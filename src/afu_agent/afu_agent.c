@@ -21,7 +21,7 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz) {
     // Enumerate processes
     char stdout_filename[FILENAME_SIZE];
     char stdout_pipename[FILENAME_SIZE];
-    char attached_process[FILENAME_SIZE] = { 0 };
+    char attached_process[FILENAME_SIZE];
     DIR *d;
     struct dirent *dir;
     d = opendir("/proc");
@@ -71,10 +71,10 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
         return -1;
     }
     size_t previousLongestPath = 0;
-    size_t filelen = strlen(path);
+    size_t pathlen = strlen(path);
     while (NULL != (ent = getmntent(mountsFile))) {
         size_t mntlen = strlen(ent->mnt_dir);
-        if (mntlen > filelen) {
+        if (mntlen > pathlen) {
             continue;
         }
 
@@ -83,7 +83,7 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
         }
 
         if (strncmp(path, ent->mnt_dir, mntlen) == 0) {
-            strncpy(result, ent->mnt_dir, mntlen > size ? size : mntlen);
+            strncpy(result, ent->mnt_dir, mntlen+1 > size ? size : mntlen+1);
             previousLongestPath = mntlen;
         }
     }
@@ -103,16 +103,8 @@ int main() {
     get_process_connected_to_stdin(test, BLOCK_SIZE);
     printf("Connected process executable: %s\n", test);
 
-    // struct statfs connectedExecutableStats;
-    // statfs(test, &connectedExecutableStats);
-    // TODO: ...
-
     char ownFilename[FILENAME_SIZE];
     readlink("/proc/self/exe", ownFilename, FILENAME_SIZE);
-    // TODO: ...
-
-    // struct statfs ownExecutableStats;
-    // statfs(ownFilename, &ownExecutableStats);
     // TODO: ...
 
     char connectedExecutableFsMountPoint[FILENAME_SIZE];
@@ -128,18 +120,6 @@ int main() {
     } else {
         printf("Both processes live under fs %s!\n", ownExecutableFsMountPoint);
     }
-
-    // if (connectedExecutableStats.f_fsid == ownExecutableStats.f_fsid) {
-    //     printf("We're on the same filesystem!\n");
-    // }
-
-    // char stdinpipe[BLOCK_SIZE];
-    // readlink("/proc/self/fd/0", stdinpipe, BLOCK_SIZE);
-    // printf("%s\n", stdinpipe);
-
-    // struct stat stdin_stats;
-    // fstat(0, &stdin_stats);
-    // printf("%lu\n", stdin_stats.st_ino);
 
     // char buffer[BLOCK_SIZE];
 
