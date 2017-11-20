@@ -5,20 +5,20 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <pthread.h>
 
 #include <fuse.h>
 
-typedef struct afu_entry {
-    const char *name;
-    const int key;
-} afu_entry_t;
-
-static afu_entry_t afus[] = {
-    { .name = "blowfish", .key = 0},
-    { .name = "sponge"  , .key = 1},
-};
+#include "../common/afus.h"
+#include "server.h"
 
 static const char *agent_filepath = "./afu_agent";
+
+static const char *socket_alias = ".hello";
+static char socket_filename[255];
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
@@ -30,7 +30,15 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     }
 
     if (strncmp(path, "/", 1) == 0) {  // probably nonsense
-        for (int i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
+
+        if (strcmp(path+1, socket_alias) == 0) {
+            stbuf->st_mode = S_IFLNK | 0777;
+            stbuf->st_nlink = 1;
+            stbuf->st_size = strlen(socket_filename);
+            return 0;
+        }
+
+        for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
             if (strcmp(path+1, afus[i].name) != 0) {
                 continue;
             }
@@ -56,11 +64,24 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
 
-    for (int i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
+    filler(buf, socket_alias, NULL, 0);
+
+    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
         filler(buf, afus[i].name, NULL, 0);
     }
 
     return 0;
+}
+
+static int readlink_callback(const char *path, char *buf, size_t size) {
+    if (strncmp(path, "/", 1) == 0) {  // probably nonsense
+        if (strcmp(path+1, socket_alias) == 0) {
+            strncpy(buf, socket_filename, size);
+            return 0;
+        }
+    }
+
+    return -ENOENT;
 }
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
@@ -72,7 +93,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 
   if (strncmp(path, "/", 1) == 0) {  // probably nonsense
-    for (int i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
+    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
         if (strcmp(path+1, afus[i].name) != 0) {
             continue;
         }
@@ -104,7 +125,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 static int release_callback(const char *path, struct fuse_file_info *fi)
 {
 	if (strncmp(path, "/", 1) == 0) {  // probably nonsense
-        for (int i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
+        for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
             if (strcmp(path+1, afus[i].name) != 0) {
                 continue;
             }
@@ -121,10 +142,19 @@ static struct fuse_operations fuse_example_operations = {
   .open = open_callback,
   .read = read_callback,
   .readdir = readdir_callback,
+  .readlink = readlink_callback,
   .release = release_callback
 };
 
 int main(int argc, char *argv[])
 {
-  return fuse_main(argc, argv, &fuse_example_operations, NULL);
+    // Set a file name for the server socket
+    char name2[L_tmpnam];
+    tmpnam(name2);
+    strncpy(socket_filename, name2, 255);
+
+    pthread_t server_thread;
+    pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
+
+    return fuse_main(argc, argv, &fuse_example_operations, NULL);
 }
