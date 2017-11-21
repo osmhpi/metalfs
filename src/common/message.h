@@ -18,6 +18,7 @@ typedef struct agent_hello_data {
     uint64_t pid;
     int afu_type;
     uint64_t input_agent_pid;
+    char input_buffer_filename[232];
 } agent_hello_data_t;
 
 typedef struct agent_push_buffer_data {

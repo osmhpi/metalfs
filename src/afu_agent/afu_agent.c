@@ -60,7 +60,8 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
                 int64_t inode = atoll(stdout_pipename + sizeof("pipe["));
                 if (inode == stdin_stats.st_ino) {
                     snprintf(attached_process, FILENAME_SIZE, "/proc/%s/exe", dir->d_name);
-                    readlink(attached_process, buffer, bufsiz);
+                    len = readlink(attached_process, buffer, bufsiz-1);
+                    buffer[len] = '\0';
                     // TODO: ...
                     break;
                 }
@@ -126,25 +127,28 @@ int main() {
     int input_pid;
     char test[FILENAME_SIZE] = { 0 };
     get_process_connected_to_stdin(test, BLOCK_SIZE, &input_pid);
-    printf("Connected process executable: %s\n", test);
+    if (strlen(test))
+        printf("Connected process executable: %s\n", test);
 
     char ownFilename[FILENAME_SIZE];
-    readlink("/proc/self/exe", ownFilename, FILENAME_SIZE);
+    size_t len = readlink("/proc/self/exe", ownFilename, FILENAME_SIZE-1);
+    ownFilename[len] = '\0';
     // TODO: ...
 
     char connectedExecutableFsMountPoint[FILENAME_SIZE];
-    if (get_mount_point_of_filesystem(test, connectedExecutableFsMountPoint, FILENAME_SIZE))
-        printf("whooopsie\n");
+    if (!strlen(test) || get_mount_point_of_filesystem(test, connectedExecutableFsMountPoint, FILENAME_SIZE)) {
+        // printf("whooopsie\n");
+    }
+
     char ownExecutableFsMountPoint[FILENAME_SIZE];
     if (get_mount_point_of_filesystem(ownFilename, ownExecutableFsMountPoint, FILENAME_SIZE))
         printf("oopsie\n");
 
-    if (strcmp(connectedExecutableFsMountPoint, ownExecutableFsMountPoint) != 0) {
-        printf("Processes live in different file systems!\n%s\n%s\n",
-            ownExecutableFsMountPoint, connectedExecutableFsMountPoint);
+    if (!strlen(test) || strcmp(connectedExecutableFsMountPoint, ownExecutableFsMountPoint) != 0) {
+        // printf("Processes live in different file systems!\n");
         input_pid = 0;
     } else {
-        printf("Both processes live under fs %s!\n", ownExecutableFsMountPoint);
+        // printf("Both processes live under fs %s!\n", ownExecutableFsMountPoint);
     }
 
     int afu = determine_afu_key(ownFilename);
@@ -164,6 +168,11 @@ int main() {
     if (connect(sock, &serv_addr, sizeof(serv_addr)) < 0)
         perror("connect() failed");
 
+    int input_file = -1, output_file = -1;
+    char *input_buffer = NULL, *output_buffer = NULL;
+    size_t bytes_read = 0;
+    bool eof = false;
+
     message_t request = {
         .type = AGENT_HELLO,
         .data.agent_hello = {
@@ -173,6 +182,14 @@ int main() {
         }
     };
 
+    // If there's no agent connected to stdin, we have create a memory-mapped file
+    if (input_pid == 0) {
+        create_temp_file_for_shared_buffer(
+            request.data.agent_hello.input_buffer_filename,
+            sizeof(request.data.agent_hello.input_buffer_filename),
+            &input_file, &input_buffer);
+    }
+
     if (send(sock, &request, sizeof(request), 0) < 0)
         perror("send() failed");
 
@@ -181,22 +198,6 @@ int main() {
         perror("recv() failed");
 
     if (response.type == SERVER_ACCEPT_AGENT) {
-
-        int input_file = -1, output_file = -1;
-        char *input_buffer = NULL, *output_buffer = NULL;
-        size_t bytes_read = 0;
-        bool eof = false;
-
-        // If there's no agent connected to stdin, we have to memory-map a file
-        if (input_pid == 0) {
-            if (strlen(response.data.message) == 0) {
-                // Should not happen
-                return 1;
-            }
-
-            input_file = open(response.data.message, O_WRONLY);
-            input_buffer = mmap(NULL, BUFFER_SIZE, PROT_WRITE, MAP_SHARED, input_file, 0);
-        }
 
         // Process input
         for (;;) {
@@ -224,7 +225,10 @@ int main() {
             send(sock, &processing_request, sizeof(processing_request), 0);
 
             message_t processing_response;
-            recv(sock, &processing_response, sizeof(processing_response), 0);
+            size_t received = recv(sock, &processing_response, sizeof(processing_response), 0);
+
+            if (received == 0)
+                break;
 
             if (processing_response.type != SERVER_PROCESSED_BUFFER)
                 break;
@@ -232,8 +236,10 @@ int main() {
             if (output_file == -1 &&
                 strlen(processing_response.data.server_processed_buffer.output_buffer_filename)) {
 
-                output_file = open(processing_response.data.server_processed_buffer.output_buffer_filename, O_RDONLY);
-                output_buffer = mmap(NULL, BUFFER_SIZE, PROT_READ, MAP_SHARED, output_file, 0);
+                map_shared_buffer_for_reading(
+                    processing_response.data.server_processed_buffer.output_buffer_filename,
+                    &output_file, &output_buffer
+                );
             }
 
             if (processing_response.data.server_processed_buffer.size && output_buffer) {

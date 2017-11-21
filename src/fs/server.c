@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/mman.h>
+#include <pthread.h>
 
 #include "../common/buffer.h"
 #include "../common/message.h"
@@ -30,7 +31,113 @@ typedef struct registered_agent {
     LIST_ENTRY Link;
 } registered_agent_t;
 
+pthread_mutex_t registered_agent_mutex = PTHREAD_MUTEX_INITIALIZER;
 LIST_ENTRY registered_agents;
+
+void* agent_thread(void* args) {
+    registered_agent_t *agent = args;
+
+    message_t input_file_message = {
+        .type = SERVER_ACCEPT_AGENT
+    };
+
+    send(agent->socket, &input_file_message, sizeof(input_file_message), 0);
+
+    for (;;) {
+        message_t processing_request;
+        size_t received = recv(agent->socket, &processing_request, sizeof(processing_request), 0);
+        if (received == 0)
+            break;
+
+        if (processing_request.type != AGENT_PUSH_BUFFER)
+            break; // Wtf. TODO
+
+        message_t processing_response = {
+            .type = SERVER_PROCESSED_BUFFER
+        };
+
+        size_t size = processing_request.data.agent_push_buffer.size;
+        bool eof = processing_request.data.agent_push_buffer.eof;
+
+        if (size > 0) {
+            // Do something. Would be good to forward data to the desired afu
+            // in the future
+
+            char demo_buffer[BUFFER_SIZE];
+            memcpy(demo_buffer, agent->input_buffer, size);
+
+            // Inspired by snap_education
+
+            // Convert all char to lower case
+            for (size_t i = 0; i < size; i++) {
+                if (demo_buffer[i] >= 'A' && demo_buffer[i] <= 'Z')
+                    demo_buffer[i] = demo_buffer[i] + ('a' - 'A');
+                else
+                    demo_buffer[i] = demo_buffer[i];
+            }
+
+            if (agent->output_agent != NULL) {
+                // TODO: Write to internal buffer for the next agent and signal
+                // that data has arrived
+            } else {
+                // If we haven't yet established an output buffer for the agent, do it now
+                if (!agent->output_buffer) {
+                    create_temp_file_for_shared_buffer(
+                        processing_response.data.server_processed_buffer.output_buffer_filename,
+                        sizeof(processing_response.data.server_processed_buffer.output_buffer_filename),
+                        &agent->output_file, &agent->output_buffer);
+                }
+
+                memcpy(agent->output_buffer, demo_buffer, size);
+                processing_response.data.server_processed_buffer.size = size;
+                processing_response.data.server_processed_buffer.eof = eof;
+            }
+        } else {
+            // TODO: Wait for the results of the preceding AFU
+        }
+
+        send(agent->socket, &processing_response, sizeof(processing_response), 0);
+
+        if (eof) {
+            break;
+        }
+    }
+
+    {
+        pthread_mutex_lock(&registered_agent_mutex);
+
+        // Remove from list
+        RemoveEntryList(&agent->Link);
+
+        if (agent->input_agent) {
+            agent->input_agent->output_agent = NULL;
+        }
+
+        if (agent->output_agent) {
+            agent->output_agent->input_agent = NULL;
+        }
+
+        pthread_mutex_unlock(&registered_agent_mutex);
+    }
+
+    // Close stuff
+    if (agent->input_buffer) {
+        munmap(agent->input_buffer, BUFFER_SIZE);
+        close(agent->input_file);
+        agent->input_buffer = NULL, agent->input_file = -1;
+    }
+
+    if (agent->output_buffer) {
+        munmap(agent->output_buffer, BUFFER_SIZE);
+        close(agent->output_file);
+        agent->output_buffer = NULL, agent->output_file = -1;
+    }
+
+    close(agent->socket);
+    free(agent);
+
+    return 0;
+}
 
 void* start_socket(void* args) {
     InitializeListHead(&registered_agents);
@@ -63,24 +170,34 @@ void* start_socket(void* args) {
             agent->afu_type = request.data.agent_hello.afu_type;
             agent->input_agent_pid = request.data.agent_hello.input_agent_pid;
 
-            message_t input_file_message = {
-                .type = SERVER_ACCEPT_AGENT
-            };
-
-            // If the agent's input is not connected to another agent, respond
-            // with a file that will be used for shared memory-mapping
+            // If the agent's input is not connected to another agent, it should
+            // have provided a file that will be used for memory-mapped data exchange
             if (agent->input_agent_pid == 0) {
-                char input_file_name[] = "accfs-mmap-XXXXXX";
-                agent->input_file = mkstemp(input_file_name);
-                strcpy(input_file_message.data.message, input_file_name);
 
-                agent->input_buffer = mmap(NULL, BUFFER_SIZE, PROT_READ, MAP_SHARED, agent->input_file, 0);
+                if (strlen(request.data.agent_hello.input_buffer_filename) == 0) {
+                    // Should not happen
+                    close(connfd);
+                    free(agent);
+                    continue;
+                }
+
+                map_shared_buffer_for_reading(
+                    request.data.agent_hello.input_buffer_filename,
+                    &agent->input_file, &agent->input_buffer
+                );
             }
 
-            send(agent->socket, &input_file_message, sizeof(input_file_message), 0);
+            {
+                pthread_mutex_lock(&registered_agent_mutex);
 
-            // Append to list
-            InsertTailList(&registered_agents, &agent->Link);
+                // Append to list
+                InsertTailList(&registered_agents, &agent->Link);
+
+                pthread_mutex_unlock(&registered_agent_mutex);
+            }
+
+            pthread_t agent_thr;
+            pthread_create(&agent_thr, NULL, agent_thread, (void*)agent);
         } else {
             // Don't know this guy -- doesn't even say hello
             close(connfd);
