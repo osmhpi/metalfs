@@ -3,6 +3,7 @@
         "unistd.h": "c",
         "stat.h": "c",
         "fuse.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "afu.h": "c"
     }
 }

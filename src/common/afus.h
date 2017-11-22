@@ -1,11 +1,19 @@
 #pragma once
 
+typedef enum afu_type {
+    AFU_HOST_PASSTHROUGH,
+
+    AFU_BLOWFISH,
+    AFU_SPONGE
+} afu_type_t;
+
 typedef struct afu_entry {
     const char *name;
-    const int key;
+    const afu_type_t key;
 } afu_entry_t;
 
 static afu_entry_t afus[] = {
-    { .name = "blowfish", .key = 0},
-    { .name = "sponge"  , .key = 1},
+    { .name = "passthrough", .key = AFU_HOST_PASSTHROUGH},
+    { .name = "blowfish",    .key = AFU_BLOWFISH},
+    { .name = "sponge"  ,    .key = AFU_SPONGE},
 };

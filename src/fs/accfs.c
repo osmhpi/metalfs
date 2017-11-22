@@ -14,6 +14,7 @@
 
 #include "../common/afus.h"
 #include "server.h"
+#include "afu.h"
 
 static const char *agent_filepath = "./afu_agent";
 
@@ -148,10 +149,13 @@ static struct fuse_operations fuse_example_operations = {
 
 int main(int argc, char *argv[])
 {
+    // Temporarily enable our fake FPGA buffer list
+    InitializeListHead(&fpga_buffers);
+
     // Set a file name for the server socket
-    char name2[L_tmpnam];
-    tmpnam(name2);
-    strncpy(socket_filename, name2, 255);
+    char temp[L_tmpnam];
+    tmpnam(temp);
+    strncpy(socket_filename, temp, 255);
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);

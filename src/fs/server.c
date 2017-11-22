@@ -12,6 +12,7 @@
 #include "../common/buffer.h"
 #include "../common/message.h"
 #include "list/list.h"
+#include "afu.h"
 
 typedef struct registered_agent {
     int pid;
@@ -23,8 +24,13 @@ typedef struct registered_agent {
     int input_file;
     char* input_buffer;
 
+    int internal_input_buffer_handle;
+    char* internal_input_size;
+    bool internal_input_eof;
+    pthread_mutex_t* internal_input_mutex;
+    pthread_cond_t* internal_input_condition;
+
     struct registered_agent* output_agent;
-    int output_agent_pid;
     int output_file;
     char* output_buffer;
 
@@ -56,47 +62,67 @@ void* agent_thread(void* args) {
             .type = SERVER_PROCESSED_BUFFER
         };
 
-        size_t size = processing_request.data.agent_push_buffer.size;
-        bool eof = processing_request.data.agent_push_buffer.eof;
+        size_t size = 0;
+        bool eof = false;
 
-        if (size > 0) {
-            // Do something. Would be good to forward data to the desired afu
-            // in the future
+        int input_buf_handle = -1, output_buf_handle = -1;
+        char *input_buffer = NULL, *output_buffer = NULL;
+        size_t output_size;
 
-            char demo_buffer[BUFFER_SIZE];
-            memcpy(demo_buffer, agent->input_buffer, size);
-
-            // Inspired by snap_education
-
-            // Convert all char to lower case
-            for (size_t i = 0; i < size; i++) {
-                if (demo_buffer[i] >= 'A' && demo_buffer[i] <= 'Z')
-                    demo_buffer[i] = demo_buffer[i] + ('a' - 'A');
-                else
-                    demo_buffer[i] = demo_buffer[i];
-            }
-
-            if (agent->output_agent != NULL) {
-                // TODO: Write to internal buffer for the next agent and signal
-                // that data has arrived
-            } else {
-                // If we haven't yet established an output buffer for the agent, do it now
-                if (!agent->output_buffer) {
-                    create_temp_file_for_shared_buffer(
-                        processing_response.data.server_processed_buffer.output_buffer_filename,
-                        sizeof(processing_response.data.server_processed_buffer.output_buffer_filename),
-                        &agent->output_file, &agent->output_buffer);
-                }
-
-                memcpy(agent->output_buffer, demo_buffer, size);
-                processing_response.data.server_processed_buffer.size = size;
-                processing_response.data.server_processed_buffer.eof = eof;
-            }
+        // Determine where to load the input from
+        if (processing_request.data.agent_push_buffer.size > 0) {
+            // Perform action on agent-provided input data
+            input_buffer = agent->input_buffer;
+            size = processing_request.data.agent_push_buffer.size;
+            eof = processing_request.data.agent_push_buffer.eof;
         } else {
-            // TODO: Wait for the results of the preceding AFU
+            // Wait for the results of the preceding AFU
+            pthread_mutex_lock(agent->internal_input_mutex);
+            pthread_cond_wait(agent->internal_input_condition, agent->internal_input_mutex);
+
+            input_buf_handle = agent->internal_input_buffer_handle;
+            size = agent->internal_input_size;
+            eof = agent->internal_input_eof;
+
+            pthread_mutex_unlock(agent->internal_input_mutex);
         }
 
-        send(agent->socket, &processing_response, sizeof(processing_response), 0);
+        // Determine where to put the output
+        if (agent->output_agent == NULL) {
+            // Copy to host
+
+            // If we haven't yet established an output buffer for the agent, do it now
+            if (!agent->output_buffer) {
+                create_temp_file_for_shared_buffer(
+                    processing_response.data.server_processed_buffer.output_buffer_filename,
+                    sizeof(processing_response.data.server_processed_buffer.output_buffer_filename),
+                    &agent->output_file, &agent->output_buffer);
+            }
+
+            output_buffer = agent->output_buffer;
+        } else {
+            output_buf_handle = create_new_buffer();
+        }
+
+        perform_afu_action(agent->afu_type,
+            input_buf_handle, input_buffer, size,
+            output_buf_handle, output_buffer, &output_size);
+
+        if (output_buffer) {
+            processing_response.data.server_processed_buffer.size = output_size;
+            processing_response.data.server_processed_buffer.eof = eof;
+            send(agent->socket, &processing_response, sizeof(processing_response), 0);
+        } else {
+            pthread_mutex_lock(agent->output_agent->internal_input_mutex);
+            agent->output_agent->internal_input_buffer_handle = output_buf_handle;
+            agent->output_agent->internal_input_size = output_size;
+            agent->output_agent->internal_input_eof = eof;
+            pthread_cond_signal(agent->output_agent->internal_input_condition);
+            pthread_mutex_unlock(agent->output_agent->internal_input_mutex);
+
+            if (eof)
+                send(agent->socket, &processing_response, sizeof(processing_response), 0);
+        }
 
         if (eof) {
             break;
@@ -134,9 +160,48 @@ void* agent_thread(void* args) {
     }
 
     close(agent->socket);
+
+    free(agent->internal_input_mutex);
+    free(agent->internal_input_condition);
     free(agent);
 
     return 0;
+}
+
+registered_agent_t* find_agent_with_pid(int pid) {
+    if (IsListEmpty(&registered_agents))
+        return NULL;
+
+    PLIST_ENTRY current_link = registered_agents.Flink;
+    do {
+        registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
+
+        if (current_agent->pid == pid)
+            return current_agent;
+
+        current_link = current_link->Flink;
+    } while (current_link != &registered_agents);
+
+    return NULL;
+}
+
+void update_agent_wiring() {
+    if (IsListEmpty(&registered_agents))
+        return;
+
+    PLIST_ENTRY current_link = registered_agents.Flink;
+
+    do {
+        registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
+
+        if (current_agent->input_agent_pid && current_agent->input_agent == NULL) {
+            current_agent->input_agent = find_agent_with_pid(current_agent->input_agent_pid);
+            if (current_agent->input_agent != NULL)
+                current_agent->input_agent->output_agent = current_agent;
+        }
+
+        current_link = current_link->Flink;
+    } while (current_link != &registered_agents);
 }
 
 void* start_socket(void* args) {
@@ -145,13 +210,12 @@ void* start_socket(void* args) {
     int listenfd = 0, connfd = 0;
     struct sockaddr_un serv_addr;
 
-    char* name1 = (char*)args;
-    printf("Socket %s\n", name1);
+    char* socket_file_name = (char*)args;
 
     listenfd = socket(AF_UNIX, SOCK_STREAM, 0);
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sun_family = AF_UNIX;
-    strcpy(serv_addr.sun_path, name1);
+    strcpy(serv_addr.sun_path, socket_file_name);
 
     bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
@@ -185,6 +249,13 @@ void* start_socket(void* args) {
                     request.data.agent_hello.input_buffer_filename,
                     &agent->input_file, &agent->input_buffer
                 );
+            } else {
+                // Create a mutexes for internal signaling
+                agent->internal_input_buffer_handle = -1;
+                agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
+                pthread_mutex_init(agent->internal_input_mutex, NULL);
+                agent->internal_input_condition = malloc(sizeof(pthread_cond_t));
+                pthread_cond_init(agent->internal_input_condition, NULL);
             }
 
             {
@@ -192,6 +263,8 @@ void* start_socket(void* args) {
 
                 // Append to list
                 InsertTailList(&registered_agents, &agent->Link);
+
+                update_agent_wiring();
 
                 pthread_mutex_unlock(&registered_agent_mutex);
             }

@@ -1,6 +1,12 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
+
+#define CONTAINING_LIST_RECORD(address, type) \
+    ((type *)( \
+    (char*)(address) - \
+    (uint64_t)(&((type *)0)->Link)))
 
 typedef struct _LIST_ENTRY {
   struct _LIST_ENTRY  *Flink;

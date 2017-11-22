@@ -127,8 +127,8 @@ int main() {
     int input_pid;
     char test[FILENAME_SIZE] = { 0 };
     get_process_connected_to_stdin(test, BLOCK_SIZE, &input_pid);
-    if (strlen(test))
-        printf("Connected process executable: %s\n", test);
+    // if (strlen(test))
+    //     printf("Connected process executable: %s\n", test);
 
     char ownFilename[FILENAME_SIZE];
     size_t len = readlink("/proc/self/exe", ownFilename, FILENAME_SIZE-1);
