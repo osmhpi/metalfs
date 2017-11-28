@@ -23,6 +23,15 @@ static const char *files_dir = "files";
 static const char *socket_alias = ".hello";
 static char socket_filename[255];
 
+
+static int chown_callback(const char *path, uid_t uid, gid_t gid,
+             struct fuse_file_info *fi)
+{
+    (void) fi;
+
+    return 0;
+}
+
 static int getattr_callback(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
 
@@ -168,7 +177,6 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         return res;
     }
 
-
     snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
     if (strcmp(path, test_filename) == 0) {
         int fd;
@@ -196,7 +204,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 static int release_callback(const char *path, struct fuse_file_info *fi)
 {
-	if (strncmp(path, "/", 1) == 0) {  // probably nonsense
+    if (strncmp(path, "/", 1) == 0) {  // probably nonsense
         for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
             if (strcmp(path+1, afus[i].name) != 0) {
                 continue;
@@ -206,16 +214,69 @@ static int release_callback(const char *path, struct fuse_file_info *fi)
             break;
         }
     }
-	return 0;
+    return 0;
+}
+
+static int truncate_callback(const char *path, off_t size,
+            struct fuse_file_info *fi)
+{
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
+    if (strcmp(path, test_filename) == 0) {
+        int res;
+
+        if (fi != NULL && false)
+            res = ftruncate(fi->fh, size);
+        else
+            res = truncate("./test.txt", size);
+        if (res == -1)
+            return -errno;
+
+        return 0;
+    }
+    return -ENOENT;
+}
+
+static int write_callback(const char *path, const char *buf, size_t size,
+        off_t offset, struct fuse_file_info *fi)
+{
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
+    if (strcmp(path, test_filename) == 0) {
+        int fd;
+        int res;
+
+        (void) fi;
+        if(fi == NULL || true)
+            fd = open("./test.txt", O_WRONLY);
+        else
+            fd = fi->fh;
+
+        if (fd == -1)
+            return -errno;
+
+        res = pwrite(fd, buf, size, offset);
+        if (res == -1)
+            res = -errno;
+
+        if (fi == NULL || true)
+            close(fd);
+        return res;
+    }
+
+    return -ENOENT;
 }
 
 static struct fuse_operations fuse_example_operations = {
-  .getattr = getattr_callback,
-  .open = open_callback,
-  .read = read_callback,
-  .readdir = readdir_callback,
-  .readlink = readlink_callback,
-  .release = release_callback
+    .chown = chown_callback,
+    .getattr = getattr_callback,
+    .open = open_callback,
+    .read = read_callback,
+    .readdir = readdir_callback,
+    .readlink = readlink_callback,
+    .release = release_callback,
+    .truncate = truncate_callback,
+    .write = write_callback
 };
 
 int main(int argc, char *argv[])

@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <mntent.h>
 #include <libgen.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,6 +29,7 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
     // Determine the inode number of the stdin file descriptor
     struct stat stdin_stats;
     fstat(0, &stdin_stats);
+
     // TODO: Check errno
 
     // Enumerate processes
@@ -58,7 +61,7 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
             size_t len = readlink(stdout_filename, stdout_pipename, FILENAME_SIZE);
             if (strncmp(stdout_pipename, "pipe:", 5 > len ? len : 5) == 0 && len > sizeof("pipe:[]")) {
                 int64_t inode = atoll(stdout_pipename + sizeof("pipe["));
-                if (inode == stdin_stats.st_ino) {
+                if ((uint64_t)inode == stdin_stats.st_ino) {
                     snprintf(attached_process, FILENAME_SIZE, "/proc/%s/exe", dir->d_name);
                     len = readlink(attached_process, buffer, bufsiz-1);
                     buffer[len] = '\0';
@@ -124,38 +127,64 @@ int determine_afu_key(char *filename) {
 
 int main() {
 
-    int input_pid;
-    char test[FILENAME_SIZE] = { 0 };
-    get_process_connected_to_stdin(test, BLOCK_SIZE, &input_pid);
-    // if (strlen(test))
-    //     printf("Connected process executable: %s\n", test);
-
-    char ownFilename[FILENAME_SIZE];
-    size_t len = readlink("/proc/self/exe", ownFilename, FILENAME_SIZE-1);
-    ownFilename[len] = '\0';
+    // Find out our own filename and fs mount point
+    char own_file_name[FILENAME_SIZE];
+    size_t len = readlink("/proc/self/exe", own_file_name, FILENAME_SIZE-1);
+    own_file_name[len] = '\0';
     // TODO: ...
 
-    char connectedExecutableFsMountPoint[FILENAME_SIZE];
-    if (!strlen(test) || get_mount_point_of_filesystem(test, connectedExecutableFsMountPoint, FILENAME_SIZE)) {
+    int afu = determine_afu_key(own_file_name);
+
+    char own_fs_mount_point[FILENAME_SIZE];
+    if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_SIZE))
+        printf("oopsie\n");
+
+    // Determine the file connected to stdin
+    char stdin_file[FILENAME_SIZE];
+    len = readlink("/proc/self/fd/0", stdin_file, FILENAME_SIZE-1);
+    stdin_file[len] = '\0';
+
+    // Check if we're reading from an FPGA file
+    int stdin_file_len = strlen(stdin_file);
+    int mountpoint_len = strlen(own_fs_mount_point);
+    if (strncmp(own_fs_mount_point, stdin_file, mountpoint_len > stdin_file_len ? stdin_file_len : mountpoint_len) == 0) {
+        fprintf(stderr, "Room for improvement\n");
+    }
+
+    // TODO: Only if we're not reading from an FPGA file
+    // Determine if the process that's talking to us is another AFU
+    int input_pid;
+    char stdin_executable[FILENAME_SIZE] = { 0 };
+    get_process_connected_to_stdin(stdin_executable, BLOCK_SIZE, &input_pid);
+    if (strlen(stdin_executable))
+        printf("Connected process executable: %s\n", stdin_executable);
+
+    char stdin_executable_fs_mount_point[FILENAME_SIZE];
+    if (!strlen(stdin_executable) || get_mount_point_of_filesystem(stdin_executable, stdin_executable_fs_mount_point, FILENAME_SIZE)) {
         // printf("whooopsie\n");
     }
 
-    char ownExecutableFsMountPoint[FILENAME_SIZE];
-    if (get_mount_point_of_filesystem(ownFilename, ownExecutableFsMountPoint, FILENAME_SIZE))
-        printf("oopsie\n");
-
-    if (!strlen(test) || strcmp(connectedExecutableFsMountPoint, ownExecutableFsMountPoint) != 0) {
+    if (!strlen(stdin_executable) || strcmp(stdin_executable_fs_mount_point, own_fs_mount_point) != 0) {
         // printf("Processes live in different file systems!\n");
         input_pid = 0;
     } else {
-        // printf("Both processes live under fs %s!\n", ownExecutableFsMountPoint);
+        // printf("Both processes live under fs %s!\n", own_fs_mount_point);
     }
 
-    int afu = determine_afu_key(ownFilename);
+    // Determine the file connected to stdout
+    char stdout_file[FILENAME_SIZE];
+    len = readlink("/proc/self/fd/1", stdout_file, FILENAME_SIZE-1);
+    stdout_file[len] = '\0';
+
+    // Check if we're writing to an FPGA file
+    int stdout_file_len = strlen(stdout_file);
+    if (strncmp(own_fs_mount_point, stdout_file, mountpoint_len > stdout_file_len ? stdout_file_len : mountpoint_len) == 0) {
+        fprintf(stderr, "More room for improvement\n");
+    }
 
     // Say hello to the filesystem!
     char socket_filename[FILENAME_SIZE];
-    sprintf(socket_filename, "%s/.hello", ownExecutableFsMountPoint);
+    sprintf(socket_filename, "%s/.hello", own_fs_mount_point);
 
     int sock = 0;
     struct sockaddr_un serv_addr;
@@ -165,7 +194,7 @@ int main() {
     if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
         perror("socket() failed");
 
-    if (connect(sock, &serv_addr, sizeof(serv_addr)) < 0)
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
         perror("connect() failed");
 
     int input_file = -1, output_file = -1;
