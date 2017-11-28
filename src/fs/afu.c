@@ -140,6 +140,9 @@ size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size
         input_buffer, size,
         output_buffer, size);
 
+    snap_detach_action(action);
+    snap_card_free(card);
+
     return size;
 }
 
