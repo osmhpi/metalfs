@@ -13,7 +13,6 @@ find_package(cxl REQUIRED)
 
 SET(AFU_AGENT_SOURCES
     src/common/buffer.c
-    # src/common/afus.c
 
     src/afu_agent/afu_agent.c
 )
@@ -28,7 +27,6 @@ include_directories(
 )
 SET(ACCFS_SOURCES
     src/common/buffer.c
-    # src/common/afus.c
 
     src/fs/accfs.c
     src/fs/server.c

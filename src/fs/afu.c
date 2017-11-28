@@ -119,7 +119,7 @@ static uint8_t example_key[] __attribute__((aligned(128))) = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77
 };
 
-size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size_t size) {
+size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size_t size, bool encrypt) {
     char* input_buffer = get_buffer_addr(input_buf_handle);
     char* output_buffer = get_buffer_addr(output_buf_handle);
 
@@ -136,7 +136,7 @@ size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size
 
     blowfish_set_key(action, timeout, example_key, sizeof(example_key));
 
-    blowfish_cipher(action, MODE_ENCRYPT, timeout,
+    blowfish_cipher(action, encrypt ? MODE_ENCRYPT : MODE_DECRYPT, timeout,
         input_buffer, size,
         output_buffer, size);
 
@@ -170,8 +170,11 @@ void perform_afu_action(
         case AFU_LOWERCASE:
             *output_size = perform_lowercase_action(input_buf_handle, output_buf_handle, input_size);
             break;
-        case AFU_BLOWFISH:
-            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size);
+        case AFU_BLOWFISH_ENCRYPT:
+            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, true);
+            break;
+        case AFU_BLOWFISH_DECRYPT:
+            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, false);
             break;
     }
 

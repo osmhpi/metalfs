@@ -156,8 +156,8 @@ int main() {
     int input_pid;
     char stdin_executable[FILENAME_SIZE] = { 0 };
     get_process_connected_to_stdin(stdin_executable, BLOCK_SIZE, &input_pid);
-    if (strlen(stdin_executable))
-        printf("Connected process executable: %s\n", stdin_executable);
+    // if (strlen(stdin_executable))
+    //     printf("Connected process executable: %s\n", stdin_executable);
 
     char stdin_executable_fs_mount_point[FILENAME_SIZE];
     if (!strlen(stdin_executable) || get_mount_point_of_filesystem(stdin_executable, stdin_executable_fs_mount_point, FILENAME_SIZE)) {
