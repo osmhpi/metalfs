@@ -4,7 +4,7 @@ typedef enum afu_type {
     AFU_HOST_PASSTHROUGH,
 
     AFU_BLOWFISH,
-    AFU_SPONGE
+    AFU_LOWERCASE
 } afu_type_t;
 
 typedef struct afu_entry {
@@ -15,5 +15,5 @@ typedef struct afu_entry {
 static afu_entry_t afus[] = {
     { .name = "passthrough", .key = AFU_HOST_PASSTHROUGH},
     { .name = "blowfish",    .key = AFU_BLOWFISH},
-    { .name = "sponge"  ,    .key = AFU_SPONGE},
+    { .name = "lowercase",   .key = AFU_LOWERCASE},
 };

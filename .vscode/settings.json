@@ -4,6 +4,8 @@
         "stat.h": "c",
         "fuse.h": "c",
         "stdio.h": "c",
-        "afu.h": "c"
+        "afu.h": "c",
+        "snap_blowfish.h": "c",
+        "action_blowfish.h": "c"
     }
 }

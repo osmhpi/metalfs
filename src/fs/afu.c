@@ -4,9 +4,13 @@
 #include <string.h>
 
 #include <pthread.h>
+#include <libsnap.h>
 
 #include "../common/buffer.h"
 #include "../common/afus.h"
+
+#include "actions/blowfish/action_blowfish.h"
+#include "actions/blowfish/snap_blowfish.h"
 
 // Emulate buffers on the FPGA
 typedef struct fpga_buffer {
@@ -85,7 +89,7 @@ char* get_buffer_addr(int buffer_handle) {
     return result;
 }
 
-size_t perform_demo_action(int input_buf_handle, int output_buf_handle, size_t size) {
+size_t perform_lowercase_action(int input_buf_handle, int output_buf_handle, size_t size) {
     // Inspired by snap_education
 
     char* input_buffer = get_buffer_addr(input_buf_handle);
@@ -108,6 +112,34 @@ size_t perform_passthrough_action(int input_buf_handle, int output_buf_handle, s
 
     // Just copy
     memcpy(output_buffer, input_buffer, size);
+    return size;
+}
+
+static uint8_t example_key[] __attribute__((aligned(128))) = {
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77
+};
+
+size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size_t size) {
+    char* input_buffer = get_buffer_addr(input_buf_handle);
+    char* output_buffer = get_buffer_addr(output_buf_handle);
+
+    unsigned long timeout = 10000;
+    struct snap_card *card = NULL;
+    struct snap_action *action = NULL;
+    snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
+    char device[128];
+
+    snprintf(device, sizeof(device)-1, "/dev/cxl/afu%d.0s", 0);
+    card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM,
+                   SNAP_DEVICE_ID_SNAP);
+    action = snap_attach_action(card, BLOWFISH_ACTION_TYPE, action_irq, 60);
+
+    blowfish_set_key(action, timeout, example_key, sizeof(example_key));
+
+    blowfish_cipher(action, MODE_ENCRYPT, timeout,
+        input_buffer, size,
+        output_buffer, size);
+
     return size;
 }
 
@@ -135,11 +167,11 @@ void perform_afu_action(
         case AFU_HOST_PASSTHROUGH:
             *output_size = perform_passthrough_action(input_buf_handle, output_buf_handle, input_size);
             break;
-        case AFU_SPONGE:
-            *output_size = perform_demo_action(input_buf_handle, output_buf_handle, input_size);
+        case AFU_LOWERCASE:
+            *output_size = perform_lowercase_action(input_buf_handle, output_buf_handle, input_size);
             break;
         case AFU_BLOWFISH:
-            *output_size = perform_demo_action(input_buf_handle, output_buf_handle, input_size);
+            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size);
             break;
     }
 
