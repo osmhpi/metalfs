@@ -8,8 +8,14 @@ set(CMAKE_C_FLAGS "-Wall -Wextra -std=c11")
 
 find_package(FUSE REQUIRED)
 find_package(Threads REQUIRED)
-find_package(snap REQUIRED)
-find_package(cxl REQUIRED)
+
+option(WITH_SNAP "Build with snap" ON)
+
+if(WITH_SNAP)
+    add_definitions(-DWITH_SNAP)
+    find_package(snap REQUIRED)
+    find_package(cxl REQUIRED)
+endif()
 
 SET(AFU_AGENT_SOURCES
     src/common/buffer.c
@@ -33,9 +39,29 @@ SET(ACCFS_SOURCES
     src/fs/afu.c
 
     src/fs/list/list.c
-
-    src/fs/actions/blowfish/action_blowfish.c
-    src/fs/actions/blowfish/snap_blowfish.c
 )
+
+if(WITH_SNAP)
+    SET(ACCFS_SOURCES
+        {ACCFS_SOURCES}
+        
+        src/fs/actions/blowfish/action_blowfish.c
+        src/fs/actions/blowfish/snap_blowfish.c
+    )
+endif()
+
+SET (ACCFS_LIBRARIES
+    ${FUSE_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+if(WITH_SNAP)
+    SET(ACCFS_LIBRARIES
+        ${ACCFS_LIBRARIES}
+        ${SNAP_LIBRARY}
+        ${CXL_LIBRARY}
+    )
+endif()
+
 add_executable(accfs ${ACCFS_SOURCES})
-target_link_libraries(accfs ${FUSE_LIBRARIES} ${SNAP_LIBRARY} ${CXL_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(accfs ${ACCFS_LIBRARIES})

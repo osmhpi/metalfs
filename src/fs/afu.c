@@ -4,13 +4,17 @@
 #include <string.h>
 
 #include <pthread.h>
+#ifdef WITH_SNAP
 #include <libsnap.h>
+#endif
 
 #include "../common/buffer.h"
 #include "../common/afus.h"
 
+#ifdef WITH_SNAP
 #include "actions/blowfish/action_blowfish.h"
 #include "actions/blowfish/snap_blowfish.h"
+#endif
 
 // Emulate buffers on the FPGA
 typedef struct fpga_buffer {
@@ -119,6 +123,7 @@ static uint8_t example_key[] __attribute__((aligned(128))) = {
     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77
 };
 
+#ifdef WITH_SNAP
 size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size_t size, bool encrypt) {
     char* input_buffer = get_buffer_addr(input_buf_handle);
     char* output_buffer = get_buffer_addr(output_buf_handle);
@@ -145,6 +150,7 @@ size_t perform_blowfish_action(int input_buf_handle, int output_buf_handle, size
 
     return size;
 }
+#endif
 
 void perform_afu_action(
     int afu_type,
@@ -173,12 +179,14 @@ void perform_afu_action(
         case AFU_LOWERCASE:
             *output_size = perform_lowercase_action(input_buf_handle, output_buf_handle, input_size);
             break;
+#ifdef WITH_SNAP
         case AFU_BLOWFISH_ENCRYPT:
             *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, true);
             break;
         case AFU_BLOWFISH_DECRYPT:
             *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, false);
             break;
+#endif
     }
 
     release_buffer(input_buf_handle);

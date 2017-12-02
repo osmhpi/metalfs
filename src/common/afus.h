@@ -15,7 +15,9 @@ typedef struct afu_entry {
 
 static afu_entry_t afus[] = {
     { .name = "passthrough", .key = AFU_HOST_PASSTHROUGH},
+#ifdef WITH_SNAP
     { .name = "blowfish_encrypt",    .key = AFU_BLOWFISH_ENCRYPT},
     { .name = "blowfish_decrypt",    .key = AFU_BLOWFISH_DECRYPT},
+#endif
     { .name = "lowercase",   .key = AFU_LOWERCASE},
 };
