@@ -43,24 +43,25 @@ LIST_ENTRY registered_agents;
 void* agent_thread(void* args) {
     registered_agent_t *agent = args;
 
-    message_t input_file_message = {
-        .type = SERVER_ACCEPT_AGENT
-    };
+    message_type_t message_type = SERVER_ACCEPT_AGENT;
 
-    send(agent->socket, &input_file_message, sizeof(input_file_message), 0);
+    send(agent->socket, &message_type, sizeof(message_type), 0);
 
     for (;;) {
-        message_t processing_request;
-        size_t received = recv(agent->socket, &processing_request, sizeof(processing_request), 0);
+        message_type_t incoming_message_type;
+        size_t received = recv(agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
         if (received == 0)
             break;
 
-        if (processing_request.type != AGENT_PUSH_BUFFER)
+        if (incoming_message_type != AGENT_PUSH_BUFFER)
             break; // Wtf. TODO
 
-        message_t processing_response = {
-            .type = SERVER_PROCESSED_BUFFER
-        };
+        agent_push_buffer_data_t processing_request;
+        received = recv(agent->socket, &processing_request, sizeof(processing_request), 0);
+        if (received == 0)
+            break;
+
+        server_processed_buffer_data_t processing_response = {};
 
         size_t size = 0;
         bool eof = false;
@@ -70,11 +71,11 @@ void* agent_thread(void* args) {
         size_t output_size;
 
         // Determine where to load the input from
-        if (processing_request.data.agent_push_buffer.size > 0) {
+        if (processing_request.size > 0) {
             // Perform action on agent-provided input data
             input_buffer = agent->input_buffer;
-            size = processing_request.data.agent_push_buffer.size;
-            eof = processing_request.data.agent_push_buffer.eof;
+            size = processing_request.size;
+            eof = processing_request.eof;
         } else {
             // Wait for the results of the preceding AFU
             pthread_mutex_lock(agent->internal_input_mutex);
@@ -93,10 +94,16 @@ void* agent_thread(void* args) {
 
             // If we haven't yet established an output buffer for the agent, do it now
             if (!agent->output_buffer) {
+                message_type_t output_buffer_message_type = SERVER_INITIALIZE_OUTPUT_BUFFER;
+                server_initialize_output_buffer_data_t output_buffer_message;
+
                 create_temp_file_for_shared_buffer(
-                    processing_response.data.server_processed_buffer.output_buffer_filename,
-                    sizeof(processing_response.data.server_processed_buffer.output_buffer_filename),
+                    output_buffer_message.output_buffer_filename,
+                    sizeof(output_buffer_message.output_buffer_filename),
                     &agent->output_file, &agent->output_buffer);
+
+                send(agent->socket, &output_buffer_message_type, sizeof(output_buffer_message_type), 0);
+                send(agent->socket, &output_buffer_message, sizeof(output_buffer_message), 0);
             }
 
             output_buffer = agent->output_buffer;
@@ -109,8 +116,10 @@ void* agent_thread(void* args) {
             output_buf_handle, output_buffer, &output_size);
 
         if (output_buffer) {
-            processing_response.data.server_processed_buffer.size = output_size;
-            processing_response.data.server_processed_buffer.eof = eof;
+            processing_response.size = output_size;
+            processing_response.eof = eof;
+            message_type = SERVER_PROCESSED_BUFFER;
+            send(agent->socket, &message_type, sizeof(message_type), 0);
             send(agent->socket, &processing_response, sizeof(processing_response), 0);
         } else {
             pthread_mutex_lock(agent->output_agent->internal_input_mutex);
@@ -224,21 +233,24 @@ void* start_socket(void* args) {
     for (;;) {
         connfd = accept(listenfd, NULL, NULL);
 
-        message_t request;
-        recv(connfd, &request, sizeof(request), 0);
+        message_type_t incoming_message_type;
+        recv(connfd, &incoming_message_type, sizeof(incoming_message_type), 0);
 
-        if (request.type == AGENT_HELLO) {
+        if (incoming_message_type == AGENT_HELLO) {
+            agent_hello_data_t request;
+            recv(connfd, &request, sizeof(request), 0);
+
             registered_agent_t *agent = calloc(1, sizeof(registered_agent_t));
             agent->socket = connfd;
-            agent->pid = request.data.agent_hello.pid;
-            agent->afu_type = request.data.agent_hello.afu_type;
-            agent->input_agent_pid = request.data.agent_hello.input_agent_pid;
+            agent->pid = request.pid;
+            agent->afu_type = request.afu_type;
+            agent->input_agent_pid = request.input_agent_pid;
 
             // If the agent's input is not connected to another agent, it should
             // have provided a file that will be used for memory-mapped data exchange
             if (agent->input_agent_pid == 0) {
 
-                if (strlen(request.data.agent_hello.input_buffer_filename) == 0) {
+                if (strlen(request.input_buffer_filename) == 0) {
                     // Should not happen
                     close(connfd);
                     free(agent);
@@ -246,7 +258,7 @@ void* start_socket(void* args) {
                 }
 
                 map_shared_buffer_for_reading(
-                    request.data.agent_hello.input_buffer_filename,
+                    request.input_buffer_filename,
                     &agent->input_file, &agent->input_buffer
                 );
             } else {

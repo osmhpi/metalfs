@@ -202,32 +202,33 @@ int main() {
     size_t bytes_read = 0;
     bool eof = false;
 
-    message_t request = {
-        .type = AGENT_HELLO,
-        .data.agent_hello = {
-            .pid = getpid(),
-            .afu_type = afu,
-            .input_agent_pid = input_pid
-        }
+    agent_hello_data_t request = {
+        .pid = getpid(),
+        .afu_type = afu,
+        .input_agent_pid = input_pid
     };
 
-    // If there's no agent connected to stdin, we have create a memory-mapped file
+    // If there's no agent connected to stdin, we have to create a memory-mapped file
     if (input_pid == 0) {
         create_temp_file_for_shared_buffer(
-            request.data.agent_hello.input_buffer_filename,
-            sizeof(request.data.agent_hello.input_buffer_filename),
+            request.input_buffer_filename,
+            sizeof(request.input_buffer_filename),
             &input_file, &input_buffer);
     }
 
+    message_type_t message_type = AGENT_HELLO;
+    send(sock, &message_type, sizeof(message_type), 0);
     if (send(sock, &request, sizeof(request), 0) < 0)
         perror("send() failed");
 
-    message_t response;
-    if (recv(sock, &response, sizeof(response), 0) < 0)
+    message_type_t incoming_message_type;
+    size_t received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
+    if (received == 0)
+        return -1;
+    else if (received < 0)
         perror("recv() failed");
 
-    if (response.type == SERVER_ACCEPT_AGENT) {
-
+    if (incoming_message_type == SERVER_ACCEPT_AGENT) {
         // Process input
         for (;;) {
             if (input_buffer != NULL) {
@@ -244,39 +245,50 @@ int main() {
 
             // Tell the server about the data (if any)
             // and wait for it to be consumed
-            message_t processing_request = {
-                .type = AGENT_PUSH_BUFFER,
-                .data.agent_push_buffer = {
-                    .size = bytes_read,
-                    .eof = eof
-                }
+            message_type = AGENT_PUSH_BUFFER;
+            agent_push_buffer_data_t processing_request = {
+                .size = bytes_read,
+                .eof = eof
             };
+            send(sock, &message_type, sizeof(message_type), 0);
             send(sock, &processing_request, sizeof(processing_request), 0);
 
-            message_t processing_response;
-            size_t received = recv(sock, &processing_response, sizeof(processing_response), 0);
+            size_t received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
+            if (received == 0)
+                break;
+            
+            if (incoming_message_type == SERVER_INITIALIZE_OUTPUT_BUFFER) {
+                server_initialize_output_buffer_data_t message;
+                // Read data
+                received = recv(sock, &message, sizeof(message), 0);
+                if (received == 0)
+                    break;
+
+                // Should always be true - we expect this message type only once
+                if (output_file == -1)
+                    map_shared_buffer_for_reading(message.output_buffer_filename, &output_file, &output_buffer);
+
+                // Wait for the next message
+                received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
+                if (received == 0)
+                    break;
+            }
+
+            if (incoming_message_type != SERVER_PROCESSED_BUFFER)
+                break;
+
+            server_processed_buffer_data_t processing_response;
+            received = recv(sock, &processing_response, sizeof(processing_response), 0);
 
             if (received == 0)
                 break;
 
-            if (processing_response.type != SERVER_PROCESSED_BUFFER)
-                break;
-
-            if (output_file == -1 &&
-                strlen(processing_response.data.server_processed_buffer.output_buffer_filename)) {
-
-                map_shared_buffer_for_reading(
-                    processing_response.data.server_processed_buffer.output_buffer_filename,
-                    &output_file, &output_buffer
-                );
-            }
-
-            if (processing_response.data.server_processed_buffer.size && output_buffer) {
+            if (processing_response.size && output_buffer) {
                 // Write to stdout
-                fwrite(output_buffer, sizeof(char), processing_response.data.server_processed_buffer.size, stdout);
+                fwrite(output_buffer, sizeof(char), processing_response.size, stdout);
             }
 
-            eof = processing_response.data.server_processed_buffer.eof;
+            eof = processing_response.eof;
 
             if (eof && output_buffer) {
                 // Unmap buffer
