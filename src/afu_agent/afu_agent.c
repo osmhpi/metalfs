@@ -21,9 +21,6 @@
 #include "../common/buffer.h"
 #include "../common/message.h"
 
-#define BLOCK_SIZE 512
-#define FILENAME_SIZE 512
-
 int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
 
     // Determine the inode number of the stdin file descriptor
@@ -33,9 +30,9 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
     // TODO: Check errno
 
     // Enumerate processes
-    char stdout_filename[FILENAME_SIZE];
-    char stdout_pipename[FILENAME_SIZE];
-    char attached_process[FILENAME_SIZE];
+    char stdout_filename[FILENAME_MAX];
+    char stdout_pipename[FILENAME_MAX];
+    char attached_process[FILENAME_MAX];
     DIR *d;
     struct dirent *dir;
     d = opendir("/proc");
@@ -53,16 +50,16 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
                 continue;
             }
 
-            snprintf(stdout_filename, FILENAME_SIZE, "/proc/%s/fd/1", dir->d_name);
+            snprintf(stdout_filename, FILENAME_MAX, "/proc/%s/fd/1", dir->d_name);
 
             *pid = atoi(dir->d_name);
 
             // Check if stdout of this process is the same as our stdin pipe
-            size_t len = readlink(stdout_filename, stdout_pipename, FILENAME_SIZE);
+            size_t len = readlink(stdout_filename, stdout_pipename, FILENAME_MAX);
             if (strncmp(stdout_pipename, "pipe:", 5 > len ? len : 5) == 0 && len > sizeof("pipe:[]")) {
                 int64_t inode = atoll(stdout_pipename + sizeof("pipe["));
                 if ((uint64_t)inode == stdin_stats.st_ino) {
-                    snprintf(attached_process, FILENAME_SIZE, "/proc/%s/exe", dir->d_name);
+                    snprintf(attached_process, FILENAME_MAX, "/proc/%s/exe", dir->d_name);
                     len = readlink(attached_process, buffer, bufsiz-1);
                     buffer[len] = '\0';
                     // TODO: ...
@@ -128,62 +125,63 @@ int determine_afu_key(char *filename) {
 int main() {
 
     // Find out our own filename and fs mount point
-    char own_file_name[FILENAME_SIZE];
-    size_t len = readlink("/proc/self/exe", own_file_name, FILENAME_SIZE-1);
+    char own_file_name[FILENAME_MAX];
+    size_t len = readlink("/proc/self/exe", own_file_name, FILENAME_MAX-1);
     own_file_name[len] = '\0';
     // TODO: ...
 
     int afu = determine_afu_key(own_file_name);
 
-    char own_fs_mount_point[FILENAME_SIZE];
-    if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_SIZE))
+    char own_fs_mount_point[FILENAME_MAX];
+    if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_MAX))
         printf("oopsie\n");
 
     // Determine the file connected to stdin
-    char stdin_file[FILENAME_SIZE];
-    len = readlink("/proc/self/fd/0", stdin_file, FILENAME_SIZE-1);
+    char stdin_file[FILENAME_MAX];
+    len = readlink("/proc/self/fd/0", stdin_file, FILENAME_MAX-1);
     stdin_file[len] = '\0';
 
     // Check if we're reading from an FPGA file
     int stdin_file_len = strlen(stdin_file);
-    int mountpoint_len = strlen(own_fs_mount_point);
-    if (strncmp(own_fs_mount_point, stdin_file, mountpoint_len > stdin_file_len ? stdin_file_len : mountpoint_len) == 0) {
-        fprintf(stderr, "Room for improvement\n");
+    char files_prefix[FILENAME_MAX];
+    snprintf(files_prefix, FILENAME_MAX, "%s/files/", own_fs_mount_point);
+    int files_prefix_len = strlen(own_fs_mount_point);
+    char* internal_input_filename = "";
+    if (strncmp(files_prefix, stdin_file, files_prefix_len > stdin_file_len ? stdin_file_len : files_prefix_len) == 0) {
+        internal_input_filename = basename(stdin_file);
     }
 
-    // TODO: Only if we're not reading from an FPGA file
-    // Determine if the process that's talking to us is another AFU
-    int input_pid;
-    char stdin_executable[FILENAME_SIZE] = { 0 };
-    get_process_connected_to_stdin(stdin_executable, BLOCK_SIZE, &input_pid);
-    // if (strlen(stdin_executable))
-    //     printf("Connected process executable: %s\n", stdin_executable);
+    int input_pid = 0;
+    if (strlen(internal_input_filename) == 0) {
+        // Determine if the process that's talking to us is another AFU
+        char stdin_executable[FILENAME_MAX] = { 0 };
+        get_process_connected_to_stdin(stdin_executable, sizeof(stdin_executable), &input_pid);
 
-    char stdin_executable_fs_mount_point[FILENAME_SIZE];
-    if (!strlen(stdin_executable) || get_mount_point_of_filesystem(stdin_executable, stdin_executable_fs_mount_point, FILENAME_SIZE)) {
-        // printf("whooopsie\n");
-    }
+        char stdin_executable_fs_mount_point[FILENAME_MAX];
+        if (!strlen(stdin_executable) || get_mount_point_of_filesystem(stdin_executable, stdin_executable_fs_mount_point, FILENAME_MAX)) {
+            // printf("whooopsie\n");
+        }
 
-    if (!strlen(stdin_executable) || strcmp(stdin_executable_fs_mount_point, own_fs_mount_point) != 0) {
-        // printf("Processes live in different file systems!\n");
-        input_pid = 0;
-    } else {
-        // printf("Both processes live under fs %s!\n", own_fs_mount_point);
+        if (!strlen(stdin_executable) || strcmp(stdin_executable_fs_mount_point, own_fs_mount_point) != 0) {
+            // Reset input_pid
+            input_pid = 0;
+        }
     }
 
     // Determine the file connected to stdout
-    char stdout_file[FILENAME_SIZE];
-    len = readlink("/proc/self/fd/1", stdout_file, FILENAME_SIZE-1);
+    char stdout_file[FILENAME_MAX];
+    len = readlink("/proc/self/fd/1", stdout_file, FILENAME_MAX-1);
     stdout_file[len] = '\0';
 
     // Check if we're writing to an FPGA file
     int stdout_file_len = strlen(stdout_file);
-    if (strncmp(own_fs_mount_point, stdout_file, mountpoint_len > stdout_file_len ? stdout_file_len : mountpoint_len) == 0) {
-        fprintf(stderr, "More room for improvement\n");
+    char* internal_output_filename = "";
+    if (strncmp(files_prefix, stdout_file, files_prefix_len > stdout_file_len ? stdout_file_len : files_prefix_len) == 0) {
+        internal_output_filename = basename(stdout_file); 
     }
 
     // Say hello to the filesystem!
-    char socket_filename[FILENAME_SIZE];
+    char socket_filename[FILENAME_MAX];
     sprintf(socket_filename, "%s/.hello", own_fs_mount_point);
 
     int sock = 0;
@@ -207,6 +205,8 @@ int main() {
         .afu_type = afu,
         .input_agent_pid = input_pid
     };
+    strncpy(request.internal_input_filename, internal_input_filename, sizeof(request.internal_input_filename));
+    strncpy(request.internal_output_filename, internal_output_filename, sizeof(request.internal_output_filename));
 
     // If there's no agent connected to stdin, we have to create a memory-mapped file
     if (input_pid == 0) {
