@@ -4,8 +4,9 @@
 extern "C" {
 #endif
 
-void mtl_initialize();
-
+int mtl_initialize(char* metadata_store);
+int mtl_deinitialize();
+int mtl_open(char* filename);
 
 #ifdef __cplusplus
 }

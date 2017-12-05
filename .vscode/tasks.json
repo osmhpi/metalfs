@@ -22,6 +22,10 @@
                 "base": "$gcc",
                 "fileLocation": ["absolute"]
             }
+        },
+        {
+            "taskName": "./metal_test",
+            "isTestCommand": true
         }
     ]
 }
