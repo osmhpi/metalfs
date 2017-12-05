@@ -6,6 +6,7 @@
         "stdio.h": "c",
         "afu.h": "c",
         "snap_blowfish.h": "c",
-        "action_blowfish.h": "c"
+        "action_blowfish.h": "c",
+        "metal.h": "c"
     }
 }
