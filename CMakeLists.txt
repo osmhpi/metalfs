@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 project(accfs)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}) # Put binaries into root of build tree
 
 set(CMAKE_C_FLAGS "-Wall -Wextra -std=c11")
 
@@ -19,3 +20,5 @@ if(WITH_SNAP)
 endif()
 
 add_subdirectory(src)
+
+add_subdirectory(third_party/googletest)
