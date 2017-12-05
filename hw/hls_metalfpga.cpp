@@ -7,45 +7,97 @@
 
 using namespace std;
 
+static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
+static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
+static snapu64_t mf_extents_prefixsum[MF_SLOT_COUNT][MF_EXTENT_COUNT];
+
+static snapu32_t mf_fill_extents(mf_slot_offset slot, mf_extent_count_t extent_count,
+                                 mf_extent_t direct_extents[6], snap_membus_t * din_gmem)
+{
+    mf_extent_count_t i_extent = 0;
+    snapu64_t prefixsum = 0;
+    for (; i_extent < 5; ++i_extent)
+    {
+        mf_extents_begin[slot][i_extent] = direct_extents[i_extent].begin;
+        snapu64_t count = direct_extents[i_extent].count;
+        prefixsum += count;
+        mf_extents_count[slot][i_extent] = count;
+        mf_extents_prefixsum[slot][i_extent] = prefixsum;
+
+        if (i_extent == extent_count - 1)
+        {
+            return SNAP_RETC_SUCCESS;
+        }
+    }
+    // i_extent == 5, extent_count > 5
+    if (extent_count > 6) {
+        //needs host
+        snapu64_t extent_list_base = direct_extents[5].block_begin;
+        snapu64_t host_block_offset = 0;
+        snap_membus_t memory_block = din_gmem[extent_list_base>>ADDR_RIGHT_SHIFT]
+        for(uint64_t host_offset = 0; i_extent < extent_count; ++i_extent, ++host_offset)
+        {
+            //TODO-lw:
+            // local_offset = (i_extent - 5) % 4
+            // if local_offset == 0: host_block_offset++; load next memory block
+            // interpret memory_block((local_offset+1) * 64 - 1, local_offset * 64) as mf_extent_t (ENDIANNESS!)
+            // calc prefixsum and store extent data
+        }
+        
+    }
+    else
+    {
+        mf_extents_begin[slot][i_extent] = direct_extents[i_extent].begin;
+        snapu64_t count = direct_extents[i_extent].count;
+        prefixsum += count;
+        mf_extents_count[slot][i_extent] = count;
+        mf_extents_prefixsum[slot][i_extent] = prefixsum;
+    }
+    return SNAP_RETC_SUCCESS;
+}
 
 // ------------------------------------------------
 // --------------- ACTION FUNCTIONS ---------------
 // ------------------------------------------------
 
+static snapu32_t action_filemap(snap_membus_t * din_gmem,
+                                snap_membus_t * dout_gmem,
+                                action_reg * action_reg)
+{
+
+
+}
+
+static snapu32_t action_extentop(snap_membus_t * din_gmem,
+                                snap_membus_t * dout_gmem,
+                                action_reg * action_reg)
+{
+}
+
+static snapu32_t action_bufmap(snap_membus_t * din_gmem,
+                                snap_membus_t * dout_gmem,
+                                action_reg * action_reg)
+{
+}
 
 static snapu32_t process_action(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
                                 action_reg * action_reg)
 {
-    /* snapu64_t inAddr; */
-    /* snapu64_t outAddr; */
-    /* snapu32_t byteCount; */
-    /* snapu32_t mode; */
+    snapu8_t function_code;
+    function_code = action_reg->Data.function;
 
-    /* // byte address received need to be aligned with port width */
-    /* inAddr  = action_reg->Data.input_data.addr; */
-    /* outAddr  = action_reg->Data.output_data.addr; */
-    /* byteCount = action_reg->Data.data_length; */
-    /* mode = action_reg->Data.mode; */
-
-    snapu32_t retc = SNAP_RETC_SUCCESS;
-    /* switch (mode) { */
-    /* case MODE_SET_KEY: */
-    /*     retc = action_setkey(din_gmem, inAddr, byteCount); */
-    /*     break; */
-    /* case MODE_ENCRYPT: */
-    /*     retc = action_endecrypt(din_gmem, inAddr, dout_gmem, outAddr, */
-    /*                 byteCount, 0); */
-    /*     break; */
-    /* case MODE_DECRYPT: */
-    /*     retc = action_endecrypt(din_gmem, inAddr, dout_gmem, outAddr, */
-    /*                 byteCount, 1); */
-    /*     break; */
-    /* default: */
-    /*     break; */
-    /* } */
-
-    return retc;
+    switch(function_code)
+    {
+        case MF_FUNC_FILEMAP:
+            return action_filemap(din_gmem, dout_gmem, act_reg);
+        case MF_FUNC_EXTENTOP:
+            return action_extentop(din_gmem, dout_gmem, act_reg);
+        case MF_FUNC_EXTENTOP:
+            return action_bufmap(din_gmem, dout_gmem, act_reg);
+        default:
+            return SNAP_RETC_SUCCESS;
+    }
 }
 
 // This example doesn't use FPGA DDR.
@@ -69,7 +121,7 @@ void hls_action(snap_membus_t  *din_gmem, snap_membus_t  *dout_gmem,
     /* Required Action Type Detection */
     switch (action_reg->Control.flags) {
         case 0:
-        Action_Config->action_type = (snapu32_t)FS_ACTION_TYPE;
+        Action_Config->action_type = (snapu32_t)METALFPGA_ACTION_TYPE;
         Action_Config->release_level = (snapu32_t)HW_RELEASE_LEVEL;
         action_reg->Control.Retc = (snapu32_t)0xe00f;
         break;
