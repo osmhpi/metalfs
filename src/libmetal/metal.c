@@ -7,7 +7,9 @@
 
 #include <lmdb.h>
 
+#include "extent.h"
 #include "inode.h"
+#include "meta.h"
 
 #include "metal.h"
 
@@ -16,7 +18,7 @@ MDB_env *env;
 int mtl_initialize(const char *metadata_store) {
 
     mdb_env_create(&env);
-    mdb_env_set_maxdbs(env, 2); // inodes, extents
+    mdb_env_set_maxdbs(env, 3); // inodes, extents, meta
     mdb_env_open(env, metadata_store, 0, 0644);
 
     MDB_txn *txn;
@@ -94,22 +96,6 @@ int mtl_open(const char* filename) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-
-    // // Open the files database if necessary
-    // if (inodes_db == 0)
-    //     mdb_dbi_open(txn, INODES_DB_NAME, MDB_CREATE, &inodes_db);
-
-    // // Try to find a file object with the provided name
-    // MDB_val key = { .mv_size = strlen(filename), .mv_data = filename };
-    // MDB_val inode_val;
-    // int res = mdb_get(txn, inodes_db, &key, &inode_val);
-    // if (res == MDB_NOTFOUND) {
-    //     // Create if not exists
-    //     mtl_inode inode = { .type = 0 };
-    //     inode_val.mv_size = sizeof(inode), inode_val.mv_data = &inode;
-    //     mdb_put(txn, inodes_db, &key, &inode_val, 0);
-    // }
-
     
     uint64_t inode_id;
     int res = mtl_resolve_inode(txn, filename, &inode_id);
