@@ -1,11 +1,19 @@
 set(
     SOURCES
+    extent.c
+    inode.c
+    meta.c
     metal.c
 )
 
 set(
     LIBRARIES
-    sqlite3
+    lmdb
+)
+
+
+include_directories(
+    ${LMDB_INCLUDE_DIR}
 )
 
 add_library(libmetal STATIC ${SOURCES})

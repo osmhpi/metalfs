@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(accfs)
+project(metal_fs)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}) # Put binaries into root of build tree
@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "-Wall -Wextra -std=c11")
 
 find_package(FUSE REQUIRED)
 find_package(Threads REQUIRED)
-find_package(sqlite3 REQUIRED)
+find_package(LMDB REQUIRED)
 
 option(WITH_SNAP "Build with snap" ON)
 
