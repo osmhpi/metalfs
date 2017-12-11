@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #define MTL_SUCCESS 0
 #define MTL_ERROR_NOENTRY 2
 #define MTL_ERROR_EXISTS 17
@@ -13,9 +15,10 @@ extern "C" {
 int mtl_initialize(const char* metadata_store);
 int mtl_deinitialize();
 
-int mtl_open(const char* filename);
-int mtl_mkdir(const char* filename);
-int mtl_create(const char* filename);
+int mtl_open(const char *filename);
+int mtl_mkdir(const char *filename);
+int mtl_create(const char *filename);
+int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
 
 #ifdef __cplusplus
 }

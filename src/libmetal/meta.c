@@ -40,4 +40,5 @@ uint64_t mtl_next_inode_id(MDB_txn *txn) {
 
 int mtl_reset_meta_db() {
     meta_db = 0;
+    return MTL_SUCCESS;
 }

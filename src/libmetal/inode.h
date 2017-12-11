@@ -24,6 +24,13 @@ typedef struct mtl_directory_entry_head {
     uint8_t name_len;
 } mtl_directory_entry_head;
 
+typedef struct mtl_file_extent {
+    uint64_t offset;
+    uint64_t length;
+} mtl_file_extent;
+
+int mtl_load_file(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_file_extent **extents, uint64_t *extents_length);
+int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, mtl_file_extent *extents, uint64_t extents_length, mtl_file_extent *new_extent);
 int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *file_inode_id);
 
 int mtl_create_root_directory(MDB_txn *txn);

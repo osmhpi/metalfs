@@ -18,7 +18,7 @@ int mtl_ensure_inodes_db_open(MDB_txn *txn) {
     return MTL_SUCCESS;
 }
 
-int mtl_load_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, void **data) {
+int mtl_load_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, void **data, uint64_t *data_length) {
 
     mtl_ensure_inodes_db_open(txn);
 
@@ -33,6 +33,8 @@ int mtl_load_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, void **da
     *inode = (mtl_inode*) inode_value.mv_data;
     if (data != NULL)
         *data = inode_value.mv_data + sizeof(mtl_inode);
+    if (data_length != NULL)
+        *data_length = inode_value.mv_size - sizeof(mtl_inode);
 
     return MTL_SUCCESS;
 }
@@ -56,6 +58,16 @@ mtl_directory_entry_head* mtl_load_next_directory_entry(void *dir_data, uint64_t
     return result;
 }
 
+int mtl_load_file(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_file_extent **extents, uint64_t *extents_length) {
+
+    uint64_t data_length;
+    int res = mtl_load_inode(txn, inode_id, inode, extents, &data_length);
+    if (extents_length != NULL)
+        *extents_length = data_length / sizeof(mtl_file_extent);
+
+    return res;
+}
+
 int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char* filename, uint64_t *file_inode_id) {
 
     // TODO: Check if len(filename) < FILENAME_MAX = 2^8 = 256
@@ -63,7 +75,7 @@ int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char* fi
 
     mtl_inode *dir_inode;
     void *dir_data;
-    mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_data);
+    mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_data, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
         return MTL_ERROR_NOTDIRECTORY;
@@ -104,6 +116,16 @@ int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, void* data,
     return MTL_SUCCESS;
 }
 
+int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, mtl_file_extent *extents, uint64_t extents_length, mtl_file_extent *new_extent) {
+
+    inode->length += new_extent->length;
+
+    mtl_file_extent extent_data [extents_length+1];
+    memcpy(extent_data, extents, extents_length * sizeof(mtl_file_extent));
+    memcpy(extent_data + extents_length, new_extent, sizeof(mtl_file_extent));
+    return mtl_put_inode(txn, inode_id, inode, extent_data, sizeof(extent_data));
+}
+
 int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t inode_id) {
 
     // TODO: Check if len(filename) < FILENAME_MAX = 2^8 = 256
@@ -111,7 +133,7 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
 
     mtl_inode *dir_inode;
     void *dir_inode_data;
-    mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_inode_data);
+    mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_inode_data, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
         return MTL_ERROR_NOTDIRECTORY;
@@ -237,4 +259,5 @@ int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *file
 
 int mtl_reset_inodes_db() {
     inodes_db = 0;
+    return MTL_SUCCESS;
 }

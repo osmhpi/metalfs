@@ -1,5 +1,7 @@
 #include <lmdb.h>
 
+#include "metal.h"
+
 #include "extent.h"
 
 #define EXTENTS_DB_NAME "extents"
@@ -12,10 +14,9 @@ int mtl_ensure_extents_db_open(MDB_txn *txn) {
     return 0;
 }
 
-uint64_t mtl_reserve_extent(uint64_t desired_min_size, uint8_t expected_writers, uint64_t *offset) {
+uint64_t mtl_reserve_extent(uint64_t _size, uint64_t *offset) {
     // Pop from heap
     // Split up if necessary
-    // Update list links
     // Insert remaning extent into heap
     // Return offset and size
     return 0;
@@ -38,4 +39,5 @@ int mtl_free_extent(uint64_t offset) {
 
 int mtl_reset_extents_db() {
     extents_db = 0;
+    return MTL_SUCCESS;
 }

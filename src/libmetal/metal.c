@@ -166,3 +166,34 @@ int mtl_create(const char *filename) {
     free(basec);
     return MTL_SUCCESS;
 }
+
+int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    // Check how long we intend to write
+    uint64_t write_end = offset + size;
+
+    mtl_inode *inode;
+    mtl_file_extent *extents;
+    uint64_t extents_length;
+    mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+
+    while (inode->length < write_end) {
+
+        // Allocate a new occupied extent with the requested length
+        mtl_file_extent new_extent;
+        new_extent.length = mtl_reserve_extent(inode->length - write_end, &new_extent.offset);
+
+        // Assign it to the file
+        mtl_add_extent_to_file(txn, inode_id, inode, extents, extents_length, &new_extent);
+    }
+
+
+    mdb_txn_commit(txn);
+
+    // Copy the actual data to the FPGA
+    
+    return MTL_SUCCESS;
+}
