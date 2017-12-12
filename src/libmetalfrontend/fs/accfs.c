@@ -15,6 +15,7 @@
 #include "../common/afus.h"
 #include "server.h"
 #include "afu.h"
+#include "../../libmetal/metal.h"
 
 static const char *agent_filepath = "./afu_agent";
 
@@ -55,6 +56,17 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
         return 0;
+    }
+
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+        if (mtl_open(path + 6) == MTL_SUCCESS) {
+            stbuf->st_mode = S_IFREG | 0755;
+            stbuf->st_nlink = 2;
+            return 0;
+        }
+
+        return -ENOENT;
     }
 
     snprintf(test_filename, FILENAME_MAX, "/%s", socket_alias);
@@ -99,12 +111,11 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     (void) offset;
     (void) fi;
 
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-
     char test_filename[FILENAME_MAX];
 
     if (strcmp(path, "/") == 0) {
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
         filler(buf, socket_alias, NULL, 0);
         filler(buf, afus_dir, NULL, 0);
         filler(buf, files_dir, NULL, 0);
@@ -113,6 +124,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     snprintf(test_filename, FILENAME_MAX, "/%s", afus_dir);
     if (strcmp(path, test_filename) == 0) {
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
         for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
             filler(buf, afus[i].name, NULL, 0);
         }
@@ -121,11 +134,45 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
     if (strcmp(path, test_filename) == 0) {
-        filler(buf, "file1", NULL, 0);
-        return 0;
+        mtl_dir *dir;
+
+        // +6, because path = "/files/<filename>", but we only want "/filename"
+        int res;
+        if (strlen(path + 6) == 0) {
+            res = mtl_opendir("/", &dir);
+        } else {
+            res = mtl_opendir(path + 6, &dir);
+        }
+
+        if (res != MTL_SUCCESS) {
+            return -res;
+        }
+
+        char current_filename[FILENAME_MAX];
+        int readdir_status;
+        while ((readdir_status = mtl_readdir(dir, current_filename, sizeof(current_filename))) != MTL_COMPLETE) {
+            filler(buf, current_filename, NULL, 0);
+        }
     }
 
     return 0;
+}
+
+static int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi)
+{
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+        res = mtl_create(path + 6);
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    return -ENOSYS;
 }
 
 static int readlink_callback(const char *path, char *buf, size_t size) {
@@ -143,7 +190,20 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
     (void)path;
     (void)fi;
 
-    return 0;
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+        res = mtl_open(path + 6);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    return -ENOSYS;
 }
 
 static int read_callback(const char *path, char *buf, size_t size, off_t offset,
@@ -276,7 +336,8 @@ static struct fuse_operations fuse_example_operations = {
     .readlink = readlink_callback,
     .release = release_callback,
     .truncate = truncate_callback,
-    .write = write_callback
+    .write = write_callback,
+    .create = create_callback
 };
 
 int main(int argc, char *argv[])
@@ -291,6 +352,8 @@ int main(int argc, char *argv[])
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
+
+    mtl_initialize("metadata_store");
 
     return fuse_main(argc, argv, &fuse_example_operations, NULL);
 }

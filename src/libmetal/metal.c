@@ -15,11 +15,22 @@
 
 MDB_env *env;
 
+
+typedef struct mtl_dir {
+    uint64_t length;
+    mtl_directory_entry_head *first;
+    mtl_directory_entry_head *next;
+} mtl_dir;
+
 int mtl_initialize(const char *metadata_store) {
 
     mdb_env_create(&env);
     mdb_env_set_maxdbs(env, 3); // inodes, extents, meta
-    mdb_env_open(env, metadata_store, 0, 0644);
+    int res = mdb_env_open(env, metadata_store, 0, 0644);
+
+    if (res == MDB_INVALID) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, 0, &txn);
@@ -68,7 +79,13 @@ int mtl_resolve_inode(MDB_txn *txn, const char *path, uint64_t *inode_id) {
         }
     }
 
-    res = mtl_resolve_inode_in_directory(txn, dir_inode_id, base, inode_id);
+    if (strcmp(base, "/") == 0) {
+        *inode_id = 0;
+        res = MTL_SUCCESS;
+    } else {
+        res = mtl_resolve_inode_in_directory(txn, dir_inode_id, base, inode_id);
+    }
+
     free(dirc), free(basec);
     return res;
 }
@@ -87,7 +104,7 @@ int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path, uint64_t *inode
     } else {
         res = mtl_resolve_inode(txn, dir, inode_id);
     }
-    
+
     free(dirc);
     return res;
 }
@@ -96,13 +113,75 @@ int mtl_open(const char* filename) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-    
+
     uint64_t inode_id;
     int res = mtl_resolve_inode(txn, filename, &inode_id);
-    
+
     mdb_txn_abort(txn);
 
     return res;
+}
+
+int mtl_opendir(const char *filename, mtl_dir **dir) {
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+
+    uint64_t inode_id;
+    int res = mtl_resolve_inode(txn, filename, &inode_id);
+
+    mtl_inode *dir_inode;
+    mtl_directory_entry_head *dir_entries;
+    res = mtl_load_directory(txn, inode_id, &dir_inode, &dir_entries, NULL);
+
+    char* dir_data = malloc(sizeof(mtl_dir) + dir_inode->length);
+
+    *dir = (mtl_dir*) dir_data;
+    (*dir)->length = dir_inode->length;
+    (*dir)->next = (mtl_directory_entry_head*) (dir_data + sizeof(mtl_dir));
+    (*dir)->first = (*dir)->next;
+
+    memcpy(dir_data + sizeof(mtl_dir), dir_entries, dir_inode->length);
+
+    // we can abort because we only read
+    mdb_txn_abort(txn);
+
+    return res;
+}
+
+int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size) {
+
+    if (dir->next != NULL) {
+        strncpy(
+            buffer,
+            (char*) dir->next + sizeof(mtl_directory_entry_head),
+            size < dir->next->name_len ? size : dir->next->name_len
+        );
+
+        // Null-terminate
+        if (size > dir->next->name_len)
+            buffer[dir->next->name_len] = '\0';
+
+        mtl_directory_entry_head *next = (mtl_directory_entry_head*) (
+            (char*) dir->next +
+            sizeof(mtl_directory_entry_head) +
+            dir->next->name_len
+        );
+
+        if ((char*) next + sizeof(mtl_directory_entry_head) > (char*) dir->first + dir->length) {
+            next = NULL;
+        }
+        dir->next = next;
+
+        return MTL_SUCCESS;
+    }
+
+    return MTL_COMPLETE;
+}
+
+int mtl_closedir(mtl_dir *dir) {
+    free(dir);
+    return MTL_SUCCESS;
 }
 
 int mtl_mkdir(const char *filename) {
@@ -194,6 +273,6 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
     mdb_txn_commit(txn);
 
     // Copy the actual data to the FPGA
-    
+
     return MTL_SUCCESS;
 }
