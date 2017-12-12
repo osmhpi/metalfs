@@ -178,6 +178,15 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
 
 int mtl_create_root_directory(MDB_txn *txn) {
 
+    mtl_ensure_inodes_db_open(txn);
+
+    // Check if a root directory already exists
+    uint64_t root_inode_id = 0;
+    MDB_val root_dir_key = { .mv_data = &root_inode_id, .mv_size = sizeof(root_inode_id)};
+    MDB_val root_dir_value;
+    if (mdb_get(txn, inodes_db, &root_dir_key, &root_dir_value) == MDB_SUCCESS)
+        return MTL_SUCCESS;
+
     // Create a root inode
     mtl_inode root_inode = {
         .type = MTL_DIRECTORY,
@@ -189,9 +198,9 @@ int mtl_create_root_directory(MDB_txn *txn) {
         .created = 0
     };
 
-    mtl_put_inode(txn, 0, &root_inode, NULL, 0);
-    mtl_append_inode_id_to_directory(txn, 0, ".", 0);
-    mtl_append_inode_id_to_directory(txn, 0, "..", 0);
+    mtl_put_inode(txn, root_inode_id, &root_inode, NULL, 0);
+    mtl_append_inode_id_to_directory(txn, root_inode_id, ".", root_inode_id);
+    mtl_append_inode_id_to_directory(txn, root_inode_id, "..", root_inode_id);
 
     return MTL_SUCCESS;
 }
@@ -216,9 +225,22 @@ int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char 
         .created = 0
     };
 
-    mtl_put_inode(txn, *directory_file_inode_id, &dir_inode, NULL, 0);
-    mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, ".", *directory_file_inode_id);
-    mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, "..", dir_inode_id);
+    res = mtl_put_inode(txn, *directory_file_inode_id, &dir_inode, NULL, 0);
+    if (res != MTL_SUCCESS) {
+        return res;
+    }
+
+    res = mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, ".", *directory_file_inode_id);
+    if (res != MTL_SUCCESS) {
+        return res;
+    }
+
+    res = mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, "..", dir_inode_id);
+    if (res != MTL_SUCCESS) {
+        return res;
+    }
+
+    return MTL_SUCCESS;
 }
 
 int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *file_inode_id) {

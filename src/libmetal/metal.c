@@ -26,7 +26,11 @@ int mtl_initialize(const char *metadata_store) {
 
     mdb_env_create(&env);
     mdb_env_set_maxdbs(env, 3); // inodes, extents, meta
-    mdb_env_open(env, metadata_store, 0, 0644);
+    int res = mdb_env_open(env, metadata_store, 0, 0644);
+
+    if (res == MDB_INVALID) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, 0, &txn);
