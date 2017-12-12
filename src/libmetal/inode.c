@@ -14,7 +14,7 @@ int mtl_ensure_inodes_db_open(MDB_txn *txn) {
 
     if (inodes_db == 0)
         mdb_dbi_open(txn, INODES_DB_NAME, MDB_CREATE, &inodes_db);
-    
+
     return MTL_SUCCESS;
 }
 
@@ -85,14 +85,14 @@ int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char* fi
     if (dir_inode->type != MTL_DIRECTORY) {
         return MTL_ERROR_NOTDIRECTORY;
     }
-    
+
     mtl_directory_entry_head *current_entry = NULL;
     char *current_filename = NULL;
     while ((current_entry = mtl_load_next_directory_entry(dir_data, dir_inode->length, current_entry, &current_filename)) != NULL) {
         // File names are not null-terminated, so we *have* to use strncmp
         if (filename_length != current_entry->name_len)
             continue;
-        
+
         if (strncmp(current_filename, filename, current_entry->name_len) == 0) {
             // This is the entry we're looking for!
             *file_inode_id = current_entry->inode_id;
@@ -104,7 +104,7 @@ int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char* fi
 }
 
 int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, void* data, uint64_t data_length) {
-    
+
     mtl_ensure_inodes_db_open(txn);
 
     uint64_t inode_data_length = sizeof(*inode) + data_length;
@@ -156,7 +156,7 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
         }
     }
 
-    uint64_t new_data_length = dir_inode->length + 
+    uint64_t new_data_length = dir_inode->length +
                                sizeof(mtl_directory_entry_head) + filename_length;
 
     mtl_inode new_dir_inode = *dir_inode;
@@ -178,19 +178,22 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
 
 int mtl_create_root_directory(MDB_txn *txn) {
 
-    // TODO: Fix
-
     // Create a root inode
     mtl_inode root_inode = {
         .type = MTL_DIRECTORY,
-        .length = 0,
+        .length = 0, //sizeof(dir_data),
         .user = 0,
         .group = 0,
         .accessed = 0,
         .modified = 0,
         .created = 0
     };
-    return mtl_put_inode(txn, 0, &root_inode, NULL, 0);
+
+    mtl_put_inode(txn, 0, &root_inode, NULL, 0);
+    mtl_append_inode_id_to_directory(txn, 0, ".", 0);
+    mtl_append_inode_id_to_directory(txn, 0, "..", 0);
+
+    return MTL_SUCCESS;
 }
 
 int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *directory_file_inode_id) {
@@ -203,32 +206,9 @@ int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char 
         return res;
     }
 
-    // Craft a new directory file
-
-    char this_dir[] = ".";
-    uint64_t this_dir_len = strlen(this_dir);
-    char parent_dir[] = "..";
-    uint64_t parent_dir_len = strlen(parent_dir);
-
-    char dir_data[
-        sizeof(mtl_directory_entry_head) + this_dir_len +
-        sizeof(mtl_directory_entry_head) + parent_dir_len
-    ];
-
-    mtl_directory_entry_head *this_dir_entry_head = (mtl_directory_entry_head*) dir_data;
-    this_dir_entry_head->inode_id = *directory_file_inode_id;
-    this_dir_entry_head->name_len = this_dir_len;
-    memcpy(dir_data + sizeof(mtl_directory_entry_head), this_dir, this_dir_len);
-
-    mtl_directory_entry_head *parent_dir_entry_head = (mtl_directory_entry_head*) dir_data + this_dir_len;
-    parent_dir_entry_head->inode_id = dir_inode_id;
-    parent_dir_entry_head->name_len = parent_dir_len;
-    memcpy(dir_data + sizeof(mtl_directory_entry_head) + this_dir_len +
-        sizeof(mtl_directory_entry_head), parent_dir, parent_dir_len);
-
     mtl_inode dir_inode = {
         .type = MTL_DIRECTORY,
-        .length = sizeof(dir_data),
+        .length = 0, // sizeof(dir_data),
         .user = 0,
         .group = 0,
         .accessed = 0,
@@ -236,7 +216,9 @@ int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char 
         .created = 0
     };
 
-    return mtl_put_inode(txn, *directory_file_inode_id, &dir_inode, dir_data, sizeof(dir_data));
+    mtl_put_inode(txn, *directory_file_inode_id, &dir_inode, NULL, 0);
+    mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, ".", *directory_file_inode_id);
+    mtl_append_inode_id_to_directory(txn, *directory_file_inode_id, "..", dir_inode_id);
 }
 
 int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *file_inode_id) {

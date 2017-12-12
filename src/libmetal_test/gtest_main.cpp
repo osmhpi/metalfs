@@ -73,11 +73,25 @@ TEST_F(MetalTest, FailsWhenOpeningNonExistentFile) {
 }
 
 TEST_F(MetalTest, ListsDirectoryContents) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  ASSERT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+
   mtl_dir *dir;
-  EXPECT_EQ(MTL_SUCCESS, mtl_opendir("/", &dir));
-  EXPECT_STREQ("foo", mtl_readdir(dir));
-  EXPECT_EQ(NULL, mtl_readdir(dir));
+  ASSERT_EQ(MTL_SUCCESS, mtl_opendir("/", &dir));
+
+  char current_filename[FILENAME_MAX];
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_STREQ(".", current_filename);
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_STREQ("..", current_filename);
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_STREQ("foo", current_filename);
+
+  EXPECT_EQ(MTL_COMPLETE, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_closedir(dir));
 }
 
 }  // namespace

@@ -100,7 +100,7 @@ int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path, uint64_t *inode
     } else {
         res = mtl_resolve_inode(txn, dir, inode_id);
     }
-    
+
     free(dirc);
     return res;
 }
@@ -109,10 +109,10 @@ int mtl_open(const char* filename) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-    
+
     uint64_t inode_id;
     int res = mtl_resolve_inode(txn, filename, &inode_id);
-    
+
     mdb_txn_abort(txn);
 
     return res;
@@ -122,10 +122,10 @@ int mtl_opendir(const char *filename, mtl_dir **dir) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-    
+
     uint64_t inode_id;
     int res = mtl_resolve_inode(txn, filename, &inode_id);
-    
+
     mtl_inode *dir_inode;
     mtl_directory_entry_head *dir_entries;
     res = mtl_load_directory(txn, inode_id, &dir_inode, &dir_entries, NULL);
@@ -138,27 +138,46 @@ int mtl_opendir(const char *filename, mtl_dir **dir) {
     (*dir)->first = (*dir)->next;
 
     memcpy(dir_data + sizeof(mtl_dir), dir_entries, dir_inode->length);
-    
+
     // we can abort because we only read
     mdb_txn_abort(txn);
 
     return res;
 }
 
-char* mtl_readdir(mtl_dir *dir) {
-    
-    char* result = (char*) dir->next;
-    if (result != NULL) {
-        mtl_directory_entry_head *next = (mtl_directory_entry_head*) (result + sizeof(mtl_directory_entry_head) + dir->next->name_len);
-        if ((char*) next >= (char*) dir->first + dir->length) {
+int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size) {
+
+    if (dir->next != NULL) {
+        strncpy(
+            buffer,
+            (char*) dir->next + sizeof(mtl_directory_entry_head),
+            size < dir->next->name_len ? size : dir->next->name_len
+        );
+
+        // Null-terminate
+        if (size > dir->next->name_len)
+            buffer[dir->next->name_len] = '\0';
+
+        mtl_directory_entry_head *next = (mtl_directory_entry_head*) (
+            (char*) dir->next +
+            sizeof(mtl_directory_entry_head) +
+            dir->next->name_len
+        );
+
+        if ((char*) next + sizeof(mtl_directory_entry_head) > (char*) dir->first + dir->length) {
             next = NULL;
         }
         dir->next = next;
-        
-        return result + sizeof(mtl_directory_entry_head);
+
+        return MTL_SUCCESS;
     }
 
-    return NULL;
+    return MTL_COMPLETE;
+}
+
+int mtl_closedir(mtl_dir *dir) {
+    free(dir);
+    return MTL_SUCCESS;
 }
 
 int mtl_mkdir(const char *filename) {
@@ -250,6 +269,6 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
     mdb_txn_commit(txn);
 
     // Copy the actual data to the FPGA
-    
+
     return MTL_SUCCESS;
 }
