@@ -15,6 +15,7 @@
 #include "../common/afus.h"
 #include "server.h"
 #include "afu.h"
+#include "../../libmetal/metal.h"
 
 static const char *agent_filepath = "./afu_agent";
 
@@ -121,8 +122,14 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
     if (strcmp(path, test_filename) == 0) {
-        filler(buf, "file1", NULL, 0);
-        return 0;
+        char current_filename[FILENAME_MAX];
+        mtl_dir *dir;
+        int res = mtl_opendir(path + 6, &dir); //+6, because path = "/files/<filename>", but we only want "/filename"
+        int readdir_status = mtl_readdir(dir, current_filename, sizeof(current_filename));
+        while (readdir_status != MTL_COMPLETE){
+            filler(buf, current_filename, NULL, 0);
+            readdir_status = mtl_readdir(dir, current_filename, sizeof(current_filename));
+        }
     }
 
     return 0;
@@ -291,6 +298,8 @@ int main(int argc, char *argv[])
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
+
+    mtl_initialize("metadata_store");
 
     return fuse_main(argc, argv, &fuse_example_operations, NULL);
 }
