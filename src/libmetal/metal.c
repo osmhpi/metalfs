@@ -15,6 +15,13 @@
 
 MDB_env *env;
 
+
+typedef struct mtl_dir {
+    uint64_t length;
+    mtl_directory_entry_head *first;
+    mtl_directory_entry_head *next;
+} mtl_dir;
+
 int mtl_initialize(const char *metadata_store) {
 
     mdb_env_create(&env);
@@ -68,7 +75,13 @@ int mtl_resolve_inode(MDB_txn *txn, const char *path, uint64_t *inode_id) {
         }
     }
 
-    res = mtl_resolve_inode_in_directory(txn, dir_inode_id, base, inode_id);
+    if (strcmp(base, "/") == 0) {
+        *inode_id = 0;
+        res = MTL_SUCCESS;
+    } else {
+        res = mtl_resolve_inode_in_directory(txn, dir_inode_id, base, inode_id);
+    }
+
     free(dirc), free(basec);
     return res;
 }
@@ -103,6 +116,49 @@ int mtl_open(const char* filename) {
     mdb_txn_abort(txn);
 
     return res;
+}
+
+int mtl_opendir(const char *filename, mtl_dir **dir) {
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    
+    uint64_t inode_id;
+    int res = mtl_resolve_inode(txn, filename, &inode_id);
+    
+    mtl_inode *dir_inode;
+    mtl_directory_entry_head *dir_entries;
+    res = mtl_load_directory(txn, inode_id, &dir_inode, &dir_entries, NULL);
+
+    char* dir_data = malloc(sizeof(mtl_dir) + dir_inode->length);
+
+    *dir = (mtl_dir*) dir_data;
+    (*dir)->length = dir_inode->length;
+    (*dir)->next = (mtl_directory_entry_head*) (dir_data + sizeof(mtl_dir));
+    (*dir)->first = (*dir)->next;
+
+    memcpy(dir_data + sizeof(mtl_dir), dir_entries, dir_inode->length);
+    
+    // we can abort because we only read
+    mdb_txn_abort(txn);
+
+    return res;
+}
+
+char* mtl_readdir(mtl_dir *dir) {
+    
+    char* result = (char*) dir->next;
+    if (result != NULL) {
+        mtl_directory_entry_head *next = (mtl_directory_entry_head*) (result + sizeof(mtl_directory_entry_head) + dir->next->name_len);
+        if ((char*) next >= (char*) dir->first + dir->length) {
+            next = NULL;
+        }
+        dir->next = next;
+        
+        return result + sizeof(mtl_directory_entry_head);
+    }
+
+    return NULL;
 }
 
 int mtl_mkdir(const char *filename) {

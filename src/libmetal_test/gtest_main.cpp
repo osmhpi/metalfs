@@ -72,6 +72,14 @@ TEST_F(MetalTest, FailsWhenOpeningNonExistentFile) {
   EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt"));
 }
 
+TEST_F(MetalTest, ListsDirectoryContents) {
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  mtl_dir *dir;
+  EXPECT_EQ(MTL_SUCCESS, mtl_opendir("/", &dir));
+  EXPECT_STREQ("foo", mtl_readdir(dir));
+  EXPECT_EQ(NULL, mtl_readdir(dir));
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {

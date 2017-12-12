@@ -58,6 +58,11 @@ mtl_directory_entry_head* mtl_load_next_directory_entry(void *dir_data, uint64_t
     return result;
 }
 
+int mtl_load_directory(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_directory_entry_head **dir_entries, uint64_t *entries_length) {
+
+    return mtl_load_inode(txn, inode_id, inode, dir_entries, &entries_length);
+}
+
 int mtl_load_file(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_file_extent **extents, uint64_t *extents_length) {
 
     uint64_t data_length;
