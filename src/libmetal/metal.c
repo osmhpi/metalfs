@@ -90,8 +90,8 @@ int mtl_resolve_inode(MDB_txn *txn, const char *path, uint64_t *inode_id) {
     return res;
 }
 
-int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path, uint64_t *inode_id)
-{
+int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path, uint64_t *inode_id) {
+
     int res;
     char *dirc, *dir;
 
@@ -106,6 +106,28 @@ int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path, uint64_t *inode
     }
 
     free(dirc);
+    return res;
+}
+
+int mtl_get_inode(const char *path, mtl_inode *inode) {
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+
+    uint64_t inode_id;
+    int res = mtl_resolve_inode(txn, path, &inode_id);
+    if (res != MTL_SUCCESS) { // early exit because inode resolving failed
+        mdb_txn_abort(txn);
+        return res;
+    }
+    
+    mtl_inode *db_inode;
+    res = mtl_load_inode(txn, inode_id, &db_inode, NULL, NULL); // NULLs because we are only interested in the inode, not the data behind it
+    if (res == MTL_SUCCESS) {
+        memcpy(inode, db_inode, sizeof(mtl_inode)); // need to copy because db_inode pointer points to invalid memory after aborting the DB transaction
+    }
+
+    mdb_txn_abort(txn);
     return res;
 }
 

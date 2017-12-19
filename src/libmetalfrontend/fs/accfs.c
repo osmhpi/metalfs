@@ -16,6 +16,7 @@
 #include "server.h"
 #include "afu.h"
 #include "../../libmetal/metal.h"
+#include "../../libmetal/inode.h"
 
 static const char *agent_filepath = "./afu_agent";
 
@@ -25,17 +26,16 @@ static const char *socket_alias = ".hello";
 static char socket_filename[255];
 
 
-static int chown_callback(const char *path, uid_t uid, gid_t gid,
-             struct fuse_file_info *fi)
-{
-    (void) fi;
+static int chown_callback(const char *path, uid_t uid, gid_t gid) {
 
+    
     return 0;
 }
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
 
+    int res;
     char test_filename[FILENAME_MAX];
 
     if (strcmp(path, "/") == 0) {
@@ -60,13 +60,31 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
 
     snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
     if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
-        if (mtl_open(path + 6) == MTL_SUCCESS) {
-            stbuf->st_mode = S_IFREG | 0755;
-            stbuf->st_nlink = 2;
-            return 0;
-        }
+          mtl_inode inode;
 
-        return -ENOENT;
+          res = mtl_get_inode(path + 6, &inode);
+          if (res != MTL_SUCCESS) {
+            return -res;
+          }
+
+          stbuf->st_dev; // device ID? can we put something meaningful here?
+          stbuf->st_ino; // TODO: inode-ID
+          stbuf->st_mode; // set according to filetype below
+          stbuf->st_nlink; // number of hard links to file. since we don't support hardlinks as of now, this will always be 0. 
+          stbuf->st_uid = inode.user; // user-ID of owner
+          stbuf->st_gid = inode.group; // group-ID of owner
+          stbuf->st_rdev; // unused, since this field is meant for special files which we do not have in our FS
+          stbuf->st_size = inode.length; // length of referenced file in byte
+          stbuf->st_blksize; // our blocksize. 4k?
+          stbuf->st_blocks; // number of 512B blocks belonging to file. TODO: needs to be set in inode whenever we write an extent
+          stbuf->st_atime = inode.accessed; // time of last read or write
+          stbuf->st_mtime = inode.modified; // time of last write
+          stbuf->st_ctime = inode.created; // time of last change to either content or inode-data
+
+
+          stbuf->st_mode = S_IFREG | 0755;
+          stbuf->st_nlink = 2;
+          return 0;
     }
 
     snprintf(test_filename, FILENAME_MAX, "/%s", socket_alias);
@@ -82,8 +100,6 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
-
-        int res;
 
         res = lstat(agent_filepath, stbuf);
         if (res == -1)
@@ -259,7 +275,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         return res;
     }
 
-  return -ENOENT;
+    return -ENOENT;
 }
 
 static int release_callback(const char *path, struct fuse_file_info *fi)

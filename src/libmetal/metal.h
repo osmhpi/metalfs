@@ -16,9 +16,11 @@ extern "C" {
 int mtl_initialize(const char* metadata_store);
 int mtl_deinitialize();
 
+typedef struct mtl_inode mtl_inode;
 struct mtl_dir;
 typedef struct mtl_dir mtl_dir;
 
+int mtl_get_inode(const char *path, mtl_inode *inode);
 int mtl_open(const char *filename);
 int mtl_opendir(const char *filename, mtl_dir **dir);
 int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size);
