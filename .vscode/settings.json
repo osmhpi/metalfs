@@ -16,6 +16,7 @@
         "string_view": "c",
         "utility": "c",
         "inode.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "functional": "c"
     }
 }

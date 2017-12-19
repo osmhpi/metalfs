@@ -25,7 +25,7 @@ typedef struct mtl_dir {
 int mtl_initialize(const char *metadata_store) {
 
     mdb_env_create(&env);
-    mdb_env_set_maxdbs(env, 3); // inodes, extents, meta
+    mdb_env_set_maxdbs(env, 4); // inodes, extents, heap, meta
     int res = mdb_env_open(env, metadata_store, 0, 0644);
 
     if (res == MDB_INVALID) {

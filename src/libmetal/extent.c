@@ -1,12 +1,20 @@
 #include <lmdb.h>
 
+#include <stddef.h>
+
 #include "metal.h"
 
 #include "extent.h"
 
 #define EXTENTS_DB_NAME "extents"
+#define INVALID_EXTENT (1 << 63)
 
 MDB_dbi extents_db = 0;
+
+typedef struct mtl_hollow_heap {
+    uint64_t root;
+    uint64_t size;
+} mtl_hollow_heap;
 
 int mtl_ensure_extents_db_open(MDB_txn *txn) {
     if (extents_db == 0)

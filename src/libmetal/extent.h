@@ -19,6 +19,7 @@ typedef struct mtl_extent {
     // Part of a hollow heap
     uint64_t h_second_parent;
     uint64_t h_next;
+    uint64_t h_child;
     uint64_t h_rank;
     bool h_hollow;
 } mtl_extent;
