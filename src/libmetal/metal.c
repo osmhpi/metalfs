@@ -7,6 +7,7 @@
 
 #include <lmdb.h>
 
+#include "hollow_heap.h"
 #include "extent.h"
 #include "inode.h"
 #include "meta.h"
@@ -49,6 +50,7 @@ int mtl_deinitialize() {
     mtl_reset_extents_db();
     mtl_reset_inodes_db();
     mtl_reset_meta_db();
+    mtl_reset_heap_db();
 
     mdb_env_close(env);
 
@@ -269,10 +271,19 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
         mtl_add_extent_to_file(txn, inode_id, inode, extents, extents_length, &new_extent);
     }
 
-
     mdb_txn_commit(txn);
 
     // Copy the actual data to the FPGA
 
     return MTL_SUCCESS;
+}
+
+MDB_txn* mtl_create_txn() {
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+    return txn;
+}
+
+void mtl_commit_txn(MDB_txn* txn) {
+    mdb_txn_commit(txn);
 }

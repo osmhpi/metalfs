@@ -9,6 +9,7 @@ set(
 
 set(
     LIBRARIES
+    m  # C Math
     lmdb
 )
 

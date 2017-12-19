@@ -27,6 +27,12 @@ int mtl_mkdir(const char *filename);
 int mtl_create(const char *filename);
 int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
 
+// Only used for testing
+struct MDB_txn;
+typedef struct MDB_txn MDB_txn;
+MDB_txn *mtl_create_txn();
+void mtl_commit_txn(MDB_txn *txn);
+
 #ifdef __cplusplus
 }
 #endif
