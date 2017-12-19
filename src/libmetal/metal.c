@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libgen.h>
+#include <stdio.h>
 
 #include <lmdb.h>
 
@@ -53,6 +54,45 @@ int mtl_deinitialize() {
     mdb_env_close(env);
 
     return MTL_SUCCESS;
+}
+
+int mtl_chown(const char *path, uid_t uid, gid_t gid) {
+
+    int res;
+
+    printf("starting chown\n");
+    MDB_txn *txn;
+    res = mdb_txn_begin(env, NULL, 0, &txn);
+    printf("return of begin: \d\n", res);
+
+    uint64_t inode_id;
+    res = mtl_resolve_inode(txn, path, &inode_id);
+    printf("return of resolve_inode: \d\n", res);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return -res;
+    }
+    
+    mtl_inode *old_inode;
+    mtl_inode new_inode;
+    void *data;
+    uint64_t data_length;
+    res = mtl_load_inode(txn, inode_id, &old_inode, &data, &data_length);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return -res;
+    }
+
+    memcpy(&new_inode, old_inode, sizeof(mtl_inode));
+
+    new_inode.user = uid;
+    new_inode.group = gid;
+
+    res = mtl_put_inode(txn, inode_id, &new_inode, data, data_length);
+    printf("return of put_inode: \d\n", res);
+    
+    mdb_txn_commit(txn);
+    return res;
 }
 
 int mtl_resolve_inode(MDB_txn *txn, const char *path, uint64_t *inode_id) {
