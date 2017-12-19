@@ -4,16 +4,48 @@
 #include <hls_snap.H>
 #include <action_metalfpga.h> /*MetalFPGA job definition*/
 
+#define MFB_ADDRESS(A) (A >> ADDR_RIGHT_SHIFT)
+#define MFB_INCREMENT (0x1 << ADDR_RIGHT_SHIFT)
+typedef ap_uint<ADDR_RIGHT_SHIFT> mfb_byteoffset_t;
+typedef ap_uint<ADDR_RIGHT_SHIFT+3> mfb_bitoffset_t;
+#define MFB_TOBITOFFSET(BYTEO) (((mfb_bitoffset_t)BYTEO)<<3)
+
+typedef snapu32_t mf_retc_t;
+
+#define M_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
+
+typedef ap_uint<1> mf_bool_t;
+#define MF_TRUE 0x1
+#define MF_FALSE 0x0
+
 #define MF_EXTENT_COUNT_W 9
 #define MF_EXTENT_COUNT (0x1 << MF_EXTENT_COUNT_W)
 typedef ap_uint<MF_EXTENT_COUNT_W> mf_extent_offset_t;
 typedef ap_uint<MF_EXTENT_COUNT_W+1> mf_extent_count_t;
+#define MF_EXTENT_DIRECT_COUNT 6
+
+#define MF_EXTENT_BYTES_W 4
+#define MF_EXTENT_BYTES (0x1 << MF_EXTENT_BYTES_W)
+#define MF_EXTENTS_PER_LINE_W (ADDR_RIGHT_SHIFT - MF_EXTENT_BYTES_W)
+#define MF_EXTENTS_PER_LINE (0x1 << MF_EXTENTS_PER_LINE_W)
+typedef ap_uint<MF_EXTENTS_PER_LINE_W> mf_line_extent_offset_t;
+typedef ap_uint<MF_EXTENTS_PER_LINE_W+1> mf_line_extent_count_t;
+
 
 #define MF_SLOT_COUNT_W 4
 #define MF_SLOT_COUNT (0x1 << MF_SLOT_COUNT_W)
 typedef ap_uint<MF_SLOT_COUNT_W> mf_slot_offset_t;
 typedef ap_uint<MF_SLOT_COUNT_W+1> mf_slot_count_t;
 
+typedef struct
+{
+    snapu8_t flags;
+    snapu64_t physical_block_number;
+    snapu64_t logical_block_number;
+    snapu64_t block_buffer_address;
+} mf_slot_state_t;
+#define MF_SLOT_FLAG_OPEN 0x1
+#define MF_SLOT_FLAG_BLOCK_ACTIVE 0x2
 
 //---------------------------------------------------------------------
 typedef struct {

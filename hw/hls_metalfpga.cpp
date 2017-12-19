@@ -3,57 +3,108 @@
 
 #include "action_metalfpga.H"
 
+#include "endianconv.hpp"
+
 #define HW_RELEASE_LEVEL       0x00000013
 
 using namespace std;
 
 static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
-static snapu64_t mf_extents_prefixsum[MF_SLOT_COUNT][MF_EXTENT_COUNT];
+static snapu64_t mf_extents_lastblock[MF_SLOT_COUNT][MF_EXTENT_COUNT];
+static mf_slot_state_t mf_slots[MF_SLOT_COUNT];
 
-static snapu32_t mf_fill_extents(mf_slot_offset slot, mf_extent_count_t extent_count,
-                                 mf_extent_t direct_extents[6], snap_membus_t * din_gmem)
+// Filemap functions:
+static void mf_extract_extents(mf_extent_t & extents[MF_EXTENTS_PER_LINE], const snap_membus_t * din_gmem, uint64_t address)
+{
+    snap_membus_t line = din_gmem[MF_BUSADDRESS(address)];
+    mf_extent_t extents[MF_EXTENTS_PER_LINE];
+    for (mf_extent_count_t i_extent; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
+    {
+        extents[i_extent] = 
+            { 
+                .block_begin = mf_get64(line, i_extent * sizeof(mf_extent_t)),
+                .block_count = mf_get64(line, i_extent * sizeof(mf_extent_t) + sizeof(snapu64_t)
+            };
+    }
+    return extents;
+}
+
+static mf_bool_t mf_fill_extents_mem(mf_slot_offset_t slot,
+                                     mf_extent_count_t extent_count,
+                                     snap_membus_t * din_gmem,
+                                     snapu64_t address)
+{
+    snapu64_t line_address = address;
+    mf_extent_t line_extents[MF_EXTENTS_PER_LINE];
+    snapu64_t last_block = 0;
+    for (mf_extent_count_t i_extent = 0; i_extent < extent_count; ++i_extent)
+    {
+        mf_line_extent_offset_t o_line_extent = i_extent & MF_MASK(MF_EXTENTS_PER_LINE_W,0);
+        if (o_line_extent == 0)
+        {
+            mf_extract_extents(line_extents, din_gmem, MFB_ADDRESS(line_address));
+            line_address += MFB_INCREMENT;
+        }
+        mf_extent_t & extent = line_extents[o_line_extent];
+        mf_extents_begin[slot][i_extent] = extent.block_begin;
+        mf_extents_count[slot][i_extent] = extent.block_count;
+        last_block += extent.block_count;
+        mf_extents_lastblock[slot][i_extent] = last_block;
+    }
+    return MF_TRUE;
+}
+
+static mf_bool_t mf_fill_extents_direct(mf_slot_offset_t slot,
+                                        mf_extent_count_t extent_count,
+                                        const mf_extent_t & direct_extents[MF_EXTENT_DIRECT_COUNT])
 {
     mf_extent_count_t i_extent = 0;
-    snapu64_t prefixsum = 0;
-    for (; i_extent < 5; ++i_extent)
+    snapu64_t last_block = 0;
+    for (mf_extent_count_t i_extent = 0; i_extent < MF_EXTENT_DIRECT_COUNT && i_extent < extent_count; ++i_extent)
     {
         mf_extents_begin[slot][i_extent] = direct_extents[i_extent].begin;
-        snapu64_t count = direct_extents[i_extent].count;
-        prefixsum += count;
-        mf_extents_count[slot][i_extent] = count;
-        mf_extents_prefixsum[slot][i_extent] = prefixsum;
+        mf_extents_count[slot][i_extent] = direct_extents[i_extent].count;
+        last_block += direct_extents[i_extent].count;
+        mf_extents_prefixsum[slot][i_extent] = last_block;
+    }
+    return MF_TRUE;
+}
 
-        if (i_extent == extent_count - 1)
-        {
-            return SNAP_RETC_SUCCESS;
-        }
-    }
-    // i_extent == 5, extent_count > 5
-    if (extent_count > 6) {
-        //needs host
-        snapu64_t extent_list_base = direct_extents[5].block_begin;
-        snapu64_t host_block_offset = 0;
-        snap_membus_t memory_block = din_gmem[extent_list_base>>ADDR_RIGHT_SHIFT]
-        for(uint64_t host_offset = 0; i_extent < extent_count; ++i_extent, ++host_offset)
-        {
-            //TODO-lw:
-            // local_offset = (i_extent - 5) % 4
-            // if local_offset == 0: host_block_offset++; load next memory block
-            // interpret memory_block((local_offset+1) * 64 - 1, local_offset * 64) as mf_extent_t (ENDIANNESS!)
-            // calc prefixsum and store extent data
-        }
-        
-    }
-    else
+static mf_bool_t mf_slot_open(mf_slot_offset_t slot)
+{
+    if (mf_slots[slot] & MF_SLOT_FLAG_OPEN)
     {
-        mf_extents_begin[slot][i_extent] = direct_extents[i_extent].begin;
-        snapu64_t count = direct_extents[i_extent].count;
-        prefixsum += count;
-        mf_extents_count[slot][i_extent] = count;
-        mf_extents_prefixsum[slot][i_extent] = prefixsum;
+        return MF_FALSE;
     }
-    return SNAP_RETC_SUCCESS;
+    mf_slots[slot].flags |= MF_SLOT_FLAG_OPEN;
+    mf_slots[slot].flags &= ~MF_SLOT_FLAG_BLOCK_ACTIVE;
+    mf_slots[slot].physical_block_number = 0;
+    mf_slots[slot].logical_block_number = 0;
+
+    //use the first 64k of DRAM as block buffers with fixed slot mapping
+    mf_slots[slot].block_buffer_address = ((uint64_t)slot) << 12;
+
+    return MF_TRUE;
+}
+
+static mf_bool_t mf_slot_close(mf_slot_offset_t slot)
+{
+
+    if (!(mf_slots[slot].flags & MF_SLOT_FLAG_OPEN))
+    {
+        return MF_FALSE;
+    }
+    if (mf_slots[slot].flags & MF_SLOT_FLAG_BLOCK_ACTIVE)
+    {
+        //TODO-lw flush block
+        mf_slots[slot].flags &= ~MF_SLOT_FLAG_BLOCK_ACTIVE;
+    }
+    mf_slots[slot].flags &= ~MF_SLOT_FLAG_OPEN;
+    mf_slots[slot].physical_block_number = 0;
+    mf_slots[slot].logical_block_number = 0;
+
+    return MF_TRUE;
 }
 
 // ------------------------------------------------
@@ -62,10 +113,51 @@ static snapu32_t mf_fill_extents(mf_slot_offset slot, mf_extent_count_t extent_c
 
 static snapu32_t action_filemap(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                action_reg * action_reg)
+                                action_reg * job)
 {
+    if (job.slot >= MF_SLOT_COUNT)
+    {
+        return SNAP_RETC_FAILURE;
+    }
+    mf_slot_offset_t slot = job.slot;
 
+    if (job.flags & MF_FLAG_FILEMAP_UNMAP)
+    {
+        if (!mf_slot_close())
+        {
+            return SNAP_RETC_FAILURE;
+        }
+    }
+    else
+    {
+        if (job.extent_count > MF_EXTENT_COUNT)
+        {
+            return SNAP_RETC_FAILURE;
+        }
+        mf_extent_count_t extent_count = job.extent_count;
 
+        if (!mf_slot_open())
+        {
+            return SNAP_RETC_FAILURE;
+        }
+        if (job.flags & MF_FLAG_FILEMAP_INDIRECT)
+        {
+            if (!mf_fill_extents_direct(slot, extent_count, job.extents.direct))
+            {
+                mf_slot_close();
+                return SNAP_RETC_FAILURE;
+            }
+        }
+        else
+        {
+            if (!mf_fill_extents_mem(slot, extent_count, din_gmem, job.extents.indirect_address))
+            {
+                mf_slot_close();
+                return SNAP_RETC_FAILURE;
+            }
+        }
+    }
+    return SNAP_RETC_SUCCESS;
 }
 
 static snapu32_t action_extentop(snap_membus_t * din_gmem,

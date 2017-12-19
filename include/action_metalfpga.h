@@ -22,8 +22,16 @@ typedef struct mf_func_filemap_job {
     uint8_t slot;
     uint8_t flags; // TODO-lw define Flag masks and positions
     uint16_t extent_count;
-    mf_extent_t extents[6];
+    union extents
+    {
+        mf_extent_t direct[6];
+        uint64_t indirect_address;
+    };
 } mf_func_filemap_job_t;
+// UNMAP 0: map file extents to slot | 1: unmap file from slot
+#define MF_FLAG_FILEMAP_UNMAP 0x1
+// INDIRECT 0: extents come from job struct | 1: extents come from host memory
+#define MF_FLAG_FILEMAP_INDIRECT 0x2
 
 #define MF_FUNC_EXTENTOP 1
 typedef struct mf_func_extentop_job {
@@ -40,9 +48,6 @@ typedef struct mf_func_bufmap_job {
 // TODO-lw define!
 } mf_func_bufmap_job_t;
 
-// Blowfish Configuration PATTERN.
-// This must match with DATA structure in hls_blowfish/kernel.cpp
-// Job description should start with the list of addresses.
 typedef struct metalfpga_job {
     uint8_t function;
     uint8_t _fill[3];
