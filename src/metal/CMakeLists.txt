@@ -18,5 +18,5 @@ include_directories(
     ${LMDB_INCLUDE_DIR}
 )
 
-add_library(libmetal STATIC ${SOURCES})
-target_link_libraries(libmetal ${LIBRARIES})
+add_library(metal STATIC ${SOURCES})
+target_link_libraries(metal ${LIBRARIES})

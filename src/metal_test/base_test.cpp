@@ -2,7 +2,7 @@
 
 #include <ftw.h>
 
-#include "../libmetal/metal.h"
+#include "../metal/metal.h"
 
 int rm(const char *path, const struct stat *s, int flag, struct FTW *f)
 {

@@ -15,8 +15,8 @@
 #include "../common/afus.h"
 #include "server.h"
 #include "afu.h"
-#include "../../libmetal/metal.h"
-#include "../../libmetal/inode.h"
+#include "../../metal/metal.h"
+#include "../../metal/inode.h"
 
 static const char *agent_filepath = "./afu_agent";
 

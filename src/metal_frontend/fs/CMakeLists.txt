@@ -38,4 +38,4 @@ if(WITH_SNAP)
 endif()
 
 add_executable(accfs ${ACCFS_SOURCES})
-target_link_libraries(accfs libmetal ${ACCFS_LIBRARIES})
+target_link_libraries(accfs metal ${ACCFS_LIBRARIES})

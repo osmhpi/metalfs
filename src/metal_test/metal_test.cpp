@@ -1,4 +1,4 @@
-#include "../libmetal/metal.h"
+#include "../metal/metal.h"
 #include "base_test.hpp"
 
 namespace {

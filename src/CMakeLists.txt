@@ -1,3 +1,3 @@
-add_subdirectory(libmetal)
-add_subdirectory(libmetal_test)
-add_subdirectory(libmetalfrontend)
+add_subdirectory(metal)
+add_subdirectory(metal_test)
+add_subdirectory(metal_frontend)
