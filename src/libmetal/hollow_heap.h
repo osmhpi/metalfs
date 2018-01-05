@@ -8,10 +8,13 @@ extern "C" {
 
 #include <lmdb.h>
 
-int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value);
+#define INVALID_NODE 0
+typedef uint64_t mtl_heap_node_id;
+
+int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value, mtl_heap_node_id *node_id);
 int mtl_heap_extract_max(MDB_txn *txn, uint64_t *max_value);
-// Because of a missing external unique identifier, we currently don't
-// offer a decrease_key operation.
+int mtl_heap_delete(MDB_txn *txn, mtl_heap_node_id node_id);
+int mtl_heap_increase_key(MDB_txn *txn, mtl_heap_node_id node_id, uint64_t key, mtl_heap_node_id *updated_node_id);
 
 int mtl_reset_heap_db();
 

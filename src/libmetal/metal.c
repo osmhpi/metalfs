@@ -287,7 +287,7 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 
         // Allocate a new occupied extent with the requested length
         mtl_file_extent new_extent;
-        new_extent.length = mtl_reserve_extent(inode->length - write_end, &new_extent.offset);
+        new_extent.length = mtl_reserve_extent(txn, inode->length - write_end, &new_extent.offset);
 
         // Assign it to the file
         mtl_add_extent_to_file(txn, inode_id, inode, extents, extents_length, &new_extent);

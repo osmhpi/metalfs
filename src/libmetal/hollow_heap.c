@@ -9,13 +9,10 @@
 #include "hollow_heap.h"
 
 #define HEAP_DB_NAME "heap"
-#define INVALID_NODE 0
 
 const char hollow_heap_key[] = "hollow-heap";
 
 MDB_dbi heap_db = 0;
-
-typedef uint64_t mtl_heap_node_id;
 
 typedef struct mtl_heap_node {
     mtl_heap_node_id second_parent;
@@ -47,14 +44,14 @@ int mtl_ensure_heap_db_open(MDB_txn *txn) {
 
 int mtl_put_heap(MDB_txn *txn, mtl_hollow_heap *heap) {
 
-    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = &hollow_heap_key };
+    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = hollow_heap_key };
     MDB_val heap_value = { .mv_size = sizeof(mtl_hollow_heap), .mv_data = heap };
     mdb_put(txn, heap_db, &heap_key, &heap_value, 0);
 
     return MTL_SUCCESS;
 }
 
-int mtl_load_node(MDB_txn *txn, mtl_heap_node_id node_id, mtl_heap_node **node) {
+int mtl_load_node(MDB_txn *txn, mtl_heap_node_id node_id, const mtl_heap_node **node) {
     if (node_id == INVALID_NODE) {
         *node = NULL;
         return MTL_SUCCESS;
@@ -103,10 +100,10 @@ mtl_heap_node_id mtl_link(MDB_txn *txn, mtl_heap_node_id first_id, mtl_heap_node
 }
 
 mtl_heap_node_id mtl_link_ids(MDB_txn *txn, mtl_heap_node_id first, mtl_heap_node_id second, bool ranked) {
-    mtl_heap_node *first_node;
+    const mtl_heap_node *first_node;
     mtl_load_node(txn, first, &first_node);
 
-    mtl_heap_node *second_node;
+    const mtl_heap_node *second_node;
     mtl_load_node(txn, second, &second_node);
 
     return mtl_link(txn, first, *first_node, second, *second_node, ranked);
@@ -151,6 +148,12 @@ int mtl_node_set_hollow(MDB_txn *txn, mtl_heap_node_id node_id, const mtl_heap_n
     return mtl_put_node(txn, node_id, &updated_node);
 }
 
+int mtl_node_set_key(MDB_txn *txn, mtl_heap_node_id node_id, const mtl_heap_node *node, uint64_t key) {
+    mtl_heap_node updated_node = *node;
+    updated_node.key = key;
+    return mtl_put_node(txn, node_id, &updated_node);
+}
+
 void mtl_heap_node_id_list_insert(mtl_heap_node_id_list** list, mtl_heap_node_id id) {
     mtl_heap_node_id_list *result = calloc(1, sizeof(mtl_heap_node_id_list));
     result->id = id;
@@ -184,7 +187,7 @@ int mtl_delete_node(MDB_txn *txn, const mtl_hollow_heap *heap, mtl_heap_node_id 
 
     // Remove hollow roots, starting with 'node'
 
-    mtl_heap_node_id_list *hollow_roots_list_head;
+    mtl_heap_node_id_list *hollow_roots_list_head = NULL;
     mtl_heap_node_id_list_insert(&hollow_roots_list_head, node_id);
 
     uint64_t upper_bound_of_max_rank = ceil(log2(heap->size)) + 1;
@@ -199,13 +202,13 @@ int mtl_delete_node(MDB_txn *txn, const mtl_hollow_heap *heap, mtl_heap_node_id 
     while ((next_deleted_root_node_id = mtl_heap_node_id_list_pop(&hollow_roots_list_head)) != INVALID_NODE) {
 
         // Load it a last time
-        mtl_heap_node *next_deleted_root_node;
+        const mtl_heap_node *next_deleted_root_node;
         mtl_load_node(txn, next_deleted_root_node_id, &next_deleted_root_node);
 
         // Look at all children because they will become roots after deleting 'next_deleted_root_node'
-        mtl_heap_node *current_child_node;
+        const mtl_heap_node *current_child_node;
         mtl_heap_node_id current_child_node_id;
-        mtl_heap_node *next_child_node;
+        const mtl_heap_node *next_child_node;
         mtl_heap_node_id next_child_node_id = next_deleted_root_node->child;
         mtl_load_node(txn, next_child_node_id, &next_child_node);
 
@@ -273,7 +276,7 @@ int mtl_delete_node(MDB_txn *txn, const mtl_hollow_heap *heap, mtl_heap_node_id 
 
 int mtl_load_or_create_heap(MDB_txn *txn, const mtl_hollow_heap **heap) {
 
-    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = &hollow_heap_key };
+    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = hollow_heap_key };
     MDB_val heap_value;
 
     int res = mdb_get(txn, heap_db, &heap_key, &heap_value);
@@ -291,7 +294,7 @@ int mtl_load_or_create_heap(MDB_txn *txn, const mtl_hollow_heap **heap) {
     return MTL_ERROR_INVALID_ARGUMENT;
 }
 
-int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value) {
+int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value, mtl_heap_node_id *node_id) {
 
     mtl_ensure_heap_db_open(txn);
 
@@ -299,8 +302,9 @@ int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value) {
     mtl_load_or_create_heap(txn, &heap);
 
     mtl_heap_node_id new_root_id;
+    mtl_heap_node_id new_node_id;
     if (heap->root == INVALID_NODE) {
-        mtl_heap_node_id new_node_id = mtl_next_heap_node_id(txn);
+        new_node_id = mtl_next_heap_node_id(txn);
         mtl_heap_node new_node = { .key = key, .value = value };
 
         MDB_val new_node_key = { .mv_size = sizeof(new_node_id), .mv_data = &new_node_id };
@@ -309,10 +313,10 @@ int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value) {
 
         new_root_id = new_node_id;
     } else {
-        mtl_heap_node *root;
+        const mtl_heap_node *root;
         mtl_load_node(txn, heap->root, &root);
 
-        mtl_heap_node_id new_node_id = mtl_next_heap_node_id(txn);
+        new_node_id = mtl_next_heap_node_id(txn);
         mtl_heap_node new_node = { .key = key, .value = value };
         new_root_id = mtl_link(txn, heap->root, *root, new_node_id, new_node, false);
     }
@@ -321,6 +325,9 @@ int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value) {
     updated_heap.root = new_root_id;
     ++updated_heap.size;
     mtl_put_heap(txn, &updated_heap);
+
+    if (node_id)
+        *node_id = new_node_id;
 
     return MTL_SUCCESS;
 }
@@ -335,12 +342,75 @@ int mtl_heap_extract_max(MDB_txn *txn, uint64_t *max_value) {
     if (heap->root == INVALID_NODE)
         return MTL_ERROR_NOENTRY;
 
-    mtl_heap_node *node;
+    const mtl_heap_node *node;
     mtl_load_node(txn, heap->root, &node);
 
     *max_value = node->value;
 
     return mtl_delete_node(txn, heap, heap->root, node);
+}
+
+int mtl_heap_delete(MDB_txn *txn, mtl_heap_node_id node_id) {
+
+    mtl_ensure_heap_db_open(txn);
+
+    const mtl_hollow_heap *heap;
+    mtl_load_or_create_heap(txn, &heap);
+
+    const mtl_heap_node *node;
+    mtl_load_node(txn, node_id, &node);
+
+    return mtl_delete_node(txn, heap, node_id, node);
+}
+
+int mtl_heap_increase_key(MDB_txn *txn, mtl_heap_node_id node_id, uint64_t key, mtl_heap_node_id *updated_node_id) {
+
+    mtl_ensure_heap_db_open(txn);
+
+    const mtl_hollow_heap *heap;
+    mtl_load_or_create_heap(txn, &heap);
+
+    const mtl_heap_node *node;
+    mtl_load_node(txn, node_id, &node);
+
+    if (heap->root == node_id) {
+        if (updated_node_id)
+            *updated_node_id = node_id;
+        return mtl_node_set_key(txn, node_id, node, key);
+    }
+
+    mtl_heap_node new_node;
+
+    mtl_heap_node_id new_node_id = mtl_next_heap_node_id(txn);
+    new_node.key = key;
+    new_node.value = node->value;
+    new_node.hollow = false;
+    new_node.rank = node->rank >=2 ? node->rank - 2 : 0;
+    new_node.child = node_id;
+    mtl_put_node(txn, new_node_id, &new_node);
+
+    mtl_heap_node_id new_root = mtl_link_ids(txn, heap->root, new_node_id, false);
+
+    if (new_root != heap->root) {
+        mtl_hollow_heap updated_heap = *heap;
+
+        // Update hollow heap
+        updated_heap.root = new_root;
+        mtl_put_heap(txn, &updated_heap);
+    }
+
+    // Update hollow node
+    mtl_heap_node hollow_node = *node;
+    hollow_node.hollow = true;
+    if (new_root != new_node_id) {
+        hollow_node.second_parent = new_node_id;
+    }
+    mtl_put_node(txn, node_id, &hollow_node);
+
+    if (updated_node_id)
+        *updated_node_id = new_node_id;
+
+    return MTL_SUCCESS;
 }
 
 int mtl_reset_heap_db() {

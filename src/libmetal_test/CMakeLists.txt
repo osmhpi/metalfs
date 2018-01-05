@@ -5,6 +5,7 @@ set(
     base_test.hpp
     heap_test.cpp
     metal_test.cpp
+    extent_test.cpp
 
     gtest_main.cpp
 )
