@@ -1,4 +1,5 @@
-#include "../metal/metal.h"
+#include <metal/metal.h>
+
 #include "base_test.hpp"
 
 namespace {
@@ -18,16 +19,16 @@ TEST_F(MetalTest, FailsWhenCreatingAnExistingDirectory) {
 }
 
 TEST_F(MetalTest, CreatesAFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, OpensACreatedFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt"));
-  EXPECT_EQ(MTL_SUCCESS, mtl_open("/hello_world.txt"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
+  EXPECT_EQ(MTL_SUCCESS, mtl_open("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, FailsWhenOpeningNonExistentFile) {
-  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt"));
+  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, ListsDirectoryContents) {

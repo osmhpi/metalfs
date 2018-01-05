@@ -30,7 +30,8 @@ int mtl_load_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, void **da
         return MTL_ERROR_NOENTRY;
     }
 
-    *inode = (mtl_inode*) inode_value.mv_data;
+    if (inode != NULL)
+        *inode = (mtl_inode*) inode_value.mv_data;
     if (data != NULL)
         *data = inode_value.mv_data + sizeof(mtl_inode);
     if (data_length != NULL)
@@ -63,7 +64,7 @@ int mtl_load_directory(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_d
     return mtl_load_inode(txn, inode_id, inode, dir_entries, &entries_length);
 }
 
-int mtl_load_file(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_file_extent **extents, uint64_t *extents_length) {
+int mtl_load_file(MDB_txn *txn, uint64_t inode_id, const mtl_inode **inode, const mtl_file_extent **extents, uint64_t *extents_length) {
 
     uint64_t data_length;
     int res = mtl_load_inode(txn, inode_id, inode, extents, &data_length);
@@ -121,14 +122,20 @@ int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, void* data,
     return MTL_SUCCESS;
 }
 
-int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, mtl_file_extent *extents, uint64_t extents_length, mtl_file_extent *new_extent) {
+int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent) {
 
-    inode->length += new_extent->length;
+    const mtl_inode *inode;
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+
+    mtl_inode updated_inode = *inode;
+    updated_inode.length += new_extent->length;
 
     mtl_file_extent extent_data [extents_length+1];
     memcpy(extent_data, extents, extents_length * sizeof(mtl_file_extent));
     memcpy(extent_data + extents_length, new_extent, sizeof(mtl_file_extent));
-    return mtl_put_inode(txn, inode_id, inode, extent_data, sizeof(extent_data));
+    return mtl_put_inode(txn, inode_id, &updated_inode, extent_data, sizeof(extent_data));
 }
 
 int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t inode_id) {

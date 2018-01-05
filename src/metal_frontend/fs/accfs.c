@@ -181,9 +181,12 @@ static int create_callback(const char *path, mode_t mode, struct fuse_file_info 
     char test_filename[FILENAME_MAX];
     snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
     if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
-        res = mtl_create(path + 6);
+        uint64_t inode_id;
+        res = mtl_create(path + 6, &inode_id);
         if (res != MTL_SUCCESS)
             return -res;
+
+        fi->fh = inode_id;
 
         return 0;
     }
@@ -203,18 +206,19 @@ static int readlink_callback(const char *path, char *buf, size_t size) {
 }
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
-    (void)path;
-    (void)fi;
-
+    
     int res;
 
     char test_filename[FILENAME_MAX];
     snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
     if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
-        res = mtl_open(path + 6);
+        uint64_t inode_id;
+        res = mtl_open(path + 6, &inode_id);
 
         if (res != MTL_SUCCESS)
             return -res;
+
+        fi->fh = inode_id;
 
         return 0;
     }
@@ -280,16 +284,6 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 static int release_callback(const char *path, struct fuse_file_info *fi)
 {
-    if (strncmp(path, "/", 1) == 0) {  // probably nonsense
-        for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-            if (strcmp(path+1, afus[i].name) != 0) {
-                continue;
-            }
-
-            close(fi->fh);
-            break;
-        }
-    }
     return 0;
 }
 
@@ -316,31 +310,13 @@ static int truncate_callback(const char *path, off_t size,
 static int write_callback(const char *path, const char *buf, size_t size,
         off_t offset, struct fuse_file_info *fi)
 {
-    char test_filename[FILENAME_MAX];
-    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
-    if (strcmp(path, test_filename) == 0) {
-        int fd;
-        int res;
-
-        (void) fi;
-        if(fi == NULL || true)
-            fd = open("./test.txt", O_WRONLY);
-        else
-            fd = fi->fh;
-
-        if (fd == -1)
-            return -errno;
-
-        res = pwrite(fd, buf, size, offset);
-        if (res == -1)
-            res = -errno;
-
-        if (fi == NULL || true)
-            close(fd);
-        return res;
+    if (fi->fh != 0) {
+        int res = mtl_write(fi->fh, buf, size, offset);
+        // TODO
+        return size;
     }
 
-    return -ENOENT;
+    return -ENOSYS;
 }
 
 static struct fuse_operations fuse_example_operations = {

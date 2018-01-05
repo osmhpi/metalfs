@@ -1,5 +1,5 @@
-#include "../metal/metal.h"
-#include "../metal/extent.h"
+#include <metal/metal.h>
+#include <metal/extent.h>
 
 #include "base_test.hpp"
 

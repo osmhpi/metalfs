@@ -1,5 +1,5 @@
-#include "../metal/metal.h"
-#include "../metal/hollow_heap.h"
+#include <metal/metal.h>
+#include <metal/hollow_heap.h>
 
 #include "base_test.hpp"
 

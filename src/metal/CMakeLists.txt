@@ -11,6 +11,8 @@ set(
     LIBRARIES
     m  # C Math
     lmdb
+
+    metal_storage
 )
 
 

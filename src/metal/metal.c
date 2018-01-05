@@ -6,6 +6,7 @@
 #include <libgen.h>
 
 #include <lmdb.h>
+#include <metal_storage/storage.h>
 
 #include "hollow_heap.h"
 #include "extent.h"
@@ -14,14 +15,14 @@
 
 #include "metal.h"
 
-MDB_env *env;
-
-
 typedef struct mtl_dir {
     uint64_t length;
     mtl_directory_entry_head *first;
     mtl_directory_entry_head *next;
 } mtl_dir;
+
+MDB_env *env;
+mtl_storage_metadata metadata;
 
 int mtl_initialize(const char *metadata_store) {
 
@@ -38,12 +39,15 @@ int mtl_initialize(const char *metadata_store) {
 
     mtl_create_root_directory(txn);
 
-    // Create a single extent spanning the entire storage
-    // TODO
+    // Query storage metadata
+    mtl_storage_get_metadata(&metadata);
+
+    // Create a single extent spanning the entire storage (if necessary)
+    mtl_initialize_extents(txn, metadata.num_blocks);
 
     mdb_txn_commit(txn);
 
-    return 0;
+    return MTL_SUCCESS;
 }
 
 int mtl_deinitialize() {
@@ -123,7 +127,7 @@ int mtl_get_inode(const char *path, mtl_inode *inode) {
         return res;
     }
     
-    mtl_inode *db_inode;
+    const mtl_inode *db_inode;
     res = mtl_load_inode(txn, inode_id, &db_inode, NULL, NULL); // NULLs because we are only interested in the inode, not the data behind it
     if (res == MTL_SUCCESS) {
         memcpy(inode, db_inode, sizeof(mtl_inode)); // need to copy because db_inode pointer points to invalid memory after aborting the DB transaction
@@ -133,15 +137,18 @@ int mtl_get_inode(const char *path, mtl_inode *inode) {
     return res;
 }
 
-int mtl_open(const char* filename) {
+int mtl_open(const char* filename, uint64_t *inode_id) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
 
-    uint64_t inode_id;
-    int res = mtl_resolve_inode(txn, filename, &inode_id);
+    uint64_t id;
+    int res = mtl_resolve_inode(txn, filename, &id);
 
     mdb_txn_abort(txn);
+
+    if (inode_id)
+        *inode_id = id;
 
     return res;
 }
@@ -239,7 +246,7 @@ int mtl_mkdir(const char *filename) {
     return MTL_SUCCESS;
 }
 
-int mtl_create(const char *filename) {
+int mtl_create(const char *filename, uint64_t *inode_id) {
 
     int res;
 
@@ -267,6 +274,10 @@ int mtl_create(const char *filename) {
 
     mdb_txn_commit(txn);
     free(basec);
+
+    if (inode_id)
+        *inode_id = file_inode_id;
+
     return MTL_SUCCESS;
 }
 
@@ -276,26 +287,42 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
     mdb_txn_begin(env, NULL, 0, &txn);
 
     // Check how long we intend to write
-    uint64_t write_end = offset + size;
+    uint64_t write_end_bytes = offset + size;
+    uint64_t write_end_blocks = write_end_bytes / metadata.block_size;
+    if (write_end_bytes % metadata.block_size) 
+        ++write_end_blocks;
 
-    mtl_inode *inode;
-    mtl_file_extent *extents;
-    uint64_t extents_length;
-    mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+    uint64_t current_inode_length_blocks;
+    {
+        mtl_inode *inode;
+        mtl_load_file(txn, inode_id, &inode, NULL, NULL);
+        current_inode_length_blocks = inode->length;
+    }
 
-    while (inode->length < write_end) {
+    while (current_inode_length_blocks < write_end_blocks) {
 
         // Allocate a new occupied extent with the requested length
         mtl_file_extent new_extent;
-        new_extent.length = mtl_reserve_extent(txn, inode->length - write_end, &new_extent.offset);
+        new_extent.length = mtl_reserve_extent(txn, write_end_blocks - current_inode_length_blocks, &new_extent.offset);
+        current_inode_length_blocks += new_extent.length;
 
         // Assign it to the file
-        mtl_add_extent_to_file(txn, inode_id, inode, extents, extents_length, &new_extent);
+        // TODO: Only do this once, also update the length (in bytes)
+        mtl_add_extent_to_file(txn, inode_id, &new_extent);
     }
 
     mdb_txn_commit(txn);
 
-    // Copy the actual data to the FPGA
+    // Prepare the storage 
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
+    mtl_storage_set_active_extent_list(extents, extents_length);
+    mdb_txn_abort(txn);
+
+    // Copy the actual data to storage
+    mtl_storage_write(offset, buffer, size);
 
     return MTL_SUCCESS;
 }
