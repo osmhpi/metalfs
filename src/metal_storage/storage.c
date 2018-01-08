@@ -5,6 +5,21 @@
 
 #ifdef WITH_SNAP
 
+int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
+    return 0;
+}
+
+int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length) {
+    return 0;
+}
+
+int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
+    return 0;
+}
+
+int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
+    return 0;
+}
 
 #else
 
@@ -27,7 +42,7 @@ int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
 
 int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length) {
     free(_extents);
-    
+
     _extents = malloc(length * sizeof(mtl_file_extent));
     memcpy(_extents, extents, length * sizeof(mtl_file_extent));
     _extents_length = length;
@@ -55,12 +70,12 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
         }
 
         uint64_t current_extent_write_pos = current_offset - current_extent_offset;
-        uint64_t current_extent_write_length = 
+        uint64_t current_extent_write_length =
             (_extents[current_extent].length * BLOCK_SIZE) - current_extent_write_pos;
         if (current_extent_write_length > length)
             current_extent_write_length = length;
 
-        memcpy(_storage + (_extents[current_extent].offset * BLOCK_SIZE) + current_extent_write_pos, 
+        memcpy(_storage + (_extents[current_extent].offset * BLOCK_SIZE) + current_extent_write_pos,
                buffer + (current_offset - offset),
                current_extent_write_length);
 
@@ -73,7 +88,7 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
     if (!_storage) {
         _storage = malloc(NUM_BLOCKS * BLOCK_SIZE);
     }
-    
+
     // TODO
 }
 

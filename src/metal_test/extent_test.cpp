@@ -5,94 +5,102 @@
 
 namespace {
 
-TEST_F(MetalTest, AllocatesAnExtent) {
+TEST_F(BaseTest, AllocatesAnExtent) {
+    test_initialize_env();
+
     uint64_t offset = 4711, length = 4;
 
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         ASSERT_EQ(MTL_SUCCESS, mtl_initialize_extents(txn, 8));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
         EXPECT_EQ(0, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(MTL_SUCCESS, mtl_commit_extent(txn, offset, length));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
 }
 
-TEST_F(MetalTest, AllocatesTwoExtents) {
+TEST_F(BaseTest, AllocatesTwoExtents) {
+    test_initialize_env();
+
     uint64_t offset = 4711, length = 4;
 
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         ASSERT_EQ(MTL_SUCCESS, mtl_initialize_extents(txn, 8));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
         EXPECT_EQ(0, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
         EXPECT_EQ(4, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
 }
 
-TEST_F(MetalTest, FreesAnExtent) {
+TEST_F(BaseTest, FreesAnExtent) {
+    test_initialize_env();
+
     uint64_t offset = 4711, length = 4;
 
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         ASSERT_EQ(MTL_SUCCESS, mtl_initialize_extents(txn, 8));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
         EXPECT_EQ(0, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(MTL_SUCCESS, mtl_free_extent(txn, offset));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
 }
 
-TEST_F(MetalTest, MakesFreedSpaceAvailableForReuse) {
+TEST_F(BaseTest, MakesFreedSpaceAvailableForReuse) {
+    test_initialize_env();
+
     uint64_t offset = 4711, length = 4;
 
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         ASSERT_EQ(MTL_SUCCESS, mtl_initialize_extents(txn, 8));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
         EXPECT_EQ(0, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(MTL_SUCCESS, mtl_free_extent(txn, offset));
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
     {
-        MDB_txn *txn = mtl_create_txn();
+        MDB_txn *txn = test_create_txn();
         EXPECT_EQ(8, mtl_reserve_extent(txn, 8, &offset));
         EXPECT_EQ(0, offset);
-        mtl_commit_txn(txn);
+        test_commit_txn(txn);
     }
 }
 

@@ -9,8 +9,7 @@
 #include "hollow_heap.h"
 
 #define HEAP_DB_NAME "heap"
-
-const char hollow_heap_key[] = "hollow-heap";
+#define HEAP_KEY "hollow-heap"
 
 MDB_dbi heap_db = 0;
 
@@ -44,7 +43,7 @@ int mtl_ensure_heap_db_open(MDB_txn *txn) {
 
 int mtl_put_heap(MDB_txn *txn, mtl_hollow_heap *heap) {
 
-    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = hollow_heap_key };
+    MDB_val heap_key = { .mv_size = sizeof(HEAP_KEY), .mv_data = HEAP_KEY };
     MDB_val heap_value = { .mv_size = sizeof(mtl_hollow_heap), .mv_data = heap };
     mdb_put(txn, heap_db, &heap_key, &heap_value, 0);
 
@@ -276,7 +275,7 @@ int mtl_delete_node(MDB_txn *txn, const mtl_hollow_heap *heap, mtl_heap_node_id 
 
 int mtl_load_or_create_heap(MDB_txn *txn, const mtl_hollow_heap **heap) {
 
-    MDB_val heap_key = { .mv_size = sizeof(hollow_heap_key), .mv_data = hollow_heap_key };
+    MDB_val heap_key = { .mv_size = sizeof(HEAP_KEY), .mv_data = HEAP_KEY };
     MDB_val heap_value;
 
     int res = mdb_get(txn, heap_db, &heap_key, &heap_value);
