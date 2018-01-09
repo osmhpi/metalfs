@@ -201,6 +201,55 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
     return mtl_put_inode(txn, dir_inode_id, &new_dir_inode, new_dir_inode_data, new_data_length);
 }
 
+int mtl_remove_entry_from_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *inode_id) {
+
+    uint64_t filename_length = strlen(filename);
+
+    mtl_inode *dir_inode;
+    void *dir_inode_data;
+    mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_inode_data, NULL);
+
+    if (dir_inode->type != MTL_DIRECTORY) {
+        return MTL_ERROR_NOTDIRECTORY;
+    }
+
+    uint64_t new_data_length = dir_inode->length -
+                               (sizeof(mtl_directory_entry_head) + filename_length);
+
+    mtl_inode new_dir_inode = *dir_inode;
+    new_dir_inode.length = new_data_length;
+    char new_dir_inode_data[new_data_length];
+
+    uint64_t current_inode_data_offset = 0;
+
+    // Find the entry
+    mtl_directory_entry_head *current_entry = NULL;
+    char *current_filename = NULL;
+    while ((current_entry = mtl_load_next_directory_entry(dir_inode_data, dir_inode->length, current_entry, &current_filename)) != NULL) {
+        if (filename_length == current_entry->name_len &&
+            strncmp(current_filename, filename, current_entry->name_len) == 0) {
+            if (inode_id)
+                *inode_id = current_entry->inode_id;
+
+            continue; // Skip this entry
+        }
+
+        if (current_inode_data_offset + current_entry->name_len + sizeof(mtl_directory_entry_head)
+                > new_data_length
+        ) {
+            // If we're attempting to write too much data, this means we didn't find (skip) the specified entry
+            return MTL_ERROR_NOENTRY;
+        }
+
+        memcpy(new_dir_inode_data + current_inode_data_offset, current_entry, sizeof(mtl_directory_entry_head));
+        current_inode_data_offset += sizeof(mtl_directory_entry_head);
+        memcpy(new_dir_inode_data + current_inode_data_offset, current_filename, current_entry->name_len);
+        current_inode_data_offset += current_entry->name_len;
+    }
+
+    return mtl_put_inode(txn, dir_inode_id, &new_dir_inode, new_dir_inode_data, new_data_length);
+}
+
 int mtl_create_root_directory(MDB_txn *txn) {
 
     mtl_ensure_inodes_db_open(txn);
@@ -290,6 +339,15 @@ int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *file
     };
 
     return mtl_put_inode(txn, *file_inode_id, &file_inode, NULL, 0);
+}
+
+int mtl_delete_inode(MDB_txn *txn, uint64_t inode_id) {
+
+    mtl_ensure_inodes_db_open(txn);
+
+    MDB_val inode_key = { .mv_size = sizeof(inode_id), .mv_data = &inode_id };
+    mdb_del(txn, inodes_db, &inode_key, NULL);
+    return MTL_SUCCESS;
 }
 
 int mtl_reset_inodes_db() {

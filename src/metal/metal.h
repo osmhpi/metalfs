@@ -30,6 +30,7 @@ int mtl_create(const char *filename, uint64_t *inode_id);
 int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
 uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset);
 int mtl_truncate(uint64_t inode_id, uint64_t offset);
+int mtl_unlink(const char *filename);
 
 #ifdef __cplusplus
 }

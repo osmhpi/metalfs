@@ -210,12 +210,10 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
     int res;
 
     char test_filename[FILENAME_MAX];
-    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
     if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
         uint64_t inode_id;
         res = mtl_open(path + 6, &inode_id);
-
-        printf("Called open for %s with resulting inode id %lu\n", path, inode_id);
 
         if (res != MTL_SUCCESS)
             return -res;
@@ -309,6 +307,25 @@ static int write_callback(const char *path, const char *buf, size_t size,
     return -ENOSYS;
 }
 
+static int unlink_callback(const char *path) {
+
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+
+        res = mtl_unlink(path + 6);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    return -ENOSYS;
+}
+
 static struct fuse_operations fuse_example_operations = {
     .chown = chown_callback,
     .getattr = getattr_callback,
@@ -319,7 +336,8 @@ static struct fuse_operations fuse_example_operations = {
     .release = release_callback,
     .truncate = truncate_callback,
     .write = write_callback,
-    .create = create_callback
+    .create = create_callback,
+    .unlink = unlink_callback
 };
 
 int main(int argc, char *argv[])

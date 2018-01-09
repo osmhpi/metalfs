@@ -413,3 +413,45 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
 
     return MTL_SUCCESS;
 }
+
+int mtl_unlink(const char *filename) {
+
+    // We don't (yet?) support hard links, so we can just remove the inode
+    int res;
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    char *basec, *base;
+    basec = strdup(filename);
+    base = basename(basec);
+
+    uint64_t parent_dir_inode_id;
+    res = mtl_resolve_parent_dir_inode(txn, filename, &parent_dir_inode_id);
+
+    // Remove directory entry
+    uint64_t inode_id;
+    res = mtl_remove_entry_from_directory(txn, parent_dir_inode_id, base, &inode_id);
+
+    // Free all extents
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    res = mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
+
+    if (res == MTL_ERROR_NOENTRY) {
+        return res;
+    }
+
+    for (uint64_t i = 0; i < extents_length; ++i) {
+        mtl_free_extent(txn, extents[i].offset);
+    }
+
+    // Remove inode
+    mtl_delete_inode(txn, inode_id);
+
+    mdb_txn_commit(txn);
+
+    free(basec);
+
+    return MTL_SUCCESS;
+}
