@@ -27,13 +27,8 @@ static char socket_filename[255];
 
 
 static int chown_callback(const char *path, uid_t uid, gid_t gid) {
-    printf("asd\n");
     printf("path: %s\n", path);
     return mtl_chown(path + 6, uid, gid);
-}
-
-static int getxattr_callback(const char* path, const char* name, char* value, size_t size) {
-    return 0;
 }
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
@@ -357,7 +352,6 @@ static struct fuse_operations fuse_example_operations = {
     .truncate = truncate_callback,
     .write = write_callback,
     .create = create_callback,
-    .getxattr = getxattr_callback
 };
 
 int main(int argc, char *argv[])
