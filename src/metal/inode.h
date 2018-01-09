@@ -32,7 +32,7 @@ typedef struct mtl_directory_entry_head {
 
 int mtl_load_file(MDB_txn *txn, uint64_t inode_id, const mtl_inode **inode, const mtl_file_extent **extents, uint64_t *extents_length);
 int mtl_load_directory(MDB_txn *txn, uint64_t inode_id, mtl_inode **inode, mtl_directory_entry_head **dir_entries, uint64_t *entries_length);
-int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent);
+int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent, uint64_t new_length);
 int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char *filename, uint64_t *file_inode_id);
 
 int mtl_create_root_directory(MDB_txn *txn);

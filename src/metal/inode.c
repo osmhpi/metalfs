@@ -122,7 +122,7 @@ int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, void* data,
     return MTL_SUCCESS;
 }
 
-int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent) {
+int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent, uint64_t new_length) {
 
     const mtl_inode *inode;
     const mtl_file_extent *extents;
@@ -130,7 +130,7 @@ int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
 
     mtl_inode updated_inode = *inode;
-    updated_inode.length += new_extent->length;
+    updated_inode.length = new_length;
 
     mtl_file_extent extent_data [extents_length+1];
     memcpy(extent_data, extents, extents_length * sizeof(mtl_file_extent));

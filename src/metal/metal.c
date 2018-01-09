@@ -126,7 +126,7 @@ int mtl_get_inode(const char *path, mtl_inode *inode) {
         mdb_txn_abort(txn);
         return res;
     }
-    
+
     const mtl_inode *db_inode;
     res = mtl_load_inode(txn, inode_id, &db_inode, NULL, NULL); // NULLs because we are only interested in the inode, not the data behind it
     if (res == MTL_SUCCESS) {
@@ -289,7 +289,7 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
     // Check how long we intend to write
     uint64_t write_end_bytes = offset + size;
     uint64_t write_end_blocks = write_end_bytes / metadata.block_size;
-    if (write_end_bytes % metadata.block_size) 
+    if (write_end_bytes % metadata.block_size)
         ++write_end_blocks;
 
     uint64_t current_inode_length_blocks;
@@ -308,12 +308,15 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 
         // Assign it to the file
         // TODO: Only do this once, also update the length (in bytes)
-        mtl_add_extent_to_file(txn, inode_id, &new_extent);
+        uint64_t new_length = write_end_bytes > current_inode_length_blocks * metadata.block_size
+            ? current_inode_length_blocks * metadata.block_size
+            : write_end_bytes;
+        mtl_add_extent_to_file(txn, inode_id, &new_extent, new_length);
     }
 
     mdb_txn_commit(txn);
 
-    // Prepare the storage 
+    // Prepare the storage
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     const mtl_file_extent *extents;
     uint64_t extents_length;
@@ -323,6 +326,25 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 
     // Copy the actual data to storage
     mtl_storage_write(offset, buffer, size);
+
+    return MTL_SUCCESS;
+}
+
+int mtl_read(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
+
+     MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    // Prepare the storage
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
+    mtl_storage_set_active_extent_list(extents, extents_length);
+    mdb_txn_abort(txn);
+
+    // Copy the actual data from storage
+    mtl_storage_read(offset, buffer, size);
 
     return MTL_SUCCESS;
 }

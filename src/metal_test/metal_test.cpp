@@ -53,4 +53,23 @@ TEST_F(MetalTest, ListsDirectoryContents) {
   EXPECT_EQ(MTL_SUCCESS, mtl_closedir(dir));
 }
 
+TEST_F(MetalTest, WritesToAFile) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+}
+
+TEST_F(MetalTest, ReadsWrittenBytes) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+
+  char output[256];
+  EXPECT_EQ(MTL_SUCCESS, mtl_read(inode, output, strlen(test) + 1, 0));
+
+  EXPECT_EQ(0, strncmp(test, output, strlen(test) + 1));
+}
+
 }  // namespace

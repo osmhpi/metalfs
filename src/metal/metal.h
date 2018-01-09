@@ -28,6 +28,7 @@ int mtl_closedir(mtl_dir *dir);
 int mtl_mkdir(const char *filename);
 int mtl_create(const char *filename, uint64_t *inode_id);
 int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
+int mtl_read(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
 
 #ifdef __cplusplus
 }
