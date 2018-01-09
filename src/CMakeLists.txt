@@ -1,3 +1,9 @@
-add_subdirectory(libmetal)
-add_subdirectory(libmetal_test)
-add_subdirectory(libmetalfrontend)
+
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_subdirectory(metal)
+add_subdirectory(metal_test)
+add_subdirectory(metal_frontend)
+add_subdirectory(metal_storage)
