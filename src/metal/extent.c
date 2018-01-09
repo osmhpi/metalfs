@@ -68,7 +68,7 @@ int mtl_initialize_extents(MDB_txn *txn, uint64_t blocks) {
     return MTL_SUCCESS;
 }
 
-uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, uint64_t *offset) {
+uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, uint64_t *offset, bool commit) {
 
     mtl_ensure_extents_db_open(txn);
 
@@ -106,7 +106,7 @@ uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, uint64_t *offset) {
     }
 
     // Update status of existing extent
-    updated_extent.status = MTL_RESERVED;
+    updated_extent.status = commit ? MTL_COMMITTED : MTL_RESERVED;
     mtl_put_extent(txn, extent_offset, &updated_extent);
 
     // Return offset and size
@@ -116,7 +116,11 @@ uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, uint64_t *offset) {
     return extent_length;
 }
 
-int mtl_commit_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
+int mtl_truncate_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
+
+    if (len == 0) {
+        return mtl_free_extent(txn, offset);
+    }
 
     mtl_ensure_extents_db_open(txn);
 
@@ -124,10 +128,23 @@ int mtl_commit_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
     const mtl_extent *extent;
     mtl_load_extent(txn, offset, &extent);
 
-    // Update status
-    mtl_extent updated_extent = *extent;
-    updated_extent.status = MTL_COMMITTED;
-    mtl_put_extent(txn, offset, &updated_extent);
+    {
+        // Update the existing extent
+        mtl_extent updated_extent = *extent;
+        updated_extent.status = MTL_COMMITTED;
+        updated_extent.length = len;
+        mtl_put_extent(txn, offset, &updated_extent);
+    }
+
+    if (extent->length > len) {
+        // Add an extent for the remaning space
+        mtl_extent extent_to_be_freed = { .length = extent->length - len, .status = MTL_RESERVED, .pq_node = INVALID_NODE };
+        mtl_put_extent(txn, offset + len, &extent_to_be_freed);
+
+        // Delete it afterwards
+        return mtl_free_extent(txn, offset + len);
+    }
+
     return MTL_SUCCESS;
 }
 
@@ -204,7 +221,7 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
         .length = extent_size,
         .pq_node = pq_node
     };
-    
+
     MDB_val updated_extent_key = { .mv_size = sizeof(extent_offset), .mv_data = &extent_offset };
     MDB_val updated_extent_value = { .mv_size = sizeof(updated_extent), .mv_data = &updated_extent };
     mdb_put(txn, extents_db, &updated_extent_key, &updated_extent_value, 0);

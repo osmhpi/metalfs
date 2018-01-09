@@ -67,9 +67,18 @@ TEST_F(MetalTest, ReadsWrittenBytes) {
   EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
 
   char output[256];
-  EXPECT_EQ(MTL_SUCCESS, mtl_read(inode, output, strlen(test) + 1, 0));
+  EXPECT_EQ(strlen(test) + 1, mtl_read(inode, output, sizeof(output), 0));
 
   EXPECT_EQ(0, strncmp(test, output, strlen(test) + 1));
+}
+
+TEST_F(MetalTest, TruncatesAFile) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_truncate(inode, 0));
 }
 
 }  // namespace

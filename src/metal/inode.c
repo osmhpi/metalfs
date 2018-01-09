@@ -132,9 +132,27 @@ int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new
     mtl_inode updated_inode = *inode;
     updated_inode.length = new_length;
 
-    mtl_file_extent extent_data [extents_length+1];
+    mtl_file_extent extent_data [extents_length + 1];
     memcpy(extent_data, extents, extents_length * sizeof(mtl_file_extent));
     memcpy(extent_data + extents_length, new_extent, sizeof(mtl_file_extent));
+    return mtl_put_inode(txn, inode_id, &updated_inode, extent_data, sizeof(extent_data));
+}
+
+int mtl_truncate_file_extents(MDB_txn *txn, uint64_t inode_id, uint64_t new_file_length, uint64_t extents_length, uint64_t *update_last_extent_length) {
+
+    const mtl_inode *inode;
+    const mtl_file_extent *extents;
+    mtl_load_file(txn, inode_id, &inode, &extents, NULL);
+
+    mtl_inode updated_inode = *inode;
+    updated_inode.length = new_file_length;
+
+    mtl_file_extent extent_data [extents_length];
+    memcpy(extent_data, extents, extents_length * sizeof(mtl_file_extent));
+    if (update_last_extent_length) {
+        extent_data[extents_length - 1].length = *update_last_extent_length;
+    }
+
     return mtl_put_inode(txn, inode_id, &updated_inode, extent_data, sizeof(extent_data));
 }
 
@@ -188,6 +206,7 @@ int mtl_create_root_directory(MDB_txn *txn) {
     mtl_ensure_inodes_db_open(txn);
 
     // Check if a root directory already exists
+    // TODO: We should start counting inodes at 2
     uint64_t root_inode_id = 0;
     MDB_val root_dir_key = { .mv_data = &root_inode_id, .mv_size = sizeof(root_inode_id)};
     MDB_val root_dir_value;

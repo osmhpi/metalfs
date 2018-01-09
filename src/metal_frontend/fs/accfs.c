@@ -28,7 +28,7 @@ static char socket_filename[255];
 
 static int chown_callback(const char *path, uid_t uid, gid_t gid) {
 
-    
+
     return 0;
 }
 
@@ -70,7 +70,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
           stbuf->st_dev; // device ID? can we put something meaningful here?
           stbuf->st_ino; // TODO: inode-ID
           stbuf->st_mode; // set according to filetype below
-          stbuf->st_nlink; // number of hard links to file. since we don't support hardlinks as of now, this will always be 0. 
+          stbuf->st_nlink; // number of hard links to file. since we don't support hardlinks as of now, this will always be 0.
           stbuf->st_uid = inode.user; // user-ID of owner
           stbuf->st_gid = inode.group; // group-ID of owner
           stbuf->st_rdev; // unused, since this field is meant for special files which we do not have in our FS
@@ -206,7 +206,7 @@ static int readlink_callback(const char *path, char *buf, size_t size) {
 }
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
-    
+
     int res;
 
     char test_filename[FILENAME_MAX];
@@ -214,6 +214,8 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
     if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
         uint64_t inode_id;
         res = mtl_open(path + 6, &inode_id);
+
+        printf("Called open for %s with resulting inode id %lu\n", path, inode_id);
 
         if (res != MTL_SUCCESS)
             return -res;
@@ -257,29 +259,11 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         return res;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
-    if (strcmp(path, test_filename) == 0) {
-        int fd;
-        int res;
-
-        if (fi == NULL || true)
-            fd = open("./test.txt", O_RDONLY);
-        else
-            fd = fi->fh;
-
-        if (fd == -1)
-            return -errno;
-
-        res = pread(fd, buf, size, offset);
-        if (res == -1)
-            res = -errno;
-
-        if(fi == NULL || true)
-            close(fd);
-        return res;
+    if (fi->fh != 0) {
+        return mtl_read(fi->fh, buf, size, offset);
     }
 
-    return -ENOENT;
+    return -ENOSYS;
 }
 
 static int release_callback(const char *path, struct fuse_file_info *fi)
@@ -287,32 +271,38 @@ static int release_callback(const char *path, struct fuse_file_info *fi)
     return 0;
 }
 
-static int truncate_callback(const char *path, off_t size,
-            struct fuse_file_info *fi)
+static int truncate_callback(const char *path, off_t size)
 {
-    char test_filename[FILENAME_MAX];
-    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
-    if (strcmp(path, test_filename) == 0) {
-        int res;
+    // struct fuse_file_info* is not available in truncate :/
+    int res;
 
-        if (fi != NULL && false)
-            res = ftruncate(fi->fh, size);
-        else
-            res = truncate("./test.txt", size);
-        if (res == -1)
-            return -errno;
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+        uint64_t inode_id;
+        res = mtl_open(path + 6, &inode_id);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        res = mtl_truncate(inode_id, size);
+
+        if (res != MTL_SUCCESS)
+            return -res;
 
         return 0;
     }
-    return -ENOENT;
+
+    return -ENOSYS;
 }
 
 static int write_callback(const char *path, const char *buf, size_t size,
         off_t offset, struct fuse_file_info *fi)
 {
     if (fi->fh != 0) {
-        int res = mtl_write(fi->fh, buf, size, offset);
-        // TODO
+        mtl_write(fi->fh, buf, size, offset);
+
+        // TODO: Return the actual length that was written (to be returned from mtl_write)
         return size;
     }
 

@@ -17,13 +17,8 @@ TEST_F(BaseTest, AllocatesAnExtent) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
+        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset, true));
         EXPECT_EQ(0, offset);
-        test_commit_txn(txn);
-    }
-    {
-        MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(MTL_SUCCESS, mtl_commit_extent(txn, offset, length));
         test_commit_txn(txn);
     }
 }
@@ -40,13 +35,13 @@ TEST_F(BaseTest, AllocatesTwoExtents) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
+        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset, true));
         EXPECT_EQ(0, offset);
         test_commit_txn(txn);
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
+        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset, true));
         EXPECT_EQ(4, offset);
         test_commit_txn(txn);
     }
@@ -64,7 +59,7 @@ TEST_F(BaseTest, FreesAnExtent) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
+        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset, true));
         EXPECT_EQ(0, offset);
         test_commit_txn(txn);
     }
@@ -87,7 +82,7 @@ TEST_F(BaseTest, MakesFreedSpaceAvailableForReuse) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset));
+        EXPECT_EQ(4, mtl_reserve_extent(txn, length, &offset, true));
         EXPECT_EQ(0, offset);
         test_commit_txn(txn);
     }
@@ -98,7 +93,7 @@ TEST_F(BaseTest, MakesFreedSpaceAvailableForReuse) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(8, mtl_reserve_extent(txn, 8, &offset));
+        EXPECT_EQ(8, mtl_reserve_extent(txn, 8, &offset, true));
         EXPECT_EQ(0, offset);
         test_commit_txn(txn);
     }
