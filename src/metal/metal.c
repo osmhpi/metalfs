@@ -332,12 +332,11 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset) {
 
     MDB_txn *txn;
-    mdb_txn_begin(env, NULL, 0, &txn);
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
 
     uint64_t read_len = size;
 
     // Prepare the storage and check how much we can read
-    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     mtl_inode *inode;
     const mtl_file_extent *extents;
     uint64_t extents_length;
