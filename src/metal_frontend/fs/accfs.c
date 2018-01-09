@@ -27,9 +27,8 @@ static char socket_filename[255];
 
 
 static int chown_callback(const char *path, uid_t uid, gid_t gid) {
-
-
-    return 0;
+    printf("path: %s\n", path);
+    return mtl_chown(path + 6, uid, gid);
 }
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
@@ -174,8 +173,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     return 0;
 }
 
-static int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi)
-{
+static int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
     int res;
 
     char test_filename[FILENAME_MAX];
