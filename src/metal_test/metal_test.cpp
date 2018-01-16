@@ -1,49 +1,8 @@
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <ftw.h>
+#include <metal/metal.h>
 
-#include <sys/stat.h>
-
-#include "gtest/gtest.h"
-
-#include "../libmetal/metal.h"
+#include "base_test.hpp"
 
 namespace {
-
-int rm(const char *path, const struct stat *s, int flag, struct FTW *f)
-{
-    int status;
-    int (*rm_func)( const char * );
-
-    switch( flag ) {
-    default:     rm_func = unlink; break;
-    case FTW_DP: rm_func = rmdir;
-    }
-    if (status = rm_func( path ), status != 0) {
-      // perror( path );
-    }
-    return status;
-}
-
-class MetalTest : public ::testing::Test {
- protected:
-  virtual void SetUp() {
-    // Recursively remove
-    if (nftw("test_files", rm, FOPEN_MAX, FTW_DEPTH)) {
-      // perror("test_files");
-    }
-
-    mkdir("test_files", S_IRWXU);
-    mkdir("test_files/metadata_store", S_IRWXU);
-
-    mtl_initialize("test_files/metadata_store");
-  }
-
-  virtual void TearDown() {
-    mtl_deinitialize();
-  }
-};
 
 TEST_F(MetalTest, CreatesADirectory) {
   EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
@@ -60,16 +19,16 @@ TEST_F(MetalTest, FailsWhenCreatingAnExistingDirectory) {
 }
 
 TEST_F(MetalTest, CreatesAFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, OpensACreatedFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt"));
-  EXPECT_EQ(MTL_SUCCESS, mtl_open("/hello_world.txt"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
+  EXPECT_EQ(MTL_SUCCESS, mtl_open("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, FailsWhenOpeningNonExistentFile) {
-  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt"));
+  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, ListsDirectoryContents) {
@@ -94,9 +53,32 @@ TEST_F(MetalTest, ListsDirectoryContents) {
   EXPECT_EQ(MTL_SUCCESS, mtl_closedir(dir));
 }
 
-}  // namespace
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST_F(MetalTest, WritesToAFile) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
 }
+
+TEST_F(MetalTest, ReadsWrittenBytes) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+
+  char output[256];
+  EXPECT_EQ(strlen(test) + 1, mtl_read(inode, output, sizeof(output), 0));
+
+  EXPECT_EQ(0, strncmp(test, output, strlen(test) + 1));
+}
+
+TEST_F(MetalTest, TruncatesAFile) {
+  uint64_t inode;
+  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  char *test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+
+  EXPECT_EQ(MTL_SUCCESS, mtl_truncate(inode, 0));
+}
+
+}  // namespace
