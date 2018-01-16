@@ -37,26 +37,20 @@ typedef struct mf_func_filemap_job {
 // INDIRECT 0: extents come from job struct | 1: extents come from host memory
 #define MF_FILEMAP_INDIRECT MF_MASK(2,2)
 
-#define MF_FUNC_EXTENTOP 1
-typedef struct mf_func_extentop_job {
+#define MF_FUNC_ACCESS 1
+typedef struct mf_func_access_job {
     uint8_t operation;
     uint8_t flags; // TODO-lw define Flag masks and positions
     uint64_t host_buffer;
     mf_extent_t src_extent;
     mf_extent_t dst_extent;
-} mf_func_extentop_job_t;
-
-#define MF_FUNC_BUFMAP 2
-typedef struct mf_func_bufmap_job {
-// TODO-lw define!
-} mf_func_bufmap_job_t;
+} mf_func_access_job_t;
 
 typedef struct metalfpga_job {
     uint8_t function;
     union {
         mf_func_filemap_job_t filemap;
         mf_func_extentop_job_t extentop;
-        mf_func_bufmap_job_t bufmap;
     } jspec;
 } metalfpga_job_t;
 
