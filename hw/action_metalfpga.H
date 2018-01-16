@@ -12,7 +12,7 @@ typedef ap_uint<ADDR_RIGHT_SHIFT+3> mfb_bitoffset_t;
 
 typedef snapu32_t mf_retc_t;
 
-#define M_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
+#define MF_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
 typedef ap_uint<1> mf_bool_t;
 #define MF_TRUE 0x1
@@ -22,7 +22,7 @@ typedef ap_uint<1> mf_bool_t;
 #define MF_EXTENT_COUNT (0x1 << MF_EXTENT_COUNT_W)
 typedef ap_uint<MF_EXTENT_COUNT_W> mf_extent_offset_t;
 typedef ap_uint<MF_EXTENT_COUNT_W+1> mf_extent_count_t;
-#define MF_EXTENT_DIRECT_COUNT 6
+#define MF_EXTENT_DIRECT_COUNT 5
 
 #define MF_EXTENT_BYTES_W 4
 #define MF_EXTENT_BYTES (0x1 << MF_EXTENT_BYTES_W)
@@ -40,6 +40,7 @@ typedef ap_uint<MF_SLOT_COUNT_W+1> mf_slot_count_t;
 typedef struct
 {
     snapu8_t flags;
+    snapu16_t extent_count;
     snapu64_t physical_block_number;
     snapu64_t logical_block_number;
     snapu64_t block_buffer_address;
@@ -50,7 +51,7 @@ typedef struct
 //---------------------------------------------------------------------
 typedef struct {
     CONTROL Control;    /*  16 bytes */
-    fs_job_t Data;      /* up to 108 bytes */
+    metalfpga_job_t Data;      /* up to 108 bytes */
     uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(metalfpga_job_t)];
 } action_reg;
 
