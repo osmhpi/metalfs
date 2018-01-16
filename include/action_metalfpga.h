@@ -10,7 +10,9 @@
 extern "C" {
 #endif
 
-#define METALFPGA_ACTION_TYPE 0x00000216
+#define METALFPGA_ACTION_TYPE 0x00000216 
+ 
+#define MF_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
 typedef struct mf_extent {
     uint64_t block_begin;
