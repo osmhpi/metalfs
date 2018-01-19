@@ -19,34 +19,32 @@ typedef struct mf_extent {
     uint64_t block_count;
 } mf_extent_t;
 
-#define MF_FUNC_FILEMAP 0
-typedef struct mf_func_filemap_job {
-    uint8_t slot : 8;
-    bool map : 1;
-    bool indirect : 1;
-    uint16_t extent_count : 16;
+#define MF_FUNC_MAP 0
+typedef struct mf_func_map_job {
+    uint8_t slot;
+    bool map;
+    bool indirect;
+    uint16_t extent_count;
     union
     {
-        mf_extent_t direct[5];
+        mf_extent_t direct[4];
         uint64_t indirect_address;
     } extents;
-} mf_func_filemap_job_t;
+} mf_func_map_job_t;
 
-#define MF_FUNC_FILEQUERY 1
-typedef struct mf_func_filequery_job {
-    uint8_t slot : 8;
-    bool query_mapping : 1;
-    bool query_slot_state : 1;
+#define MF_FUNC_QUERY 1
+typedef struct mf_func_query_job {
+    bool slot;
+    uint8_t query_mapping;
+    uint8_t query_state;
     uint64_t lblock_to_pblock;
-    struct {
-        bool open : 1;
-        bool active : 1;
-        uint16_t extent_count;
-        uint64_t block_count;
-        uint64_t current_lblock;
-        uint64_t current_pblock;
-    } slot_state;
-} mf_func_filequery_job_t;
+    bool state_open;
+    bool state_active;
+    uint16_t state_extent_count;
+    uint64_t state_block_count;
+    uint64_t state_current_lblock;
+    uint64_t state_current_pblock;
+} mf_func_query_job_t;
 
 #define MF_FUNC_ACCESS 2
 typedef struct mf_func_access_job {
@@ -60,8 +58,8 @@ typedef struct mf_func_access_job {
 typedef struct metalfpga_job {
     uint8_t function;
     union {
-        mf_func_filemap_job_t filemap;
-        mf_func_filequery_job_t filequery;
+        mf_func_map_job_t map;
+        mf_func_query_job_t query;
         mf_func_access_job_t access;
     } jspec;
 } metalfpga_job_t;
