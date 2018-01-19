@@ -20,7 +20,8 @@ typedef struct mf_extent {
 #define MF_FUNC_FILEMAP 0
 typedef struct mf_func_filemap_job {
     uint8_t slot : 8;
-    uint8_t flags : 8; // TODO-lw define Flag masks and positions
+    bool map : 1;
+    bool indirect : 1;
     uint16_t extent_count : 16;
     union
     {
@@ -28,29 +29,38 @@ typedef struct mf_func_filemap_job {
         uint64_t indirect_address;
     } extents;
 } mf_func_filemap_job_t;
-// .flags constants:
-// MODE: 0: unmap slot | 1: map slot | 2: test mapping
-#define MF_FILEMAP_MODE MF_MASK(1,0)
-#define MF_FILEMAP_MODE_UNMAP 0x0
-#define MF_FILEMAP_MODE_MAP 0x1
-#define MF_FILEMAP_MODE_TEST 0x2
-// INDIRECT 0: extents come from job struct | 1: extents come from host memory
-#define MF_FILEMAP_INDIRECT MF_MASK(2,2)
 
-#define MF_FUNC_ACCESS 1
+#define MF_FUNC_FILEQUERY 1
+typedef struct mf_func_filequery_job {
+    uint8_t slot : 8;
+    bool query_mapping : 1;
+    bool query_slot_state : 1;
+    uint64_t lblock_to_pblock;
+    struct {
+        bool open : 1;
+        bool active : 1;
+        uint16_t extent_count;
+        uint64_t block_count;
+        uint64_t current_lblock;
+        uint64_t current_pblock;
+    } slot_state;
+} mf_func_filequery_job_t;
+
+#define MF_FUNC_ACCESS 2
 typedef struct mf_func_access_job {
     uint8_t operation;
     uint8_t flags; // TODO-lw define Flag masks and positions
     uint64_t host_buffer;
-    mf_extent_t src_extent;
-    mf_extent_t dst_extent;
+    uint64_t file_offset;
+    uint64_t byte_count;
 } mf_func_access_job_t;
 
 typedef struct metalfpga_job {
     uint8_t function;
     union {
         mf_func_filemap_job_t filemap;
-        mf_func_extentop_job_t extentop;
+        mf_func_filequery_job_t filequery;
+        mf_func_access_job_t access;
     } jspec;
 } metalfpga_job_t;
 
