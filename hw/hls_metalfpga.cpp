@@ -17,25 +17,25 @@ using namespace std;
 
 static snapu32_t action_map(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                action_reg * act_reg)
+                                mf_func_map_job_t job)
 {
-    if (act_reg->Data.jspec.map.slot >= MF_SLOT_COUNT)
+    if (job.slot >= MF_SLOT_COUNT)
     {
         return SNAP_RETC_FAILURE;
     }
-    mf_slot_offset_t slot = act_reg->Data.jspec.map.slot;
+    mf_slot_offset_t slot = job.slot;
 
-    if (act_reg->Data.jspec.map.map)
+    if (job.map)
     {
-        if (act_reg->Data.jspec.map.extent_count > MF_EXTENT_COUNT)
+        if (job.extent_count > MF_EXTENT_COUNT)
         {
             return SNAP_RETC_FAILURE;
         }
-        mf_extent_count_t extent_count = act_reg->Data.jspec.map.extent_count;
+        mf_extent_count_t extent_count = job.extent_count;
 
-        if (act_reg->Data.jspec.map.indirect)
+        if (job.indirect)
         {
-            if (!mf_file_open_indirect(slot, extent_count, act_reg->Data.jspec.map.extents.indirect_address, din_gmem))
+            if (!mf_file_open_indirect(slot, extent_count, job.extents.indirect_address, din_gmem))
             {
                 mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
@@ -43,7 +43,13 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
         }
         else
         {
-            if (!mf_file_open_direct(slot, extent_count, act_reg->Data.jspec.map.extents.direct))
+          mf_extent_t extents[MF_EXTENT_DIRECT_COUNT] = {
+            job.extents.direct.d1,
+            job.extents.direct.d2,
+            job.extents.direct.d3,
+            job.extents.direct.d4
+          };
+            if (!mf_file_open_direct(slot, extent_count, extents))
             {
                 mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
@@ -62,27 +68,27 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
 
 static snapu16_t action_query(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                action_reg * act_reg)
+                                mf_func_query_job_t job)
 {
-    if (act_reg->Data.jspec.query.query_mapping)
+    if (job.query_mapping)
     {
-        /* act_reg->Data.jspec.query.lblock_to_pblock = mf_file_map_pblock(act_reg->Data.jspec.query.slot, act_reg->Data.jspec.query.lblock_to_pblock); */
+        snapu64_t lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
     }
-    if (act_reg->Data.jspec.query.query_state)
+    if (job.query_state)
     {
-        /* act_reg->Data.jspec.query.state_open = mf_file_is_open(act_reg->Data.jspec.query.slot); */
-        /* act_reg->Data.jspec.query.state_active = mf_file_is_active(act_reg->Data.jspec.query.slot); */
-        /* act_reg->Data.jspec.query.state_extent_count = mf_file_get_extent_count(act_reg->Data.jspec.query.slot); */
-        /* act_reg->Data.jspec.query.state_block_count = mf_file_get_block_count(act_reg->Data.jspec.query.slot); */
-        /* act_reg->Data.jspec.query.state_current_lblock = mf_file_get_lblock(act_reg->Data.jspec.query.slot); */
-        /* act_reg->Data.jspec.query.state_current_pblock = mf_file_get_pblock(act_reg->Data.jspec.query.slot); */
+        bool state_open = mf_file_is_open(job.slot);
+        bool state_active = mf_file_is_active(job.slot);
+        snapu16_t state_extent_count = mf_file_get_extent_count(job.slot);
+        snapu64_t state_block_count = mf_file_get_block_count(job.slot);
+        snapu64_t state_current_lblock = mf_file_get_lblock(job.slot);
+        snapu64_t state_current_pblock = mf_file_get_pblock(job.slot);
     }
     return SNAP_RETC_SUCCESS;
 }
 
 static snapu32_t action_access(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                action_reg * act_reg)
+                                mf_func_access_job_t job)
 {
     return SNAP_RETC_FAILURE;
 }
@@ -97,11 +103,20 @@ static snapu32_t process_action(snap_membus_t * din_gmem,
     switch(function_code)
     {
         case MF_FUNC_MAP:
-            return action_map(din_gmem, dout_gmem, act_reg);
+          {
+            //mf_func_map_job_t map_job; // = act_reg->Data.jspec.map;
+            return SNAP_RETC_FAILURE; //action_map(din_gmem, dout_gmem, map_job);
+          }
         case MF_FUNC_QUERY:
-            return action_query(din_gmem, dout_gmem, act_reg);
+          {
+            //mf_func_query_job_t query_job; // = act_reg->Data.jspec.query;
+            return SNAP_RETC_FAILURE; //action_query(din_gmem, dout_gmem, query_job);
+          }
         case MF_FUNC_ACCESS:
-            return action_access(din_gmem, dout_gmem, act_reg);
+          {
+            //mf_func_access_job_t access_job; // = act_reg->Data.jspec.access;
+            return SNAP_RETC_FAILURE; //action_access(din_gmem, dout_gmem, access_job);
+          }
         default:
             return SNAP_RETC_FAILURE;
     }

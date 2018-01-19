@@ -26,7 +26,12 @@ typedef struct mf_func_map_job {
     uint16_t extent_count;
     union
     {
-        mf_extent_t direct[MF_EXTENT_DIRECT_COUNT];
+        struct {
+            mf_extent_t d1; //[MF_EXTENT_DIRECT_COUNT];
+            mf_extent_t d2; //[MF_EXTENT_DIRECT_COUNT];
+            mf_extent_t d3; //[MF_EXTENT_DIRECT_COUNT];
+            mf_extent_t d4; //[MF_EXTENT_DIRECT_COUNT];
+        } direct;
         uint64_t indirect_address;
     } extents;
 } mf_func_map_job_t;
