@@ -4,8 +4,7 @@
 #include "action_metalfpga.H"
 
 #include "endianconv.hpp"
-#include "hls_metalfpga_access.h"
-#include "hls_metalfpga_map.h"
+#include "hls_metalfpga_file.h"
 
 
 #define HW_RELEASE_LEVEL       0x00000013
@@ -16,83 +15,93 @@ using namespace std;
 // --------------- ACTION FUNCTIONS ---------------
 // ------------------------------------------------
 
-static snapu32_t action_filemap(snap_membus_t * din_gmem,
+static snapu32_t action_map(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_filemap_job_t job)
+                                action_reg * act_reg)
 {
-    if (job.slot >= MF_SLOT_COUNT)
+    if (act_reg->Data.jspec.map.slot >= MF_SLOT_COUNT)
     {
         return SNAP_RETC_FAILURE;
     }
-    mf_slot_offset_t slot = job.slot;
+    mf_slot_offset_t slot = act_reg->Data.jspec.map.slot;
 
-    if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_UNMAP)
+    if (act_reg->Data.jspec.map.map)
     {
-        if (!mf_map_close(slot))
+        if (act_reg->Data.jspec.map.extent_count > MF_EXTENT_COUNT)
         {
             return SNAP_RETC_FAILURE;
         }
-    }
-    else if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_MAP)
-    {
-        if (job.extent_count > MF_EXTENT_COUNT)
-        {
-            return SNAP_RETC_FAILURE;
-        }
-        mf_extent_count_t extent_count = job.extent_count;
+        mf_extent_count_t extent_count = act_reg->Data.jspec.map.extent_count;
 
-        if (job.flags & MF_FILEMAP_INDIRECT)
+        if (act_reg->Data.jspec.map.indirect)
         {
-            if (!mf_map_open_direct(slot, extent_count, job.extents.direct))
+            if (!mf_file_open_indirect(slot, extent_count, act_reg->Data.jspec.map.extents.indirect_address, din_gmem))
             {
-                mf_map_close(slot);
+                mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
             }
         }
         else
         {
-            if (!mf_map_open_indirect(slot, extent_count, job.extents.indirect_address, din_gmem))
+            if (!mf_file_open_direct(slot, extent_count, act_reg->Data.jspec.map.extents.direct))
             {
-                mf_map_close(slot);
+                mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
             }
         }
     }
-    else if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_TEST)
-    {
-        snap_membus_t line = din_gmem[job.extents.indirect_address>>ADDR_RIGHT_SHIFT];
-        snapu64_t logical_block_number = mf_get64(line, 0);
-        snapu64_t physical_block_number = mf_map_get_pblock(slot, logical_block_number);
-        mf_set64(line, 0, physical_block_number);
-        dout_gmem[job.extents.indirect_address>>ADDR_RIGHT_SHIFT] = line;
-    }
     else
     {
-        return SNAP_RETC_FAILURE;
+        if (!mf_file_close(slot))
+        {
+            return SNAP_RETC_FAILURE;
+        }
+    }
+    return SNAP_RETC_SUCCESS;
+}
+
+static snapu16_t action_query(snap_membus_t * din_gmem,
+                                snap_membus_t * dout_gmem,
+                                action_reg * act_reg)
+{
+    if (act_reg->Data.jspec.query.query_mapping)
+    {
+        /* act_reg->Data.jspec.query.lblock_to_pblock = mf_file_map_pblock(act_reg->Data.jspec.query.slot, act_reg->Data.jspec.query.lblock_to_pblock); */
+    }
+    if (act_reg->Data.jspec.query.query_state)
+    {
+        /* act_reg->Data.jspec.query.state_open = mf_file_is_open(act_reg->Data.jspec.query.slot); */
+        /* act_reg->Data.jspec.query.state_active = mf_file_is_active(act_reg->Data.jspec.query.slot); */
+        /* act_reg->Data.jspec.query.state_extent_count = mf_file_get_extent_count(act_reg->Data.jspec.query.slot); */
+        /* act_reg->Data.jspec.query.state_block_count = mf_file_get_block_count(act_reg->Data.jspec.query.slot); */
+        /* act_reg->Data.jspec.query.state_current_lblock = mf_file_get_lblock(act_reg->Data.jspec.query.slot); */
+        /* act_reg->Data.jspec.query.state_current_pblock = mf_file_get_pblock(act_reg->Data.jspec.query.slot); */
     }
     return SNAP_RETC_SUCCESS;
 }
 
 static snapu32_t action_access(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_extentop_job_t job)
+                                action_reg * act_reg)
 {
     return SNAP_RETC_FAILURE;
 }
 
 static snapu32_t process_action(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_access_job_t job)
+                                action_reg * act_reg)
 {
     snapu8_t function_code;
     function_code = act_reg->Data.function;
 
     switch(function_code)
     {
-        case MF_FUNC_FILEMAP:
-            return action_filemap(din_gmem, dout_gmem, act_reg->Data.jspec.filemap);
+        case MF_FUNC_MAP:
+            return action_map(din_gmem, dout_gmem, act_reg);
+        case MF_FUNC_QUERY:
+            return action_query(din_gmem, dout_gmem, act_reg);
         case MF_FUNC_ACCESS:
-            return action_extentop(din_gmem, dout_gmem, act_reg->Data.jspec.extentop);
+            return action_access(din_gmem, dout_gmem, act_reg);
         default:
             return SNAP_RETC_FAILURE;
     }

@@ -1,4 +1,4 @@
-#include "hls_metalfpga_map.h"
+#include "hls_metalfpga_file.h"
 
 #include <string.h>
 #include <iostream>
@@ -6,6 +6,17 @@
 #include "action_metalfpga.H"
 #include "endianconv.hpp"
 
+typedef struct
+{
+    snapu8_t flags;
+    snapu16_t extent_count;
+    snapu64_t block_count;
+    snapu64_t current_pblock;
+    snapu64_t current_lblock;
+    snapu64_t block_buffer_address;
+} mf_slot_state_t;
+#define MF_SLOT_FLAG_OPEN 0x1
+#define MF_SLOT_FLAG_ACTIVE 0x2
 
 static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
@@ -77,11 +88,11 @@ static mf_bool_t mf_slot_open(mf_slot_offset_t slot, mf_extent_count_t extent_co
         return MF_FALSE;
     }
     mf_slots[slot].flags |= MF_SLOT_FLAG_OPEN;
-    mf_slots[slot].flags &= ~MF_SLOT_FLAG_BLOCK_ACTIVE;
+    mf_slots[slot].flags &= ~MF_SLOT_FLAG_ACTIVE;
     mf_slots[slot].extent_count = 0;
     mf_slots[slot].block_count = 0;
-    mf_slots[slot].physical_block_number = 0;
-    mf_slots[slot].logical_block_number = 0;
+    mf_slots[slot].current_pblock = 0;
+    mf_slots[slot].current_lblock = 0;
 
     //use the first 64k of DRAM as block buffers with fixed slot mapping
     mf_slots[slot].block_buffer_address = ((uint64_t)slot) << 12;
@@ -90,7 +101,7 @@ static mf_bool_t mf_slot_open(mf_slot_offset_t slot, mf_extent_count_t extent_co
 }
 
 
-mf_bool_t mf_file_open_direct(   mf_slot_offset_t slot,
+mf_bool_t mf_file_open_direct(  mf_slot_offset_t slot,
                                 mf_extent_count_t extent_count,
                                 const mf_extent_t extents[MF_EXTENT_DIRECT_COUNT])
 {
@@ -99,7 +110,7 @@ mf_bool_t mf_file_open_direct(   mf_slot_offset_t slot,
 
 }
 
-mf_bool_t mf_file_open_indirect( mf_slot_offset_t slot,
+mf_bool_t mf_file_open_indirect(mf_slot_offset_t slot,
                                 mf_extent_count_t extent_count,
                                 snapu64_t buffer_address,
                                 snap_membus_t * host_mem_in)
@@ -108,22 +119,22 @@ mf_bool_t mf_file_open_indirect( mf_slot_offset_t slot,
             mf_fill_extents_indirect(slot, extent_count, buffer_address, host_mem_in);
 }
 
-static mf_bool_t mf_file_close(mf_slot_offset_t slot)
+mf_bool_t mf_file_close(mf_slot_offset_t slot)
 {
 
     if (!(mf_slots[slot].flags & MF_SLOT_FLAG_OPEN))
     {
         return MF_FALSE;
     }
-    if (mf_slots[slot].flags & MF_SLOT_FLAG_BLOCK_ACTIVE)
+    if (mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE)
     {
         //TODO-lw flush block
-        mf_slots[slot].flags &= ~MF_SLOT_FLAG_BLOCK_ACTIVE;
+        mf_slots[slot].flags &= ~MF_SLOT_FLAG_ACTIVE;
     }
     mf_slots[slot].flags &= ~MF_SLOT_FLAG_OPEN;
     mf_slots[slot].extent_count = 0;
-    mf_slots[slot].physical_block_number = 0;
-    mf_slots[slot].logical_block_number = 0;
+    mf_slots[slot].current_pblock = 0;
+    mf_slots[slot].current_lblock = 0;
 
     return MF_TRUE;
 }

@@ -18,6 +18,7 @@ typedef struct mf_extent {
 } mf_extent_t;
 
 #define MF_FUNC_MAP 0
+#define MF_EXTENT_DIRECT_COUNT 4
 typedef struct mf_func_map_job {
     uint8_t slot;
     bool map;
@@ -25,16 +26,16 @@ typedef struct mf_func_map_job {
     uint16_t extent_count;
     union
     {
-        mf_extent_t direct[4];
+        mf_extent_t direct[MF_EXTENT_DIRECT_COUNT];
         uint64_t indirect_address;
     } extents;
 } mf_func_map_job_t;
 
 #define MF_FUNC_QUERY 1
 typedef struct mf_func_query_job {
-    bool slot;
-    uint8_t query_mapping;
-    uint8_t query_state;
+    uint8_t slot;
+    bool query_mapping;
+    bool query_state;
     uint64_t lblock_to_pblock;
     bool state_open;
     bool state_active;
