@@ -101,15 +101,17 @@ static void read_options(int argc, char ** argv)
 }
 
 // tokenizes input, changes input string, only works on NULL-terminated strings. returns first token when first token was found.
-static char * tokenize(char *input, char delimeter, char **next_token) {
+static char * tokenize(char *input, char delimeter, char **next_token, int *chars_left) {
     char *returnString = input;
-    while (*input != delimeter && *input != '\0') {
+    while (*input != delimeter && *input != '\0' && *chars_left > 0) {
 	input++;
+	(*chars_left)--;
     }
     if (*input != '\0') {
-		*input = '\0';
-    	*next_token = input + 1;
-	}
+	*input = '\0';
+    }
+    *next_token = input + 1;
+    (*chars_left)--;
 	
     return returnString;
 }
@@ -122,7 +124,7 @@ static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, ch
         free(*extents);
     }
     *extents = malloc(sizeof(mf_extent_t));
-    uint16_t extent_size = 1;
+    uint16_t extent_vector_size = 1;
     *extent_count = 0;
 
     // prepare tokenizer
@@ -130,28 +132,30 @@ static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, ch
     char *next_token;
 
     // get initial token from input string (format: <extentStart>:<extentLength>)
-    char *token = tokenize(input, delim, &next_token);
+    int input_left = strlen(input);
+    char *token = tokenize(input, delim, &next_token, &input_left);
 
-    while(token && *extent_count < 0xff) //uint16_t limited to 0xff
+    while(*token != '\0' && *extent_count < 0xff) //uint16_t limited to 0xff
     {
         (*extent_count)++;
 
 	// if extents gets too small, we double it in size, similar to a C++ style vector
-        if (*extent_count > extent_size)
+        if (*extent_count > extent_vector_size)
         {
-            extent_size *= 2;
-            *extents = realloc(*extents, extent_size * sizeof(mf_extent_t));
+            extent_vector_size *= 2;
+            *extents = realloc(*extents, extent_vector_size * sizeof(mf_extent_t));
         }
 
 	// parse extent_start and extent_length from token and store it in extents
 		mf_extent_t *new_extent = *extents + (unsigned int)*extent_count - 1;
 		char *extent_length;
-		char *extent_start = tokenize(token, ':', &extent_length); // rest of token get's put into extent_length, conveniently the rest of the token IS the current extent's length.
+		int token_length = strlen(token);
+		char *extent_start = tokenize(token, ':', &extent_length, &token_length); // rest of token get's put into extent_length, conveniently the rest of the token IS the current extent's length.
 		new_extent->block_begin = (uint64_t)strtoull(extent_start, NULL, 10);
 		new_extent->block_count = (uint64_t)strtoull(extent_length, NULL, 10);
         
 	// get next extent token
-        token = tokenize(next_token, delim, &next_token);
+        token = tokenize(next_token, delim, &next_token, &input_left);
     }
 }
 
@@ -163,7 +167,7 @@ static void snap_prepare_filemap_job(struct snap_job *cjob, metalfpga_job_t *mjo
 	// build filemap_job struct
 	mf_func_filemap_job_t filemap_job;
        	filemap_job.slot = opts.slot_no;
-	filemap_job.flags |= opts.operation;
+	filemap_job.flags = opts.operation;
 	switch (opts.operation) {
 	    case MF_FILEMAP_MODE_UNMAP:
 		filemap_job.extent_count = 0xff;
