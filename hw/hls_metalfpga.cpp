@@ -35,7 +35,7 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
 
         if (job.indirect)
         {
-            if (!mf_file_open_indirect(slot, extent_count, job.extents.indirect_address, din_gmem))
+            if (!mf_file_open_indirect(slot, extent_count, job.indirect_address, din_gmem))
             {
                 mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
@@ -44,10 +44,9 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
         else
         {
           mf_extent_t extents[MF_EXTENT_DIRECT_COUNT] = {
-            job.extents.direct.d1,
-            job.extents.direct.d2,
-            job.extents.direct.d3,
-            job.extents.direct.d4
+            job.direct.d1,
+            job.direct.d2,
+            job.direct.d3
           };
             if (!mf_file_open_direct(slot, extent_count, extents))
             {
@@ -99,23 +98,24 @@ static snapu32_t process_action(snap_membus_t * din_gmem,
 {
     snapu8_t function_code;
     function_code = act_reg->Data.function;
+    metalfpga_job_t job = act_reg->Data;
 
     switch(function_code)
     {
         case MF_FUNC_MAP:
           {
-            //mf_func_map_job_t map_job; // = act_reg->Data.jspec.map;
-            return SNAP_RETC_FAILURE; //action_map(din_gmem, dout_gmem, map_job);
+            //mf_func_map_job_t map_job = act_reg->Data.jspec.map;
+            return action_map(din_gmem, dout_gmem, job.jspec.map);
           }
         case MF_FUNC_QUERY:
           {
-            //mf_func_query_job_t query_job; // = act_reg->Data.jspec.query;
-            return SNAP_RETC_FAILURE; //action_query(din_gmem, dout_gmem, query_job);
+            //mf_func_query_job_t query_job = act_reg->Data.jspec.query;
+            return action_query(din_gmem, dout_gmem, job.jspec.query);
           }
         case MF_FUNC_ACCESS:
           {
-            //mf_func_access_job_t access_job; // = act_reg->Data.jspec.access;
-            return SNAP_RETC_FAILURE; //action_access(din_gmem, dout_gmem, access_job);
+            //mf_func_access_job_t access_job = act_reg->Data.jspec.access;
+            return action_access(din_gmem, dout_gmem, job.jspec.access);
           }
         default:
             return SNAP_RETC_FAILURE;
