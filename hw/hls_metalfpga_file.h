@@ -1,6 +1,5 @@
 #include "action_metalfpga.H"
 
-
 extern mf_buffer_t mf_file_buffers[MF_SLOT_COUNT];
 
 

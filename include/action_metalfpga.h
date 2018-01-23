@@ -20,30 +20,29 @@ typedef struct mf_extent {
 } mf_extent_t;
 
 #define MF_FUNC_MAP 0
+#define MF_EXTENT_DIRECT_COUNT 5
 typedef struct mf_func_map_job {
-    uint8_t slot;
-    bool map;
-    bool indirect;
-    uint16_t extent_count;
-    union
-    {
-        mf_extent_t direct[4];
-        uint64_t indirect_address;
-    } extents;
+    uint8_t slot : 4;
+    bool map : 1;
+    bool indirect : 1;
+    uint16_t extent_count : 16;
+    mf_extent_t direct_extents[MF_EXTENT_DIRECT_COUNT];
+    uint64_t indirect_address;
 } mf_func_map_job_t;
 
 #define MF_FUNC_QUERY 1
 typedef struct mf_func_query_job {
-    bool slot;
-    uint8_t query_mapping;
-    uint8_t query_state;
-    uint64_t lblock_to_pblock;
-    bool state_open;
-    bool state_active;
-    uint16_t state_extent_count;
-    uint64_t state_block_count;
-    uint64_t state_current_lblock;
-    uint64_t state_current_pblock;
+    uint8_t slot;
+    bool query_mapping;
+    bool query_state;
+    uint64_t lblock;//_to_pblock;
+    uint64_t result_address;
+    /* bool state_open; */
+    /* bool state_active; */
+    /* uint16_t state_extent_count; */
+    /* uint64_t state_block_count; */
+    /* uint64_t state_current_lblock; */
+    /* uint64_t state_current_pblock; */
 } mf_func_query_job_t;
 
 #define MF_FUNC_ACCESS 2

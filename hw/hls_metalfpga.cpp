@@ -4,8 +4,7 @@
 #include "action_metalfpga.H"
 
 #include "endianconv.hpp"
-#include "hls_metalfpga_access.h"
-#include "hls_metalfpga_map.h"
+#include "hls_metalfpga_file.h"
 
 
 #define HW_RELEASE_LEVEL       0x00000013
@@ -16,9 +15,9 @@ using namespace std;
 // --------------- ACTION FUNCTIONS ---------------
 // ------------------------------------------------
 
-static snapu32_t action_filemap(snap_membus_t * din_gmem,
+static snapu32_t action_map(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_filemap_job_t job)
+                                mf_func_map_job_t job)
 {
     if (job.slot >= MF_SLOT_COUNT)
     {
@@ -26,14 +25,7 @@ static snapu32_t action_filemap(snap_membus_t * din_gmem,
     }
     mf_slot_offset_t slot = job.slot;
 
-    if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_UNMAP)
-    {
-        if (!mf_map_close(slot))
-        {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-    else if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_MAP)
+    if (job.map)
     {
         if (job.extent_count > MF_EXTENT_COUNT)
         {
@@ -41,58 +33,89 @@ static snapu32_t action_filemap(snap_membus_t * din_gmem,
         }
         mf_extent_count_t extent_count = job.extent_count;
 
-        if (job.flags & MF_FILEMAP_INDIRECT)
+        if (job.indirect)
         {
-            if (!mf_map_open_direct(slot, extent_count, job.extents.direct))
+            if (!mf_file_open_indirect(slot, extent_count, job.indirect_address, din_gmem))
             {
-                mf_map_close(slot);
+                mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
             }
         }
         else
         {
-            if (!mf_map_open_indirect(slot, extent_count, job.extents.indirect_address, din_gmem))
+            if (!mf_file_open_direct(slot, extent_count, job.direct_extents))
             {
-                mf_map_close(slot);
+                mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
             }
         }
     }
-    else if ((job.flags & MF_FILEMAP_MODE) == MF_FILEMAP_MODE_TEST)
-    {
-        snap_membus_t line = din_gmem[job.extents.indirect_address>>ADDR_RIGHT_SHIFT];
-        snapu64_t logical_block_number = mf_get64(line, 0);
-        snapu64_t physical_block_number = mf_map_get_pblock(slot, logical_block_number);
-        mf_set64(line, 0, physical_block_number);
-        dout_gmem[job.extents.indirect_address>>ADDR_RIGHT_SHIFT] = line;
-    }
     else
     {
-        return SNAP_RETC_FAILURE;
+        if (!mf_file_close(slot))
+        {
+            return SNAP_RETC_FAILURE;
+        }
     }
+    return SNAP_RETC_SUCCESS;
+}
+
+static snapu16_t action_query(snap_membus_t * din_gmem,
+                                snap_membus_t * dout_gmem,
+                                mf_func_query_job_t job)
+{
+    snap_membus_t line;
+    if (job.query_mapping)
+    {
+        snapu64_t pblock= mf_file_map_pblock(job.slot, job.lblock);
+        mf_set64(line, 0, pblock);
+    }
+    if (job.query_state)
+    {
+        mf_set64(line, 8, mf_file_is_open(job.slot));
+        mf_set64(line, 16, mf_file_is_active(job.slot));
+        mf_set64(line, 24, mf_file_get_extent_count(job.slot));
+        mf_set64(line, 32, mf_file_get_block_count(job.slot));
+        mf_set64(line, 40, mf_file_get_lblock(job.slot));
+        mf_set64(line, 48, mf_file_get_pblock(job.slot));
+    }
+    MFB_WRITE(dout_gmem, job.result_address, line);
+    //dout_gmem[MFB_ADDRESS(job.result_address)] = line
     return SNAP_RETC_SUCCESS;
 }
 
 static snapu32_t action_access(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_extentop_job_t job)
+                                mf_func_access_job_t job)
 {
     return SNAP_RETC_FAILURE;
 }
 
 static snapu32_t process_action(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
-                                mf_func_access_job_t job)
+                                action_reg * act_reg)
 {
     snapu8_t function_code;
     function_code = act_reg->Data.function;
+    metalfpga_job_t job = act_reg->Data;
 
     switch(function_code)
     {
-        case MF_FUNC_FILEMAP:
-            return action_filemap(din_gmem, dout_gmem, act_reg->Data.jspec.filemap);
+        case MF_FUNC_MAP:
+          {
+            //mf_func_map_job_t map_job = act_reg->Data.jspec.map;
+            return action_map(din_gmem, dout_gmem, job.jspec.map);
+          }
+        case MF_FUNC_QUERY:
+          {
+            //mf_func_query_job_t query_job = act_reg->Data.jspec.query;
+            return action_query(din_gmem, dout_gmem, job.jspec.query);
+          }
         case MF_FUNC_ACCESS:
-            return action_extentop(din_gmem, dout_gmem, act_reg->Data.jspec.extentop);
+          {
+            //mf_func_access_job_t access_job = act_reg->Data.jspec.access;
+            return action_access(din_gmem, dout_gmem, job.jspec.access);
+          }
         default:
             return SNAP_RETC_FAILURE;
     }

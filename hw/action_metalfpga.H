@@ -9,6 +9,7 @@
 #define MEMDW_W (ADDR_RIGHT_SHIFT+3)
 
 #define MFB_ADDRESS(A) (A >> ADDR_RIGHT_SHIFT)
+#define MFB_WRITE(PTR, A, VAL) PTR[MFB_ADDRESS(A)]=VAL
 #define MFB_INCREMENT (0x1 << ADDR_RIGHT_SHIFT)
 typedef ap_uint<ADDR_RIGHT_SHIFT> mfb_byteoffset_t;
 typedef ap_uint<ADDR_RIGHT_SHIFT+3> mfb_bitoffset_t;
@@ -26,7 +27,6 @@ typedef ap_uint<1> mf_bool_t;
 #define MF_EXTENT_COUNT (0x1 << MF_EXTENT_COUNT_W)
 typedef ap_uint<MF_EXTENT_COUNT_W> mf_extent_offset_t;
 typedef ap_uint<MF_EXTENT_COUNT_W+1> mf_extent_count_t;
-#define MF_EXTENT_DIRECT_COUNT 5
 
 #define MF_EXTENT_BYTES_W 4
 #define MF_EXTENT_BYTES (0x1 << MF_EXTENT_BYTES_W)
@@ -47,21 +47,10 @@ typedef ap_uint<MF_SLOT_COUNT_W+1> mf_slot_count_t;
 #define MF_BUFFER_BYTES (0x1<<MF_BUFFER_BYTES_W)
 #define MF_BUFFER_LINES_W (MF_BRAM_BITS_W-MEMDW_W)
 #define MF_BUFFER_LINES (0x1<<MF_BUFFER_LINES_W)
-typedef snap_membus_t[MF_BUFFER_LINES] mf_buffer_t;
+typedef snap_membus_t mf_buffer_t[MF_BUFFER_LINES];
 typedef ap_uint<MF_BUFFER_LINES_W> mf_buffer_line_offset_t;
 typedef ap_uint<MF_BUFFER_LINES_W+1> mf_buffer_line_count_t;
 
-typedef struct
-{
-    snapu8_t flags;
-    snapu16_t extent_count;
-    snapu64_t block_count;
-    snapu64_t current_pblock;
-    snapu64_t current_lblock;
-    snapu64_t block_buffer_address;
-} mf_slot_state_t;
-#define MF_SLOT_FLAG_OPEN 0x1
-#define MF_SLOT_FLAG_ACTIVE 0x2
 
 //---------------------------------------------------------------------
 typedef struct {
