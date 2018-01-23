@@ -43,12 +43,7 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
         }
         else
         {
-          mf_extent_t extents[MF_EXTENT_DIRECT_COUNT] = {
-            job.direct.d1,
-            job.direct.d2,
-            job.direct.d3
-          };
-            if (!mf_file_open_direct(slot, extent_count, extents))
+            if (!mf_file_open_direct(slot, extent_count, job.direct_extents))
             {
                 mf_file_close(slot);
                 return SNAP_RETC_FAILURE;
@@ -69,19 +64,23 @@ static snapu16_t action_query(snap_membus_t * din_gmem,
                                 snap_membus_t * dout_gmem,
                                 mf_func_query_job_t job)
 {
+    snap_membus_t line;
     if (job.query_mapping)
     {
-        snapu64_t lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
+        snapu64_t pblock= mf_file_map_pblock(job.slot, job.lblock);
+        mf_set64(line, 0, pblock);
     }
     if (job.query_state)
     {
-        bool state_open = mf_file_is_open(job.slot);
-        bool state_active = mf_file_is_active(job.slot);
-        snapu16_t state_extent_count = mf_file_get_extent_count(job.slot);
-        snapu64_t state_block_count = mf_file_get_block_count(job.slot);
-        snapu64_t state_current_lblock = mf_file_get_lblock(job.slot);
-        snapu64_t state_current_pblock = mf_file_get_pblock(job.slot);
+        mf_set64(line, 8, mf_file_is_open(job.slot));
+        mf_set64(line, 16, mf_file_is_active(job.slot));
+        mf_set64(line, 24, mf_file_get_extent_count(job.slot));
+        mf_set64(line, 32, mf_file_get_block_count(job.slot));
+        mf_set64(line, 40, mf_file_get_lblock(job.slot));
+        mf_set64(line, 48, mf_file_get_pblock(job.slot));
     }
+    MFB_WRITE(dout_gmem, job.result_address, line);
+    //dout_gmem[MFB_ADDRESS(job.result_address)] = line
     return SNAP_RETC_SUCCESS;
 }
 

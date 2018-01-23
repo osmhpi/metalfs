@@ -9,6 +9,7 @@
 #define MEMDW_W (ADDR_RIGHT_SHIFT+3)
 
 #define MFB_ADDRESS(A) (A >> ADDR_RIGHT_SHIFT)
+#define MFB_WRITE(PTR, A, VAL) PTR[MFB_ADDRESS(A)]=VAL
 #define MFB_INCREMENT (0x1 << ADDR_RIGHT_SHIFT)
 typedef ap_uint<ADDR_RIGHT_SHIFT> mfb_byteoffset_t;
 typedef ap_uint<ADDR_RIGHT_SHIFT+3> mfb_bitoffset_t;
