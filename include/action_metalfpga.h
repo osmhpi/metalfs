@@ -4,6 +4,7 @@
 /*
  * TODO: licensing, implemented according to IBM snap examples
  */
+#include "stdbool.h"
 #include <snap_types.h>
 
 #ifdef __cplusplus
@@ -23,7 +24,7 @@ typedef struct mf_extent {
 #define MF_EXTENT_DIRECT_COUNT 5
 typedef struct mf_func_map_job {
     uint8_t slot : 4;
-    bool map : 1;
+    bool map : 1; // decides wether we map or unmap
     bool indirect : 1;
     uint16_t extent_count : 16;
     mf_extent_t direct_extents[MF_EXTENT_DIRECT_COUNT];
