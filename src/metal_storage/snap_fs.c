@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L //because we want to use posix_memalign, see here: https://stackoverflow.com/questions/32438554/warning-implicit-declaration-of-posix-memalign
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,7 @@ typedef struct {
     bool query_mapping;
     bool query_state;
     uint64_t lblock;
+    uint64_t result_addr;
 } query_options_t;
 
 typedef struct {
@@ -190,7 +192,7 @@ static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, ch
 
 static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob) {
 
-    assert(sizeof(*mjob) <= SNAP_JOBSIZE);
+    assert(sizeof(*mjob) <= 108);
     memset(mjob, 0, sizeof(*mjob));
 
     // build query job struct
@@ -199,9 +201,17 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     query_job.slot = opts.slot_no;
     if (query_opts->query_mapping) {
         query_job.query_mapping = true;
-        query_job.query_mapping = query_opts->lblock;
+        query_job.lblock = query_opts->lblock;
     }
     query_job.query_state = query_opts->query_state;
+
+    //get 64 bit aligned memory for our action to write the query results into
+    if (posix_memalign((void**)&query_opts->result_addr, 64, 56) != 0) {
+        perror("FAILED: posix_memalign");
+        return;
+    }
+
+    query_job.result_address = query_opts->result_addr;
 
     //set job struct parameters
     mjob->function = MF_FUNC_QUERY;
@@ -213,11 +223,12 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 
 static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 {
-    assert(sizeof(*mjob) <= SNAP_JOBSIZE);
+    assert(sizeof(*mjob) <= 108);
     memset(mjob, 0, sizeof(*mjob));
 
     // build map job struct
     mf_func_map_job_t map_job;
+
     map_options_t *map_opts = &opts.func_options.map_opts;
     map_job.slot = opts.slot_no;
     map_job.map = map_opts->map;
@@ -275,6 +286,7 @@ int main(int argc, char *argv[])
                 opts.card_no, strerror(errno));
         goto out_error1;
     }
+
     switch(opts.func_type) {
         case MF_FUNC_MAP:
             snap_prepare_map_job(&cjob, &mjob);
@@ -295,6 +307,10 @@ int main(int argc, char *argv[])
     if (cjob.retc != SNAP_RETC_SUCCESS) {
         fprintf(stderr, "err: Unexpected RETC=%x!\n", cjob.retc);
         goto out_error2;
+    }
+
+    if (opts.func_type == MF_FUNC_QUERY) {
+        // read results from opts.func_options.query_opts.result_addr
     }
 
     snap_detach_action(action);
