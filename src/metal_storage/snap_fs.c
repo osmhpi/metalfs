@@ -309,8 +309,26 @@ int main(int argc, char *argv[])
         goto out_error2;
     }
 
+    // output query results
     if (opts.func_type == MF_FUNC_QUERY) {
-        // read results from opts.func_options.query_opts.result_addr
+        query_options_t query_opts = opts.func_options.query_opts;
+        uint64_t *result = (uint64_t *)query_opts.result_addr;
+        if (query_opts.query_mapping) {
+            printf("Logical block %lu mapped to physical block %lu.",
+                    query_opts.lblock,
+                    *result);
+        }
+        if (query_opts.query_state) {
+            (bool)*(result + 1) ? printf("Slot %d is open ", opts.slot_no) : printf("Slot %d is closed ", opts.slot_no);
+            (bool)*(result + 2) ? printf("and active.\n") : printf("and not active.\n");
+            printf("===== MAPPING =====\n");
+            printf("%d extents, ", (uint16_t)*result + 3);
+            printf("%lu blocks mapped.\n", *result + 4);
+            printf("===== CURRENT OPERATION =====");
+            printf("Logical block %lu\n", *result + 5);
+            printf("Physical block %lu\n", *result + 6);
+        }
+        free((uint64_t *)query_opts.result_addr);
     }
 
     snap_detach_action(action);
