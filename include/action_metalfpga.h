@@ -1,5 +1,5 @@
-#ifndef __ACTION_METALFPGA_H__
-#define __ACTION_METALFPGA_H__
+#ifndef __ACTION_METALFPGA_H_HLS__
+#define __ACTION_METALFPGA_H_HLS__
 
 /*
  * TODO: licensing, implemented according to IBM snap examples
@@ -12,56 +12,44 @@ extern "C" {
 
 #define METALFPGA_ACTION_TYPE 0x00000216
 
-typedef struct mf_extent {
-    uint64_t block_begin;
-    uint64_t block_count;
-} mf_extent_t;
+#define MF_JOB_MAP 0
+// 64bit words at job_address:
+//   word0: slot                | R
+//   word1: map_else_unmap      | R
+//   word2: extent_count        | R
+//   ...
+//   word(2n+8): extent n begin | R
+//   word(2n+9): extent n count | R
 
-#define MF_FUNC_MAP 0
-#define MF_EXTENT_DIRECT_COUNT 5
-typedef struct mf_func_map_job {
-    uint8_t slot : 4;
-    bool map : 1;
-    bool indirect : 1;
-    uint16_t extent_count : 16;
-    mf_extent_t direct_extents[MF_EXTENT_DIRECT_COUNT];
-    uint64_t indirect_address;
-} mf_func_map_job_t;
+#define MF_JOB_QUERY 1
+// 64bit words at job_address:
+//   word0:                     |
+//     byte0: slot              | R
+//     byte1: query_mapping     | R
+//     byte2: query_state       | R
+//     byte3: is_open           | W  if query_state
+//     byet4: is_active         | W  if query_state
+//   word1: lblock_to_pblock    | RW if query_mapping
+//   word2: extent_count        | W  if query_state
+//   word3: block_count         | W  if query_state
+//   word4: current_lblock      | W  if query_state
+//   word5: current_pblock      | W  if query_state
 
-#define MF_FUNC_QUERY 1
-typedef struct mf_func_query_job {
-    uint8_t slot;
-    bool query_mapping;
-    bool query_state;
-    uint64_t lblock;//_to_pblock;
-    uint64_t result_address;
-    /* bool state_open; */
-    /* bool state_active; */
-    /* uint16_t state_extent_count; */
-    /* uint64_t state_block_count; */
-    /* uint64_t state_current_lblock; */
-    /* uint64_t state_current_pblock; */
-} mf_func_query_job_t;
-
-#define MF_FUNC_ACCESS 2
-typedef struct mf_func_access_job {
-    uint8_t operation;
-    uint8_t flags; // TODO-lw define Flag masks and positions
-    uint64_t host_buffer;
-    uint64_t file_offset;
-    uint64_t byte_count;
-} mf_func_access_job_t;
+#define MF_JOB_ACCESS 2
+// 64bit words at job_address:
+//   word0:                     |
+//     byte0: slot              | R
+//     byte1: write_else_read   | R
+//   word1: buffer_address      | R
+//   word2: file_byte_offset    | R
+//   word3: file_byte_count     | R
 
 typedef struct metalfpga_job {
-    uint8_t function;
-    union {
-        mf_func_map_job_t map;
-        mf_func_query_job_t query;
-        mf_func_access_job_t access;
-    } jspec;
+    uint64_t job_address;
+    uint64_t job_type;
 } metalfpga_job_t;
 
 #ifdef __cplusplus
 }
 #endif
-#endif	/* __ACTION_METALFPGA_H__ */
+#endif // __ACTION_METALFPGA_H_HLS__
