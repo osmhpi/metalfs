@@ -23,13 +23,6 @@ static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
 static mf_retc_t action_query(mf_job_query_t & job);
 static mf_retc_t action_access(const mf_job_access_t & job);
 
-static mf_retc_t action_file_write_buffer(snap_membus_t * mem_in,
-                                      snap_membus_t * mem_ddr,
-                                      const mf_job_access_t & job);
-static mf_retc_t action_file_read_buffer(snap_membus_t * mem_out,
-                                     snap_membus_t * mem_ddr,
-                                     const mf_job_access_t & job);
-
 static void action_file_read_block(snap_membus_t * mem,
                                    mf_slot_offset_t slot,
                                    snapu64_t buffer_address,
@@ -185,20 +178,6 @@ static mf_retc_t action_access(snap_membus_t * mem_in,
         return SNAP_RETC_FAILURE;
     }
 
-    if (job.write_else_read)
-    {
-        return mf_file_write_buffer(mem_in, mem_ddr, job);
-    }
-    else
-    {
-        return mf_file_read_buffer(mem_out, mem_ddr, job);
-    }
-}
-
-static mf_retc_t action_file_write_buffer(snap_membus_t * mem_in,
-                                   snap_membus_t * mem_ddr,
-                                   const mf_job_access_t & job)
-{
     const snapu64_t file_blocks = mf_file_get_block_count(job.slot);
     const snapu64_t file_bytes = file_blocks * MF_BLOCK_BYTES;
     if (job.file_byte_offset + job.file_byte_count > file_bytes)
@@ -212,42 +191,86 @@ static mf_retc_t action_file_write_buffer(snap_membus_t * mem_in,
     const snapu64_t file_end_block = MF_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
 
     snapu64_t buffer_address = job.buffer_address;
-    mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE);//TODO-lw return FAILURE if fails
+    if (! mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE)) return SNAP_RETC_FAILURE;
     for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
     {
         mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0;
         mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1;
-        action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
 
-        mf_file_next(mem_ddr, job.slot, MF_TRUE);//TODO-lw return FAILURE if fails
+        if (write_else_read)
+        {
+            action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
+        }
+        else
+        {
+            action_file_read_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
+        }
+
+        buffer_address += end_offset - begin_offset + 1;
+
+        if (i_block == file_end_block)
+        {
+            if (! mf_file_flush(mem_ddr, job.slot)) return SNAP_RETC_FAILURE;
+        }
+        else
+        {
+            if (! mf_file_next(mem_ddr, job.slot, MF_TRUE)) return SNAP_RETC_FAILURE;
+        }
     }
     return SNAP_RETC_SUCCESS;
 }
 
-static mf_retc_t action_file_read_buffer(snap_membus_t * mem_out,
-                                  snap_membus_t * mem_ddr,
-                                  const mf_job_access_t & job)
-{
-
-    return SNAP_RETC_FAILURE;
-}
 
 static void action_file_write_block(snap_membus_t * mem,
                                     mf_slot_offset_t slot,
                                     snapu64_t buffer_address,
-                                    mf_block_offset_tbegin_offset,
+                                    mf_block_offset_t begin_offset,
                                     mf_block_offset_t end_offset)
 {
-    mf_file_buffers[slot];
+    snapu64_t end_address = buffer_address + end_offset - begin_offset;
+
+    snapu64_t begin_line = MFB_ADDRESS(buffer_address);
+    mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
+    snapu64_t end_line = MFB_ADDRESS(end_address);
+    mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
+
+    mf_block_offset_t offset = begin_offset;
+    for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
+    {
+        snap_membus_t line = mem[i_line];
+        mfb_byteoffset_t begin_byte = (i_line == begin_line)? begin_line_offset : 0;
+        mfb_byteoffset_t end_byte = (i_line == end_line)? end_line_offset : BP - 1;
+        for (mfb_byteoffset_t i_byte = = begin_byte; i_byte <= end_byte; ++i_byte)
+        {
+            mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
+        }
+    }
 }
 
 static void action_file_read_block(snap_membus_t * mem,
                                    mf_slot_offset_t slot,
                                    snapu64_t buffer_address,
-                                   mf_block_offset_tbegin_offset,
+                                   mf_block_offset_t begin_offset,
                                    mf_block_offset_t end_offset)
 {
-    mf_file_buffers[slot];
+    /* snapu64_t end_address = buffer_address + end_offset - begin_offset; */
+
+    /* snapu64_t begin_line = MFB_ADDRESS(buffer_address); */
+    /* mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address); */
+    /* snapu64_t end_line = MFB_ADDRESS(end_address); */
+    /* mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address); */
+
+    /* mf_block_offset_t offset = begin_offset; */
+    /* for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line) */
+    /* { */
+    /*     snap_membus_t line = mem[i_line]; */
+    /*     mfb_byteoffset_t begin_byte = (i_line == begin_line)? begin_line_offset : 0; */
+    /*     mfb_byteoffset_t end_byte = (i_line == end_line)? end_line_offset : BP - 1; */
+    /*     for (mfb_byteoffset_t i_byte = = begin_byte; i_byte <= end_byte; ++i_byte) */
+    /*     { */
+    /*         mf_file_buffers[slot][offset++] = mf_get8(line, i_byte); */
+    /*     } */
+    /* } */
 }
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------
