@@ -23,7 +23,23 @@ static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
 static mf_retc_t action_query(mf_job_query_t & job);
 static mf_retc_t action_access(const mf_job_access_t & job);
 
+static mf_retc_t action_file_write_buffer(snap_membus_t * mem_in,
+                                      snap_membus_t * mem_ddr,
+                                      const mf_job_access_t & job);
+static mf_retc_t action_file_read_buffer(snap_membus_t * mem_out,
+                                     snap_membus_t * mem_ddr,
+                                     const mf_job_access_t & job);
 
+static void action_file_read_block(snap_membus_t * mem,
+                                   mf_slot_offset_t slot,
+                                   snapu64_t buffer_address,
+                                   mf_block_offset_tbegin_offset,
+                                   mf_block_offset_t end_offset);
+static void action_file_write_block(snap_membus_t * mem,
+                                    mf_slot_offset_t slot,
+                                    snapu64_t buffer_address,
+                                    mf_block_offset_tbegin_offset,
+                                    mf_block_offset_t end_offset);
 // ------------------------------------------------
 // -------------- ACTION ENTRY POINT --------------
 // ------------------------------------------------
@@ -146,8 +162,6 @@ static mf_retc_t action_query(mf_job_query_t & job)
     if (job.query_mapping)
     {
         job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
-        /* snapu64_t pblock= mf_file_map_pblock(job.slot, job.lblock); */
-        /* mf_set64(line, 0, pblock); */
     }
     if (job.query_state)
     {
@@ -157,29 +171,84 @@ static mf_retc_t action_query(mf_job_query_t & job)
         job.block_count = mf_file_get_block_count(job.slot);
         job.current_lblock = mf_file_get_lblock(job.slot);
         job.current_pblock = mf_file_get_pblock(job.slot);
-        /* mf_set64(line, 8, mf_file_is_open(job.slot)); */
-        /* mf_set64(line, 16, mf_file_is_active(job.slot)); */
-        /* mf_set64(line, 24, mf_file_get_extent_count(job.slot)); */
-        /* mf_set64(line, 32, mf_file_get_block_count(job.slot)); */
-        /* mf_set64(line, 40, mf_file_get_lblock(job.slot)); */
-        /* mf_set64(line, 48, mf_file_get_pblock(job.slot)); */
     }
-    /* MFB_WRITE(gmem_host_out, job.result_address, line); */
-    //dout_gmem[MFB_ADDRESS(job.result_address)] = line
     return SNAP_RETC_SUCCESS;
 }
 
-static mf_retc_t action_access(const mf_job_access_t & job)
+static mf_retc_t action_access(snap_membus_t * mem_in,
+                               snap_membus_t * mem_out,
+                               snap_membus_t * mem_ddr,
+                               const mf_job_access_t & job)
 {
     if (! mf_file_is_open(job.slot))
     {
         return SNAP_RETC_FAILURE;
     }
 
+    if (job.write_else_read)
+    {
+        return mf_file_write_buffer(mem_in, mem_ddr, job);
+    }
+    else
+    {
+        return mf_file_read_buffer(mem_out, mem_ddr, job);
+    }
+}
+
+static mf_retc_t action_file_write_buffer(snap_membus_t * mem_in,
+                                   snap_membus_t * mem_ddr,
+                                   const mf_job_access_t & job)
+{
+    const snapu64_t file_blocks = mf_file_get_block_count(job.slot);
+    const snapu64_t file_bytes = file_blocks * MF_BLOCK_BYTES;
+    if (job.file_byte_offset + job.file_byte_count > file_bytes)
+    {
+        return SNAP_RETC_FAILURE;
+    }
+
+    const mf_block_offset_t file_begin_offset = MF_BLOCK_OFFSET(job.file_byte_offset);
+    const snapu64_t file_begin_block = MF_BLOCK_NUMBER(job.file_byte_offset);
+    const mf_block_offset_t file_end_offset = MF_BLOCK_OFFSET(job.file_byte_offset + job.file_byte_count - 1);
+    const snapu64_t file_end_block = MF_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
+
+    snapu64_t buffer_address = job.buffer_address;
+    mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE);//TODO-lw return FAILURE if fails
+    for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
+    {
+        mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0;
+        mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1;
+        action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
+
+        mf_file_next(mem_ddr, job.slot, MF_TRUE);//TODO-lw return FAILURE if fails
+    }
+    return SNAP_RETC_SUCCESS;
+}
+
+static mf_retc_t action_file_read_buffer(snap_membus_t * mem_out,
+                                  snap_membus_t * mem_ddr,
+                                  const mf_job_access_t & job)
+{
+
     return SNAP_RETC_FAILURE;
 }
 
+static void action_file_write_block(snap_membus_t * mem,
+                                    mf_slot_offset_t slot,
+                                    snapu64_t buffer_address,
+                                    mf_block_offset_tbegin_offset,
+                                    mf_block_offset_t end_offset)
+{
+    mf_file_buffers[slot];
+}
 
+static void action_file_read_block(snap_membus_t * mem,
+                                   mf_slot_offset_t slot,
+                                   snapu64_t buffer_address,
+                                   mf_block_offset_tbegin_offset,
+                                   mf_block_offset_t end_offset)
+{
+    mf_file_buffers[slot];
+}
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------
 //-----------------------------------------------------------------------------
