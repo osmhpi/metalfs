@@ -1,23 +1,114 @@
-#include <string.h>
-#include <iostream>
-
 #include "action_metalfpga.H"
 
-#include "endianconv.hpp"
-#include "hls_metalfpga_file.h"
+#include "mf_endian.h"
+#include "mf_file.h"
+#include "mf_jobstruct.h"
+
+
+/* #include "hls_globalmem.h" */
+
+/* snap_membus_t * gmem_host_in; */
+/* snap_membus_t * gmem_host_out; */
+/* snap_membus_t * gmem_ddr; */
 
 
 #define HW_RELEASE_LEVEL       0x00000013
 
-using namespace std;
+
+static mf_retc_t process_action(snap_membus_t * mem_in,
+                                snap_membus_t * mem_out,
+                                action_reg * act_reg);
+
+static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
+static mf_retc_t action_query(mf_job_query_t & job);
+static mf_retc_t action_access(const mf_job_access_t & job);
+
+
+// ------------------------------------------------
+// -------------- ACTION ENTRY POINT --------------
+// ------------------------------------------------
+// This design uses FPGA DDR.
+// Set Environment Variable "SDRAM_USED=TRUE" before compilation.
+void hls_action(snap_membus_t * din,
+                snap_membus_t * dout,
+                snap_membus_t * ddr,
+                action_reg * action_reg,
+                action_RO_config_reg * action_config)
+{
+    // Configure Host Memory AXI Interface
+#pragma HLS INTERFACE m_axi port=din bundle=host_mem offset=slave depth=512
+#pragma HLS INTERFACE m_axi port=dout bundle=host_mem offset=slave depth=512
+#pragma HLS INTERFACE s_axilite port=din bundle=ctrl_reg offset=0x030
+#pragma HLS INTERFACE s_axilite port=dout bundle=ctrl_reg offset=0x040
+
+    // Configure Host Memory AXI Lite Master Interface
+#pragma HLS DATA_PACK variable=action_config
+#pragma HLS INTERFACE s_axilite port=action_config bundle=ctrl_reg  offset=0x010
+#pragma HLS DATA_PACK variable=action_reg
+#pragma HLS INTERFACE s_axilite port=action_reg bundle=ctrl_reg offset=0x100
+#pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
+
+    // Configure DDR memory Interface
+#pragma HLS INTERFACE m_axi port=ddr bundle=card_mem0 offset=slave depth=512 \
+  max_read_burst_length=64  max_write_burst_length=64 
+#pragma HLS INTERFACE s_axilite port=ddr bundle=ctrl_reg offset=0x050
+
+
+    // Make memory ports globally accessible
+    /* gmem_host_in = din; */
+    /* gmem_host_out = dout; */
+    /* gmem_ddr = ddr; */
+
+    // Required Action Type Detection
+    switch (action_reg->Control.flags) {
+    case 0:
+        action_config->action_type = (snapu32_t)METALFPGA_ACTION_TYPE;
+        action_config->release_level = (snapu32_t)HW_RELEASE_LEVEL;
+        action_reg->Control.Retc = (snapu32_t)0xe00f;
+        break;
+    default:
+        action_reg->Control.Retc = process_action(din, dout, action_reg);
+        break;
+    }
+}
+
 
 // ------------------------------------------------
 // --------------- ACTION FUNCTIONS ---------------
 // ------------------------------------------------
 
-static snapu32_t action_map(snap_membus_t * din_gmem,
-                                snap_membus_t * dout_gmem,
-                                mf_func_map_job_t job)
+// Decode job_type and call appropriate action
+static mf_retc_t process_action(snap_membus_t * mem_in,
+                                snap_membus_t * mem_out,
+                                action_reg * act_reg)
+{
+    switch(act_reg->Data.job_type)
+    {
+        case MF_JOB_MAP:
+          {
+            mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
+            return action_map(mem_in, map_job);
+          }
+        case MF_JOB_QUERY:
+          {
+            mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
+            mf_retc_t retc = action_query(query_job);
+            mf_write_job_query(mem_out, act_reg->Data.job_address, query_job);
+            return retc;
+          }
+        case MF_JOB_ACCESS:
+          {
+            mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
+            return action_access(access_job);
+          }
+        default:
+            return SNAP_RETC_FAILURE;
+    }
+}
+
+// File Map / Unmap Operation:
+static mf_retc_t action_map(snap_membus_t * mem_in,
+                            const mf_job_map_t & job)
 {
     if (job.slot >= MF_SLOT_COUNT)
     {
@@ -25,7 +116,7 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
     }
     mf_slot_offset_t slot = job.slot;
 
-    if (job.map)
+    if (job.map_else_unmap)
     {
         if (job.extent_count > MF_EXTENT_COUNT)
         {
@@ -33,21 +124,10 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
         }
         mf_extent_count_t extent_count = job.extent_count;
 
-        if (job.indirect)
+        if (!mf_file_open(slot, extent_count, job.extent_address, mem_in))
         {
-            if (!mf_file_open_indirect(slot, extent_count, job.indirect_address, din_gmem))
-            {
-                mf_file_close(slot);
-                return SNAP_RETC_FAILURE;
-            }
-        }
-        else
-        {
-            if (!mf_file_open_direct(slot, extent_count, job.direct_extents))
-            {
-                mf_file_close(slot);
-                return SNAP_RETC_FAILURE;
-            }
+            mf_file_close(slot);
+            return SNAP_RETC_FAILURE;
         }
     }
     else
@@ -60,110 +140,53 @@ static snapu32_t action_map(snap_membus_t * din_gmem,
     return SNAP_RETC_SUCCESS;
 }
 
-static snapu16_t action_query(snap_membus_t * din_gmem,
-                                snap_membus_t * dout_gmem,
-                                mf_func_query_job_t job)
+static mf_retc_t action_query(mf_job_query_t & job)
 {
     snap_membus_t line;
     if (job.query_mapping)
     {
-        snapu64_t pblock= mf_file_map_pblock(job.slot, job.lblock);
-        mf_set64(line, 0, pblock);
+        job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
+        /* snapu64_t pblock= mf_file_map_pblock(job.slot, job.lblock); */
+        /* mf_set64(line, 0, pblock); */
     }
     if (job.query_state)
     {
-        mf_set64(line, 8, mf_file_is_open(job.slot));
-        mf_set64(line, 16, mf_file_is_active(job.slot));
-        mf_set64(line, 24, mf_file_get_extent_count(job.slot));
-        mf_set64(line, 32, mf_file_get_block_count(job.slot));
-        mf_set64(line, 40, mf_file_get_lblock(job.slot));
-        mf_set64(line, 48, mf_file_get_pblock(job.slot));
+        job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
+        job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
+        job.extent_count = mf_file_get_extent_count(job.slot);
+        job.block_count = mf_file_get_block_count(job.slot);
+        job.current_lblock = mf_file_get_lblock(job.slot);
+        job.current_pblock = mf_file_get_pblock(job.slot);
+        /* mf_set64(line, 8, mf_file_is_open(job.slot)); */
+        /* mf_set64(line, 16, mf_file_is_active(job.slot)); */
+        /* mf_set64(line, 24, mf_file_get_extent_count(job.slot)); */
+        /* mf_set64(line, 32, mf_file_get_block_count(job.slot)); */
+        /* mf_set64(line, 40, mf_file_get_lblock(job.slot)); */
+        /* mf_set64(line, 48, mf_file_get_pblock(job.slot)); */
     }
-    MFB_WRITE(dout_gmem, job.result_address, line);
+    /* MFB_WRITE(gmem_host_out, job.result_address, line); */
     //dout_gmem[MFB_ADDRESS(job.result_address)] = line
     return SNAP_RETC_SUCCESS;
 }
 
-static snapu32_t action_access(snap_membus_t * din_gmem,
-                                snap_membus_t * dout_gmem,
-                                mf_func_access_job_t job)
+static mf_retc_t action_access(const mf_job_access_t & job)
 {
+    if (! mf_file_is_open(job.slot))
+    {
+        return SNAP_RETC_FAILURE;
+    }
+
     return SNAP_RETC_FAILURE;
 }
 
-static snapu32_t process_action(snap_membus_t * din_gmem,
-                                snap_membus_t * dout_gmem,
-                                action_reg * act_reg)
-{
-    snapu8_t function_code;
-    function_code = act_reg->Data.function;
-    metalfpga_job_t job = act_reg->Data;
-
-    switch(function_code)
-    {
-        case MF_FUNC_MAP:
-          {
-            //mf_func_map_job_t map_job = act_reg->Data.jspec.map;
-            return action_map(din_gmem, dout_gmem, job.jspec.map);
-          }
-        case MF_FUNC_QUERY:
-          {
-            //mf_func_query_job_t query_job = act_reg->Data.jspec.query;
-            return action_query(din_gmem, dout_gmem, job.jspec.query);
-          }
-        case MF_FUNC_ACCESS:
-          {
-            //mf_func_access_job_t access_job = act_reg->Data.jspec.access;
-            return action_access(din_gmem, dout_gmem, job.jspec.access);
-          }
-        default:
-            return SNAP_RETC_FAILURE;
-    }
-}
-
-// This design does use FPGA DDR.
-// Need to set Environment Variable "SDRAM_USED=TRUE" before compilation.
-void hls_action(snap_membus_t * din_gmem,
-                snap_membus_t * dout_gmem,
-                snap_membus_t * ddr_gmem,
-                action_reg *action_reg, action_RO_config_reg *Action_Config)
-{
-    // Host Memory AXI Interface
-#pragma HLS INTERFACE m_axi port=din_gmem bundle=host_mem offset=slave depth=512
-#pragma HLS INTERFACE m_axi port=dout_gmem bundle=host_mem offset=slave depth=512
-#pragma HLS INTERFACE s_axilite port=din_gmem bundle=ctrl_reg offset=0x030
-#pragma HLS INTERFACE s_axilite port=dout_gmem bundle=ctrl_reg offset=0x040
-
-    // Host Memory AXI Lite Master Interface
-#pragma HLS DATA_PACK variable=Action_Config
-#pragma HLS INTERFACE s_axilite port=Action_Config bundle=ctrl_reg  offset=0x010
-#pragma HLS DATA_PACK variable=action_reg
-#pragma HLS INTERFACE s_axilite port=action_reg bundle=ctrl_reg offset=0x100
-#pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
-
-    	// DDR memory Interface
-#pragma HLS INTERFACE m_axi port=ddr_gmem bundle=card_mem0 offset=slave depth=512 \
-  max_read_burst_length=64  max_write_burst_length=64 
-#pragma HLS INTERFACE s_axilite port=ddr_gmem bundle=ctrl_reg offset=0x050
-
-    /* Required Action Type Detection */
-    switch (action_reg->Control.flags) {
-        case 0:
-        Action_Config->action_type = (snapu32_t)METALFPGA_ACTION_TYPE;
-        Action_Config->release_level = (snapu32_t)HW_RELEASE_LEVEL;
-        action_reg->Control.Retc = (snapu32_t)0xe00f;
-        break;
-        default:
-        action_reg->Control.Retc = process_action(din_gmem, dout_gmem, action_reg);
-        break;
-    }
-}
 
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
 #ifdef NO_SYNTH
+
+#include <stdio.h>
 
 int main()
 {

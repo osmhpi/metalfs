@@ -1,10 +1,10 @@
-#include "hls_metalfpga_file.h"
+#include "mf_file.h"
 
-#include <string.h>
-#include <iostream>
+#include "hls_globalmem.h"
 
-#include "action_metalfpga.H"
-#include "endianconv.hpp"
+#include "mf_definitions.h"
+#include "mf_endian.h"
+
 
 typedef struct
 {
@@ -18,16 +18,18 @@ typedef struct
 #define MF_SLOT_FLAG_OPEN 0x1
 #define MF_SLOT_FLAG_ACTIVE 0x2
 
+
 static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_lastblock[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static mf_slot_state_t mf_slots[MF_SLOT_COUNT];
 
-mf_buffer_t mf_file_buffers[MF_SLOT_COUNT];
+mf_block_t mf_file_buffers[MF_SLOT_COUNT];
 
-static void mf_extract_extents(mf_extent_t extents[MF_EXTENTS_PER_LINE], const snap_membus_t * din_gmem, uint64_t address)
+
+static void mf_extract_extents(mf_extent_t extents[MF_EXTENTS_PER_LINE], const snap_membus_t * mem, uint64_t address)
 {
-    snap_membus_t line = din_gmem[MFB_ADDRESS(address)];
+    snap_membus_t line = mem[MFB_ADDRESS(address)];
     //mf_extent_t extents[MF_EXTENTS_PER_LINE];
     for (mf_extent_count_t i_extent; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
     {
@@ -36,28 +38,10 @@ static void mf_extract_extents(mf_extent_t extents[MF_EXTENTS_PER_LINE], const s
     }
 }
 
-static mf_bool_t mf_fill_extents_direct(mf_slot_offset_t slot,
-                                        mf_extent_count_t extent_count,
-                                        const mf_extent_t extents[MF_EXTENT_DIRECT_COUNT])
-{
-    mf_extent_count_t i_extent = 0;
-    snapu64_t last_block = 0;
-    for (mf_extent_count_t i_extent = 0; i_extent < MF_EXTENT_DIRECT_COUNT && i_extent < extent_count; ++i_extent)
-    {
-        mf_extents_begin[slot][i_extent] = extents[i_extent].block_begin;
-        mf_extents_count[slot][i_extent] = extents[i_extent].block_count;
-        last_block += extents[i_extent].block_count;
-        mf_extents_lastblock[slot][i_extent] = last_block;
-    }
-    mf_slots[slot].extent_count = extent_count;
-    mf_slots[slot].block_count = last_block;
-    return MF_TRUE;
-}
-
 static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
                                      mf_extent_count_t extent_count,
                                      snapu64_t address,
-                                     snap_membus_t * host_mem_in)
+                                     snap_membus_t * mem)
 {
     snapu64_t line_address = address;
     mf_extent_t line_extents[MF_EXTENTS_PER_LINE];
@@ -67,7 +51,7 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
         mf_line_extent_offset_t o_line_extent = i_extent & MF_MASK(MF_EXTENTS_PER_LINE_W,0);
         if (o_line_extent == 0)
         {
-            mf_extract_extents(line_extents, host_mem_in, MFB_ADDRESS(line_address));
+            mf_extract_extents(line_extents, mem, MFB_ADDRESS(line_address));
             line_address += MFB_INCREMENT;
         }
         mf_extent_t & extent = line_extents[o_line_extent];
@@ -101,22 +85,13 @@ static mf_bool_t mf_slot_open(mf_slot_offset_t slot, mf_extent_count_t extent_co
 }
 
 
-mf_bool_t mf_file_open_direct(  mf_slot_offset_t slot,
-                                mf_extent_count_t extent_count,
-                                const mf_extent_t extents[MF_EXTENT_DIRECT_COUNT])
+mf_bool_t mf_file_open(mf_slot_offset_t slot,
+                       mf_extent_count_t extent_count,
+                       snapu64_t buffer_address,
+                       snap_membus_t * mem)
 {
     return mf_slot_open(slot, extent_count) &&
-            mf_fill_extents_direct(slot, extent_count, extents);
-
-}
-
-mf_bool_t mf_file_open_indirect(mf_slot_offset_t slot,
-                                mf_extent_count_t extent_count,
-                                snapu64_t buffer_address,
-                                snap_membus_t * host_mem_in)
-{
-    return mf_slot_open(slot, extent_count) &&
-            mf_fill_extents_indirect(slot, extent_count, buffer_address, host_mem_in);
+            mf_fill_extents_indirect(slot, extent_count, buffer_address, mem);
 }
 
 mf_bool_t mf_file_close(mf_slot_offset_t slot)

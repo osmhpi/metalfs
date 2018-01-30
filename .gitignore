@@ -1,5 +1,9 @@
 build/
 
+# vim cache files
+*.swp
+*.swo
+
 # Prerequisites
 *.d
 

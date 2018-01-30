@@ -1,16 +1,15 @@
-#include "action_metalfpga.H"
+#ifndef __MF_FILE_H__
+#define __MF_FILE_H__
 
-extern mf_buffer_t mf_file_buffers[MF_SLOT_COUNT];
+#include "mf_definitions.h"
+
+extern mf_block_t mf_file_buffers[MF_SLOT_COUNT];
 
 
-mf_bool_t mf_file_open_direct(  mf_slot_offset_t slot,
-                                mf_extent_count_t extent_count,
-                                const mf_extent_t extents[MF_EXTENT_DIRECT_COUNT]);
-
-mf_bool_t mf_file_open_indirect(mf_slot_offset_t slot,
-                                mf_extent_count_t extent_count,
-                                snapu64_t buffer_address,
-                                snap_membus_t * host_mem_in);
+mf_bool_t mf_file_open(mf_slot_offset_t slot,
+                       mf_extent_count_t extent_count,
+                       snapu64_t buffer_address,
+                       snap_membus_t * mem);
 
 mf_bool_t mf_file_close(mf_slot_offset_t slot);
 
@@ -40,3 +39,4 @@ mf_bool_t mf_file_next(mf_slot_offset_t slot, mf_bool_t dirty);
 
 mf_bool_t mf_file_flush(mf_slot_offset_t slot);
 
+#endif // __MF_FILE_H__
