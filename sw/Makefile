@@ -40,10 +40,10 @@ endif
 
 all: all_build
 
-snap_bfs_objs = action_bfs.o
-snap_bfs: $(snap_bfs_objs)
+metal_storage_cli_objs = snap_fs.o
+metal_storage_cli: $(metal_storage_cli_objs)
 
-projs += snap_bfs bfs_diff
+projs += metal_storage_cli
 
 # If you have the host code outside of the default snap directory structure,
 # change to /path/to/snap/actions/software.mk
