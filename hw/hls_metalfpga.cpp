@@ -50,7 +50,7 @@ void hls_action(snap_membus_t * din,
 
     // Configure DDR memory Interface
 #pragma HLS INTERFACE m_axi port=ddr bundle=card_mem0 offset=slave depth=512 \
-  max_read_burst_length=64  max_write_burst_length=64 
+    max_read_burst_length=64  max_write_burst_length=64 
 #pragma HLS INTERFACE s_axilite port=ddr bundle=ctrl_reg offset=0x050
 
 
@@ -89,6 +89,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
             mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
             return action_map(mem_in, map_job);
           }
+          break;
         case MF_JOB_QUERY:
           {
             mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
@@ -96,13 +97,16 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
             mf_write_job_query(mem_out, act_reg->Data.job_address, query_job);
             return retc;
           }
+          break;
         case MF_JOB_ACCESS:
           {
             mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
             return action_access(access_job);
           }
+          break;
         default:
             return SNAP_RETC_FAILURE;
+          break;
     }
 }
 
@@ -242,7 +246,7 @@ int main()
 	act_reg.Data.job_type = MF_JOB_MAP;
 	hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
 
-    fprintf(stderr, "// MAP query slot 2, lblock 9\n");
+    fprintf(stderr, "// QUERY slot 2, lblock 9\n");
 
     job_mem_b[0] = 2; // slot
     job_mem_b[1] = true; // query_mapping
