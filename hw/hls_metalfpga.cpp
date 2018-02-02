@@ -193,13 +193,13 @@ int main()
     static snap_membus_t din_gmem[1024];
     static snap_membus_t dout_gmem[1024];
     static snap_membus_t dram_gmem[1024];
-    static snapu32_t nvme_gmem[];
+    //static snapu32_t nvme_gmem[];
     action_reg act_reg;
     action_RO_config_reg act_config;
 
     // read action config:
     act_reg.Control.flags = 0x0;
-    hls_action(din_gmem, dout_gmem, &act_reg, &act_config);
+    hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
     fprintf(stderr, "ACTION_TYPE:   %08x\nRELEASE_LEVEL: %08x\nRETC:          %04x\n",
         (unsigned int)act_config.action_type,
         (unsigned int)act_config.release_level,
@@ -208,12 +208,58 @@ int main()
 
     // test action functions:
 
-    /* fprintf(stderr, "// MODE_SET_KEY ciphertext 16 Byte at 0x100\n"); */
-    /* act_reg.Control.flags = 0x1; */
-    /* act_reg.Data.input_data.addr = 0; */
-    /* act_reg.Data.data_length = 8; */
-    /* act_reg.Data.mode = MODE_SET_KEY; */
-    /* hls_action(din_gmem, dout_gmem, &act_reg, &act_config); */
+    fprintf(stderr, "// MAP slot 2 1000:7,2500:3,1700:8\n");
+    uint64_t * job_mem = (uint64_t *)din_gmem;
+    uint8_t * job_mem_b = (uint8_t *)din_gmem;
+    job_mem_b[0] = 2; // slot
+    job_mem[1] = true; // map
+    job_mem[2] = 3; // extent_count
+
+    job_mem[8]  = 1000; // ext0.begin
+    job_mem[9]  = 7;    // ext0.count
+    job_mem[10] = 2500; // ext1.begin
+    job_mem[11] = 3;    // ext1.count
+    job_mem[12] = 1700; // ext2.begin
+    job_mem[13] = 8;    // ext2.count
+    
+    act_reg.Control.flags = 0x1;
+    act_reg.Data.job_address = 0;
+    act_reg.Data.job_type = MF_JOB_MAP;
+    hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+
+    fprintf(stderr, "// MAP slot 7 1200:8,1500:24\n");
+	job_mem_b[0] = 7; // slot
+	job_mem[1] = true; // map
+	job_mem[2] = 2; // extent_count
+
+	job_mem[8]  = 1200; // ext0.begin
+	job_mem[9]  = 8;    // ext0.count
+	job_mem[10] = 1500; // ext1.begin
+	job_mem[11] = 24;   // ext1.count
+
+	act_reg.Control.flags = 0x1;
+	act_reg.Data.job_address = 0;
+	act_reg.Data.job_type = MF_JOB_MAP;
+	hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+
+    fprintf(stderr, "// MAP query slot 2, lblock 9\n");
+
+    job_mem_b[0] = 2; // slot
+    job_mem_b[1] = true; // query_mapping
+    job_mem_b[2] = true; // query_state
+	job_mem[1] = 9; // lblock
+
+	act_reg.Control.flags = 0x1;
+	act_reg.Data.job_address = 0;
+	act_reg.Data.job_type = MF_JOB_QUERY;
+	hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+
+	uint64_t is_open = mf_file_is_open(2)? MF_TRUE : MF_FALSE;
+	uint64_t is_active = mf_file_is_active(2)? MF_TRUE : MF_FALSE;
+	uint64_t extent_count = mf_file_get_extent_count(2);
+	uint64_t block_count = mf_file_get_block_count(2);
+	uint64_t current_lblock = mf_file_get_lblock(2);
+	uint64_t current_pblock = mf_file_get_pblock(2);
 
     return 0;
 }
