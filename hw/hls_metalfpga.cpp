@@ -17,21 +17,26 @@
 
 static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
+                                snap_membus_t * mem_ddr,
                                 action_reg * act_reg);
 
 static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
 static mf_retc_t action_query(mf_job_query_t & job);
-static mf_retc_t action_access(const mf_job_access_t & job);
+static mf_retc_t action_access(snap_membus_t * mem_in,
+                               snap_membus_t * mem_out,
+                               snap_membus_t * mem_ddr,
+                               const mf_job_access_t & job);
 
-static void action_file_read_block(snap_membus_t * mem,
+static void action_file_write_block(snap_membus_t * mem_in,
                                    mf_slot_offset_t slot,
                                    snapu64_t buffer_address,
-                                   mf_block_offset_tbegin_offset,
+                                   mf_block_offset_t begin_offset,
                                    mf_block_offset_t end_offset);
-static void action_file_write_block(snap_membus_t * mem,
+static void action_file_read_block(snap_membus_t * mem_in,
+                                    snap_membus_t * mem_out,
                                     mf_slot_offset_t slot,
                                     snapu64_t buffer_address,
-                                    mf_block_offset_tbegin_offset,
+                                    mf_block_offset_t begin_offset,
                                     mf_block_offset_t end_offset);
 // ------------------------------------------------
 // -------------- ACTION ENTRY POINT --------------
@@ -76,7 +81,7 @@ void hls_action(snap_membus_t * din,
         action_reg->Control.Retc = (snapu32_t)0xe00f;
         break;
     default:
-        action_reg->Control.Retc = process_action(din, dout, action_reg);
+        action_reg->Control.Retc = process_action(din, dout, ddr, action_reg);
         break;
     }
 }
@@ -89,6 +94,7 @@ void hls_action(snap_membus_t * din,
 // Decode job_type and call appropriate action
 static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
+                                snap_membus_t * mem_ddr,
                                 action_reg * act_reg)
 {
     switch(act_reg->Data.job_type)
@@ -108,7 +114,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
         case MF_JOB_ACCESS:
           {
             mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
-            return action_access(access_job);
+            return action_access(mem_in, mem_out, mem_ddr, access_job);
           }
         default:
             return SNAP_RETC_FAILURE;
@@ -194,16 +200,26 @@ static mf_retc_t action_access(snap_membus_t * mem_in,
     if (! mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE)) return SNAP_RETC_FAILURE;
     for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
     {
-        mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0;
-        mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1;
+        /* mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0; */
+        /* mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1; */
+        mf_block_offset_t begin_offset = 0;
+        if (i_block == file_begin_block)
+        {
+            begin_offset = file_begin_offset;
+        }
+        mf_block_offset_t end_offset = MF_BLOCK_BYTES - 1;
+        if (i_block == file_end_block)
+        {
+            end_offset = file_end_offset;
+        }
 
-        if (write_else_read)
+        if (job.write_else_read)
         {
             action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
         }
         else
         {
-            action_file_read_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
+            action_file_read_block(mem_in, mem_out, job.slot, buffer_address, begin_offset, end_offset);
         }
 
         buffer_address += end_offset - begin_offset + 1;
@@ -221,7 +237,7 @@ static mf_retc_t action_access(snap_membus_t * mem_in,
 }
 
 
-static void action_file_write_block(snap_membus_t * mem,
+static void action_file_write_block(snap_membus_t * mem_in,
                                     mf_slot_offset_t slot,
                                     snapu64_t buffer_address,
                                     mf_block_offset_t begin_offset,
@@ -237,40 +253,58 @@ static void action_file_write_block(snap_membus_t * mem,
     mf_block_offset_t offset = begin_offset;
     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
     {
-        snap_membus_t line = mem[i_line];
-        mfb_byteoffset_t begin_byte = (i_line == begin_line)? begin_line_offset : 0;
-        mfb_byteoffset_t end_byte = (i_line == end_line)? end_line_offset : BP - 1;
-        for (mfb_byteoffset_t i_byte = = begin_byte; i_byte <= end_byte; ++i_byte)
+        snap_membus_t line = mem_in[i_line];
+        mfb_byteoffset_t begin_byte = 0;
+        if (i_line == begin_line)
+        {
+            begin_byte = begin_line_offset;
+        }
+        mfb_byteoffset_t end_byte = MFB_INCREMENT - 1;
+        if (i_line == end_line)
+        {
+            end_byte = end_line_offset;
+        }
+        for (mfb_byteoffset_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
         {
             mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
         }
     }
 }
 
-static void action_file_read_block(snap_membus_t * mem,
+static void action_file_read_block(snap_membus_t * mem_in,
+                                   snap_membus_t * mem_out,
                                    mf_slot_offset_t slot,
                                    snapu64_t buffer_address,
                                    mf_block_offset_t begin_offset,
                                    mf_block_offset_t end_offset)
 {
-    /* snapu64_t end_address = buffer_address + end_offset - begin_offset; */
+    snapu64_t end_address = buffer_address + end_offset - begin_offset;
 
-    /* snapu64_t begin_line = MFB_ADDRESS(buffer_address); */
-    /* mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address); */
-    /* snapu64_t end_line = MFB_ADDRESS(end_address); */
-    /* mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address); */
+    snapu64_t begin_line = MFB_ADDRESS(buffer_address);
+    mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
+    snapu64_t end_line = MFB_ADDRESS(end_address);
+    mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
 
-    /* mf_block_offset_t offset = begin_offset; */
-    /* for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line) */
-    /* { */
-    /*     snap_membus_t line = mem[i_line]; */
-    /*     mfb_byteoffset_t begin_byte = (i_line == begin_line)? begin_line_offset : 0; */
-    /*     mfb_byteoffset_t end_byte = (i_line == end_line)? end_line_offset : BP - 1; */
-    /*     for (mfb_byteoffset_t i_byte = = begin_byte; i_byte <= end_byte; ++i_byte) */
-    /*     { */
-    /*         mf_file_buffers[slot][offset++] = mf_get8(line, i_byte); */
-    /*     } */
-    /* } */
+    mf_block_offset_t offset = begin_offset;
+    for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
+    {
+        snap_membus_t line = mem_in[i_line];
+        mfb_byteoffset_t begin_byte = 0;
+        if (i_line == begin_line)
+        {
+            begin_byte = begin_line_offset;
+        }
+        mfb_byteoffset_t end_byte = MFB_INCREMENT - 1;
+        if (i_line == end_line)
+        {
+            end_byte = end_line_offset;
+        }
+        for (mfb_byteoffset_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
+        {
+            mf_set8(line, i_byte, mf_file_buffers[slot][offset++]);
+        }
+        mem_out[i_line] = line;
+    }
 }
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------

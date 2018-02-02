@@ -50,7 +50,7 @@ typedef ap_uint<MF_SLOT_OFFSET_W+1> mf_slot_count_t;
 typedef ap_uint<8> mf_block_t[MF_BLOCK_BYTES];
 typedef ap_uint<MF_BLOCK_BYTE_OFFSET_W> mf_block_offset_t;
 typedef ap_uint<MF_BLOCK_BYTE_OFFSET_W+1> mf_block_count_t;
-#define MF_BLOCK_NUMBER(BYTE_OFFSET) (BYTE_OFFSET>>MF_BUFFER_BYTES_W)
-#define MF_BLOCK_OFFSET(BYTE_OFFSET) (BYTE_OFFSET&MF_MASK(MF_BUFFER_BYTES_W,0))
+#define MF_BLOCK_NUMBER(BYTE_OFFSET) (BYTE_OFFSET>>MF_BLOCK_BYTE_OFFSET_W)
+#define MF_BLOCK_OFFSET(BYTE_OFFSET) (BYTE_OFFSET&MF_MASK(MF_BLOCK_BYTE_OFFSET_W,0))
 
 #endif // __MF_DEFINITIONS_H__

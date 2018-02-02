@@ -16,5 +16,6 @@ typedef ap_uint<ADDR_RIGHT_SHIFT+3> mfb_bitoffset_t;
 #define MFB_TOBITOFFSET(BYTEO) (((mfb_bitoffset_t)BYTEO)<<3)
 
 #define MF_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
+#define MFB_LINE_OFFSET(A) (A & MF_MASK(ADDR_RIGHT_SHIFT,0))
 
 #endif // __HLS_DEFINITIONS_H__
