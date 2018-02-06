@@ -14,13 +14,6 @@ set(
 )
 
 set(
-    CLI_SOURCES
-    
-    snap_fs.h
-    snap_fs.c
-)
-
-set(
     METAL_STORAGE_LIBRARIES
 )
 
@@ -30,20 +23,12 @@ if(WITH_SNAP)
         ${SNAP_LIBRARY}
         ${CXL_LIBRARY}
     )
-    SET(METAL_STORAGE_CLI_LIBRARIES
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${SNAP_LIBRARY}
-        ${CXL_LIBRARY}
-    )
 endif()
 
 include_directories(
     ${SNAP_INCLUDE_DIR}
     ${CXL_INCLUDE_DIR}
 )
-
-add_executable(metal_storage_cli ${CLI_SOURCES})
-target_link_libraries(metal_storage_cli ${METAL_STORAGE_CLI_LIBRARIES})
 
 add_library(metal_storage STATIC ${SOURCES})
 target_link_libraries(metal_storage ${METAL_STORAGE_LIBRARIES})
