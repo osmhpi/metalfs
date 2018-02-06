@@ -26,17 +26,23 @@ static mf_slot_state_t mf_slots[MF_SLOT_COUNT];
 
 mf_block_t mf_file_buffers[MF_SLOT_COUNT];
 
+typedef mf_extent_t mf_line_extents_t[MF_EXTENTS_PER_LINE];
 
-static void mf_extract_extents(mf_extent_t extents[MF_EXTENTS_PER_LINE], const snap_membus_t * mem, uint64_t address)
-{
-    snap_membus_t line = mem[MFB_ADDRESS(address)];
-    //mf_extent_t extents[MF_EXTENTS_PER_LINE];
-    for (mf_extent_count_t i_extent; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
-    {
-        extents[i_extent].block_begin = mf_get64(line, i_extent * sizeof(mf_extent_t));
-        extents[i_extent].block_count = mf_get64(line, i_extent * sizeof(mf_extent_t) + sizeof(snapu64_t));
-    }
-}
+//static void mf_extract_extents(const snap_membus_t * mem, uint64_t address)
+//{
+//	mf_line_extents_t line_extents;
+//    snap_membus_t line = mem[MFB_ADDRESS(address)];
+//    //mf_extent_t extents[MF_EXTENTS_PER_LINE];
+//    for (mf_extent_count_t i_extent = 0; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
+//    {
+//    	snapu64_t begin = mf_get64(line, i_extent * 16);
+//    	snapu64_t count = mf_get64(line, i_extent * 16 + 8);
+//        line_extents[i_extent].block_begin = begin;
+//        line_extents[i_extent].block_count = count;
+//    }
+//    (void)line_extents[0];
+//    //return line_extents;
+//}
 
 static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
                                      mf_extent_count_t extent_count,
@@ -51,7 +57,14 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
         mf_line_extent_offset_t o_line_extent = i_extent & MF_MASK(MF_EXTENTS_PER_LINE_W,0);
         if (o_line_extent == 0)
         {
-            mf_extract_extents(line_extents, mem, MFB_ADDRESS(line_address));
+        	snap_membus_t line = mem[MFB_ADDRESS(address)];
+            for (mf_extent_count_t i_extent = 0; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
+            {
+            	snapu64_t begin = mf_get64(line, i_extent * 16);
+            	snapu64_t count = mf_get64(line, i_extent * 16 + 8);
+                line_extents[i_extent].block_begin = begin;
+                line_extents[i_extent].block_count = count;
+            }
             line_address += MFB_INCREMENT;
         }
         mf_extent_t & extent = line_extents[o_line_extent];

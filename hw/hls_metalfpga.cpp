@@ -258,17 +258,17 @@ static void action_file_write_block(snap_membus_t * mem_in,
     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
     {
         snap_membus_t line = mem_in[i_line];
-        mfb_byteoffset_t begin_byte = 0;
+        mfb_bytecount_t begin_byte = 0;
         if (i_line == begin_line)
         {
             begin_byte = begin_line_offset;
         }
-        mfb_byteoffset_t end_byte = MFB_INCREMENT - 1;
+        mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
         if (i_line == end_line)
         {
             end_byte = end_line_offset;
         }
-        for (mfb_byteoffset_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
+        for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
         {
             mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
         }
@@ -293,17 +293,17 @@ static void action_file_read_block(snap_membus_t * mem_in,
     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
     {
         snap_membus_t line = mem_in[i_line];
-        mfb_byteoffset_t begin_byte = 0;
+        mfb_bytecount_t begin_byte = 0;
         if (i_line == begin_line)
         {
             begin_byte = begin_line_offset;
         }
-        mfb_byteoffset_t end_byte = MFB_INCREMENT - 1;
+        mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
         if (i_line == end_line)
         {
             end_byte = end_line_offset;
         }
-        for (mfb_byteoffset_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
+        for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
         {
             mf_set8(line, i_byte, mf_file_buffers[slot][offset++]);
         }
@@ -320,8 +320,7 @@ static void action_file_read_block(snap_membus_t * mem_in,
 
 int main()
 {
-    static snap_membus_t din_gmem[1024];
-    static snap_membus_t dout_gmem[1024];
+    static snap_membus_t host_gmem[1024];
     static snap_membus_t dram_gmem[1024];
     //static snapu32_t nvme_gmem[];
     action_reg act_reg;
@@ -329,7 +328,7 @@ int main()
 
     // read action config:
     act_reg.Control.flags = 0x0;
-    hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
     fprintf(stderr, "ACTION_TYPE:   %08x\nRELEASE_LEVEL: %08x\nRETC:          %04x\n",
         (unsigned int)act_config.action_type,
         (unsigned int)act_config.release_level,
@@ -339,8 +338,8 @@ int main()
     // test action functions:
 
     fprintf(stderr, "// MAP slot 2 1000:7,2500:3,1700:8\n");
-    uint64_t * job_mem = (uint64_t *)din_gmem;
-    uint8_t * job_mem_b = (uint8_t *)din_gmem;
+    uint64_t * job_mem = (uint64_t *)host_gmem;
+    uint8_t * job_mem_b = (uint8_t *)host_gmem;
     job_mem_b[0] = 2; // slot
     job_mem[1] = true; // map
     job_mem[2] = 3; // extent_count
@@ -355,7 +354,7 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_MAP;
-    hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
 
     fprintf(stderr, "// MAP slot 7 1200:8,1500:24\n");
 	job_mem_b[0] = 7; // slot
@@ -370,7 +369,7 @@ int main()
 	act_reg.Control.flags = 0x1;
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_MAP;
-	hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
 
     fprintf(stderr, "// QUERY slot 2, lblock 9\n");
 
@@ -382,7 +381,7 @@ int main()
 	act_reg.Control.flags = 0x1;
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_QUERY;
-	hls_action(din_gmem, dout_gmem, dram_gmem, &act_reg, &act_config);
+	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
 
 	uint64_t is_open = mf_file_is_open(2)? MF_TRUE : MF_FALSE;
 	uint64_t is_active = mf_file_is_active(2)? MF_TRUE : MF_FALSE;
@@ -391,6 +390,43 @@ int main()
 	uint64_t current_lblock = mf_file_get_lblock(2);
 	uint64_t current_pblock = mf_file_get_pblock(2);
 
+    
+    fprintf(stderr, "// ACCESS slot 2, write 6K @ offset 3K\n");
+    job_mem_b[0] = 2; // slot
+    job_mem_b[1] = true; // write
+    job_mem[1] = 128; // buffer beginning at mem[2]
+    job_mem[2] = 3072; // 3K offset
+    job_mem[3] = 6144; // 6K length
+
+    snap_membus_t data_line = 0;
+    mf_set64(data_line, 0, 0xda7a111100000001ull);
+    mf_set64(data_line, 8, 0xda7a222200000002ull);
+    mf_set64(data_line, 16, 0xda7a333300000003ull);
+    mf_set64(data_line, 24, 0xda7a444400000004ull);
+    mf_set64(data_line, 32, 0xda7a555500000005ull);
+    mf_set64(data_line, 40, 0xda7a666600000006ull);
+    mf_set64(data_line, 48, 0xda7a777700000007ull);
+    mf_set64(data_line, 56, 0xda7a888800000008ull);
+    for (int i = 0; i < 96; ++i) {
+        host_gmem[2+i] = data_line;
+    }
+
+	act_reg.Control.flags = 0x1;
+	act_reg.Data.job_address = 0;
+	act_reg.Data.job_type = MF_JOB_ACCESS;
+	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+
+    fprintf(stderr, "// ACCESS slot 2, read 100 @ offset 3077\n");
+    job_mem_b[0] = 2; // slot
+    job_mem_b[1] = false; // read
+    job_mem[1] = 7168; // buffer beginning at mem[112]
+    job_mem[2] = 3077; // 3077 offset
+    job_mem[3] = 100; // 100 length
+
+	act_reg.Control.flags = 0x1;
+	act_reg.Data.job_address = 0;
+	act_reg.Data.job_type = MF_JOB_ACCESS;
+	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
     return 0;
 }
 
