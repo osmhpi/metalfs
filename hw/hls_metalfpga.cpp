@@ -97,32 +97,24 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_ddr,
                                 action_reg * act_reg)
 {
-    switch(act_reg->Data.job_type)
+    if (act_reg->Data.job_type == MF_JOB_MAP)
     {
-        case MF_JOB_MAP:
-          {
-            mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
-            return action_map(mem_in, map_job);
-          }
-          break;
-        case MF_JOB_QUERY:
-          {
-            mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
-            mf_retc_t retc = action_query(query_job);
-            mf_write_job_query(mem_out, act_reg->Data.job_address, query_job);
-            return retc;
-          }
-          break;
-        case MF_JOB_ACCESS:
-          {
-            mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
-            return action_access(mem_in, mem_out, mem_ddr, access_job);
-          }
-          break;
-        default:
-            return SNAP_RETC_FAILURE;
-          break;
+    	mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
+        return action_map(mem_in, map_job);
     }
+    else if (act_reg->Data.job_type == MF_JOB_QUERY)
+    {
+    	mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
+        mf_retc_t retc = action_query(query_job);
+        mf_write_job_query(mem_out, act_reg->Data.job_address, query_job);
+        return retc;
+    }
+    else if (act_reg->Data.job_type == MF_JOB_ACCESS)
+    {
+        mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
+        return action_access(mem_in, mem_out, mem_ddr, access_job);
+    }
+    return SNAP_RETC_FAILURE;
 }
 
 // File Map / Unmap Operation:

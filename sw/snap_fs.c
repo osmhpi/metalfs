@@ -195,10 +195,11 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     assert(sizeof(*mjob) <= 108);
     memset(mjob, 0, sizeof(*mjob));
 
-    if (posix_memalign((void**)&mjob->job_address, 64, 6) != 0) {
+    if (posix_memalign((void**)&mjob->job_address, 64, sizeof(uint64_t) * 8) != 0) {
         perror("FAILED: posix_memalign");
         return;
     }
+    printf("allocated %lu bytes\n", sizeof(uint64_t) * 6);
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     mjob->job_type = MF_JOB_QUERY;
 
@@ -221,10 +222,16 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     memset(mjob, 0, sizeof(*mjob));
 
     map_options_t *map_opts = &opts.func_options.map_opts;
-    if (posix_memalign((void**)&mjob->job_address, 64, map_opts->extent_count * 2 + 3) != 0) {
+    int lineSize = sizeof(uint64_t) * 8; // 1 line = 64 byte
+    int numberOfExtentLines = map_opts->extent_count % 4 ? map_opts->extent_count / 4 + 1 : map_opts->extent_count / 4; // 4 extents per line, can't allocate half lines
+    printf("mem_address before: %lu\n", mjob->job_address);
+    mjob->job_address = (uint64_t)snap_malloc(lineSize * (numberOfExtentLines +1));
+    /*if (posix_memalign((void**)&mjob->job_address, 64, lineSize * (numberOfExtentLines + 1) * 4000) != 0) { 
         perror("FAILED: posix_memalign");
         return;
-    }
+    }*/
+    printf("allocated %d bytes\n", lineSize * (numberOfExtentLines +1));
+    printf("mem_address after: %lu\n", mjob->job_address);
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     mjob->job_type = MF_JOB_MAP;
 
@@ -311,7 +318,7 @@ int main(int argc, char *argv[])
             printf("===== MAPPING =====\n");
             printf("%d extents, ", (uint16_t)result[3]);
             printf("%lu blocks mapped.\n", result[4]);
-            printf("===== CURRENT OPERATION =====");
+            printf("===== CURRENT OPERATION =====\n");
             printf("Logical block %lu\n", result[5]);
             printf("Physical block %lu\n", result[6]);
         }
@@ -325,8 +332,11 @@ int main(int argc, char *argv[])
 
 out_error2:
     snap_detach_action(action);
+    snap_card_free(card);
+    exit(EXIT_FAILURE);
 out_error1:
     snap_card_free(card);
+    exit(EXIT_FAILURE);
 out_error:
     exit(EXIT_FAILURE);
 }
