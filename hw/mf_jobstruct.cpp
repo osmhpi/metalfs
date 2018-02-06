@@ -13,6 +13,10 @@ mf_job_map_t mf_read_job_map(snap_membus_t * mem, snapu64_t address)
     map_job.slot = mf_get8(line, 0);
     map_job.map_else_unmap = (mf_get8(line, 8) == 0)? MF_FALSE : MF_TRUE;
     map_job.extent_count = mf_get16(line, 16);
+    snapu16_t extent_count_le;
+    extent_count_le = mf_get16le(line, 16);
+    snapu16_t extent_count_be;
+	extent_count_be = mf_get16be(line, 16);
     map_job.extent_address = address + MFB_INCREMENT;
     return map_job;
 }
