@@ -27,9 +27,14 @@ mtl_storage_metadata metadata;
 
 int mtl_initialize(const char *metadata_store) {
 
+    int res = mtl_storage_initialize();
+    if (res != MTL_SUCCESS) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
+
     mdb_env_create(&env);
     mdb_env_set_maxdbs(env, 4); // inodes, extents, heap, meta
-    int res = mdb_env_open(env, metadata_store, 0, 0644);
+    res = mdb_env_open(env, metadata_store, 0, 0644);
 
     if (res == MDB_INVALID) {
         return MTL_ERROR_INVALID_ARGUMENT;
@@ -52,6 +57,8 @@ int mtl_initialize(const char *metadata_store) {
 }
 
 int mtl_deinitialize() {
+    mtl_storage_deinitialize();
+
     mtl_reset_extents_db();
     mtl_reset_inodes_db();
     mtl_reset_meta_db();
@@ -68,14 +75,14 @@ int mtl_chown(const char *path, uid_t uid, gid_t gid) {
 
     MDB_txn *txn;
     res = mdb_txn_begin(env, NULL, 0, &txn);
-    
+
     uint64_t inode_id;
     res = mtl_resolve_inode(txn, path, &inode_id);
     if (res != MTL_SUCCESS) {
         mdb_txn_abort(txn);
         return -res;
     }
-    
+
     mtl_inode *old_inode;
     mtl_inode new_inode;
     void *data;
@@ -93,7 +100,7 @@ int mtl_chown(const char *path, uid_t uid, gid_t gid) {
         new_inode.group = gid;
     }
     res = mtl_put_inode(txn, inode_id, &new_inode, data, data_length);
-    
+
     mdb_txn_commit(txn);
     return res;
 }

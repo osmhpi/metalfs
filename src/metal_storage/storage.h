@@ -12,6 +12,9 @@ typedef struct mtl_file_extent {
     uint64_t length;
 } mtl_file_extent;
 
+int mtl_storage_initialize();
+int mtl_storage_deinitialize();
+
 int mtl_storage_get_metadata(mtl_storage_metadata *metadata);
 
 int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length);

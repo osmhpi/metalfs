@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <stdlib.h>
+
+#include "../metal/metal.h"
 
 #ifdef WITH_SNAP
 
@@ -10,7 +13,7 @@
 #include <snap_tools.h>
 #include <snap_s_regs.h>
 
-#include "snap_example.h"
+#include "action_metalfpga.h"
 
 #define ACTION_WAIT_TIME        1                /* Default timeout in sec */
 
@@ -23,46 +26,6 @@
 #define NVME_LB_SIZE            512               /* NVME Block Size */
 #define NVME_DRIVE_SIZE         (4 * GIGA_BYTE)	  /* NVME Drive Size */
 #define NVME_MAX_TRANSFER_SIZE  (32 * MEGA_BYTE) /* NVME limit to Transfer in one chunk */
-
-/* Action or Kernel Write and Read are 32 bit MMIO */
-static void action_write(struct snap_card* h, uint32_t addr, uint32_t data)
-{
-    int rc;
-
-    rc = snap_mmio_write32(h, (uint64_t)addr, data);
-    return;
-}
-
-static int action_wait_idle(struct snap_card* h, int timeout, uint32_t mem_size)
-{
-    int rc = ETIME;
-    uint64_t t_start;	/* time in usec */
-    uint64_t td;		/* Diff time in usec */
-
-    /* FIXME Use act and not h */
-    snap_action_start((void*)h);
-
-    /* FIXME Use act and not h */
-    rc = snap_action_completed((void*)h, NULL, timeout);
-
-    return(!rc);
-}
-
-static void action_memcpy(struct snap_card* h,
-        uint32_t action,
-        uint64_t dest,
-        uint64_t src,
-        size_t n)
-{
-    action_write(h, ACTION_CONFIG,  action);
-    action_write(h, ACTION_DEST_LOW, (uint32_t)(dest & 0xffffffff));
-    action_write(h, ACTION_DEST_HIGH, (uint32_t)(dest >> 32));
-    action_write(h, ACTION_SRC_LOW, (uint32_t)(src & 0xffffffff));
-    action_write(h, ACTION_SRC_HIGH, (uint32_t)(src >> 32));
-    action_write(h, ACTION_CNT, n);
-    return;
-}
-
 
 static void *get_mem(int size)
 {
@@ -81,61 +44,43 @@ static void free_mem(void *buffer)
         free(buffer);
 }
 
-void fpga_copy(uint32_t blocks, uint64_t nvme_block_addr, void *buf, bool write) {
+struct snap_card *card = NULL;
+struct snap_action *action = NULL;
+
+int mtl_storage_initialize() {
     int card_no = 0;
     char device[64];
-    struct snap_card *dn;	/* lib snap handle */
-    struct snap_action *act = NULL;
-    unsigned long have_nvme = 0;
-    int timeout = ACTION_WAIT_TIME;
-    uint64_t ddr_addr = 0;
-    uint64_t host_addr = 0;
-    snap_action_flag_t attach_flags = 0;
-    int drive = 0;
-    uint32_t drive_cmd = ACTION_CONFIG_COPY_HD;
-
-    if (((nvme_block_addr + blocks) * NVME_LB_SIZE) > NVME_DRIVE_SIZE) {
-        return;
-    }
-
     sprintf(device, "/dev/cxl/afu%d.0s", card_no);
-    dn = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+
+    card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+
+    if (card == NULL) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
 
     /* Check if i do have NVME */
-    snap_card_ioctl(dn, GET_NVME_ENABLED, (unsigned long)&have_nvme);
+    unsigned long have_nvme = 0;
+    snap_card_ioctl(card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
     if (0 == have_nvme) {
-        // Interesting...
+        return MTL_ERROR_INVALID_ARGUMENT;
     }
 
-    act = snap_attach_action(dn, ACTION_TYPE_EXAMPLE, attach_flags, 5*timeout);
-    if (NULL == act) {
-        // Yes, we *could* handle this...
+    int timeout = ACTION_WAIT_TIME;
+    snap_action_flag_t attach_flags = 0;
+    action = snap_attach_action(card, METALFPGA_ACTION_TYPE, attach_flags, 5 * timeout);
+    if (NULL == action) {
+        snap_card_free(card);
+        return MTL_ERROR_INVALID_ARGUMENT;
     }
 
-    host_addr = (uint64_t)buf;
+    return MTL_SUCCESS;
+}
 
-    if (write) {
-        // Copy from host to DDR
-        action_memcpy(dn, ACTION_CONFIG_COPY_HD, ddr_addr, host_addr, blocks * NVME_LB_SIZE);
-        action_wait_idle(dn, timeout, blocks * NVME_LB_SIZE);
+int mtl_storage_deinitialize() {
+    snap_detach_action(action);
+    snap_card_free(card);
 
-        // Copy from DDR to NVME
-        drive_cmd = ACTION_CONFIG_COPY_DN | (NVME_DRIVE1 * drive);
-        action_memcpy(dn, drive_cmd, nvme_block_addr, ddr_addr, blocks);
-        action_wait_idle(dn, timeout, blocks * NVME_LB_SIZE);
-    } else {
-        // Copy from NVME to DDR
-        drive_cmd = ACTION_CONFIG_COPY_ND | (NVME_DRIVE1 * drive);
-        action_memcpy(dn, drive_cmd, ddr_addr, nvme_block_addr, blocks);
-        action_wait_idle(dn, timeout, blocks * NVME_LB_SIZE);
-
-        // Copy from DDR to host
-        action_memcpy(dn, ACTION_CONFIG_COPY_DH, host_addr, ddr_addr, blocks * NVME_LB_SIZE);
-        action_wait_idle(dn, timeout, blocks * NVME_LB_SIZE);
-    }
-
-    snap_detach_action(act);
-    snap_card_free(dn);
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
@@ -144,186 +89,139 @@ int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
         metadata->block_size = NVME_LB_SIZE;
     }
 
-    return 0;
+    return MTL_SUCCESS;
 }
 
 mtl_file_extent *_extents = NULL;
 uint64_t _extents_length;
 int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length) {
-    free(_extents);
 
-    _extents = malloc(length * sizeof(mtl_file_extent));
-    memcpy(_extents, extents, length * sizeof(mtl_file_extent));
-    _extents_length = length;
+    // Allocate job struct memory aligned on a page boundary
+    uint64_t *job_words = (uint64_t*)get_mem(
+        sizeof(uint64_t) * (
+            8 // words for the prefix
+            + (2 * length) // two words for each extent
+        )
+    );
 
-    return 0;
+    job_words[0] = 0;  // slot number
+    job_words[1] = true;  // map (vs unmap)
+    job_words[2] = length;  // extent count
+
+    for (uint64_t i = 0; i < length; ++i) {
+        job_words[8 + 2*i + 0] = extents[i].offset;
+        job_words[8 + 2*i + 1] = extents[i].length;
+    }
+
+    metalfpga_job_t mjob;
+    mjob.job_type = MF_JOB_MAP;
+    mjob.job_address = (uint64_t)job_words;
+
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
+
+    int timeout = ACTION_WAIT_TIME;
+    int rc = snap_action_sync_execute_job(action, &cjob, timeout);
+
+    free_mem(job_words);
+
+    if (rc != 0) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
+
+    if (cjob.retc != SNAP_RETC_SUCCESS) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
+
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
-    uint64_t current_offset = offset;   // Our current writing position inside the file
 
-    uint64_t current_extent = 0;
-    uint64_t current_extent_offset = 0; // The current extent's offset inside the file
+    // Allocate job struct memory aligned on a page boundary
+    uint64_t *job_words = (uint64_t*)get_mem(sizeof(uint64_t) * 4);
 
-    // Process data from one extent in each loop iteration
-    while (length > 0) {
+    uint8_t *job_bytes = (uint8_t*) job_words;
+    job_bytes[0] = 0;  // slot
+    job_bytes[1] = true;  // write, don't read
 
-        // Determine the extent for the next byte to be written
-        while (current_extent_offset + (_extents[current_extent].length * NVME_LB_SIZE) <= current_offset) {
-            current_extent_offset += _extents[current_extent].length * NVME_LB_SIZE;
-            ++current_extent;
+    // Align the input buffer
+    uint64_t aligned_length = length % 64 == 0 ? length : (length / 64 + 1) * 64;
+    void *aligned_buffer = get_mem(aligned_length);
+    memcpy(aligned_buffer, buffer, length);
 
-            // The caller has to make sure the file is large enough to write
-            assert(current_extent < _extents_length);
-        }
+    job_words[1] = (uint64_t) aligned_buffer;
+    job_words[2] = offset;
+    job_words[3] = length;
 
-        // We have found the next extent to write to
-        // Now calculate the offset inside the extent where we want to write
-        uint64_t current_extent_write_pos = current_offset - current_extent_offset;
-        // The corresponding block starts at or before this position (so integer division is fine)
-        uint64_t current_extent_write_pos_block = current_extent_write_pos / NVME_LB_SIZE;
+    metalfpga_job_t mjob;
+    mjob.job_type = MF_JOB_ACCESS;
+    mjob.job_address = (uint64_t)job_words;
 
-        // Determine how many bytes we want to write
-        uint64_t current_extent_write_length =
-            (_extents[current_extent].length * NVME_LB_SIZE) - current_extent_write_pos;
-        if (current_extent_write_length > length)
-            current_extent_write_length = length;
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
-        // Because we can only transfer full blocks, we have to copy the data to a
-        // memory-aligned temporary buffer. We also copy in batches of at most 4KiB
-        // (although we could theoretically copy up to NVME_MAX_TRANSFER_SIZE bytes)
-        uint64_t temp_block_buffer_size = 4 * KILO_BYTE;
-        if (current_extent_write_length < 4 * KILO_BYTE) {
-            temp_block_buffer_size = current_extent_write_length / NVME_LB_SIZE;
-            if (current_extent_write_length % NVME_LB_SIZE)
-                ++temp_block_buffer_size;
-            temp_block_buffer_size *= NVME_LB_SIZE;
-        }
-        void *temp_block_buffer = get_mem(temp_block_buffer_size);
+    int timeout = ACTION_WAIT_TIME;
+    int rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
-        // Call fpga_copy until there's no data left for the current extent
-        while (current_extent_write_length > 0) {
+    free_mem(aligned_buffer);
+    free_mem(job_words);
 
-            // Because we can only write block-aligned, we will clear the data
-            // in the beginning of a block when we actually intended to start
-            // writing in the middle of the block.
-            // If this is the case, spend the first transfer to block-align our
-            // writing position
-            uint64_t temp_block_buffer_offset =
-                current_extent_write_pos - (current_extent_write_pos_block * NVME_LB_SIZE);
-
-            // Determine the bytes written in this batch
-            uint64_t write_length = current_extent_write_length;
-            if (write_length > 4 * KILO_BYTE - temp_block_buffer_offset) {
-                write_length = 4 * KILO_BYTE - temp_block_buffer_offset;
-            }
-
-            // Clear the buffer memory if we're not writing 4KiB
-            if (current_extent_write_length < 4 * KILO_BYTE) {
-                memset(temp_block_buffer, 0, temp_block_buffer_size);
-                write_length = current_extent_write_length;
-            }
-
-            // Copy to buffer and then to FPGA
-            memcpy(temp_block_buffer + temp_block_buffer_offset, buffer + (current_offset - offset), write_length);
-            fpga_copy(temp_block_buffer_size / NVME_LB_SIZE,
-                _extents[current_extent].offset + current_extent_write_pos_block,
-                temp_block_buffer,
-                true);
-
-            // Update our position / length variables
-            current_offset += write_length;
-            current_extent_write_pos += write_length;
-            current_extent_write_pos_block = current_extent_write_pos / NVME_LB_SIZE;
-
-            current_extent_write_length -= write_length;
-            length -= write_length;
-        }
-
-        free_mem(temp_block_buffer);
+    if (rc != 0) {
+        return MTL_ERROR_INVALID_ARGUMENT;
     }
 
-    return 0;
+    if (cjob.retc != SNAP_RETC_SUCCESS) {
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
+
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
-    uint64_t current_offset = offset; // Our current reading position inside the file
 
-    uint64_t current_extent = 0;
-    uint64_t current_extent_offset = 0; // The current extent's offset inside the file
+    // Allocate job struct memory aligned on a page boundary
+    uint64_t *job_words = (uint64_t*)get_mem(sizeof(uint64_t) * 4);
 
-    // Process data from one extent in each loop iteration
-    while (length > 0) {
+    uint8_t *job_bytes = (uint8_t*) job_words;
+    job_bytes[0] = 0;  // slot
+    job_bytes[1] = false;  // read, don't write
 
-        // Determine the extent for the next byte to be read
-        while (current_extent_offset + (_extents[current_extent].length * NVME_LB_SIZE) <= current_offset) {
-            current_extent_offset += _extents[current_extent].length * NVME_LB_SIZE;
-            ++current_extent;
+    // Align the temporary output buffer
+    uint64_t aligned_length = length % 64 == 0 ? length : (length / 64 + 1) * 64;
+    void *aligned_buffer = get_mem(aligned_length);
 
-            // The caller has to make sure the file is large enough to read
-            assert(current_extent < _extents_length);
-        }
+    job_words[1] = (uint64_t) aligned_buffer;
+    job_words[2] = offset;
+    job_words[3] = length;
 
-        // We have found the next extent to read from
-        // Now calculate the offset inside the extent where we want to read
-        uint64_t current_extent_read_pos = current_offset - current_extent_offset;
-        // The corresponding block starts at or before this position (so integer division is fine)
-        uint64_t current_extent_read_pos_block = current_extent_read_pos / NVME_LB_SIZE;
+    metalfpga_job_t mjob;
+    mjob.job_type = MF_JOB_ACCESS;
+    mjob.job_address = (uint64_t)job_words;
 
-        // Determine how many bytes we want to read
-        uint64_t current_extent_read_length =
-            (_extents[current_extent].length * NVME_LB_SIZE) - current_extent_read_pos;
-        if (current_extent_read_length > length)
-            current_extent_read_length = length;
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
-        // Because we can only transfer full blocks, we have to copy the data from a
-        // memory-aligned temporary buffer. We also copy in batches of at most 4KiB
-        // (although we could theoretically copy up to NVME_MAX_TRANSFER_SIZE bytes)
-        uint64_t temp_block_buffer_size = 4 * KILO_BYTE;
-        if (current_extent_read_length < 4 * KILO_BYTE) {
-            temp_block_buffer_size = current_extent_read_length / NVME_LB_SIZE;
-            if (current_extent_read_length % NVME_LB_SIZE)
-                ++temp_block_buffer_size;
-            temp_block_buffer_size *= NVME_LB_SIZE;
-        }
-        void *temp_block_buffer = get_mem(temp_block_buffer_size);
+    int timeout = ACTION_WAIT_TIME;
+    int rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
-        // Call fpga_copy until there's no data left for the current extent
-        while (current_extent_read_length > 0) {
+    free_mem(job_words);
 
-            // Account for the case when we want to start reading in the middle
-            // of a block
-            uint64_t temp_block_buffer_offset =
-                current_extent_read_pos - (current_extent_read_pos_block * NVME_LB_SIZE);
-
-            // Determine the bytes read in this batch
-            uint64_t read_length = current_extent_read_length;
-            if (read_length > 4 * KILO_BYTE - temp_block_buffer_offset) {
-                read_length = 4 * KILO_BYTE - temp_block_buffer_offset;
-            }
-
-            // Copy to buffer and then to destination
-            fpga_copy(temp_block_buffer_size / NVME_LB_SIZE,
-                _extents[current_extent].offset + current_extent_read_pos_block,
-                temp_block_buffer,
-                false);
-            memcpy(buffer + (current_offset - offset),
-                temp_block_buffer + temp_block_buffer_offset,
-                read_length);
-
-            // Update our position / length variables
-            current_offset += read_length;
-            current_extent_read_pos += read_length;
-            current_extent_read_pos_block = current_extent_read_pos / NVME_LB_SIZE;
-
-            current_extent_read_length -= read_length;
-            length -= read_length;
-        }
-
-        free_mem(temp_block_buffer);
+    if (rc != 0) {
+        free_mem(aligned_buffer);
+        return MTL_ERROR_INVALID_ARGUMENT;
     }
 
-    return 0;
+    if (cjob.retc != SNAP_RETC_SUCCESS) {
+        free_mem(aligned_buffer);
+        return MTL_ERROR_INVALID_ARGUMENT;
+    }
+
+    memcpy(buffer, aligned_buffer, length);
+
+    free_mem(aligned_buffer);
+
+    return MTL_SUCCESS;
 }
 
 #else
@@ -335,6 +233,15 @@ void *_storage = NULL;
 
 mtl_file_extent *_extents = NULL;
 uint64_t _extents_length;
+
+
+int mtl_storage_initialize() {
+    return MTL_SUCCESS;
+}
+
+int mtl_storage_deinitialize() {
+    return MTL_SUCCESS;
+}
 
 int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
     if (metadata) {
