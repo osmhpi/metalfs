@@ -234,6 +234,15 @@ void *_storage = NULL;
 mtl_file_extent *_extents = NULL;
 uint64_t _extents_length;
 
+
+int mtl_storage_initialize() {
+    return MTL_SUCCESS;
+}
+
+int mtl_storage_deinitialize() {
+    return MTL_SUCCESS;
+}
+
 int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
     if (metadata) {
         metadata->num_blocks = NUM_BLOCKS;
