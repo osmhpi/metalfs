@@ -187,18 +187,18 @@ static inline snapu8_t mf_get8(const snap_membus_t & busline,
 }
 
 
-//#define mf_get64 mf_get64be
-//#define mf_set64 mf_set64be
-//#define mf_get32 mf_get32be
-//#define mf_set32 mf_set32be
-//#define mf_get16 mf_get16be
-//#define mf_set16 mf_set16be
+#define mf_get64 mf_get64be
+#define mf_set64 mf_set64be
+#define mf_get32 mf_get32be
+#define mf_set32 mf_set32be
+#define mf_get16 mf_get16be
+#define mf_set16 mf_set16be
 
-#define mf_get64 mf_get64le
-#define mf_set64 mf_set64le
-#define mf_get32 mf_get32le
-#define mf_set32 mf_set32le
-#define mf_get16 mf_get16le
-#define mf_set16 mf_set16le
+//#define mf_get64 mf_get64le
+//#define mf_set64 mf_set64le
+//#define mf_get32 mf_get32le
+//#define mf_set32 mf_set32le
+//#define mf_get16 mf_get16le
+//#define mf_set16 mf_set16le
 
 #endif // __MF_ENDIAN_H__

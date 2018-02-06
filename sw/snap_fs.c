@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <string.h>
+#include <endian.h>
 
 #include <snap_tools.h>
 #include <libsnap.h>
@@ -195,11 +196,11 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     assert(sizeof(*mjob) <= 108);
     memset(mjob, 0, sizeof(*mjob));
 
-    if (posix_memalign((void**)&mjob->job_address, 64, sizeof(uint64_t) * 8) != 0) {
+    mjob->job_address = (uint64_t)snap_malloc(64 * 8); // 1 line needed
+    /*if (posix_memalign((void**)&mjob->job_address, 64, sizeof(uint64_t) * 8) != 0) {
         perror("FAILED: posix_memalign");
         return;
-    }
-    printf("allocated %lu bytes\n", sizeof(uint64_t) * 6);
+    }*/
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     mjob->job_type = MF_JOB_QUERY;
 
@@ -222,28 +223,25 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     memset(mjob, 0, sizeof(*mjob));
 
     map_options_t *map_opts = &opts.func_options.map_opts;
-    int lineSize = sizeof(uint64_t) * 8; // 1 line = 64 byte
+    int lineSize = 64; // 1 line = 64 byte
     int numberOfExtentLines = map_opts->extent_count % 4 ? map_opts->extent_count / 4 + 1 : map_opts->extent_count / 4; // 4 extents per line, can't allocate half lines
-    printf("mem_address before: %lu\n", mjob->job_address);
     mjob->job_address = (uint64_t)snap_malloc(lineSize * (numberOfExtentLines +1));
     /*if (posix_memalign((void**)&mjob->job_address, 64, lineSize * (numberOfExtentLines + 1) * 4000) != 0) { 
         perror("FAILED: posix_memalign");
         return;
     }*/
-    printf("allocated %d bytes\n", lineSize * (numberOfExtentLines +1));
-    printf("mem_address after: %lu\n", mjob->job_address);
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     mjob->job_type = MF_JOB_MAP;
 
     // build map job struct
-    job_struct[0] = opts.slot_no;
-    job_struct[1] = map_opts->map;
+    job_struct[0] = htobe64(opts.slot_no);
+    job_struct[1] = htobe64(map_opts->map);
     if (map_opts->map) {
-        job_struct[2] = map_opts->extent_count;
+        job_struct[2] = htobe64(map_opts->extent_count);
 
         for (int i = 0; i < map_opts->extent_count; ++i) {
-            job_struct[2 * i + 8] = map_opts->extents[i].block_begin;
-            job_struct[2 * i + 9] = map_opts->extents[i].block_count;
+            job_struct[2 * i + 8] = htobe64(map_opts->extents[i].block_begin);
+            job_struct[2 * i + 9] = htobe64(map_opts->extents[i].block_count);
         }
     }
 
@@ -316,11 +314,11 @@ int main(int argc, char *argv[])
             ((bool)((uint8_t*)result)[3]) ? printf("Slot %d is open ", opts.slot_no) : printf("Slot %d is closed ", opts.slot_no);
             ((bool)((uint8_t*)result)[4]) ? printf("and active.\n") : printf("and not active.\n");
             printf("===== MAPPING =====\n");
-            printf("%d extents, ", (uint16_t)result[3]);
-            printf("%lu blocks mapped.\n", result[4]);
+            printf("%d extents, ", (uint16_t)result[2]);
+            printf("%lu blocks mapped.\n", result[3]);
             printf("===== CURRENT OPERATION =====\n");
-            printf("Logical block %lu\n", result[5]);
-            printf("Physical block %lu\n", result[6]);
+            printf("Logical block %lu\n", result[4]);
+            printf("Physical block %lu\n", result[5]);
         }
         //free((uint64_t *)query_opts.result_addr);
     }
