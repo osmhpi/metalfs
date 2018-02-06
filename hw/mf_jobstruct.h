@@ -26,9 +26,9 @@ typedef struct mf_job_query {
 typedef struct mf_job_access {
     mf_slot_offset_t slot;
     mf_bool_t write_else_read;
-    uint64_t buffer_address;
-    uint64_t file_byte_offset;
-    uint64_t file_byte_count;
+    snapu64_t buffer_address;
+    snapu64_t file_byte_offset;
+    snapu64_t file_byte_count;
 } mf_job_access_t;
 
 

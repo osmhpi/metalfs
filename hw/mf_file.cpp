@@ -176,13 +176,13 @@ snapu64_t mf_file_map_pblock(mf_slot_offset_t slot, snapu64_t logical_block_numb
 }
 
 
-mf_bool_t mf_file_seek(mf_slot_offset_t slot, snapu64_t lblock, mf_bool_t dirty)
+mf_bool_t mf_file_seek(snap_membus_t * ddr, mf_slot_offset_t slot, snapu64_t lblock, mf_bool_t dirty)
 {
     if (lblock < mf_slots[slot].block_count)
     {
         if (dirty)
         {
-            mf_file_flush(slot);
+            mf_file_flush(ddr, slot);
         }
         mf_slots[slot].current_lblock = lblock;
         mf_slots[slot].current_pblock = mf_file_map_pblock(slot, lblock);
@@ -193,14 +193,14 @@ mf_bool_t mf_file_seek(mf_slot_offset_t slot, snapu64_t lblock, mf_bool_t dirty)
     return false;
 }
 
-mf_bool_t mf_file_next(mf_slot_offset_t slot, mf_bool_t dirty)
+mf_bool_t mf_file_next(snap_membus_t * ddr, mf_slot_offset_t slot, mf_bool_t dirty)
 {
     if (!mf_file_at_end(slot))
     {
         //TODO-lw improve getting of consecutive pblocks (use current extent)
         if (dirty)
         {
-            mf_file_flush(slot);
+            mf_file_flush(ddr, slot);
         }
         mf_slots[slot].current_lblock = mf_slots[slot].current_lblock + 1;
         mf_slots[slot].current_pblock = mf_file_map_pblock(slot, mf_slots[slot].current_lblock);
@@ -211,7 +211,7 @@ mf_bool_t mf_file_next(mf_slot_offset_t slot, mf_bool_t dirty)
     return false;
 }
 
-mf_bool_t mf_file_flush(mf_slot_offset_t slot)
+mf_bool_t mf_file_flush(snap_membus_t * ddr, mf_slot_offset_t slot)
 {
     if (mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE)
     {
@@ -221,15 +221,3 @@ mf_bool_t mf_file_flush(mf_slot_offset_t slot)
     return true;
 }
 
-//-----------------------------------------------------------------------------
-//--- TESTBENCH ---------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-#ifdef NO_SYNTH
-
-int main()
-{
-    return 0;
-}
-
-#endif /* NO_SYNTH */

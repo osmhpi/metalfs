@@ -29,14 +29,20 @@ snapu16_t mf_file_get_extent_count(mf_slot_offset_t slot);
 snapu64_t mf_file_get_block_count(mf_slot_offset_t slot);
 
 
-snapu64_t mf_file_map_pblock(   mf_slot_offset_t slot,
-                                snapu64_t lblock);
+snapu64_t mf_file_map_pblock(mf_slot_offset_t slot,
+                             snapu64_t lblock);
 
 
-mf_bool_t mf_file_seek(mf_slot_offset_t slot, snapu64_t lblock, mf_bool_t dirty);
+mf_bool_t mf_file_seek(snap_membus_t * ddr,
+                       mf_slot_offset_t slot,
+                       snapu64_t lblock,
+                       mf_bool_t dirty);
 
-mf_bool_t mf_file_next(mf_slot_offset_t slot, mf_bool_t dirty);
+mf_bool_t mf_file_next(snap_membus_t * ddr,
+                       mf_slot_offset_t slot,
+                       mf_bool_t dirty);
 
-mf_bool_t mf_file_flush(mf_slot_offset_t slot);
+mf_bool_t mf_file_flush(snap_membus_t * ddr,
+                        mf_slot_offset_t slot);
 
 #endif // __MF_FILE_H__
