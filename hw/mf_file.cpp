@@ -22,7 +22,7 @@ typedef struct
 static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_lastblock[MF_SLOT_COUNT][MF_EXTENT_COUNT];
-static mf_slot_state_t mf_slots[MF_SLOT_COUNT];
+static mf_slot_state_t mf_slots[MF_SLOT_COUNT] = { 0 };
 
 mf_block_t mf_file_buffers[MF_SLOT_COUNT];
 
@@ -78,7 +78,7 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
     return MF_TRUE;
 }
 
-static mf_bool_t mf_slot_open(mf_slot_offset_t slot, mf_extent_count_t extent_count)
+static mf_bool_t mf_slot_open(mf_slot_offset_t slot)
 {
     if (mf_slots[slot].flags & MF_SLOT_FLAG_OPEN)
     {
@@ -103,7 +103,7 @@ mf_bool_t mf_file_open(mf_slot_offset_t slot,
                        snapu64_t buffer_address,
                        snap_membus_t * mem)
 {
-    return mf_slot_open(slot, extent_count) &&
+    return mf_slot_open(slot) &&
             mf_fill_extents_indirect(slot, extent_count, buffer_address, mem);
 }
 
@@ -130,12 +130,12 @@ mf_bool_t mf_file_close(mf_slot_offset_t slot)
 
 mf_bool_t mf_file_is_open(mf_slot_offset_t slot)
 {
-    return !!(mf_slots[slot].flags & MF_SLOT_FLAG_OPEN); 
+    return (mf_slots[slot].flags & MF_SLOT_FLAG_OPEN); 
 }
 
 mf_bool_t mf_file_is_active(mf_slot_offset_t slot)
 {
-    return !!(mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE);
+    return (mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE);
 }
 
 mf_bool_t mf_file_at_end(mf_slot_offset_t slot)

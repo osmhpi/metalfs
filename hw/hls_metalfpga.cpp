@@ -21,7 +21,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
                                 action_reg * act_reg);
 
 static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
-static mf_retc_t action_query(mf_job_query_t & job);
+static mf_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mf_job_query_t & job);
 static mf_retc_t action_access(snap_membus_t * mem_in,
                                snap_membus_t * mem_out,
                                snap_membus_t * mem_ddr,
@@ -105,8 +105,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_QUERY)
     {
     	mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
-        mf_retc_t retc = action_query(query_job);
-        mf_write_job_query(mem_out, act_reg->Data.job_address, query_job);
+        mf_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
         return retc;
     }
     else if (act_reg->Data.job_type == MF_JOB_ACCESS)
@@ -123,7 +122,7 @@ static mf_retc_t action_map(snap_membus_t * mem_in,
 {
     if (job.slot >= MF_SLOT_COUNT)
     {
-        return SNAP_RETC_FAILURE;
+        return SNAP_RETC_FAILURE + 4;
     }
     mf_slot_offset_t slot = job.slot;
 
@@ -131,27 +130,27 @@ static mf_retc_t action_map(snap_membus_t * mem_in,
     {
         if (job.extent_count > MF_EXTENT_COUNT)
         {
-            return SNAP_RETC_FAILURE;
+            return SNAP_RETC_FAILURE + 1;
         }
         mf_extent_count_t extent_count = job.extent_count;
 
         if (!mf_file_open(slot, extent_count, job.extent_address, mem_in))
         {
             mf_file_close(slot);
-            return SNAP_RETC_FAILURE;
+            return SNAP_RETC_FAILURE +2;
         }
     }
     else
     {
         if (!mf_file_close(slot))
         {
-            return SNAP_RETC_FAILURE;
+            return SNAP_RETC_FAILURE + 3;
         }
     }
     return SNAP_RETC_SUCCESS;
 }
 
-static mf_retc_t action_query(mf_job_query_t & job)
+static mf_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mf_job_query_t & job)
 {
     snap_membus_t line;
     if (job.query_mapping)
@@ -160,14 +159,15 @@ static mf_retc_t action_query(mf_job_query_t & job)
     }
     if (job.query_state)
     {
-        job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
-        job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
-        job.extent_count = mf_file_get_extent_count(job.slot);
-        job.block_count = mf_file_get_block_count(job.slot);
-        job.current_lblock = mf_file_get_lblock(job.slot);
-        job.current_pblock = mf_file_get_pblock(job.slot);
+        job.is_open = true; //mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
+        job.is_active = true; //mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
+        job.extent_count = 17; //mf_file_get_extent_count(job.slot);
+        job.block_count = 17 + 4; //mf_file_get_block_count(job.slot);
+        job.current_lblock = 89; //mf_file_get_lblock(job.slot);
+        job.current_pblock = 19; //mf_file_get_pblock(job.slot);
     }
-    return SNAP_RETC_SUCCESS;
+    mf_write_job_query(mem_out, job_address, job);
+    return SNAP_RETC_SUCCESS + mf_file_is_open(job.slot) + 2* mf_file_is_active(job.slot);
 }
 
 static mf_retc_t action_access(snap_membus_t * mem_in,

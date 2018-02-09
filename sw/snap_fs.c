@@ -21,7 +21,7 @@
 #include "snap_fs.h"
 
 typedef struct {
-    uint8_t map;
+    uint64_t map;
     mf_extent_t * extents;
     uint16_t extent_count;
 } map_options_t;
@@ -91,7 +91,7 @@ static void read_options(int argc, char ** argv)
             break;
         case 'm':
             opts.func_type = MF_JOB_MAP;
-            opts.func_options.map_opts.map = 0xFF;
+            opts.func_options.map_opts.map = 0xFFFFFFFFFFFFFFFF;
             read_extent_list(&opts.func_options.map_opts.extents, &opts.func_options.map_opts.extent_count, optarg);
             break;
         case 'S':
@@ -205,12 +205,13 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     mjob->job_type = MF_JOB_QUERY;
 
     // build query job struct
+    uint8_t *job_flags = (uint8_t*) job_struct;
     query_options_t *query_opts = &opts.func_options.query_opts;
-    job_struct[0] |= opts.slot_no;
-    job_struct[0] |= query_opts->query_state << 16;
+    job_flags[0] = opts.slot_no;
+    job_flags[2] = query_opts->query_state;
     if (query_opts->query_mapping) {
-        job_struct[0] |= query_opts->query_mapping << 8;
-        job_struct[1] = query_opts->lblock;
+        job_flags[1] = query_opts->query_mapping;
+        job_struct[1] = htobe64(query_opts->lblock);
     }
 
     //move job struct into cjob
@@ -305,6 +306,9 @@ int main(int argc, char *argv[])
     if (opts.func_type == MF_JOB_QUERY) {
         query_options_t query_opts = opts.func_options.query_opts;
         uint64_t *result = (uint64_t *)mjob.job_address;
+        for (int i = 0; i < 64; ++i) {
+            printf("%x ", ((uint8_t*)result)[i]);
+        }
         if (query_opts.query_mapping) {
             printf("Logical block %lu mapped to physical block %lu.",
                     query_opts.lblock,
