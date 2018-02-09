@@ -41,7 +41,7 @@ mf_job_query_t mf_read_job_query(snap_membus_t * mem, snapu64_t address)
 
 void mf_write_job_query(snap_membus_t * mem, snapu64_t address, mf_job_query_t query_job)
 {
-    snap_membus_t line = mem[MFB_ADDRESS(address)];
+    snap_membus_t line = 0;
     mf_set8(line, 0, query_job.slot);
     mf_set8(line, 1, query_job.query_mapping? 0xff : 0x00);
     mf_set8(line, 2, query_job.query_state? 0xff : 0x00);
