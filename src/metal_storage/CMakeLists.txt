@@ -8,7 +8,6 @@ include_directories(
 set(
     SOURCES
 
-    snap_example.h
     storage.c
     storage.h
 )

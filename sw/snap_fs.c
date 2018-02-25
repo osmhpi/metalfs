@@ -144,7 +144,7 @@ static char * tokenize(char *input, char delimeter, char **next_token, int *char
     }
     *next_token = input + 1;
     (*chars_left)--;
-    
+
     return returnString;
 }
 
@@ -185,7 +185,7 @@ static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, ch
         char *extent_start = tokenize(token, ':', &extent_length, &token_length); // rest of token get's put into extent_length, conveniently the rest of the token IS the current extent's length.
         new_extent->block_begin = (uint64_t)strtoull(extent_start, NULL, 10);
         new_extent->block_count = (uint64_t)strtoull(extent_length, NULL, 10);
-        
+
         // get next extent token
         token = tokenize(next_token, delim, &next_token, &input_left);
     }
