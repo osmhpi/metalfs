@@ -9,10 +9,11 @@ include_directories(
 SET(METAL_FS_SOURCES
     ${METAL_FS_SHARED_SOURCES}
 
+    list/list.c
+    afu.c
+    agent_worker.c
     metal_fs.c
     server.c
-    afu.c
-    list/list.c
 )
 
 SET (METAL_FS_LIBRARIES
