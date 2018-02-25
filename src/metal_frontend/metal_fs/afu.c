@@ -9,7 +9,7 @@
 #endif
 
 #include "../common/buffer.h"
-#include "../common/afus.h"
+#include "../common/known_afus.h"
 
 #ifdef WITH_SNAP
 #include "actions/blowfish/action_blowfish.h"
@@ -173,20 +173,20 @@ void perform_afu_action(
     }
 
     switch (afu_type) {
-        case AFU_HOST_PASSTHROUGH:
-            *output_size = perform_passthrough_action(input_buf_handle, output_buf_handle, input_size);
-            break;
-        case AFU_LOWERCASE:
-            *output_size = perform_lowercase_action(input_buf_handle, output_buf_handle, input_size);
-            break;
-#ifdef WITH_SNAP
-        case AFU_BLOWFISH_ENCRYPT:
-            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, true);
-            break;
-        case AFU_BLOWFISH_DECRYPT:
-            *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, false);
-            break;
-#endif
+//         case AFU_PASSTHROUGH:
+//             *output_size = perform_passthrough_action(input_buf_handle, output_buf_handle, input_size);
+//             break;
+//         case AFU_UPPERCASE:
+//             *output_size = perform_lowercase_action(input_buf_handle, output_buf_handle, input_size);
+//             break;
+// #ifdef WITH_SNAP
+//         case AFU_BLOWFISH_ENCRYPT:
+//             *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, true);
+//             break;
+//         case AFU_BLOWFISH_DECRYPT:
+//             *output_size = perform_blowfish_action(input_buf_handle, output_buf_handle, input_size, false);
+//             break;
+// #endif
     }
 
     release_buffer(input_buf_handle);

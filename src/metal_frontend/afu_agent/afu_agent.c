@@ -17,7 +17,7 @@
 #include <sys/un.h>
 #include <sys/mman.h>
 
-#include "../common/afus.h"
+#include "../common/known_afus.h"
 #include "../common/buffer.h"
 #include "../common/message.h"
 
@@ -113,16 +113,16 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
 
 int determine_afu_key(char *filename) {
     char *base = basename(filename);
-    for (size_t i = 0; i < sizeof(afus)/sizeof(afu_entry_t); ++i) {
-        if (strcmp(base, afus[i].name) == 0) {
-            return afus[i].key;
+    for (size_t i = 0; i < sizeof(known_afus); ++i) {
+        if (strcmp(base, known_afus[i]->name) == 0) {
+            return known_afus[i]->id;
         }
     }
 
     return -1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
     // Find out our own filename and fs mount point
     char own_file_name[FILENAME_MAX];
@@ -200,10 +200,27 @@ int main() {
     size_t bytes_read = 0;
     bool eof = false;
 
+    // Prepare to send the program parameters
+    uint64_t argv_len[argc];
+    uint64_t total_argv_len = 0;
+    for (int i = 0; i < argc; ++i) {
+        argv_len[i] = strlen(argv[i]) + 1;
+        total_argv_len += argv_len[i];
+    }
+    char argv_buffer[total_argv_len];
+    char *argv_cursor = (char*)argv_buffer;
+    for (int i = 0; i < argc; ++i) {
+        strcpy(argv_cursor, argv[i]);
+        argv_cursor[argv_len[i] - 1] = '\0';
+        argv_cursor += argv_len[i];
+    }
+
     agent_hello_data_t request = {
         .pid = getpid(),
         .afu_type = afu,
-        .input_agent_pid = input_pid
+        .input_agent_pid = input_pid,
+        .argc = argc,
+        .argv_len = total_argv_len
     };
     strncpy(request.internal_input_filename, internal_input_filename, sizeof(request.internal_input_filename));
     strncpy(request.internal_output_filename, internal_output_filename, sizeof(request.internal_output_filename));
@@ -218,8 +235,10 @@ int main() {
 
     message_type_t message_type = AGENT_HELLO;
     send(sock, &message_type, sizeof(message_type), 0);
-    if (send(sock, &request, sizeof(request), 0) < 0)
-        perror("send() failed");
+    send(sock, &request, sizeof(request), 0);
+    if (argc) {
+        send(sock, &argv_buffer, total_argv_len, 0);
+    }
 
     message_type_t incoming_message_type;
     size_t received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
@@ -229,8 +248,17 @@ int main() {
         perror("recv() failed");
 
     if (incoming_message_type == SERVER_ACCEPT_AGENT) {
+        server_accept_agent_data_t accept_data;
+        recv(sock, &accept_data, sizeof(accept_data), 0);
+
+        if (accept_data.response_length) {
+            char response[accept_data.response_length];
+            recv(sock, &response, accept_data.response_length, 0);
+            fprintf(stderr, "%s", response);
+        }
+
         // Process input
-        for (;;) {
+        while (accept_data.valid) {
             if (input_buffer != NULL) {
                 bytes_read = fread(input_buffer,  sizeof(char), BUFFER_SIZE, stdin);
                 eof = bytes_read < BUFFER_SIZE && feof(stdin);

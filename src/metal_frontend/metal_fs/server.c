@@ -11,6 +11,7 @@
 
 #include "../common/buffer.h"
 #include "../common/message.h"
+#include "../common/known_afus.h"
 #include "list/list.h"
 #include "afu.h"
 
@@ -18,6 +19,9 @@ typedef struct registered_agent {
     int pid;
     int afu_type;
     int socket;
+
+    int argc;
+    uint64_t argv_len;
 
     struct registered_agent* input_agent;
     int input_agent_pid;
@@ -43,11 +47,42 @@ LIST_ENTRY registered_agents;
 void* agent_thread(void* args) {
     registered_agent_t *agent = args;
 
+    // See if the options provided allow to execute the AFU
+    const char* response = NULL;
+    uint64_t response_len = 0;
+    bool valid = false;
+    if (agent->argc) {
+        char argv_buffer[agent->argv_len];
+        recv(agent->socket, &argv_buffer, agent->argv_len, 0);
+        char *argv[agent->argc];
+        uint64_t current_arg = 0;
+        void *argv_cursor = argv_buffer;
+        while (argv_cursor < argv_buffer + agent->argv_len) {
+            argv[current_arg++] = argv_cursor;
+            argv_cursor += strlen(argv_cursor) + 1;
+        }
+
+        mtl_afu_specification *afu_spec = NULL;
+        for (uint64_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+            if (known_afus[i]->id == agent->afu_type) {
+                afu_spec = known_afus[i];
+                break;
+            }
+        }
+
+        if (afu_spec)
+            response = afu_spec->handle_opts(agent->argc, argv, &response_len, &valid);
+    }
+
     message_type_t message_type = SERVER_ACCEPT_AGENT;
-
     send(agent->socket, &message_type, sizeof(message_type), 0);
+    server_accept_agent_data_t accept_data = { response_len, valid };
+    send(agent->socket, &accept_data, sizeof(accept_data), 0);
+    if (response_len) {
+        send(agent->socket, response, response_len, 0);
+    }
 
-    for (;;) {
+    while (valid) {
         message_type_t incoming_message_type;
         size_t received = recv(agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
         if (received == 0)
@@ -245,6 +280,8 @@ void* start_socket(void* args) {
             agent->pid = request.pid;
             agent->afu_type = request.afu_type;
             agent->input_agent_pid = request.input_agent_pid;
+            agent->argc = request.argc;
+            agent->argv_len = request.argv_len;
 
             // If the agent's input is not connected to another agent, it should
             // have provided a file that will be used for memory-mapped data exchange
@@ -262,7 +299,7 @@ void* start_socket(void* args) {
                     &agent->input_file, &agent->input_buffer
                 );
             } else {
-                // Create a mutexes for internal signaling
+                // Create mutexes for internal signaling
                 agent->internal_input_buffer_handle = -1;
                 agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
                 pthread_mutex_init(agent->internal_input_mutex, NULL);

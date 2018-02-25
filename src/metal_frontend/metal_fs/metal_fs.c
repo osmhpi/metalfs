@@ -12,7 +12,7 @@
 
 #include <fuse.h>
 
-#include "../common/afus.h"
+#include "../common/known_afus.h"
 #include "server.h"
 #include "afu.h"
 #include "../../metal/metal.h"
@@ -94,8 +94,8 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         return 0;
     }
 
-    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, afus[i].name);
+    for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_afus[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
@@ -141,8 +141,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     if (strcmp(path, test_filename) == 0) {
         filler(buf, ".", NULL, 0);
         filler(buf, "..", NULL, 0);
-        for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-            filler(buf, afus[i].name, NULL, 0);
+        for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+            filler(buf, known_afus[i]->name, NULL, 0);
         }
         return 0;
     }
@@ -229,8 +229,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
     char test_filename[FILENAME_MAX];
 
-    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, afus[i].name);
+    for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_afus[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
