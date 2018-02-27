@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-#define METALFPGA_ACTION_TYPE 0x00000216 
- 
+#define METALFPGA_ACTION_TYPE 0x00000216
+
 #define MF_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
 #define MF_JOB_MAP 0
@@ -31,7 +31,7 @@ extern "C" {
 //     byte1: query_mapping     | R
 //     byte2: query_state       | R
 //     byte3: is_open           | W  if query_state
-//     byet4: is_active         | W  if query_state
+//     byte4: is_active         | W  if query_state
 //   word1: lblock_to_pblock    | RW if query_mapping
 //   word2: extent_count        | W  if query_state
 //   word3: block_count         | W  if query_state
@@ -46,6 +46,14 @@ extern "C" {
 //   word1: buffer_address      | R
 //   word2: file_byte_offset    | R
 //   word3: file_byte_count     | R
+
+#define MF_JOB_CONFIGURE_STREAMS 3
+
+#define MF_JOB_RUN_AFUS 4
+
+#define MF_JOB_AFU_MEM_SET_READ_BUFFER 5
+
+#define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 6
 
 typedef struct metalfpga_job {
     uint64_t job_address;
