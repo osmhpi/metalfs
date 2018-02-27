@@ -8,7 +8,8 @@
 
 typedef struct
 {
-    snapu8_t flags;
+    mf_bool_t is_open;
+    mf_bool_t is_active;
     snapu16_t extent_count;
     snapu64_t block_count;
     snapu64_t current_pblock;
@@ -22,7 +23,7 @@ typedef struct
 static snapu64_t mf_extents_begin[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_count[MF_SLOT_COUNT][MF_EXTENT_COUNT];
 static snapu64_t mf_extents_lastblock[MF_SLOT_COUNT][MF_EXTENT_COUNT];
-static mf_slot_state_t mf_slots[MF_SLOT_COUNT];
+static mf_slot_state_t mf_slots[MF_SLOT_COUNT] = { 0 };
 
 mf_block_t mf_file_buffers[MF_SLOT_COUNT];
 
@@ -50,27 +51,21 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
                                      snap_membus_t * mem)
 {
     snapu64_t line_address = address;
-    mf_extent_t line_extents[MF_EXTENTS_PER_LINE];
+    snap_membus_t line = 0;
     snapu64_t last_block = 0;
     for (mf_extent_count_t i_extent = 0; i_extent < extent_count; ++i_extent)
     {
         mf_line_extent_offset_t o_line_extent = i_extent & MF_MASK(MF_EXTENTS_PER_LINE_W,0);
         if (o_line_extent == 0)
         {
-        	snap_membus_t line = mem[MFB_ADDRESS(address)];
-            for (mf_extent_count_t i_extent = 0; i_extent < MF_EXTENTS_PER_LINE; ++i_extent)
-            {
-            	snapu64_t begin = mf_get64(line, i_extent * 16);
-            	snapu64_t count = mf_get64(line, i_extent * 16 + 8);
-                line_extents[i_extent].block_begin = begin;
-                line_extents[i_extent].block_count = count;
-            }
+        	line = mem[MFB_ADDRESS(address)];
             line_address += MFB_INCREMENT;
         }
-        mf_extent_t & extent = line_extents[o_line_extent];
-        mf_extents_begin[slot][i_extent] = extent.block_begin;
-        mf_extents_count[slot][i_extent] = extent.block_count;
-        last_block += extent.block_count;
+        snapu64_t begin = mf_get64(line, o_line_extent * 16);
+        snapu64_t count = mf_get64(line, o_line_extent * 16 + 8);
+        last_block += count;
+        mf_extents_begin[slot][i_extent] = begin;
+        mf_extents_count[slot][i_extent] = count;
         mf_extents_lastblock[slot][i_extent] = last_block;
     }
     mf_slots[slot].extent_count = extent_count;
@@ -78,14 +73,14 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
     return MF_TRUE;
 }
 
-static mf_bool_t mf_slot_open(mf_slot_offset_t slot, mf_extent_count_t extent_count)
+static mf_bool_t mf_slot_open(mf_slot_offset_t slot)
 {
-    if (mf_slots[slot].flags & MF_SLOT_FLAG_OPEN)
+    if (mf_slots[slot].is_open)
     {
         return MF_FALSE;
     }
-    mf_slots[slot].flags |= MF_SLOT_FLAG_OPEN;
-    mf_slots[slot].flags &= ~MF_SLOT_FLAG_ACTIVE;
+    mf_slots[slot].is_open = true;
+    mf_slots[slot].is_active = false;;
     mf_slots[slot].extent_count = 0;
     mf_slots[slot].block_count = 0;
     mf_slots[slot].current_pblock = 0;
@@ -103,23 +98,23 @@ mf_bool_t mf_file_open(mf_slot_offset_t slot,
                        snapu64_t buffer_address,
                        snap_membus_t * mem)
 {
-    return mf_slot_open(slot, extent_count) &&
+    return mf_slot_open(slot) &&
             mf_fill_extents_indirect(slot, extent_count, buffer_address, mem);
 }
 
 mf_bool_t mf_file_close(mf_slot_offset_t slot)
 {
 
-    if (!(mf_slots[slot].flags & MF_SLOT_FLAG_OPEN))
+    if (!mf_slots[slot].is_open)
     {
         return MF_FALSE;
     }
-    if (mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE)
+    if (mf_slots[slot].is_active)
     {
         //TODO-lw flush block
-        mf_slots[slot].flags &= ~MF_SLOT_FLAG_ACTIVE;
+        mf_slots[slot].is_active = false;
     }
-    mf_slots[slot].flags &= ~MF_SLOT_FLAG_OPEN;
+    mf_slots[slot].is_open = false;
     mf_slots[slot].extent_count = 0;
     mf_slots[slot].current_pblock = 0;
     mf_slots[slot].current_lblock = 0;
@@ -130,12 +125,12 @@ mf_bool_t mf_file_close(mf_slot_offset_t slot)
 
 mf_bool_t mf_file_is_open(mf_slot_offset_t slot)
 {
-    return !!(mf_slots[slot].flags & MF_SLOT_FLAG_OPEN); 
+    return mf_slots[slot].is_open; 
 }
 
 mf_bool_t mf_file_is_active(mf_slot_offset_t slot)
 {
-    return !!(mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE);
+    return mf_slots[slot].is_active;
 }
 
 mf_bool_t mf_file_at_end(mf_slot_offset_t slot)
@@ -200,7 +195,7 @@ mf_bool_t mf_file_seek(snap_membus_t * ddr, mf_slot_offset_t slot, snapu64_t lbl
         mf_slots[slot].current_lblock = lblock;
         mf_slots[slot].current_pblock = mf_file_map_pblock(slot, lblock);
         //TODO-lw READ BLOCK current_pblock
-        mf_slots[slot].flags |= MF_SLOT_FLAG_ACTIVE;
+        mf_slots[slot].is_active = true;
         return true;
     }
     return false;
@@ -218,7 +213,7 @@ mf_bool_t mf_file_next(snap_membus_t * ddr, mf_slot_offset_t slot, mf_bool_t dir
         mf_slots[slot].current_lblock = mf_slots[slot].current_lblock + 1;
         mf_slots[slot].current_pblock = mf_file_map_pblock(slot, mf_slots[slot].current_lblock);
         //TODO-lw READ BLOCK current_pblock
-        mf_slots[slot].flags |= MF_SLOT_FLAG_ACTIVE;
+        mf_slots[slot].is_active = true;
         return true;
     }
     return false;
@@ -226,10 +221,10 @@ mf_bool_t mf_file_next(snap_membus_t * ddr, mf_slot_offset_t slot, mf_bool_t dir
 
 mf_bool_t mf_file_flush(snap_membus_t * ddr, mf_slot_offset_t slot)
 {
-    if (mf_slots[slot].flags & MF_SLOT_FLAG_ACTIVE)
+    if (mf_slots[slot].is_active)
     {
         //TODO-lw WRITE BLOCK current_pblock
-        mf_slots[slot].flags &= ~MF_SLOT_FLAG_ACTIVE;
+        mf_slots[slot].is_active = false;
     }
     return true;
 }
