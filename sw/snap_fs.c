@@ -21,7 +21,7 @@
 #include "snap_fs.h"
 
 typedef struct {
-    uint8_t map;
+    uint64_t map;
     mf_extent_t * extents;
     uint16_t extent_count;
 } map_options_t;
@@ -47,6 +47,13 @@ typedef struct {
 
 options_t opts;
 
+static void print_memory_64(uint8_t * mem)
+{
+    for (int i = 0; i < 64; ++i) {
+        printf("%02x ", ((uint8_t*)mem)[i]);
+        if (i%8 == 7) printf("\n");
+    }
+}
 static void usage(const char *prog)
 {
     printf("Usage: %s [-h] [-v, --verbose] [-V, --version]\n"
@@ -91,7 +98,7 @@ static void read_options(int argc, char ** argv)
             break;
         case 'm':
             opts.func_type = MF_JOB_MAP;
-            opts.func_options.map_opts.map = 0xFF;
+            opts.func_options.map_opts.map = 0xFFFFFFFFFFFFFFFF;
             read_extent_list(&opts.func_options.map_opts.extents, &opts.func_options.map_opts.extent_count, optarg);
             break;
         case 'S':
@@ -205,14 +212,18 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     mjob->job_type = MF_JOB_QUERY;
 
     // build query job struct
+    uint8_t *job_flags = (uint8_t*) job_struct;
     query_options_t *query_opts = &opts.func_options.query_opts;
-    job_struct[0] |= opts.slot_no;
-    job_struct[0] |= query_opts->query_state << 16;
+    job_flags[0] = opts.slot_no;
+    job_flags[2] = query_opts->query_state;
     if (query_opts->query_mapping) {
-        job_struct[0] |= query_opts->query_mapping << 8;
-        job_struct[1] = query_opts->lblock;
+        job_flags[1] = query_opts->query_mapping;
+        job_struct[1] = htobe64(query_opts->lblock);
     }
 
+    printf("Preparing QueryJobStruct:\n");
+    print_memory_64((uint8_t*)(mjob->job_address));
+     
     //move job struct into cjob
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 };
@@ -245,6 +256,10 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
         }
     }
 
+    printf("Preparing MapJobStruct:\n");
+    print_memory_64((uint8_t*)(mjob->job_address));
+    printf("... extents:\n");
+    print_memory_64((uint8_t*)(mjob->job_address)+64);
     // move job struct into cjob
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
@@ -296,29 +311,26 @@ int main(int argc, char *argv[])
     }
 
     fprintf(stdout, "RETC=%x\n", cjob.retc);
-    if (cjob.retc != SNAP_RETC_SUCCESS) {
-        fprintf(stderr, "err: Unexpected RETC=%x!\n", cjob.retc);
-        goto out_error2;
-    }
 
     // output query results
     if (opts.func_type == MF_JOB_QUERY) {
         query_options_t query_opts = opts.func_options.query_opts;
         uint64_t *result = (uint64_t *)mjob.job_address;
+        print_memory_64((uint8_t*)(result));
         if (query_opts.query_mapping) {
-            printf("Logical block %lu mapped to physical block %lu.",
+            printf("Logical block %lu mapped to physical block %lu.\n",
                     query_opts.lblock,
-                    result[1]);
+                    be64toh(result[1]));
         }
         if (query_opts.query_state) {
             ((bool)((uint8_t*)result)[3]) ? printf("Slot %d is open ", opts.slot_no) : printf("Slot %d is closed ", opts.slot_no);
             ((bool)((uint8_t*)result)[4]) ? printf("and active.\n") : printf("and not active.\n");
             printf("===== MAPPING =====\n");
-            printf("%d extents, ", (uint16_t)result[2]);
-            printf("%lu blocks mapped.\n", result[3]);
+            printf("%d extents, ", be16toh((uint16_t)result[2]));
+            printf("%lu blocks mapped.\n", be64toh(result[3]));
             printf("===== CURRENT OPERATION =====\n");
-            printf("Logical block %lu\n", result[4]);
-            printf("Physical block %lu\n", result[5]);
+            printf("Logical block %lu\n", be64toh(result[4]));
+            printf("Physical block %lu\n", be64toh(result[5]));
         }
         //free((uint64_t *)query_opts.result_addr);
     }
