@@ -147,27 +147,30 @@ static mf_retc_t action_map(snap_membus_t * mem_in,
             return SNAP_RETC_FAILURE + 3;
         }
     }
-    return SNAP_RETC_SUCCESS;
+    // return SNAP_RETC_SUCCESS;
+    return 0x1000 + (mf_file_get_extent_count(job.slot)<<4) + mf_file_is_open(job.slot);
 }
 
 static mf_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mf_job_query_t & job)
 {
     snap_membus_t line;
+    snapu64_t lblk = job.lblock_to_pblock;
     if (job.query_mapping)
     {
         job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
     }
     if (job.query_state)
     {
-        job.is_open = true; //mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
-        job.is_active = true; //mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
-        job.extent_count = 17; //mf_file_get_extent_count(job.slot);
-        job.block_count = 17 + 4; //mf_file_get_block_count(job.slot);
-        job.current_lblock = 89; //mf_file_get_lblock(job.slot);
-        job.current_pblock = 19; //mf_file_get_pblock(job.slot);
+        job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
+        job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
+        job.extent_count = mf_file_get_extent_count(job.slot);
+        job.block_count = mf_file_get_block_count(job.slot);
+        job.current_lblock = mf_file_get_lblock(job.slot);
+        job.current_pblock = mf_file_get_pblock(job.slot);
     }
     mf_write_job_query(mem_out, job_address, job);
-    return SNAP_RETC_SUCCESS + mf_file_is_open(job.slot) + 2* mf_file_is_active(job.slot);
+    // return SNAP_RETC_SUCCESS;
+    return 0x1000 + (mf_file_get_extent_count(job.slot)<<4) + mf_file_is_open(job.slot);
 }
 
 static mf_retc_t action_access(snap_membus_t * mem_in,
@@ -309,6 +312,7 @@ static void action_file_read_block(snap_membus_t * mem_in,
 #ifdef NO_SYNTH
 
 #include <stdio.h>
+#include <endian.h>
 
 int main()
 {
@@ -334,46 +338,49 @@ int main()
     uint8_t * job_mem_b = (uint8_t *)host_gmem;
     job_mem_b[0] = 2; // slot
     job_mem[1] = true; // map
-    job_mem[2] = 3; // extent_count
+    job_mem[2] = htobe64(3); // extent_count
 
-    job_mem[8]  = 1000; // ext0.begin
-    job_mem[9]  = 7;    // ext0.count
-    job_mem[10] = 2500; // ext1.begin
-    job_mem[11] = 3;    // ext1.count
-    job_mem[12] = 1700; // ext2.begin
-    job_mem[13] = 8;    // ext2.count
+    job_mem[8]  = htobe64(1000); // ext0.begin
+    job_mem[9]  = htobe64(7);    // ext0.count
+    job_mem[10] = htobe64(2500); // ext1.begin
+    job_mem[11] = htobe64(3);    // ext1.count
+    job_mem[12] = htobe64(1700); // ext2.begin
+    job_mem[13] = htobe64(8);    // ext2.count
     
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_MAP;
     hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+    printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// MAP slot 7 1200:8,1500:24\n");
 	job_mem_b[0] = 7; // slot
 	job_mem[1] = true; // map
-	job_mem[2] = 2; // extent_count
+	job_mem[2] = htobe64(2); // extent_count
 
-	job_mem[8]  = 1200; // ext0.begin
-	job_mem[9]  = 8;    // ext0.count
-	job_mem[10] = 1500; // ext1.begin
-	job_mem[11] = 24;   // ext1.count
+	job_mem[8]  = htobe64(1200); // ext0.begin
+	job_mem[9]  = htobe64(8);    // ext0.count
+	job_mem[10] = htobe64(1500); // ext1.begin
+	job_mem[11] = htobe64(24);   // ext1.count
 
 	act_reg.Control.flags = 0x1;
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_MAP;
 	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+	printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// QUERY slot 2, lblock 9\n");
 
     job_mem_b[0] = 2; // slot
     job_mem_b[1] = true; // query_mapping
     job_mem_b[2] = true; // query_state
-	job_mem[1] = 9; // lblock
+	job_mem[1] = htobe64(9); // lblock
 
 	act_reg.Control.flags = 0x1;
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_QUERY;
 	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+	printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
 	uint64_t is_open = mf_file_is_open(2)? MF_TRUE : MF_FALSE;
 	uint64_t is_active = mf_file_is_active(2)? MF_TRUE : MF_FALSE;
@@ -386,9 +393,9 @@ int main()
     fprintf(stderr, "// ACCESS slot 2, write 6K @ offset 3K\n");
     job_mem_b[0] = 2; // slot
     job_mem_b[1] = true; // write
-    job_mem[1] = 128; // buffer beginning at mem[2]
-    job_mem[2] = 3072; // 3K offset
-    job_mem[3] = 6144; // 6K length
+    job_mem[1] = htobe64(128); // buffer beginning at mem[2]
+    job_mem[2] = htobe64(3072); // 3K offset
+    job_mem[3] = htobe64(6144); // 6K length
 
     snap_membus_t data_line = 0;
     mf_set64(data_line, 0, 0xda7a111100000001ull);
@@ -407,18 +414,21 @@ int main()
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_ACCESS;
 	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+	printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// ACCESS slot 2, read 100 @ offset 3077\n");
     job_mem_b[0] = 2; // slot
     job_mem_b[1] = false; // read
-    job_mem[1] = 7168; // buffer beginning at mem[112]
-    job_mem[2] = 3077; // 3077 offset
-    job_mem[3] = 100; // 100 length
+    job_mem[1] = htobe64(7168); // buffer beginning at mem[112]
+    job_mem[2] = htobe64(3077); // 3077 offset
+    job_mem[3] = htobe64(100); // 100 length
 
 	act_reg.Control.flags = 0x1;
 	act_reg.Data.job_address = 0;
 	act_reg.Data.job_type = MF_JOB_ACCESS;
 	hls_action(host_gmem, host_gmem, dram_gmem, &act_reg, &act_config);
+	printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
+
     return 0;
 }
 
