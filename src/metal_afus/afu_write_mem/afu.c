@@ -14,3 +14,12 @@ mtl_afu_specification afu_write_mem_specification = {
 
     &handle_opts
 };
+
+void afu_write_mem_set_buffer(void *buffer) {
+
+}
+
+uint64_t afu_write_mem_get_written_bytes() {
+    // TODO
+    return 0;
+}

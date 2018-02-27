@@ -17,6 +17,24 @@
 
 pthread_mutex_t registered_agent_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_mutex_t execution_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t execution_plan_condition = PTHREAD_COND_INITIALIZER;
+mtl_afu_execution_plan new_execution_plan;
+
+void signal_new_execution_plan(mtl_afu_execution_plan plan) {
+    pthread_mutex_lock(&execution_plan_mutex);
+
+    if (new_execution_plan.length)
+    {
+        // Previous plan wasn't picked up
+        // ¯\_(ツ)_/¯
+    }
+
+    new_execution_plan = plan;
+    pthread_cond_broadcast(&execution_plan_condition);
+    pthread_mutex_unlock(&execution_plan_mutex);
+}
+
 void* agent_thread(void* args) {
     registered_agent_t *agent = args;
 
@@ -63,7 +81,7 @@ void* agent_thread(void* args) {
             break;
 
         if (incoming_message_type != AGENT_PUSH_BUFFER)
-            break; // Wtf. TODO
+            break; // Should not happen
 
         agent_push_buffer_data_t processing_request;
         received = recv(agent->socket, &processing_request, sizeof(processing_request), 0);

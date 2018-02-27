@@ -11,7 +11,6 @@ SET(METAL_FS_SOURCES
 
     list/list.c
     afu.c
-    agent_worker.c
     metal_fs.c
     server.c
 )
@@ -30,4 +29,4 @@ if(WITH_SNAP)
 endif()
 
 add_executable(metal_fs ${METAL_FS_SOURCES})
-target_link_libraries(metal_fs metal metal_afus ${METAL_FS_LIBRARIES})
+target_link_libraries(metal_fs metal metal_afus metal_pipeline ${METAL_FS_LIBRARIES})

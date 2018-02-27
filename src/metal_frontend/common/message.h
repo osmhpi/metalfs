@@ -20,6 +20,7 @@ typedef struct agent_hello_data {
     uint64_t pid;
     afu_id afu_type;
     uint64_t input_agent_pid;
+    uint64_t output_agent_pid;
     uint64_t argc;
     uint64_t argv_len;
     char input_buffer_filename[FILENAME_MAX];

@@ -21,11 +21,11 @@
 #include "../common/buffer.h"
 #include "../common/message.h"
 
-int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
+int get_process_connected_to_std_fd(int fd_no, char * buffer, size_t bufsiz, int *pid) {
 
     // Determine the inode number of the stdin file descriptor
     struct stat stdin_stats;
-    fstat(0, &stdin_stats);
+    fstat(fd_no, &stdin_stats);
 
     // TODO: Check errno
 
@@ -50,7 +50,9 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
                 continue;
             }
 
-            snprintf(stdout_filename, FILENAME_MAX, "/proc/%s/fd/1", dir->d_name);
+            char procfs_fd_file[256];
+            snprintf(procfs_fd_file, sizeof(procfs_fd_file), "/proc/self/fd/%d", 1-fd_no);
+            snprintf(stdout_filename, FILENAME_MAX, procfs_fd_file, dir->d_name);
 
             *pid = atoi(dir->d_name);
 
@@ -70,6 +72,69 @@ int get_process_connected_to_stdin(char * buffer, size_t bufsiz, int *pid) {
         closedir(d);
     } else {
         // TODO...
+    }
+
+    return 0;
+}
+
+int determine_process_or_file_connected_to_std_fd (
+    int fd_no, const char *metal_mountpoint, char *filename, size_t filename_size, bool *is_metal_file, int *pid) {
+
+    char procfs_fd_file[256];
+    snprintf(procfs_fd_file, sizeof(procfs_fd_file), "/proc/self/fd/%d", fd_no);
+
+    // Determine the file connected to fd
+    char fd_file[FILENAME_MAX];
+    size_t len = readlink(procfs_fd_file, fd_file, FILENAME_MAX-1);
+    fd_file[len] = '\0';
+
+    // Is this an actual file?
+    if (access(fd_file, F_OK) != -1) {
+        // Check if it's an FPGA file
+        char files_prefix[FILENAME_MAX]; // TODO: Use format constant
+        snprintf(files_prefix, FILENAME_MAX, "%s/files/", metal_mountpoint);
+        int files_prefix_len = strlen(files_prefix);
+
+        char* internal_input_filename = "";
+        int fd_file_len = strlen(fd_file);
+        if (strncmp(files_prefix, fd_file, files_prefix_len > fd_file_len ? fd_file_len : files_prefix_len) == 0) {
+            // TODO: This is not correct, can also contain subpath
+            internal_input_filename = basename(fd_file);
+        }
+
+        if (strlen(internal_input_filename)) {
+            strncpy(filename, internal_input_filename, filename_size);
+            *is_metal_file = true;
+            *pid = 0;
+            return 0;
+        }
+
+        strncpy(filename, fd_file, filename_size);
+        *is_metal_file = false;
+        *pid = 0;
+        return 0;
+    }
+
+    // fd_file is probably the name of a pipe
+
+    // Determine if the process that's talking to us is another AFU
+    char stdin_executable[FILENAME_MAX] = { 0 };
+    get_process_connected_to_std_fd(fd_no, stdin_executable, sizeof(stdin_executable), pid);
+
+    if (strlen(stdin_executable)) {
+
+        char afus_prefix[FILENAME_MAX]; // TODO: Use format constant
+        snprintf(afus_prefix, FILENAME_MAX, "%s/afus/", metal_mountpoint);
+        int afus_prefix_len = strlen(afus_prefix);
+
+        int stdin_executable_len = strlen(stdin_executable);
+        if (strncmp(afus_prefix, fd_file, afus_prefix_len > stdin_executable_len ? stdin_executable_len : afus_prefix_len) != 0) {
+            // Reset pid
+            *pid = 0;
+        }
+
+        strncpy(filename, stdin_executable, filename_size);
+        *is_metal_file = false;
     }
 
     return 0;
@@ -138,47 +203,17 @@ int main(int argc, char *argv[]) {
 
     // Determine the file connected to stdin
     char stdin_file[FILENAME_MAX];
-    len = readlink("/proc/self/fd/0", stdin_file, FILENAME_MAX-1);
-    stdin_file[len] = '\0';
-
-    // Check if we're reading from an FPGA file
-    int stdin_file_len = strlen(stdin_file);
-    char files_prefix[FILENAME_MAX];
-    snprintf(files_prefix, FILENAME_MAX, "%s/files/", own_fs_mount_point);
-    int files_prefix_len = strlen(own_fs_mount_point);
-    char* internal_input_filename = "";
-    if (strncmp(files_prefix, stdin_file, files_prefix_len > stdin_file_len ? stdin_file_len : files_prefix_len) == 0) {
-        internal_input_filename = basename(stdin_file);
-    }
-
-    int input_pid = 0;
-    if (strlen(internal_input_filename) == 0) {
-        // Determine if the process that's talking to us is another AFU
-        char stdin_executable[FILENAME_MAX] = { 0 };
-        get_process_connected_to_stdin(stdin_executable, sizeof(stdin_executable), &input_pid);
-
-        char stdin_executable_fs_mount_point[FILENAME_MAX];
-        if (!strlen(stdin_executable) || get_mount_point_of_filesystem(stdin_executable, stdin_executable_fs_mount_point, FILENAME_MAX)) {
-            // printf("whooopsie\n");
-        }
-
-        if (!strlen(stdin_executable) || strcmp(stdin_executable_fs_mount_point, own_fs_mount_point) != 0) {
-            // Reset input_pid
-            input_pid = 0;
-        }
-    }
+    bool stdin_is_metal_file;
+    int stdin_pid;
+    determine_process_or_file_connected_to_std_fd(
+        0, own_fs_mount_point, stdin_file, sizeof(stdin_file), &stdin_is_metal_file, &stdin_pid);
 
     // Determine the file connected to stdout
     char stdout_file[FILENAME_MAX];
-    len = readlink("/proc/self/fd/1", stdout_file, FILENAME_MAX-1);
-    stdout_file[len] = '\0';
-
-    // Check if we're writing to an FPGA file
-    int stdout_file_len = strlen(stdout_file);
-    char* internal_output_filename = "";
-    if (strncmp(files_prefix, stdout_file, files_prefix_len > stdout_file_len ? stdout_file_len : files_prefix_len) == 0) {
-        internal_output_filename = basename(stdout_file); 
-    }
+    bool stdout_is_metal_file;
+    int stdout_pid;
+    determine_process_or_file_connected_to_std_fd(
+        1, own_fs_mount_point, stdout_file, sizeof(stdout_file), &stdout_is_metal_file, &stdout_pid);
 
     // Say hello to the filesystem!
     char socket_filename[FILENAME_MAX];
@@ -218,15 +253,18 @@ int main(int argc, char *argv[]) {
     agent_hello_data_t request = {
         .pid = getpid(),
         .afu_type = afu,
-        .input_agent_pid = input_pid,
+        .input_agent_pid = stdin_pid,
+        .output_agent_pid = stdout_pid,
         .argc = argc,
         .argv_len = total_argv_len
     };
-    strncpy(request.internal_input_filename, internal_input_filename, sizeof(request.internal_input_filename));
-    strncpy(request.internal_output_filename, internal_output_filename, sizeof(request.internal_output_filename));
+    if (stdin_is_metal_file)
+        strncpy(request.internal_input_filename, stdin_file, sizeof(request.internal_input_filename));
+    if (stdout_is_metal_file)
+        strncpy(request.internal_output_filename, stdout_file, sizeof(request.internal_output_filename));
 
     // If there's no agent connected to stdin, we have to create a memory-mapped file
-    if (input_pid == 0) {
+    if (stdin_pid == 0) {
         create_temp_file_for_shared_buffer(
             request.input_buffer_filename,
             sizeof(request.input_buffer_filename),
@@ -241,7 +279,7 @@ int main(int argc, char *argv[]) {
     }
 
     message_type_t incoming_message_type;
-    size_t received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
+    int received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
     if (received == 0)
         return -1;
     else if (received < 0)
@@ -284,7 +322,7 @@ int main(int argc, char *argv[]) {
             size_t received = recv(sock, &incoming_message_type, sizeof(incoming_message_type), 0);
             if (received == 0)
                 break;
-            
+
             if (incoming_message_type == SERVER_INITIALIZE_OUTPUT_BUFFER) {
                 server_initialize_output_buffer_data_t message;
                 // Read data
