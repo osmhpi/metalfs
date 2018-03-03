@@ -113,8 +113,8 @@ void stream_convert_width(hls::stream<TOut> &words_out, hls::stream<TIn> &words_
             last_word = inval.last;
 
             // Shift words in "big endian" order
-            tmpword.data = (tmpword.data << (sizeof(tmpword.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-            tmpword.strb = (tmpword.strb << sizeof(tmpword.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+            tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
+            tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
 
             if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
                 // If last_word == true, did we shift everything to the correct position already?

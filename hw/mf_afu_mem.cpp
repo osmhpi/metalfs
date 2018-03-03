@@ -65,6 +65,7 @@ void afu_mem_write(mf_stream &in, snap_membus_t *dout_gmem) {
 		for (uint32_t i = 0; i < BPERDW; ++i) {
 #pragma HLS unroll
 			current_word[i] = uint8_t(element.data >> ((sizeof(element.data) - 1) * 8));
+			element.data <<= 8;
 		}
 
         memcpy(dout_gmem + _write_offset + (mem_offset / sizeof(current_word)), (char*) current_word, sizeof(current_word));
