@@ -48,7 +48,7 @@ static mf_retc_t action_access(snap_membus_t * mem_in,
                                snap_membus_t * mem_ddr,
                                const mf_job_access_t & job);
 
-static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl);
+static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
 static mf_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
@@ -67,7 +67,8 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_4,
     mf_stream &axis_m_5,
     mf_stream &axis_m_6,
-    mf_stream &axis_m_7
+    mf_stream &axis_m_7,
+	snapu64_t enable_mask
 );
 
 static void action_file_write_block(snap_membus_t * mem_in,
@@ -232,11 +233,12 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     }
     else if (act_reg->Data.job_type == MF_JOB_CONFIGURE_STREAMS)
     {
-        return action_configure_streams(switch_ctrl);
+        return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
     else if (act_reg->Data.job_type == MF_JOB_RUN_AFUS)
     {
-        return action_run_afus(
+    	snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+		return action_run_afus(
             mem_in,
             mem_out,
             axis_s_0,
@@ -254,7 +256,8 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
             axis_m_4,
             axis_m_5,
             axis_m_6,
-            axis_m_7
+            axis_m_7,
+			mf_get64(line, 0)
         );
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
@@ -416,15 +419,19 @@ void switch_commit(snapu32_t *switch_ctrl) {
     switch_base[0] = 0x2;
 }
 
-static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl) {
-    switch_set_mapping(switch_ctrl, 0, 1);  // 0 --> 1
-    switch_set_mapping(switch_ctrl, 1, 2);  // 1 --> 2
-    switch_set_mapping(switch_ctrl, 2, 3);  // 2 --> 3
-    switch_set_mapping(switch_ctrl, 3, 4);  // 3 --> 4
-    switch_set_mapping(switch_ctrl, 4, 5);  // 4 --> 5
-    switch_set_mapping(switch_ctrl, 5, 6);  // 5 --> 6
-    switch_set_mapping(switch_ctrl, 6, 7);  // 6 --> 7
-    switch_set_mapping(switch_ctrl, 7, 0);  // 7 --> 0
+static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
+	// Everything fits into one memory line
+	snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
+
+	switch_set_mapping(switch_ctrl, line(0, 31), 0);
+    switch_set_mapping(switch_ctrl, line(32, 63), 1);
+    switch_set_mapping(switch_ctrl, line(64, 95), 2);
+    switch_set_mapping(switch_ctrl, line(96, 127), 3);
+    switch_set_mapping(switch_ctrl, line(128, 159), 4);
+    switch_set_mapping(switch_ctrl, line(160, 191), 5);
+    switch_set_mapping(switch_ctrl, line(192, 223), 6);
+    switch_set_mapping(switch_ctrl, line(224, 255), 7);
+
     switch_commit(switch_ctrl);
     return SNAP_RETC_SUCCESS;
 }
@@ -447,19 +454,20 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_4,
     mf_stream &axis_m_5,
     mf_stream &axis_m_6,
-    mf_stream &axis_m_7
+    mf_stream &axis_m_7,
+	snapu64_t enable_mask
 ) {
     {
 #pragma HLS DATAFLOW
-        afu_mem_read(mem_in, axis_m_0);
-        afu_passthrough(axis_s_1, axis_m_1);
-        afu_passthrough(axis_s_2, axis_m_2);
-        afu_passthrough(axis_s_3, axis_m_3);
-        afu_passthrough(axis_s_4, axis_m_4);
-        afu_passthrough(axis_s_5, axis_m_5);
-        afu_passthrough(axis_s_6, axis_m_6);
-        afu_passthrough(axis_s_7, axis_m_7);
-        afu_mem_write(axis_s_0, mem_out);
+        afu_mem_read(mem_in, axis_m_0, enable_mask(0, 1));
+        afu_passthrough(axis_s_1, axis_m_1, enable_mask(2, 3));
+        afu_passthrough(axis_s_2, axis_m_2, enable_mask(3, 4));
+        afu_passthrough(axis_s_3, axis_m_3, enable_mask(4, 5));
+        afu_passthrough(axis_s_4, axis_m_4, enable_mask(5, 6));
+        afu_passthrough(axis_s_5, axis_m_5, enable_mask(6, 7));
+        afu_passthrough(axis_s_6, axis_m_6, enable_mask(7, 8));
+        afu_passthrough(axis_s_7, axis_m_7, enable_mask(8, 9));
+        afu_mem_write(axis_s_0, mem_out, enable_mask(1, 2));
     }
     return SNAP_RETC_SUCCESS;
 }
@@ -592,6 +600,7 @@ int main()
 
     fprintf(stderr, "// MAP slot 2 1000:7,2500:3,1700:8\n");
     uint64_t * job_mem = (uint64_t *)host_gmem;
+    uint32_t * job_mem_h = (uint32_t *)host_gmem;
     uint8_t * job_mem_b = (uint8_t *)host_gmem;
     job_mem_b[0] = 2; // slot
     job_mem[1] = true; // map
@@ -680,6 +689,14 @@ int main()
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// CONFIGURE STREAMS\n");
+    job_mem_h[0] = htobe32(7);
+    job_mem_h[1] = htobe32(0);
+    job_mem_h[2] = htobe32(1);
+    job_mem_h[3] = htobe32(2);
+    job_mem_h[4] = htobe32(3);
+    job_mem_h[5] = htobe32(4);
+    job_mem_h[6] = htobe32(5);
+    job_mem_h[7] = htobe32(6);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_CONFIGURE_STREAMS;
@@ -703,6 +720,7 @@ int main()
     fprintf(stderr, "// RUN AFUS\n");
     // Fill the memory with 'c' characters
     memset(&job_mem_b[0x80], 'c', 64);
+    job_mem[0] = htobe64(0xffffffffffffffff); // Enable all
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_RUN_AFUS;

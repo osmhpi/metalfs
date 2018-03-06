@@ -90,31 +90,36 @@ void stream_words2bytes(mf_byte_stream &bytes_out, hls::stream<T> &words_in)
 
 
 template<typename TOut, typename TIn>
-void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in)
+void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap_bool_t enable)
 {
-    TIn inval;
-    TOut tmpword;
-    snap_bool_t last_word = false;
-    for (uint64_t i = 0; last_word == false; i++) {
-    //#pragma HLS loop_tripcount max=1488
-        words_in.read(inval);
-        last_word = inval.last;
+	if (enable) {
+		TIn inval;
+		TOut tmpword;
+		snap_bool_t last_word = false;
+		for (uint64_t i = 0; last_word == false; i++) {
+		//#pragma HLS loop_tripcount max=1488
+			words_in.read(inval);
+			last_word = inval.last;
 
-        // Shift words in "big endian" order
-        tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-        tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+			// Shift words in "big endian" order
+			tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
+			tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
 
-        if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
-            // If last_word == true, did we shift everything to the correct position already?
-            tmpword.last = last_word;
-            words_out.write(tmpword);
-        }
-    }
+			if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
+				// If last_word == true, did we shift everything to the correct position already?
+				tmpword.last = last_word;
+				words_out.write(tmpword);
+			}
+		}
+	}
 }
 
 template<typename TOut, typename TIn>
-void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in)
+void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap_bool_t enable)
 {
+	if (!enable)
+		return;
+
     TIn inval;
     ap_uint<sizeof(inval.data) * 8> tmpword;
     ap_uint<sizeof(inval.data)> tmpstrb;
