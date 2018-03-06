@@ -260,12 +260,12 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_read_buffer(MFB_ADDRESS(mf_get64(line, 0)), mf_get64(line, 8));
+        return afu_mem_set_read_buffer(mf_get64(line, 0), mf_get64(line, 8));
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_write_buffer(MFB_ADDRESS(mf_get64(line, 0)), mf_get64(line, 8));
+        return afu_mem_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
     }
     return SNAP_RETC_FAILURE;
 }

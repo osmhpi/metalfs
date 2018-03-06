@@ -88,69 +88,59 @@ void stream_words2bytes(mf_byte_stream &bytes_out, hls::stream<T> &words_in)
     }
 }
 
-// GCD of TIn and TOut data sizes must be either TIn or TOut
+
 template<typename TOut, typename TIn>
-void stream_convert_width(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in)
+void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in)
 {
-//	if (sizeof(TIn::data) == sizeof(TOut::data)) {
-//		// Handle this trivial case (no one should actually use this)
-//		for (;;) {
-//			TIn element = words_in.read();
-//			words_out.write(element);
-//			if (element.last)
-//				break;
-//		}
-//	}
-//	else
-	if (sizeof(TIn::data) < sizeof(TOut::data))
-    {
-        TIn inval;
-        TOut tmpword;
-        snap_bool_t last_word = false;
-        for (uint64_t i = 0; last_word == false; i++) {
-        //#pragma HLS loop_tripcount max=1488
-            words_in.read(inval);
-            last_word = inval.last;
+    TIn inval;
+    TOut tmpword;
+    snap_bool_t last_word = false;
+    for (uint64_t i = 0; last_word == false; i++) {
+    //#pragma HLS loop_tripcount max=1488
+        words_in.read(inval);
+        last_word = inval.last;
 
-            // Shift words in "big endian" order
-            tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-            tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+        // Shift words in "big endian" order
+        tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
+        tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
 
-            if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
-                // If last_word == true, did we shift everything to the correct position already?
-                tmpword.last = last_word;
-                words_out.write(tmpword);
-            }
+        if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
+            // If last_word == true, did we shift everything to the correct position already?
+            tmpword.last = last_word;
+            words_out.write(tmpword);
         }
     }
-    else if (sizeof(TIn::data) > sizeof(TOut::data))
-    {
-        TIn inval;
-        ap_uint<sizeof(inval.data) * 8> tmpword;
-        ap_uint<sizeof(inval.data)> tmpstrb;
-        TOut outval;
-        for (;;) {
-            words_in.read(inval);
-            tmpword = inval.data;
-            tmpstrb = inval.strb;
-            for (int i = 0; i < sizeof(tmpword) / sizeof(outval.data); i++) {
+}
 
-                // shift words out in "big endian" order
-                outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data) * 8));
-                outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data)));
-                tmpword <<= sizeof(outval.data) * 8;
-                tmpstrb <<= sizeof(outval.data);
-                outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
+template<typename TOut, typename TIn>
+void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in)
+{
+    TIn inval;
+    ap_uint<sizeof(inval.data) * 8> tmpword;
+    ap_uint<sizeof(inval.data)> tmpstrb;
+    TOut outval;
+    for (;;) {
+        words_in.read(inval);
+        tmpword = inval.data;
+        tmpstrb = inval.strb;
 
-                words_out.write(outval);
+        for (int i = 0; i < sizeof(tmpword) / sizeof(outval.data); i++) {
 
-                if (outval.last)
-                    break;
-            }
+            // shift words out in "big endian" order
+            outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data) * 8));
+            outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data)));
+            tmpword <<= sizeof(outval.data) * 8;
+            tmpstrb <<= sizeof(outval.data);
+            outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
 
-            if (inval.last)
+            words_out.write(outval);
+
+            if (outval.last)
                 break;
         }
+
+        if (inval.last)
+            break;
     }
 }
 
