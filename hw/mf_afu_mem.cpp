@@ -23,27 +23,29 @@ mf_retc_t afu_mem_set_write_buffer(uint64_t write_offset, uint64_t write_size) {
 typedef stream_element<sizeof(snap_membus_t)> word_stream_element;
 
 void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element> &mem_stream, snap_bool_t enable) {
-    if (enable) {
-        typedef char word_t[BPERDW];
-        word_t current_word;
+    typedef char word_t[BPERDW];
+    word_t current_word;
 
-        readmem_loop:
-        for (uint64_t buffer_offset = 0; buffer_offset < _read_size; buffer_offset += sizeof(current_word)) {
-            /* Read in one memory word */
-            memcpy((char*) current_word, &din_gmem[_read_offset + MFB_ADDRESS(buffer_offset)], sizeof(current_word));
+    readmem_loop:
+    for (uint64_t buffer_offset = 0; enable; buffer_offset += sizeof(current_word)) {
+        /* Read in one memory word */
+        memcpy((char*) current_word, &din_gmem[_read_offset + MFB_ADDRESS(buffer_offset)], sizeof(current_word));
 
-            // As we can only read entire memory lines, this is only used for setting the strb
-            uint64_t bytes_to_transfer = MIN(_read_size - buffer_offset, sizeof(current_word));
+        // As we can only read entire memory lines, this is only used for setting the strb
+        uint64_t bytes_to_transfer = MIN(_read_size - buffer_offset, sizeof(current_word));
 
-            word_stream_element element;
-            for (int i = 0; i < BPERDW; ++i) {
+        word_stream_element element;
+        for (int i = 0; i < BPERDW; ++i) {
 #pragma HLS unroll
-                element.data = (element.data << 8) | ap_uint<512>(current_word[i]);
-                element.strb = (element.strb << 1) | ap_uint<64>(i < bytes_to_transfer);
-            }
-            element.last = buffer_offset + sizeof(current_word) >= _read_size;
+            element.data = (element.data << 8) | ap_uint<512>(current_word[i]);
+            element.strb = (element.strb << 1) | ap_uint<64>(i < bytes_to_transfer);
+        }
+        element.last = buffer_offset + sizeof(current_word) >= _read_size;
 
-            mem_stream.write(element);
+        mem_stream.write(element);
+
+        if (element.last) {
+            break;
         }
     }
 }

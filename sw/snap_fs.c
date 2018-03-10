@@ -268,12 +268,21 @@ static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_
 {
     memset(mjob, 0, sizeof(*mjob));
     mjob->job_type = MF_JOB_CONFIGURE_STREAMS;
-    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint32_t) * 8);
+    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint32_t) * 10);
 
-    uint32_t *job_struct = (uint32_t*)mjob->job_address;
-    job_struct[0] = htobe32(0); // read_mem 0 -> passthrough 1
-    job_struct[1] = htobe32(0x80000000); // passthrough 1 -> change_case 2
-    job_struct[2] = htobe32(0x80000000); // change_case 2 -> write_mem 0
+    uint64_t enable_mask = 0;
+    enable_mask |= (1 << 0);
+    enable_mask |= (1 << 1);
+    enable_mask |= (1 << 2);
+    enable_mask = enable_mask | (1 << 3);
+
+    uint64_t *job_struct_enable = (uint64_t*)mjob->job_address;
+    *job_struct_enable = htobe64(enable_mask);
+
+    uint32_t *job_struct = (uint32_t*)(job_struct_enable + 1);
+    job_struct[0] = htobe32(1); // read_mem 0 -> passthrough 1
+    job_struct[1] = htobe32(2); // passthrough 1 -> change_case 2
+    job_struct[2] = htobe32(0); // change_case 2 -> write_mem 0
     job_struct[3] = htobe32(0x80000000);
     job_struct[4] = htobe32(0x80000000);
     job_struct[5] = htobe32(0x80000000);
@@ -287,18 +296,7 @@ static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mj
 {
     memset(mjob, 0, sizeof(*mjob));
     mjob->job_type = MF_JOB_RUN_AFUS;
-    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
-
-    uint64_t enable_mask = 0;
-    // enable_mask |= (1 << 0);
-    // enable_mask |= (1 << 1);
-    //enable_mask |= (1 << 2);
-    //enable_mask = enable_mask | (1 << 3);
-
-    printf("Enable is at %016lx\n", mjob->job_address);
-
-    uint64_t *job_struct = (uint64_t*)mjob->job_address;
-    *job_struct = htobe64(enable_mask);
+    mjob->job_address = 0;
 
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }

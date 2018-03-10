@@ -68,8 +68,7 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_4,
     mf_stream &axis_m_5,
     mf_stream &axis_m_6,
-    mf_stream &axis_m_7,
-    snapu64_t enable_mask
+    mf_stream &axis_m_7
 );
 
 static void action_file_write_block(snap_membus_t * mem_in,
@@ -238,7 +237,6 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     }
     else if (act_reg->Data.job_type == MF_JOB_RUN_AFUS)
     {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return action_run_afus(
             mem_in,
             mem_out,
@@ -257,8 +255,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
             axis_m_4,
             axis_m_5,
             axis_m_6,
-            axis_m_7,
-            mf_get64(line, 0)
+            axis_m_7
         );
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
@@ -425,20 +422,24 @@ void switch_commit(snapu32_t *switch_ctrl) {
     switch_base[0] = 0x2;
 }
 
+static snapu64_t _enable_mask = 0;
+
 static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
     // Everything fits into one memory line
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
 
-    switch_set_mapping(switch_ctrl, mf_get32(line,  0), 0);
-    switch_set_mapping(switch_ctrl, mf_get32(line,  4), 1);
-    switch_set_mapping(switch_ctrl, mf_get32(line,  8), 2);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 12), 3);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 16), 4);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 20), 5);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 24), 6);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 28), 7);
+    _enable_mask = mf_get64(line, 0);
 
+    switch_set_mapping(switch_ctrl, mf_get32(line,  8), 0);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 12), 1);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 16), 2);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 20), 3);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 24), 4);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 28), 5);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 32), 6);
+    switch_set_mapping(switch_ctrl, mf_get32(line, 36), 7);
     switch_commit(switch_ctrl);
+
     return SNAP_RETC_SUCCESS;
 }
 
@@ -460,24 +461,23 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_4,
     mf_stream &axis_m_5,
     mf_stream &axis_m_6,
-    mf_stream &axis_m_7,
-    snapu64_t enable_mask
+    mf_stream &axis_m_7
 ) {
     {
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
-        afu_mem_read(mem_in, axis_m_0, enable_mask(1, 0));
+        afu_mem_read(mem_in, axis_m_0, _enable_mask[0]);
 
-        afu_passthrough(axis_s_1, axis_m_1, enable_mask(3, 2));
-        afu_change_case(axis_s_2, axis_m_2, enable_mask(4, 3));
+        afu_passthrough(axis_s_1, axis_m_1, _enable_mask[2]);
+        afu_change_case(axis_s_2, axis_m_2, _enable_mask[3]);
 
-        afu_passthrough(axis_s_3, axis_m_3, enable_mask(5, 4));
-        afu_passthrough(axis_s_4, axis_m_4, enable_mask(6, 5));
-        afu_passthrough(axis_s_5, axis_m_5, enable_mask(7, 6));
-        afu_passthrough(axis_s_6, axis_m_6, enable_mask(8, 7));
-        afu_passthrough(axis_s_7, axis_m_7, enable_mask(9, 8));
+        afu_passthrough(axis_s_3, axis_m_3, _enable_mask[4]);
+        afu_passthrough(axis_s_4, axis_m_4, _enable_mask[5]);
+        afu_passthrough(axis_s_5, axis_m_5, _enable_mask[6]);
+        afu_passthrough(axis_s_6, axis_m_6, _enable_mask[7]);
+        afu_passthrough(axis_s_7, axis_m_7, _enable_mask[8]);
 
-        afu_mem_write(axis_s_0, mem_out, enable_mask(2, 1));
+        afu_mem_write(axis_s_0, mem_out, _enable_mask[1]);
     }
     return SNAP_RETC_SUCCESS;
 }

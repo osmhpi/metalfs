@@ -22,76 +22,75 @@ struct stream_element {
 typedef stream_element<8> mf_stream_element;
 typedef hls::stream<mf_stream_element> mf_stream;
 
-// Convert a stream of bytes (uint8_t) to a stream of arbitrary width
-// (on byte boundaries) words
-template<typename T, bool BS>
-void stream_bytes2words(hls::stream<T> &words_out, mf_byte_stream &bytes_in, snap_bool_t enable)
-{
-    if (enable) {
-        T tmpword;
-        byte_stream_element tmpbyte;
-        snap_bool_t last_byte = false;
-        BYTES2WORDS_LOOP:
-        for (int i = 0; last_byte == false; i++) {
-        //#pragma HLS loop_tripcount max=1488
-            bytes_in.read(tmpbyte);
-            last_byte = tmpbyte.last;
-            if (!BS) { // Shift bytes in little endian order
-                tmpword.data = (tmpword.data >> 8) |
-                    (ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data) << ((sizeof(tmpword.data) - 1) * 8));
-                tmpword.strb = (tmpword.strb >> 1) |
-                    (ap_uint<sizeof(tmpword.data)>(1) << (sizeof(tmpword.data) - 1) * 8);
-            } else { // Shift bytes in big endian order
-                tmpword.data = (tmpword.data << 8) | ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data);
-                tmpword.strb = (tmpword.strb << 1) | ap_uint<sizeof(tmpword.data)>(1);
-            }
-            if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_byte) {
-                tmpword.last = last_byte;
-                words_out.write(tmpword);
-            }
-        }
-    }
-}
+// // Convert a stream of bytes (uint8_t) to a stream of arbitrary width
+// // (on byte boundaries) words
+// template<typename T, bool BS>
+// void stream_bytes2words(hls::stream<T> &words_out, mf_byte_stream &bytes_in, snap_bool_t enable)
+// {
+//     if (enable) {
+//         T tmpword;
+//         byte_stream_element tmpbyte;
+//         snap_bool_t last_byte = false;
+//         BYTES2WORDS_LOOP:
+//         for (int i = 0; last_byte == false; i++) {
+//         //#pragma HLS loop_tripcount max=1488
+//             bytes_in.read(tmpbyte);
+//             last_byte = tmpbyte.last;
+//             if (!BS) { // Shift bytes in little endian order
+//                 tmpword.data = (tmpword.data >> 8) |
+//                     (ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data) << ((sizeof(tmpword.data) - 1) * 8));
+//                 tmpword.strb = (tmpword.strb >> 1) |
+//                     (ap_uint<sizeof(tmpword.data)>(1) << (sizeof(tmpword.data) - 1) * 8);
+//             } else { // Shift bytes in big endian order
+//                 tmpword.data = (tmpword.data << 8) | ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data);
+//                 tmpword.strb = (tmpword.strb << 1) | ap_uint<sizeof(tmpword.data)>(1);
+//             }
+//             if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_byte) {
+//                 tmpword.last = last_byte;
+//                 words_out.write(tmpword);
+//             }
+//         }
+//     }
+// }
 
-// Convert an arbitrary width (on byte boundaries) words into a stream of
-// bytes (uint8_t)
-template<typename T, bool BS>
-void stream_words2bytes(mf_byte_stream &bytes_out, hls::stream<T> &words_in, snap_bool_t enable)
-{
-    if (enable) {
-        T inval;
-        ap_uint<sizeof(inval.data) * 8> tmpword;
-        ap_uint<sizeof(inval.data)> tmpstrb;
-        byte_stream_element outval;
-        WORDS2BYTES_LOOP:
-        for (;;) {
-            words_in.read(inval);
-            tmpword = inval.data;
-            tmpstrb = inval.strb;
-            for (int i = 0; i < sizeof(tmpword); i++) {
-                if (!BS) { // shift bytes out in little endian order
-                    outval.data = uint8_t(tmpword);
-                    tmpword >>= 8;
-                    tmpstrb >>= 1;
-                    outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
-                } else { // shift bytes out in big endian order
-                    outval.data = uint8_t(tmpword >> ((sizeof(tmpword) - 1) * 8));
-                    tmpword <<= 8;
-                    tmpstrb <<= 1;
-                    outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
-                }
-                bytes_out.write(outval);
+// // Convert an arbitrary width (on byte boundaries) words into a stream of
+// // bytes (uint8_t)
+// template<typename T, bool BS>
+// void stream_words2bytes(mf_byte_stream &bytes_out, hls::stream<T> &words_in, snap_bool_t enable)
+// {
+//     //if (enable) {
+//         T inval;
+//         ap_uint<sizeof(inval.data) * 8> tmpword;
+//         ap_uint<sizeof(inval.data)> tmpstrb;
+//         byte_stream_element outval;
+//         WORDS2BYTES_LOOP:
+//         while (enable) {
+//             words_in.read(inval);
+//             tmpword = inval.data;
+//             tmpstrb = inval.strb;
+//             for (int i = 0; i < sizeof(tmpword); i++) {
+//                 if (!BS) { // shift bytes out in little endian order
+//                     outval.data = uint8_t(tmpword);
+//                     tmpword >>= 8;
+//                     tmpstrb >>= 1;
+//                     outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
+//                 } else { // shift bytes out in big endian order
+//                     outval.data = uint8_t(tmpword >> ((sizeof(tmpword) - 1) * 8));
+//                     tmpword <<= 8;
+//                     tmpstrb <<= 1;
+//                     outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
+//                 }
+//                 bytes_out.write(outval);
 
-                if (outval.last)
-                    break;
-            }
+//                 if (outval.last)
+//                     break;
+//             }
 
-            if (inval.last)
-                break;
-        }
-    }
-}
-
+//             if (inval.last)
+//                 break;
+//         }
+//     //}
+// }
 
 template<typename TOut, typename TIn>
 void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap_bool_t enable)
