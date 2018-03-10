@@ -271,9 +271,9 @@ static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_
     mjob->job_address = (uint64_t)snap_malloc(sizeof(uint32_t) * 8);
 
     uint32_t *job_struct = (uint32_t*)mjob->job_address;
-    job_struct[0] = htobe32(0);
-    job_struct[1] = htobe32(0x80000000);
-    job_struct[2] = htobe32(0x80000000);
+    job_struct[0] = htobe32(0); // read_mem 0 -> passthrough 1
+    job_struct[1] = htobe32(0x80000000); // passthrough 1 -> change_case 2
+    job_struct[2] = htobe32(0x80000000); // change_case 2 -> write_mem 0
     job_struct[3] = htobe32(0x80000000);
     job_struct[4] = htobe32(0x80000000);
     job_struct[5] = htobe32(0x80000000);
@@ -290,11 +290,15 @@ static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mj
     mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
 
     uint64_t enable_mask = 0;
-    enable_mask = enable_mask | (1 << 0);
-    enable_mask = enable_mask | (1 << 1);
+    // enable_mask |= (1 << 0);
+    // enable_mask |= (1 << 1);
+    //enable_mask |= (1 << 2);
+    //enable_mask = enable_mask | (1 << 3);
+
+    printf("Enable is at %016lx\n", mjob->job_address);
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
-    *job_struct = htobe32(enable_mask);
+    *job_struct = htobe64(enable_mask);
 
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
@@ -320,6 +324,17 @@ static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, met
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     job_struct[0] = htobe64((uint64_t)buffer);
     job_struct[1] = htobe64(length);
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_change_case_set_mode_job(struct snap_job *cjob, metalfpga_job_t *mjob, uint64_t mode)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
+    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64(mode);
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
@@ -394,6 +409,15 @@ int main(int argc, char *argv[])
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
         snap_prepare_afu_mem_set_write_buffer_job(&cjob, &mjob, out_data, 64);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        if (rc != 0) {
+            fprintf(stderr, "err: job execution %d: %s!\n", rc,
+                    strerror(errno));
+            goto out_error2;
+        }
+        fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        snap_prepare_afu_change_case_set_mode_job(&cjob, &mjob, 0);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,

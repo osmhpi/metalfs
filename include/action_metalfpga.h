@@ -55,6 +55,8 @@ extern "C" {
 
 #define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 6
 
+#define MF_JOB_AFU_CHANGE_CASE_SET_MODE 7
+
 typedef struct metalfpga_job {
     uint64_t job_address;
     uint64_t job_type;
