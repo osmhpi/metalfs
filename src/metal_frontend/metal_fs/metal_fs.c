@@ -14,7 +14,6 @@
 
 #include "../common/known_afus.h"
 #include "server.h"
-#include "afu.h"
 #include "../../metal/metal.h"
 #include "../../metal/inode.h"
 
@@ -340,9 +339,6 @@ static struct fuse_operations fuse_example_operations = {
 
 int main(int argc, char *argv[])
 {
-    // Temporarily enable our fake FPGA buffer list
-    InitializeListHead(&fpga_buffers);
-
     // Set a file name for the server socket
     char temp[L_tmpnam];
     tmpnam(temp);

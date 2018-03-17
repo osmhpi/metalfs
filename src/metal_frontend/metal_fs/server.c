@@ -17,7 +17,6 @@
 #include "../common/message.h"
 #include "../common/known_afus.h"
 #include "list/list.h"
-#include "afu.h"
 #include "agent_worker.h"
 
 LIST_ENTRY registered_agents;

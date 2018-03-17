@@ -10,7 +10,6 @@ SET(METAL_FS_SOURCES
     ${METAL_FS_SHARED_SOURCES}
 
     list/list.c
-    afu.c
     metal_fs.c
     server.c
 )
