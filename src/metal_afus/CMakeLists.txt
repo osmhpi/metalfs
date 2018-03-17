@@ -13,10 +13,12 @@ set(
 
 set(
     METAL_AFUS_LIBRARIES
+    ${SNAP_LIBRARY}
 )
 
 include_directories(
-    
+    ${SNAP_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 add_library(metal_afus STATIC ${SOURCES})

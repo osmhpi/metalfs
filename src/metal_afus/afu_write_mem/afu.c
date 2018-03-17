@@ -8,11 +8,16 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, bool *v
     return "";
 }
 
+static const int apply_config() {
+
+}
+
 mtl_afu_specification afu_write_mem_specification = {
     AFU_WRITE_MEM_ID,
     "write_mem",
 
-    &handle_opts
+    &handle_opts,
+    &apply_config
 };
 
 void afu_write_mem_set_buffer(void *buffer) {
