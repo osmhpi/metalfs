@@ -58,7 +58,7 @@ static mf_bool_t mf_fill_extents_indirect(mf_slot_offset_t slot,
         mf_line_extent_offset_t o_line_extent = i_extent & MF_MASK(MF_EXTENTS_PER_LINE_W,0);
         if (o_line_extent == 0)
         {
-        	line = mem[MFB_ADDRESS(address)];
+            line = mem[MFB_ADDRESS(address)];
             line_address += MFB_INCREMENT;
         }
         snapu64_t begin = mf_get64(line, o_line_extent * 16);
@@ -80,7 +80,7 @@ static mf_bool_t mf_slot_open(mf_slot_offset_t slot)
         return MF_FALSE;
     }
     mf_slots[slot].is_open = true;
-    mf_slots[slot].is_active = false;;
+    mf_slots[slot].is_active = false;
     mf_slots[slot].extent_count = 0;
     mf_slots[slot].block_count = 0;
     mf_slots[slot].current_pblock = 0;
@@ -125,7 +125,7 @@ mf_bool_t mf_file_close(mf_slot_offset_t slot)
 
 mf_bool_t mf_file_is_open(mf_slot_offset_t slot)
 {
-    return mf_slots[slot].is_open; 
+    return mf_slots[slot].is_open;
 }
 
 mf_bool_t mf_file_is_active(mf_slot_offset_t slot)

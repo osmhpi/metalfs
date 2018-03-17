@@ -10,13 +10,9 @@ mf_job_map_t mf_read_job_map(snap_membus_t * mem, snapu64_t address)
 {
     snap_membus_t line = mem[MFB_ADDRESS(address)];
     mf_job_map_t map_job;
-    map_job.slot = mf_get8(line, 0);
-    map_job.map_else_unmap = (mf_get8(line, 8) == 0)? MF_FALSE : MF_TRUE;
-    map_job.extent_count = mf_get16(line, 16);
-    snapu16_t extent_count_le;
-    extent_count_le = mf_get16le(line, 16);
-    snapu16_t extent_count_be;
-	extent_count_be = mf_get16be(line, 16);
+    map_job.slot = mf_get64(line, 0);
+    map_job.map_else_unmap = (mf_get64(line, 8) == 0)? MF_FALSE : MF_TRUE;
+    map_job.extent_count = mf_get64(line, 16);
     map_job.extent_address = address + MFB_INCREMENT;
     return map_job;
 }
@@ -48,7 +44,7 @@ void mf_write_job_query(snap_membus_t * mem, snapu64_t address, mf_job_query_t q
     mf_set8(line, 3, query_job.is_open? 0xff : 0x00);
     mf_set8(line, 4, query_job.is_active? 0xff : 0x00);
     mf_set64(line, 8, query_job.lblock_to_pblock);
-    mf_set16(line, 16, query_job.extent_count);
+    mf_set64(line, 16, query_job.extent_count);
     mf_set64(line, 24, query_job.block_count);
     mf_set64(line, 32, query_job.current_lblock);
     mf_set64(line, 40, query_job.current_pblock);
