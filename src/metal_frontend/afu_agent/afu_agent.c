@@ -176,7 +176,7 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
     return 0;
 }
 
-int determine_afu_key(char *filename) {
+afu_id determine_afu_key(char *filename) {
     char *base = basename(filename);
     for (size_t i = 0; i < sizeof(known_afus); ++i) {
         if (strcmp(base, known_afus[i]->name) == 0) {
@@ -184,7 +184,7 @@ int determine_afu_key(char *filename) {
         }
     }
 
-    return -1;
+    return known_afus[0]->id; // we should never get here
 }
 
 int main(int argc, char *argv[]) {
@@ -195,7 +195,8 @@ int main(int argc, char *argv[]) {
     own_file_name[len] = '\0';
     // TODO: ...
 
-    int afu = determine_afu_key(own_file_name);
+    afu_id afu = determine_afu_key(own_file_name);
+    // TODO: Assert afu !~= 0, 0
 
     char own_fs_mount_point[FILENAME_MAX];
     if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_MAX))
@@ -298,7 +299,7 @@ int main(int argc, char *argv[]) {
         // Process input
         while (accept_data.valid) {
             if (input_buffer != NULL) {
-                bytes_read = fread(input_buffer,  sizeof(char), BUFFER_SIZE, stdin);
+                bytes_read = fread(input_buffer, sizeof(char), BUFFER_SIZE, stdin);
                 eof = bytes_read < BUFFER_SIZE && feof(stdin);
             }
 

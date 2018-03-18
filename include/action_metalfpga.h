@@ -48,14 +48,32 @@ extern "C" {
 //   word3: file_byte_count     | R
 
 #define MF_JOB_CONFIGURE_STREAMS 3
+// 64bit words at job_address:
+//   word0: enable_mask         | R
+//   word1:                     | R
+//     halfword0: stream 0 dest | R
+//     halfword1: stream 1 dest | R
+//   ...
+//   word4:                     | R
+//     halfword0: stream 6 dest | R
+//     halfword1: stream 7 dest | R
 
 #define MF_JOB_RUN_AFUS 4
+// no payload data
 
 #define MF_JOB_AFU_MEM_SET_READ_BUFFER 5
+// 64bit words at job_address:
+//   word0: buffer_address      | R
+//   word1: buffer_length       | R
 
 #define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 6
+// 64bit words at job_address:
+//   word0: buffer_address      | R
+//   word1: buffer_length       | R
 
 #define MF_JOB_AFU_CHANGE_CASE_SET_MODE 7
+// 64bit words at job_address:
+//   word0: mode                | R
 
 typedef struct metalfpga_job {
     uint64_t job_address;

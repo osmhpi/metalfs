@@ -51,7 +51,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_afu_specification afu_read_mem_specification = {
-    AFU_READ_MEM_ID,
+    { AFU_READ_MEM_ID, 0 },
     "read_mem",
 
     &handle_opts,

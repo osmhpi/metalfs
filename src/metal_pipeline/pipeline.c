@@ -59,25 +59,21 @@ void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
 
     uint64_t enable_mask = 0;
     for (uint64_t i = 0; i < execution_plan.length; ++i)
-        enable_mask |= (1 << execution_plan.afus[i]);
+        enable_mask |= (1 << execution_plan.afus[i].enable_id);
 
     uint64_t *job_struct_enable = (uint64_t*)snap_malloc(sizeof(uint32_t) * 10);
     *job_struct_enable = htobe64(enable_mask);
 
-    const uint32_t disable = 0x80000000;
     uint32_t *job_struct = (uint32_t*)(job_struct_enable + 1);
+    const uint32_t disable = 0x80000000;
     for (int i = 0; i < 8; ++i)
         job_struct[i] = htobe32(disable);
-    
-    // TODO:
-    // job_struct[0] = htobe32(1); // read_mem 0 -> passthrough 1
-    // job_struct[1] = htobe32(2); // passthrough 1 -> change_case 2
-    // job_struct[2] = htobe32(0); // change_case 2 -> write_mem 0
-    // job_struct[3] = htobe32(disable);
-    // job_struct[4] = htobe32(disable);
-    // job_struct[5] = htobe32(disable);
-    // job_struct[6] = htobe32(disable);
-    // job_struct[7] = htobe32(disable);
+
+    uint8_t previous_afu_stream = execution_plan.length ? execution_plan.afus[0].stream_id : 0;
+    for (uint64_t i = 1; i < execution_plan.length; ++i) {
+        job_struct[previous_afu_stream] = execution_plan.afus[i].stream_id;
+        previous_afu_stream = execution_plan.afus[i].stream_id;
+    }
 
     metalfpga_job_t mjob;
     mjob.job_type = MF_JOB_CONFIGURE_STREAMS;

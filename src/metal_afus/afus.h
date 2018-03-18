@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef uint64_t afu_id;
+typedef struct afu_id { uint8_t enable_id; uint8_t stream_id; } afu_id;
 struct snap_action;
 
 typedef const void* (*mtl_afu_handle_opts_f)(int argc, char *argv[], uint64_t *length, bool *valid);

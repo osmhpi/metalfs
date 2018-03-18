@@ -49,7 +49,7 @@ uint64_t count_agents_with_afu_id(afu_id id) {
     do {
         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-        if (current_agent->afu_type == id)
+        if (memcmp(&current_agent->afu_type, &id, sizeof(afu_id)) == 0)
             ++result;
 
         current_link = current_link->Flink;
@@ -81,8 +81,6 @@ void derive_execution_plan() {
     // Looks for agents at the beginning of a pipeline
     // that have not been signaled yet
 
-    // mtl_afu_execution_plan result = { NULL, 0 };
-
     if (IsListEmpty(&registered_agents))
         return;
 
@@ -91,7 +89,8 @@ void derive_execution_plan() {
     do {
         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-        if (current_agent->input_agent_pid  == 0 && !current_agent->start_was_signaled) {
+        // Find the first agent of the pipeline (it should have an input that is not part of the pipeline)
+        if (current_agent->input_agent_pid == 0) {
             // Walk the pipeline
             registered_agent_t *pipeline_agent = current_agent;
             uint64_t pipeline_length;
@@ -102,18 +101,19 @@ void derive_execution_plan() {
 
             if (pipeline_agent) {
                 // We have found an agent with output_agent_pid == 0, meaning it's an external file or pipe
-                // afu_id *pipeline_afus = malloc(pipeline_length);
-                // uint64_t current_pipeline_element = 0;
+                // So we have found a complete pipeline!
+                // Now, remove all agents that are part of the pipeline from registered_agents and instead
+                // insert them into pipeline_agents
                 pipeline_agent = current_agent;
-                while (pipeline_agent && pipeline_agent->output_agent_pid != 0) {
+                while (pipeline_agent) {
                     RemoveEntryList(&pipeline_agent->Link);
                     InsertTailList(&pipeline_agents, &pipeline_agent->Link);
-                    // pipeline_afus[current_pipeline_element++] = pipeline_agent->afu_type;
+
+                    if (pipeline_agent->output_agent_pid == 0)
+                        break;
+
                     pipeline_agent = pipeline_agent->output_agent;
                 }
-                current_agent->start_was_signaled = true;
-                // result.afus = pipeline_afus;
-                // result.length = pipeline_length;
                 break;
             }
         }
@@ -133,13 +133,13 @@ void register_agent(agent_hello_data_t *request, int connfd) {
 
     // Read the agent's program args from the socket (if any)
     if (request->argc) {
-        char *argv_buffer = malloc(request->argv_len);
-        recv(agent->socket, argv_buffer, request->argv_len, 0);
-        char **argv = malloc(sizeof(char*) * request->argc);
+        agent->argv_buffer = malloc(request->argv_len);
+        recv(agent->socket, agent->argv_buffer, request->argv_len, 0);
+        agent->argv = malloc(sizeof(char*) * request->argc);
         uint64_t current_arg = 0;
-        void *argv_cursor = argv_buffer;
-        while (argv_cursor < argv_buffer + request->argv_len) {
-            argv[current_arg++] = argv_cursor;
+        void *argv_cursor = agent->argv_buffer;
+        while (argv_cursor < agent->argv_buffer + request->argv_len) {
+            agent->argv[current_arg++] = argv_cursor;
             argv_cursor += strlen(argv_cursor) + 1;
         }
     }
@@ -160,23 +160,17 @@ void register_agent(agent_hello_data_t *request, int connfd) {
         );
     } else {
         // Create mutexes for internal signaling
-        agent->internal_input_buffer_handle = -1;
-        agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
-        pthread_mutex_init(agent->internal_input_mutex, NULL);
-        agent->internal_input_condition = malloc(sizeof(pthread_cond_t));
-        pthread_cond_init(agent->internal_input_condition, NULL);
+        // agent->internal_input_buffer_handle = -1;
+        // agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
+        // pthread_mutex_init(agent->internal_input_mutex, NULL);
+        // agent->internal_input_condition = malloc(sizeof(pthread_cond_t));
+        // pthread_cond_init(agent->internal_input_condition, NULL);
     }
 
-    {
-        // pthread_mutex_lock(&registered_agent_mutex);
+    // Append to list
+    InsertTailList(&registered_agents, &agent->Link);
 
-        // Append to list
-        InsertTailList(&registered_agents, &agent->Link);
-
-        update_agent_wiring();
-
-        // pthread_mutex_unlock(&registered_agent_mutex);
-    }
+    update_agent_wiring();
 }
 
 void send_agent_invalid(registered_agent_t *agent) {
@@ -187,15 +181,6 @@ void send_agent_invalid(registered_agent_t *agent) {
     server_accept_agent_data_t accept_data = { sizeof(message), false };
     send(agent->socket, &accept_data, sizeof(accept_data), 0);
     send(agent->socket, message, sizeof(message), 0);
-}
-
-void send_all_agents_invalid(PLIST_ENTRY agent_list) {
-    while (!IsListEmpty(&agent_list)) {
-        registered_agent_t *free_agent = CONTAINING_LIST_RECORD(agent_list->Flink, registered_agent_t);
-        send_agent_invalid(free_agent);
-        RemoveEntryList(&free_agent->Link);
-        free_registered_agent(free_agent);
-    }
 }
 
 void free_registered_agent(registered_agent_t *agent) {
@@ -220,8 +205,18 @@ void free_registered_agent(registered_agent_t *agent) {
     free(agent);
 }
 
+void send_all_agents_invalid(PLIST_ENTRY agent_list) {
+    while (!IsListEmpty(agent_list)) {
+        registered_agent_t *free_agent = CONTAINING_LIST_RECORD(agent_list->Flink, registered_agent_t);
+        send_agent_invalid(free_agent);
+        RemoveEntryList(&free_agent->Link);
+        free_registered_agent(free_agent);
+    }
+}
+
 void* start_socket(void* args) {
     InitializeListHead(&registered_agents);
+    InitializeListHead(&pipeline_agents);
 
     int listenfd = 0, connfd = 0;
     struct sockaddr_un serv_addr;
@@ -274,7 +269,7 @@ void* start_socket(void* args) {
 
                 // Look up the AFU specification that should be used
                 for (uint64_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
-                    if (known_afus[i]->id == current_agent->afu_type) {
+                    if (memcmp(&known_afus[i]->id, &current_agent->afu_type, sizeof(afu_id)) == 0) {
                         current_agent->afu_specification = known_afus[i];
                         break;
                     }
@@ -362,7 +357,7 @@ void* start_socket(void* args) {
             } while (current_link != &pipeline_agents);
             afu_list[current_afu] = afu_write_mem_specification.id;
 
-            mtl_afu_execution_plan execution_plan = { afu_list, pipeline_length };
+            mtl_afu_execution_plan execution_plan = { afu_list, pipeline_length + 2 };
             mtl_configure_pipeline(execution_plan);
 
             registered_agent_t *input_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);

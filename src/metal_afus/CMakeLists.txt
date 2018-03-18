@@ -3,8 +3,10 @@ set(
 
     afu_read_mem/afu.c
     afu_read_mem/afu.h
-    afu_uppercase/afu.c
-    afu_uppercase/afu.h
+    afu_change_case/afu.c
+    afu_change_case/afu.h
+    afu_passthrough/afu.c
+    afu_passthrough/afu.h
     afu_write_mem/afu.c
     afu_write_mem/afu.h
 

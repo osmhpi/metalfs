@@ -51,7 +51,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_afu_specification afu_write_mem_specification = {
-    AFU_WRITE_MEM_ID,
+    { AFU_WRITE_MEM_ID, 0 },
     "write_mem",
 
     &handle_opts,
@@ -65,5 +65,5 @@ void afu_write_mem_set_buffer(void *buffer, uint64_t length) {
 
 uint64_t afu_write_mem_get_written_bytes() {
     // TODO
-    return 0;
+    return _buffer_length;
 }

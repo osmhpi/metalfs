@@ -11,7 +11,7 @@ extern pthread_mutex_t registered_agent_mutex;
 
 typedef struct registered_agent {
     int pid;
-    int afu_type;
+    afu_id afu_type;
     mtl_afu_specification *afu_specification;
     int socket;
 

@@ -366,6 +366,7 @@ int main(int argc, char *argv[])
         goto out_error1;
     }
 
+    // Pipeline test data
     char *in_data = (char*)snap_malloc(64);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -373,21 +374,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("In:\n");
-    for (int i = 0; i < 64; i ++) {
-        printf(" %02x", in_data[i]);
-    }
-    putchar('\n');
+    // printf("In:\n");
+    // print_memory_64(in_data);
 
     char *out_data = (char*)snap_malloc(65);
     memset(out_data, '\0', 65);
-    printf("Out before:\n");
-    for (int i = 0; i < 64; i ++) {
-        printf(" %02x", out_data[i]);
-    }
-    putchar('\n');
+    // printf("Out before:\n");
+    // print_memory_64(out_data);
 
-    if (true) {
+    if (false) {
         snap_prepare_configure_streams_job(&cjob, &mjob);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
@@ -446,11 +441,8 @@ int main(int argc, char *argv[])
     fprintf(stdout, "RETC=%x\n", cjob.retc);
 
     out_data[64] = '\0';
-    printf("Out after:\n");
-    for (int i = 0; i < 64; i ++) {
-        printf(" %02x", out_data[i]);
-    }
-    putchar('\n');
+    // printf("Out after:\n");
+    // print_memory_64(out_data);
 
     // output query results
     if (opts.func_type == MF_JOB_QUERY) {
