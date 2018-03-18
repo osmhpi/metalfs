@@ -10,7 +10,8 @@ set(
 )
 
 include_directories(
-    
+    ${SNAP_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 add_library(metal_pipeline STATIC ${SOURCES})

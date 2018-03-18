@@ -401,7 +401,7 @@ void* start_socket(void* args) {
                         send(output_agent->socket, &output_buffer_message, sizeof(output_buffer_message), 0);
 
                         // Configure write_mem AFU
-                        afu_write_mem_set_buffer(output_agent->output_buffer);
+                        afu_write_mem_set_buffer(output_agent->output_buffer, 4096);
                         mtl_configure_afu(&afu_write_mem_specification);
                     }
 

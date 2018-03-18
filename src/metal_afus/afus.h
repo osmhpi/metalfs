@@ -4,9 +4,10 @@
 #include <stdbool.h>
 
 typedef uint64_t afu_id;
+struct snap_action;
 
 typedef const void* (*mtl_afu_handle_opts_f)(int argc, char *argv[], uint64_t *length, bool *valid);
-typedef int (*mtl_afu_apply_configuration_f)();
+typedef int (*mtl_afu_apply_configuration_f)(struct snap_action *action);
 
 typedef struct mtl_afu_specification {
     afu_id id;
