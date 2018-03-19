@@ -198,6 +198,10 @@ int main(int argc, char *argv[]) {
     if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_MAX))
         printf("oopsie\n");
 
+    // Donate our current time slice, hoping that all other afu processes in the pipe are
+    // spawned and recognizable afterwards. Seems to solve this race condition effectively.
+    sleep(0);
+
     // Determine the file connected to stdin
     char stdin_file[FILENAME_MAX];
     bool stdin_is_metal_file;
