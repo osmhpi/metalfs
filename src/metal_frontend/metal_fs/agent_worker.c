@@ -1,3 +1,5 @@
+#include "agent_worker.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -9,52 +11,77 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
-#include "../common/buffer.h"
+#include "../common/known_afus.h"
 #include "../common/message.h"
-#include "list/list.h"
-#include "afu.h"
-
-typedef struct registered_agent {
-    int pid;
-    int afu_type;
-    int socket;
-
-    struct registered_agent* input_agent;
-    int input_agent_pid;
-    int input_file;
-    char* input_buffer;
-
-    int internal_input_buffer_handle;
-    char* internal_input_size;
-    bool internal_input_eof;
-    pthread_mutex_t* internal_input_mutex;
-    pthread_cond_t* internal_input_condition;
-
-    struct registered_agent* output_agent;
-    int output_file;
-    char* output_buffer;
-
-    LIST_ENTRY Link;
-} registered_agent_t;
+#include "../common/buffer.h"
 
 pthread_mutex_t registered_agent_mutex = PTHREAD_MUTEX_INITIALIZER;
-LIST_ENTRY registered_agents;
+
+pthread_mutex_t execution_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t execution_plan_condition = PTHREAD_COND_INITIALIZER;
+mtl_afu_execution_plan new_execution_plan;
+
+void signal_new_execution_plan(mtl_afu_execution_plan plan) {
+    pthread_mutex_lock(&execution_plan_mutex);
+
+    if (new_execution_plan.length)
+    {
+        // Previous plan wasn't picked up
+        // ¯\_(ツ)_/¯
+    }
+
+    new_execution_plan = plan;
+    pthread_cond_broadcast(&execution_plan_condition);
+    pthread_mutex_unlock(&execution_plan_mutex);
+}
 
 void* agent_thread(void* args) {
     registered_agent_t *agent = args;
 
+    bool valid = false;
+
+    // Look up the AFU specification that should be used
+    mtl_afu_specification *afu_spec = NULL;
+    for (uint64_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+        if (known_afus[i]->id == agent->afu_type) {
+            afu_spec = known_afus[i];
+            break;
+        }
+    }
+
+    // See if the options provided allow to execute the AFU
+    const char* response = NULL;
+    uint64_t response_len = 0;
+    if (afu_spec && agent->argc) {
+        char argv_buffer[agent->argv_len];
+        recv(agent->socket, &argv_buffer, agent->argv_len, 0);
+        char *argv[agent->argc];
+        uint64_t current_arg = 0;
+        void *argv_cursor = argv_buffer;
+        while (argv_cursor < argv_buffer + agent->argv_len) {
+            argv[current_arg++] = argv_cursor;
+            argv_cursor += strlen(argv_cursor) + 1;
+        }
+
+        response = afu_spec->handle_opts(agent->argc, argv, &response_len, &valid);
+    }
+
     message_type_t message_type = SERVER_ACCEPT_AGENT;
-
     send(agent->socket, &message_type, sizeof(message_type), 0);
+    server_accept_agent_data_t accept_data = { response_len, valid };
+    send(agent->socket, &accept_data, sizeof(accept_data), 0);
+    if (response_len) {
+        send(agent->socket, response, response_len, 0);
+    }
 
-    for (;;) {
+    while (valid) {
         message_type_t incoming_message_type;
         size_t received = recv(agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
         if (received == 0)
             break;
 
         if (incoming_message_type != AGENT_PUSH_BUFFER)
-            break; // Wtf. TODO
+            break; // Should not happen
 
         agent_push_buffer_data_t processing_request;
         received = recv(agent->socket, &processing_request, sizeof(processing_request), 0);
@@ -82,7 +109,7 @@ void* agent_thread(void* args) {
             pthread_cond_wait(agent->internal_input_condition, agent->internal_input_mutex);
 
             input_buf_handle = agent->internal_input_buffer_handle;
-            size = agent->internal_input_size;
+            size = agent->internal_input_size; // TODO: is this correct?
             eof = agent->internal_input_eof;
 
             pthread_mutex_unlock(agent->internal_input_mutex);
@@ -175,121 +202,4 @@ void* agent_thread(void* args) {
     free(agent);
 
     return 0;
-}
-
-registered_agent_t* find_agent_with_pid(int pid) {
-    if (IsListEmpty(&registered_agents))
-        return NULL;
-
-    PLIST_ENTRY current_link = registered_agents.Flink;
-    do {
-        registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
-
-        if (current_agent->pid == pid)
-            return current_agent;
-
-        current_link = current_link->Flink;
-    } while (current_link != &registered_agents);
-
-    return NULL;
-}
-
-void update_agent_wiring() {
-    if (IsListEmpty(&registered_agents))
-        return;
-
-    PLIST_ENTRY current_link = registered_agents.Flink;
-
-    do {
-        registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
-
-        if (current_agent->input_agent_pid && current_agent->input_agent == NULL) {
-            current_agent->input_agent = find_agent_with_pid(current_agent->input_agent_pid);
-            if (current_agent->input_agent != NULL)
-                current_agent->input_agent->output_agent = current_agent;
-        }
-
-        current_link = current_link->Flink;
-    } while (current_link != &registered_agents);
-}
-
-void* start_socket(void* args) {
-    InitializeListHead(&registered_agents);
-
-    int listenfd = 0, connfd = 0;
-    struct sockaddr_un serv_addr;
-
-    char* socket_file_name = (char*)args;
-
-    listenfd = socket(AF_UNIX, SOCK_STREAM, 0);
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sun_family = AF_UNIX;
-    strcpy(serv_addr.sun_path, socket_file_name);
-
-    bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-
-    listen(listenfd, 10); // 10 = Queue len
-
-    for (;;) {
-        connfd = accept(listenfd, NULL, NULL);
-
-        message_type_t incoming_message_type;
-        recv(connfd, &incoming_message_type, sizeof(incoming_message_type), 0);
-
-        if (incoming_message_type == AGENT_HELLO) {
-            agent_hello_data_t request;
-            recv(connfd, &request, sizeof(request), 0);
-
-            registered_agent_t *agent = calloc(1, sizeof(registered_agent_t));
-            agent->socket = connfd;
-            agent->pid = request.pid;
-            agent->afu_type = request.afu_type;
-            agent->input_agent_pid = request.input_agent_pid;
-
-            // If the agent's input is not connected to another agent, it should
-            // have provided a file that will be used for memory-mapped data exchange
-            if (agent->input_agent_pid == 0) {
-
-                if (strlen(request.input_buffer_filename) == 0) {
-                    // Should not happen
-                    close(connfd);
-                    free(agent);
-                    continue;
-                }
-
-                map_shared_buffer_for_reading(
-                    request.input_buffer_filename,
-                    &agent->input_file, &agent->input_buffer
-                );
-            } else {
-                // Create a mutexes for internal signaling
-                agent->internal_input_buffer_handle = -1;
-                agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
-                pthread_mutex_init(agent->internal_input_mutex, NULL);
-                agent->internal_input_condition = malloc(sizeof(pthread_cond_t));
-                pthread_cond_init(agent->internal_input_condition, NULL);
-            }
-
-            {
-                pthread_mutex_lock(&registered_agent_mutex);
-
-                // Append to list
-                InsertTailList(&registered_agents, &agent->Link);
-
-                update_agent_wiring();
-
-                pthread_mutex_unlock(&registered_agent_mutex);
-            }
-
-            pthread_t agent_thr;
-            pthread_create(&agent_thr, NULL, agent_thread, (void*)agent);
-        } else {
-            // Don't know this guy -- doesn't even say hello
-            close(connfd);
-        }
-    }
-
-    close(listenfd);
-
-    return NULL;
 }

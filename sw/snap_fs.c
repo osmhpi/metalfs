@@ -223,7 +223,7 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 
     printf("Preparing QueryJobStruct:\n");
     print_memory_64((uint8_t*)(mjob->job_address));
-     
+
     //move job struct into cjob
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 };
@@ -237,7 +237,7 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     int lineSize = 64; // 1 line = 64 byte
     int numberOfExtentLines = map_opts->extent_count % 4 ? map_opts->extent_count / 4 + 1 : map_opts->extent_count / 4; // 4 extents per line, can't allocate half lines
     mjob->job_address = (uint64_t)snap_malloc(lineSize * (numberOfExtentLines +1));
-    /*if (posix_memalign((void**)&mjob->job_address, 64, lineSize * (numberOfExtentLines + 1) * 4000) != 0) { 
+    /*if (posix_memalign((void**)&mjob->job_address, 64, lineSize * (numberOfExtentLines + 1) * 4000) != 0) {
         perror("FAILED: posix_memalign");
         return;
     }*/
@@ -261,6 +261,78 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
     printf("... extents:\n");
     print_memory_64((uint8_t*)(mjob->job_address)+64);
     // move job struct into cjob
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_job_t *mjob)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_CONFIGURE_STREAMS;
+    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint32_t) * 10);
+
+    uint64_t enable_mask = 0;
+    enable_mask |= (1 << 0);
+    enable_mask |= (1 << 1);
+    enable_mask |= (1 << 2);
+    enable_mask = enable_mask | (1 << 3);
+
+    uint64_t *job_struct_enable = (uint64_t*)mjob->job_address;
+    *job_struct_enable = htobe64(enable_mask);
+
+    uint32_t *job_struct = (uint32_t*)(job_struct_enable + 1);
+    job_struct[0] = htobe32(1); // read_mem 0 -> passthrough 1
+    job_struct[1] = htobe32(2); // passthrough 1 -> change_case 2
+    job_struct[2] = htobe32(0); // change_case 2 -> write_mem 0
+    job_struct[3] = htobe32(0x80000000);
+    job_struct[4] = htobe32(0x80000000);
+    job_struct[5] = htobe32(0x80000000);
+    job_struct[6] = htobe32(0x80000000);
+    job_struct[7] = htobe32(0x80000000);
+
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mjob)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_RUN_AFUS;
+    mjob->job_address = 0;
+
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_mem_set_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
+    mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64((uint64_t)buffer);
+    job_struct[1] = htobe64(length);
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_MEM_SET_WRITE_BUFFER;
+    mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64((uint64_t)buffer);
+    job_struct[1] = htobe64(length);
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_change_case_set_mode_job(struct snap_job *cjob, metalfpga_job_t *mjob, uint64_t mode)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
+    mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64(mode);
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
@@ -294,6 +366,61 @@ int main(int argc, char *argv[])
         goto out_error1;
     }
 
+    // Pipeline test data
+    char *in_data = (char*)snap_malloc(64);
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            in_data[i * 8 + j] = 'a' + i;
+        }
+    }
+
+    // printf("In:\n");
+    // print_memory_64(in_data);
+
+    char *out_data = (char*)snap_malloc(65);
+    memset(out_data, '\0', 65);
+    // printf("Out before:\n");
+    // print_memory_64(out_data);
+
+    if (false) {
+        snap_prepare_configure_streams_job(&cjob, &mjob);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        if (rc != 0) {
+            fprintf(stderr, "err: job execution %d: %s!\n", rc,
+                    strerror(errno));
+            goto out_error2;
+        }
+        fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        snap_prepare_afu_mem_set_read_buffer_job(&cjob, &mjob, in_data, 64);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        if (rc != 0) {
+            fprintf(stderr, "err: job execution %d: %s!\n", rc,
+                    strerror(errno));
+            goto out_error2;
+        }
+        fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        snap_prepare_afu_mem_set_write_buffer_job(&cjob, &mjob, out_data, 64);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        if (rc != 0) {
+            fprintf(stderr, "err: job execution %d: %s!\n", rc,
+                    strerror(errno));
+            goto out_error2;
+        }
+        fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        snap_prepare_afu_change_case_set_mode_job(&cjob, &mjob, 0);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        if (rc != 0) {
+            fprintf(stderr, "err: job execution %d: %s!\n", rc,
+                    strerror(errno));
+            goto out_error2;
+        }
+        fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        snap_prepare_run_afus_job(&cjob, &mjob);
+    } else {
     switch(opts.func_type) {
         case MF_JOB_MAP:
             snap_prepare_map_job(&cjob, &mjob);
@@ -301,6 +428,7 @@ int main(int argc, char *argv[])
         case MF_JOB_QUERY:
             snap_prepare_query_job(&cjob, &mjob);
             break;
+    }
     }
 
     rc = snap_action_sync_execute_job(action, &cjob, timeout);
@@ -311,6 +439,10 @@ int main(int argc, char *argv[])
     }
 
     fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+    out_data[64] = '\0';
+    // printf("Out after:\n");
+    // print_memory_64(out_data);
 
     // output query results
     if (opts.func_type == MF_JOB_QUERY) {

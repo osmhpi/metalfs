@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "afus.h"
+#include "../../metal_afus/afus.h"
 
 typedef enum message_type {
     AGENT_HELLO,
@@ -18,8 +18,11 @@ typedef enum message_type {
 
 typedef struct agent_hello_data {
     uint64_t pid;
-    afu_type_t afu_type;
+    afu_id afu_type;
     uint64_t input_agent_pid;
+    uint64_t output_agent_pid;
+    uint64_t argc;
+    uint64_t argv_len;
     char input_buffer_filename[FILENAME_MAX];
     char internal_input_filename[FILENAME_MAX];
     char internal_output_filename[FILENAME_MAX];
@@ -33,6 +36,11 @@ typedef struct agent_push_buffer_data {
 typedef struct server_initialize_output_buffer_data {
     char output_buffer_filename[FILENAME_MAX];
 } server_initialize_output_buffer_data_t;
+
+typedef struct server_accept_agent_data {
+    uint64_t response_length;
+    bool valid;
+} server_accept_agent_data_t;
 
 typedef struct server_processed_buffer_data {
     uint64_t size;

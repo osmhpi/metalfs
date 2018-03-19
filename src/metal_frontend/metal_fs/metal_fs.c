@@ -7,18 +7,19 @@
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <pthread.h>
 
 #include <fuse.h>
 
-#include "../common/afus.h"
+#include "../common/known_afus.h"
 #include "server.h"
-#include "afu.h"
 #include "../../metal/metal.h"
 #include "../../metal/inode.h"
+#include "../../metal_pipeline/pipeline.h"
 
-static const char *agent_filepath = "./afu_agent";
+static char agent_filepath[255];
 
 static const char *afus_dir = "afus";
 static const char *files_dir = "files";
@@ -94,8 +95,8 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         return 0;
     }
 
-    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, afus[i].name);
+    for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_afus[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
@@ -141,8 +142,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     if (strcmp(path, test_filename) == 0) {
         filler(buf, ".", NULL, 0);
         filler(buf, "..", NULL, 0);
-        for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-            filler(buf, afus[i].name, NULL, 0);
+        for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+            filler(buf, known_afus[i]->name, NULL, 0);
         }
         return 0;
     }
@@ -229,8 +230,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
     char test_filename[FILENAME_MAX];
 
-    for (size_t i = 0; i < sizeof(afus) / sizeof(*afus); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, afus[i].name);
+    for (size_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_afus[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
@@ -340,18 +341,21 @@ static struct fuse_operations fuse_example_operations = {
 
 int main(int argc, char *argv[])
 {
-    // Temporarily enable our fake FPGA buffer list
-    InitializeListHead(&fpga_buffers);
-
     // Set a file name for the server socket
     char temp[L_tmpnam];
     tmpnam(temp);
     strncpy(socket_filename, temp, 255);
 
+    // Determine the path to the afu_agent executable
+    strncpy(agent_filepath, argv[0], sizeof(agent_filepath));
+    dirname(agent_filepath);
+    strncat(agent_filepath, "/afu_agent", sizeof(agent_filepath));
+
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
 
     mtl_initialize("metadata_store");
+    mtl_pipeline_initialize();
 
     return fuse_main(argc, argv, &fuse_example_operations, NULL);
 }
