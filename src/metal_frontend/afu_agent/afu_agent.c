@@ -50,11 +50,7 @@ int get_process_connected_to_std_fd(int fd_no, char * buffer, size_t bufsiz, int
                 continue;
             }
 
-            char procfs_fd_file[256];
-            snprintf(procfs_fd_file, sizeof(procfs_fd_file), "/proc/self/fd/%d", 1-fd_no);
-            snprintf(stdout_filename, FILENAME_MAX, procfs_fd_file, dir->d_name);
-
-            *pid = atoi(dir->d_name);
+            snprintf(stdout_filename, FILENAME_MAX, "/proc/%s/fd/%d", dir->d_name, 1-fd_no);
 
             // Check if stdout of this process is the same as our stdin pipe
             size_t len = readlink(stdout_filename, stdout_pipename, FILENAME_MAX);
@@ -63,8 +59,9 @@ int get_process_connected_to_std_fd(int fd_no, char * buffer, size_t bufsiz, int
                 if ((uint64_t)inode == stdin_stats.st_ino) {
                     snprintf(attached_process, FILENAME_MAX, "/proc/%s/exe", dir->d_name);
                     len = readlink(attached_process, buffer, bufsiz-1);
-                    buffer[len] = '\0';
                     // TODO: ...
+                    buffer[len] = '\0';
+                    *pid = atoi(dir->d_name);
                     break;
                 }
             }
@@ -122,13 +119,12 @@ int determine_process_or_file_connected_to_std_fd (
     get_process_connected_to_std_fd(fd_no, stdin_executable, sizeof(stdin_executable), pid);
 
     if (strlen(stdin_executable)) {
-
         char afus_prefix[FILENAME_MAX]; // TODO: Use format constant
         snprintf(afus_prefix, FILENAME_MAX, "%s/afus/", metal_mountpoint);
         int afus_prefix_len = strlen(afus_prefix);
 
         int stdin_executable_len = strlen(stdin_executable);
-        if (strncmp(afus_prefix, fd_file, afus_prefix_len > stdin_executable_len ? stdin_executable_len : afus_prefix_len) != 0) {
+        if (strncmp(afus_prefix, stdin_executable, afus_prefix_len > stdin_executable_len ? stdin_executable_len : afus_prefix_len) != 0) {
             // Reset pid
             *pid = 0;
         }
@@ -300,7 +296,7 @@ int main(int argc, char *argv[]) {
         while (accept_data.valid) {
             if (input_buffer != NULL) {
                 bytes_read = fread(input_buffer, sizeof(char), BUFFER_SIZE, stdin);
-                eof = bytes_read < BUFFER_SIZE && feof(stdin);
+                eof = feof(stdin);
             }
 
             if (eof && input_buffer) {

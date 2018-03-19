@@ -18,15 +18,10 @@ SET(METAL_FS_SOURCES
 SET (METAL_FS_LIBRARIES
     ${FUSE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-)
 
-# if(WITH_SNAP)
-#     SET(METAL_FS_LIBRARIES
-#         ${METAL_FS_LIBRARIES}
-#         ${SNAP_LIBRARY}
-#         ${CXL_LIBRARY}
-#     )
-# endif()
+    ${SNAP_LIBRARY}
+    ${CXL_LIBRARY}
+)
 
 add_executable(metal_fs ${METAL_FS_SOURCES})
 target_link_libraries(metal_fs metal metal_afus metal_pipeline ${METAL_FS_LIBRARIES})

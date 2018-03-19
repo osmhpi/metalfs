@@ -699,14 +699,16 @@ int main()
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// CONFIGURE STREAMS\n");
-    job_mem_h[0] = htobe32(7);
-    job_mem_h[1] = htobe32(0);
-    job_mem_h[2] = htobe32(1);
-    job_mem_h[3] = htobe32(2);
-    job_mem_h[4] = htobe32(3);
-    job_mem_h[5] = htobe32(4);
-    job_mem_h[6] = htobe32(5);
-    job_mem_h[7] = htobe32(6);
+    job_mem[0] = htobe64(0xffffffffffffffff); // Enable all
+    //job_mem[0] = htobe64(0 | (1 << 0) | (1 << 1) | (1 << 2));
+    job_mem_h[2] = htobe32(7);
+    job_mem_h[3] = htobe32(0);
+    job_mem_h[4] = htobe32(1);
+    job_mem_h[5] = htobe32(2);
+    job_mem_h[6] = htobe32(3);
+    job_mem_h[7] = htobe32(4);
+    job_mem_h[8] = htobe32(5);
+    job_mem_h[9] = htobe32(6);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_CONFIGURE_STREAMS;
@@ -737,8 +739,6 @@ int main()
     fprintf(stderr, "// RUN AFUS\n");
     // Fill the memory with 'c' characters
     memset(&job_mem_b[0x80], 'c', 64);
-    // job_mem[0] = htobe64(0xffffffffffffffff); // Enable all
-    job_mem[0] = htobe64(0 | (1 << 0) | (1 << 2));
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_RUN_AFUS;

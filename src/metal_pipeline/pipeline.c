@@ -23,18 +23,22 @@ int mtl_pipeline_initialize() {
     char device[128];
     snprintf(device, sizeof(device)-1, "/dev/cxl/afu%d.0s", 0);
 
-    _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
     if (_card == NULL) {
-        fprintf(stderr, "err: failed to open card %u: %s\n", 0, strerror(errno));
-        return MTL_ERROR_INVALID_ARGUMENT;
+        _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+        if (_card == NULL) {
+            fprintf(stderr, "err: failed to open card %u: %s\n", 0, strerror(errno));
+            return MTL_ERROR_INVALID_ARGUMENT;
+        }
     }
 
-    snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
-    _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 60);
     if (_action == NULL) {
-        fprintf(stderr, "err: failed to attach action %u: %s\n", 0, strerror(errno));
-        snap_card_free(_card);
-        return MTL_ERROR_INVALID_ARGUMENT;
+        snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
+        _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 60);
+        if (_action == NULL) {
+            fprintf(stderr, "err: failed to attach action %u: %s\n", 0, strerror(errno));
+            snap_card_free(_card);
+            return MTL_ERROR_INVALID_ARGUMENT;
+        }
     }
 
     return MTL_SUCCESS;
@@ -43,6 +47,10 @@ int mtl_pipeline_initialize() {
 int mtl_pipeline_deinitialize() {
     snap_detach_action(_action);
     snap_card_free(_card);
+
+    _action = NULL;
+    _card = NULL;
+
     return MTL_SUCCESS;
 }
 
@@ -55,8 +63,6 @@ void mtl_configure_afu(mtl_afu_specification *afu_spec) {
 }
 
 void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
-    pthread_mutex_lock(&snap_mutex);
-
     uint64_t enable_mask = 0;
     for (uint64_t i = 0; i < execution_plan.length; ++i)
         enable_mask |= (1 << execution_plan.afus[i].enable_id);
@@ -71,7 +77,7 @@ void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
 
     uint8_t previous_afu_stream = execution_plan.length ? execution_plan.afus[0].stream_id : 0;
     for (uint64_t i = 1; i < execution_plan.length; ++i) {
-        job_struct[previous_afu_stream] = execution_plan.afus[i].stream_id;
+        job_struct[previous_afu_stream] = htobe32(execution_plan.afus[i].stream_id);
         previous_afu_stream = execution_plan.afus[i].stream_id;
     }
 
@@ -82,12 +88,12 @@ void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
     struct snap_job cjob;
     snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
+    pthread_mutex_lock(&snap_mutex);
     const unsigned long timeout = 600;
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
-
     pthread_mutex_unlock(&snap_mutex);
 
-    free(job_struct);
+    free(job_struct_enable);
 
     if (rc != 0)
         // Some error occurred
@@ -101,6 +107,25 @@ void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
 }
 
 void mtl_run_pipeline() {
+    metalfpga_job_t mjob;
+    mjob.job_type = MF_JOB_RUN_AFUS;
+    mjob.job_address = 0;
+
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
+
     pthread_mutex_lock(&snap_mutex);
+    const unsigned long timeout = 600;
+    int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
     pthread_mutex_unlock(&snap_mutex);
+
+    if (rc != 0)
+        // Some error occurred
+        return;
+
+    if (cjob.retc != SNAP_RETC_SUCCESS)
+        // Some error occurred
+        return;
+
+    return;
 }

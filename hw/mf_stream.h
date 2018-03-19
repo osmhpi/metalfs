@@ -108,8 +108,14 @@ void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap
             tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
             tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
 
-            if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_word) {
-                // If last_word == true, did we shift everything to the correct position already?
+            if (last_word) {
+                // If this was the last word, shift the rest and increase i so that the result is written afterwards
+                tmpword.data <<= 8 * sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
+                tmpword.strb <<= sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
+                i += ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
+            }
+
+            if ((i + 1) % (sizeof(tmpword.data) / sizeof(inval.data)) == 0) {
                 tmpword.last = last_word;
                 words_out.write(tmpword);
             }

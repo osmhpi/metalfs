@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <pthread.h>
 
@@ -16,8 +17,9 @@
 #include "server.h"
 #include "../../metal/metal.h"
 #include "../../metal/inode.h"
+#include "../../metal_pipeline/pipeline.h"
 
-static const char *agent_filepath = "./afu_agent";
+static char agent_filepath[255];
 
 static const char *afus_dir = "afus";
 static const char *files_dir = "files";
@@ -344,10 +346,16 @@ int main(int argc, char *argv[])
     tmpnam(temp);
     strncpy(socket_filename, temp, 255);
 
+    // Determine the path to the afu_agent executable
+    strncpy(agent_filepath, argv[0], sizeof(agent_filepath));
+    dirname(agent_filepath);
+    strncat(agent_filepath, "/afu_agent", sizeof(agent_filepath));
+
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
 
     mtl_initialize("metadata_store");
+    mtl_pipeline_initialize();
 
     return fuse_main(argc, argv, &fuse_example_operations, NULL);
 }

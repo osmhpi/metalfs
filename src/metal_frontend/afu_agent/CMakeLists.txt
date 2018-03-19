@@ -1,5 +1,9 @@
 set(
     AFU_AGENT_LIBRARIES
+
+    pthread
+    ${SNAP_LIBRARY}
+    ${CXL_LIBRARY}
 )
 
 
