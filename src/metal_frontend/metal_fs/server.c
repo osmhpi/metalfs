@@ -325,7 +325,8 @@ void* start_socket(void* args) {
 
                 message_type_t incoming_message_type;
                 recv(current_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
-                assert(incoming_message_type == AGENT_PUSH_BUFFER);
+                // Don't assert, see below, just have some faith
+                // assert(incoming_message_type == AGENT_PUSH_BUFFER);
 
                 // The only processing request that we really care about is the input agent's
                 agent_push_buffer_data_t tmp_processing_request;
@@ -455,9 +456,16 @@ void* start_socket(void* args) {
 
                 // Wait until the input agent has sent the next chunk of data
                 {
+                    // There should be a better way how we handle crashed/disconnected clients
+                    // (a good idea might be to check the results of all send/recv calls)
+                    // For now, we'll just check if the input agent is still alive at this point
                     message_type_t incoming_message_type;
-                    recv(input_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
-                    assert(incoming_message_type == AGENT_PUSH_BUFFER);
+                    int received = recv(input_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
+                    if (received == 0) {
+                        break;
+                    }
+                    // Don't assert -- if we exit abnormally the card/action is left in a bad state
+                    // assert(incoming_message_type == AGENT_PUSH_BUFFER);
                     recv(input_agent->socket, &processing_request, sizeof(processing_request), 0);
                 }
             }
