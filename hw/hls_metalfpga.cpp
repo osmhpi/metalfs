@@ -477,21 +477,31 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_6,
     mf_stream &axis_m_7
 ) {
+    snap_bool_t enable_0 = _enable_mask[0];
+    snap_bool_t enable_1 = _enable_mask[1];
+    snap_bool_t enable_2 = _enable_mask[2];
+    snap_bool_t enable_3 = _enable_mask[3];
+    snap_bool_t enable_4 = _enable_mask[4];
+    snap_bool_t enable_5 = _enable_mask[5];
+    snap_bool_t enable_6 = _enable_mask[6];
+    snap_bool_t enable_7 = _enable_mask[7];
+    snap_bool_t enable_8 = _enable_mask[8];
+
     {
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
-        afu_mem_read(mem_in, axis_m_0, _enable_mask[0]);
-        afu_file_read(mem_ddr, axis_m_1, _enable_mask[2]);
+        afu_mem_read(mem_in, axis_m_0, _enable_0);
+        afu_file_read(mem_ddr, axis_m_1, _enable_2);
 
-        afu_passthrough(axis_s_3, axis_m_3, _enable_mask[6]);
-        afu_passthrough(axis_s_4, axis_m_4, _enable_mask[7]);
-        afu_passthrough(axis_s_5, axis_m_5, _enable_mask[8]);
-        afu_passthrough(axis_s_6, axis_m_6, _enable_mask[2]);
-        afu_change_case(axis_s_7, axis_m_7, _enable_mask[3]);
+        afu_passthrough(axis_s_3, axis_m_3, _enable_6);
+        afu_passthrough(axis_s_4, axis_m_4, _enable_7);
+        afu_passthrough(axis_s_5, axis_m_5, _enable_8);
+        afu_passthrough(axis_s_6, axis_m_6, _enable_2);
+        afu_change_case(axis_s_7, axis_m_7, _enable_3);
 
 
-        afu_mem_write(axis_s_0, mem_out, _enable_mask[1]);
-        afu_file_write(axis_s_1, mem_ddr, _enable_mask[3]);
+        afu_mem_write(axis_s_0, mem_out, _enable_1);
+        afu_file_write(axis_s_1, mem_ddr, _enable_3);
     }
     return SNAP_RETC_SUCCESS;
 }
