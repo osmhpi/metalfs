@@ -48,30 +48,30 @@ struct snap_card *card = NULL;
 struct snap_action *action = NULL;
 
 int mtl_storage_initialize() {
-    int card_no = 0;
-    char device[64];
-    sprintf(device, "/dev/cxl/afu%d.0s", card_no);
+    // int card_no = 0;
+    // char device[64];
+    // sprintf(device, "/dev/cxl/afu%d.0s", card_no);
 
-    card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
+    // card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
 
-    if (card == NULL) {
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
+    // if (card == NULL) {
+    //     return MTL_ERROR_INVALID_ARGUMENT;
+    // }
 
-    /* Check if i do have NVME */
-    unsigned long have_nvme = 0;
-    snap_card_ioctl(card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
-    if (0 == have_nvme) {
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
+    // /* Check if i do have NVME */
+    // unsigned long have_nvme = 0;
+    // snap_card_ioctl(card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
+    // if (0 == have_nvme) {
+    //     return MTL_ERROR_INVALID_ARGUMENT;
+    // }
 
-    int timeout = ACTION_WAIT_TIME;
-    snap_action_flag_t attach_flags = 0;
-    action = snap_attach_action(card, METALFPGA_ACTION_TYPE, attach_flags, 5 * timeout);
-    if (NULL == action) {
-        snap_card_free(card);
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
+    // int timeout = ACTION_WAIT_TIME;
+    // snap_action_flag_t attach_flags = 0;
+    // action = snap_attach_action(card, METALFPGA_ACTION_TYPE, attach_flags, 5 * timeout);
+    // if (NULL == action) {
+    //     snap_card_free(card);
+    //     return MTL_ERROR_INVALID_ARGUMENT;
+    // }
 
     return MTL_SUCCESS;
 }
