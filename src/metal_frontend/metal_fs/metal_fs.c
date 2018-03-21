@@ -357,5 +357,11 @@ int main(int argc, char *argv[])
     mtl_initialize("metadata_store");
     mtl_pipeline_initialize();
 
-    return fuse_main(argc, argv, &fuse_example_operations, NULL);
+    int retc = fuse_main(argc, argv, &fuse_example_operations, NULL);
+
+    // This de-allocates the action/card, so this should definitely be called
+    mtl_deinitialize();
+    mtl_pipeline_deinitialize();
+
+    return retc;
 }
