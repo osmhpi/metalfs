@@ -486,20 +486,27 @@ static mf_retc_t action_run_afus(
     snap_bool_t enable_6 = _enable_mask[6];
     snap_bool_t enable_7 = _enable_mask[7];
     snap_bool_t enable_8 = _enable_mask[8];
+    snap_bool_t enable_9 = _enable_mask[9];
 
     {
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
+
+        // Input AFUs
         afu_mem_read(mem_in, axis_m_0, _enable_0);
         afu_file_read(mem_ddr, axis_m_1, _enable_2);
 
-        afu_passthrough(axis_s_3, axis_m_3, _enable_6);
-        afu_passthrough(axis_s_4, axis_m_4, _enable_7);
-        afu_passthrough(axis_s_5, axis_m_5, _enable_8);
-        afu_passthrough(axis_s_6, axis_m_6, _enable_2);
-        afu_change_case(axis_s_7, axis_m_7, _enable_3);
+        // Processing AFUs
+        afu_passthrough(axis_s_2, axis_m_2, _enable_4);
+        afu_change_case(axis_s_3, axis_m_3, _enable_5);
 
+        // Placeholder AFUs (to be assigned)
+        afu_passthrough(axis_s_4, axis_m_4, _enable_6);
+        afu_passthrough(axis_s_5, axis_m_5, _enable_7);
+        afu_passthrough(axis_s_6, axis_m_6, _enable_8);
+        afu_passthrough(axis_s_7, axis_m_7, _enable_9);
 
+        // Output AFUs
         afu_mem_write(axis_s_0, mem_out, _enable_1);
         afu_file_write(axis_s_1, mem_ddr, _enable_3);
     }
