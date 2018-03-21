@@ -6,6 +6,7 @@
 #include "mf_stream.h"
 
 #include "mf_afu_mem.h"
+#include "mf_afu_file.h"
 #include "mf_afu_passthrough.h"
 #include "mf_afu_change_case.h"
 
@@ -53,6 +54,7 @@ static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t 
 static mf_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
+    snap_membus_t * mem_ddr,
     mf_stream &axis_s_0,
     mf_stream &axis_s_1,
     mf_stream &axis_s_2,
@@ -240,6 +242,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
         return action_run_afus(
             mem_in,
             mem_out,
+            mem_ddr,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -267,6 +270,16 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return afu_mem_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
+    }
+    else if (act_reg->Data.job_type == MF_JOB_AFU_FILE_SET_READ_BUFFER)
+    {
+        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+        return afu_file_set_read_buffer(mf_get64(line, 0), mf_get64(line, 8));
+    }
+    else if (act_reg->Data.job_type == MF_JOB_AFU_FILE_SET_WRITE_BUFFER)
+    {
+        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+        return afu_file_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
@@ -446,6 +459,7 @@ static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t 
 static mf_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
+    snap_membus_t * mem_ddr,
     mf_stream &axis_s_0,
     mf_stream &axis_s_1,
     mf_stream &axis_s_2,
@@ -467,17 +481,17 @@ static mf_retc_t action_run_afus(
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
         afu_mem_read(mem_in, axis_m_0, _enable_mask[0]);
+        afu_file_read(mem_ddr, axis_m_1, _enable_mask[2]);
 
-        afu_passthrough(axis_s_1, axis_m_1, _enable_mask[2]);
-        afu_change_case(axis_s_2, axis_m_2, _enable_mask[3]);
+        afu_passthrough(axis_s_3, axis_m_3, _enable_mask[6]);
+        afu_passthrough(axis_s_4, axis_m_4, _enable_mask[7]);
+        afu_passthrough(axis_s_5, axis_m_5, _enable_mask[8]);
+        afu_passthrough(axis_s_6, axis_m_6, _enable_mask[2]);
+        afu_change_case(axis_s_7, axis_m_7, _enable_mask[3]);
 
-        afu_passthrough(axis_s_3, axis_m_3, _enable_mask[4]);
-        afu_passthrough(axis_s_4, axis_m_4, _enable_mask[5]);
-        afu_passthrough(axis_s_5, axis_m_5, _enable_mask[6]);
-        afu_passthrough(axis_s_6, axis_m_6, _enable_mask[7]);
-        afu_passthrough(axis_s_7, axis_m_7, _enable_mask[8]);
 
         afu_mem_write(axis_s_0, mem_out, _enable_mask[1]);
+        afu_file_write(axis_s_1, mem_ddr, _enable_mask[3]);
     }
     return SNAP_RETC_SUCCESS;
 }
