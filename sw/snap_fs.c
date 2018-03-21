@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
     char device[128];
     struct snap_job cjob;
     metalfpga_job_t mjob;
-    unsigned long timeout = 600;
+    unsigned long timeout = 10;
     int exit_code = EXIT_SUCCESS;
     snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
 

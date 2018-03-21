@@ -76,7 +76,7 @@ static int apply_config(struct snap_action *action) {
     struct snap_job cjob;
     snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
-    const unsigned long timeout = 600;
+    const unsigned long timeout = 10;
     int rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
     free(job_struct);
