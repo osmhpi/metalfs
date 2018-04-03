@@ -369,6 +369,8 @@ void* start_socket(void* args) {
             registered_agent_t *input_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);
             registered_agent_t *output_agent = CONTAINING_LIST_RECORD(pipeline_agents.Blink, registered_agent_t);
 
+            size_t previous_size = 0;
+
             for (;;) {
                 server_processed_buffer_data_t processing_response = {};
 
@@ -396,8 +398,11 @@ void* start_socket(void* args) {
                         send(output_agent->socket, &output_buffer_message, sizeof(output_buffer_message), 0);
 
                         // Configure write_mem AFU
-                        afu_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be > 4096
-                        mtl_configure_afu(&afu_write_mem_specification);
+                        if (size != previous_size) {
+                          afu_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be > 4096
+                          mtl_configure_afu(&afu_write_mem_specification);
+                          previous_size = size;
+                        }
                     }
 
                     // Configure the read_mem AFU
@@ -448,7 +453,7 @@ void* start_socket(void* args) {
                 // Wait until the output agent is ready
                 if (input_agent != output_agent) {
                     message_type_t incoming_message_type;
-                    recv(input_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
+                    recv(output_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
                     assert(incoming_message_type == AGENT_PUSH_BUFFER);
                     agent_push_buffer_data_t tmp_processing_request;
                     recv(output_agent->socket, &tmp_processing_request, sizeof(tmp_processing_request), 0);

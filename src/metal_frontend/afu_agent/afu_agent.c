@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
 
     // Donate our current time slice, hoping that all other afu processes in the pipe are
     // spawned and recognizable afterwards. Seems to solve this race condition effectively.
-    sleep(0);
+    usleep(100);
 
     // Determine the file connected to stdin
     char stdin_file[FILENAME_MAX];
