@@ -8,7 +8,10 @@ include_directories(
 set(
     SOURCES
 
-    storage.c
+    in_memory.c
+    # metal_fpga.c
+    # metal_pipeline.c
+
     storage.h
 )
 

@@ -337,24 +337,44 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
         ++write_end_blocks;
 
     uint64_t current_inode_length_blocks;
+    mtl_file_extent last_extent = { 0, 0 };  // Used to append data if possible
     {
         mtl_inode *inode;
-        mtl_load_file(txn, inode_id, &inode, NULL, NULL);
+        const mtl_file_extent *extents;
+        uint64_t extents_length;
+
+        mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
         current_inode_length_blocks = inode->length;
+        if (extents_length > 0)
+            last_extent = extents[extents_length - 1];
     }
 
     while (current_inode_length_blocks < write_end_blocks) {
 
         // Allocate a new occupied extent with the requested length
         mtl_file_extent new_extent;
-        new_extent.length = mtl_reserve_extent(txn, write_end_blocks - current_inode_length_blocks, &new_extent.offset, true);
+        new_extent.length = mtl_reserve_extent(
+            txn,
+            write_end_blocks - current_inode_length_blocks,
+            last_extent.length ? &last_extent : NULL,
+            &new_extent.offset,
+            true
+        );
         current_inode_length_blocks += new_extent.length;
 
-        // Assign it to the file
         uint64_t new_length = write_end_bytes > current_inode_length_blocks * metadata.block_size
-            ? current_inode_length_blocks * metadata.block_size
-            : write_end_bytes;
-        mtl_add_extent_to_file(txn, inode_id, &new_extent, new_length);
+                ? current_inode_length_blocks * metadata.block_size
+                : write_end_bytes;
+
+        // If the new_extent offset matches the last_extent offset, we've extended that last_extent
+        if (last_extent.length && last_extent.offset == new_extent.offset) {
+            last_extent.length += new_extent.length;
+            mtl_extend_last_extent_in_file(txn, inode_id, &new_extent, new_length);
+        } else {
+            // Otherwise, assign the new extent to the file
+            mtl_add_extent_to_file(txn, inode_id, &new_extent, new_length);
+            last_extent = new_extent;
+        }
     }
 
     mdb_txn_commit(txn);
