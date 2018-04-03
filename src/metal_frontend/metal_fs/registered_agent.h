@@ -15,6 +15,7 @@ typedef struct registered_agent {
     mtl_operator_specification *afu_specification;
     int socket;
 
+    char cwd[FILENAME_MAX];
     int argc;
     char *argv_buffer;
     char **argv;

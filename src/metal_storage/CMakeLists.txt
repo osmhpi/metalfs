@@ -11,6 +11,7 @@ set(
     in_memory.c
     # metal_fpga.c
     # metal_pipeline.c
+    # metal_hdl_example.c
 
     storage.h
 )

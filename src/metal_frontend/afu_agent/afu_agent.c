@@ -264,6 +264,9 @@ int main(int argc, char *argv[]) {
     if (stdout_is_metal_file)
         strncpy(request.internal_output_filename, stdout_file, sizeof(request.internal_output_filename));
 
+    // Add the working directory to the request
+    getcwd(request.cwd, FILENAME_MAX);
+
     // If there's no agent connected to stdin, we have to create a memory-mapped file
     if (stdin_pid == 0) {
         create_temp_file_for_shared_buffer(

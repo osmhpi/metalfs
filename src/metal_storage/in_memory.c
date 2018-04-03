@@ -7,8 +7,9 @@
 
 #include "../metal/metal.h"
 
-#define NUM_BLOCKS 128
-#define BLOCK_SIZE 512
+// 128 MiB
+#define NUM_BLOCKS 128 * 256
+#define BLOCK_SIZE 4096
 
 void *_storage = NULL;
 

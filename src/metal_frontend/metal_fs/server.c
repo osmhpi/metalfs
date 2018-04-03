@@ -18,7 +18,7 @@
 #include "../common/message.h"
 #include "../common/known_operators.h"
 #include "list/list.h"
-#include "agent_worker.h"
+#include "registered_agent.h"
 
 LIST_ENTRY registered_agents;
 LIST_ENTRY pipeline_agents;
@@ -131,6 +131,7 @@ void register_agent(agent_hello_data_t *request, int connfd) {
     agent->input_agent_pid = request->input_agent_pid;
     agent->output_agent_pid = request->output_agent_pid;
     agent->argc = request->argc;
+    memcpy(agent->cwd, request->cwd, FILENAME_MAX);
 
     // Read the agent's program args from the socket (if any)
     if (request->argc) {

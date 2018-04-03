@@ -18,6 +18,7 @@ typedef enum message_type {
 
 typedef struct agent_hello_data {
     uint64_t pid;
+    char cwd[FILENAME_MAX];
     operator_id afu_type;
     uint64_t input_agent_pid;
     uint64_t output_agent_pid;
