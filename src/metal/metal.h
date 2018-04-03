@@ -12,6 +12,7 @@ extern "C" {
 #define MTL_ERROR_EXISTS 17
 #define MTL_ERROR_NOTDIRECTORY 20
 #define MTL_ERROR_INVALID_ARGUMENT 22
+#define MTL_ERROR_NOTEMPTY 39
 
 int mtl_initialize(const char* metadata_store);
 int mtl_deinitialize();
@@ -26,6 +27,7 @@ int mtl_opendir(const char *filename, mtl_dir **dir);
 int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size);
 int mtl_closedir(mtl_dir *dir);
 int mtl_mkdir(const char *filename);
+int mtl_rmdir(const char *filename);
 int mtl_create(const char *filename, uint64_t *inode_id);
 int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset);
 uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset);

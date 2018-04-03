@@ -291,6 +291,44 @@ int mtl_mkdir(const char *filename) {
     return MTL_SUCCESS;
 }
 
+int mtl_rmdir(const char *filename) {
+
+    int res;
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    uint64_t parent_dir_inode_id;
+    res = mtl_resolve_parent_dir_inode(txn, filename, &parent_dir_inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    char *basec, *base;
+    basec = strdup(filename);
+    base = basename(basec);
+
+    uint64_t inode_id;
+    res = mtl_remove_entry_from_directory(txn, parent_dir_inode_id, base, &inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        free(basec);
+        return res;
+    }
+
+    free(basec);
+
+    res = mtl_remove_directory(txn, inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    mdb_txn_commit(txn);
+    return MTL_SUCCESS;
+}
+
 int mtl_create(const char *filename, uint64_t *inode_id) {
 
     int res;

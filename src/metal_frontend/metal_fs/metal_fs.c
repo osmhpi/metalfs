@@ -81,8 +81,10 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
           stbuf->st_mtime = inode.modified; // time of last write
           stbuf->st_ctime = inode.created; // time of last change to either content or inode-data
 
-
-          stbuf->st_mode = S_IFREG | 0755;
+          stbuf->st_mode =
+            inode.type == MTL_FILE
+                ? S_IFREG | 0755
+                : S_IFDIR | 0755;
           stbuf->st_nlink = 2;
           return 0;
     }
@@ -148,8 +150,9 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         return 0;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
-    if (strcmp(path, test_filename) == 0) {
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if ((strlen(path) == 6 && strncmp(path, test_filename, 6) == 0) ||
+         strncmp(path, test_filename, strlen(test_filename)) == 0) {
         mtl_dir *dir;
 
         // +6, because path = "/files/<filename>", but we only want "/filename"
@@ -325,6 +328,45 @@ static int unlink_callback(const char *path) {
     return -ENOSYS;
 }
 
+static int mkdir_callback(const char *path, mode_t mode)
+{
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+
+        res = mtl_mkdir(path + 6);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    return -ENOSYS;
+}
+
+
+static int rmdir_callback(const char *path)
+{
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+
+        res = mtl_rmdir(path + 6);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    return -ENOSYS;
+}
+
 static struct fuse_operations fuse_example_operations = {
     .chown = chown_callback,
     .getattr = getattr_callback,
@@ -336,7 +378,9 @@ static struct fuse_operations fuse_example_operations = {
     .truncate = truncate_callback,
     .write = write_callback,
     .create = create_callback,
-    .unlink = unlink_callback
+    .unlink = unlink_callback,
+    .mkdir = mkdir_callback,
+    .rmdir = rmdir_callback
 };
 
 int main(int argc, char *argv[])

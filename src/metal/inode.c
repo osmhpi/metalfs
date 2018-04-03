@@ -266,6 +266,34 @@ int mtl_remove_entry_from_directory(MDB_txn *txn, uint64_t dir_inode_id, char *f
     return mtl_put_inode(txn, dir_inode_id, &new_dir_inode, new_dir_inode_data, new_data_length);
 }
 
+int mtl_remove_directory(MDB_txn *txn, uint64_t dir_inode_id) {
+
+    mtl_inode *dir_inode;
+    mtl_directory_entry_head *dir_entries;
+    mtl_load_directory(txn, dir_inode_id, &dir_inode, &dir_entries, NULL);
+
+    if (dir_inode->type != MTL_DIRECTORY) {
+        return MTL_ERROR_NOTDIRECTORY;
+    }
+
+    // Iterate over directory entries to check if it's empty
+    mtl_directory_entry_head *current_entry = NULL;
+    char *current_filename = NULL;
+    while ((current_entry = mtl_load_next_directory_entry(dir_entries, dir_inode->length, current_entry, &current_filename)) != NULL) {
+        if (current_entry->name_len == 1 && strncmp(current_filename, ".", 1) == 0) {
+            continue;
+        }
+
+        if (current_entry->name_len == 2 && strncmp(current_filename, "..", 2) == 0) {
+            continue;
+        }
+
+        return MTL_ERROR_NOTEMPTY;
+    }
+
+    return mtl_delete_inode(txn, dir_inode_id);
+}
+
 int mtl_create_root_directory(MDB_txn *txn) {
 
     mtl_ensure_inodes_db_open(txn);
@@ -281,7 +309,7 @@ int mtl_create_root_directory(MDB_txn *txn) {
     // Create a root inode
     mtl_inode root_inode = {
         .type = MTL_DIRECTORY,
-        .length = 0, //sizeof(dir_data),
+        .length = 0, // sizeof(dir_data),
         .user = 0,
         .group = 0,
         .accessed = 0,

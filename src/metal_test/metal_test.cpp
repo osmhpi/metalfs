@@ -18,6 +18,17 @@ TEST_F(MetalTest, FailsWhenCreatingAnExistingDirectory) {
   EXPECT_EQ(MTL_ERROR_EXISTS, mtl_mkdir("/foo"));
 }
 
+TEST_F(MetalTest, RemovesADirectory) {
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_rmdir("/foo"));
+}
+
+TEST_F(MetalTest, FailsWhenRemovingNonEmptyDirectory) {
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo/bar"));
+  EXPECT_EQ(MTL_ERROR_NOTEMPTY, mtl_rmdir("/foo"));
+}
+
 TEST_F(MetalTest, CreatesAFile) {
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
 }
