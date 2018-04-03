@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../../metal_afus/afus.h"
+#include "../../metal_operators/operators.h"
 
 typedef enum message_type {
     AGENT_HELLO,
@@ -18,7 +18,7 @@ typedef enum message_type {
 
 typedef struct agent_hello_data {
     uint64_t pid;
-    afu_id afu_type;
+    operator_id afu_type;
     uint64_t input_agent_pid;
     uint64_t output_agent_pid;
     uint64_t argc;

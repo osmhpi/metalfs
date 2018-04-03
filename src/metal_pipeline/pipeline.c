@@ -54,7 +54,7 @@ int mtl_pipeline_deinitialize() {
     return MTL_SUCCESS;
 }
 
-void mtl_configure_afu(mtl_afu_specification *afu_spec) {
+void mtl_configure_afu(mtl_operator_specification *afu_spec) {
     pthread_mutex_lock(&snap_mutex);
 
     afu_spec->apply_config(_action);
@@ -62,7 +62,7 @@ void mtl_configure_afu(mtl_afu_specification *afu_spec) {
     pthread_mutex_unlock(&snap_mutex);
 }
 
-void mtl_configure_pipeline(mtl_afu_execution_plan execution_plan) {
+void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     uint64_t enable_mask = 0;
     for (uint64_t i = 0; i < execution_plan.length; ++i)
         enable_mask |= (1 << execution_plan.afus[i].enable_id);

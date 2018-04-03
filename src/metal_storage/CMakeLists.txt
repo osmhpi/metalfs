@@ -30,4 +30,4 @@ include_directories(
 )
 
 add_library(metal_storage STATIC ${SOURCES})
-target_link_libraries(metal_storage metal_afus ${METAL_STORAGE_LIBRARIES})
+target_link_libraries(metal_storage metal_operators ${METAL_STORAGE_LIBRARIES})

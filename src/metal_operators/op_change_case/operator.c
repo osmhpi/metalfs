@@ -1,4 +1,4 @@
-#include "afu.h"
+#include "operator.h"
 
 #include <stddef.h>
 #include <getopt.h>
@@ -92,7 +92,7 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
-mtl_afu_specification afu_change_case_specification = {
+mtl_operator_specification op_change_case_specification = {
     { AFU_CHANGE_CASE_ID, 2 },
     "change_case",
 

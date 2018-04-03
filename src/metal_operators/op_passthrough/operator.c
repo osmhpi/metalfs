@@ -1,4 +1,4 @@
-#include "afu.h"
+#include "operator.h"
 
 #include <stddef.h>
 #include <getopt.h>
@@ -43,7 +43,7 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
-mtl_afu_specification afu_passthrough_specification = {
+mtl_operator_specification op_passthrough_specification = {
     { AFU_PASSTHROUGH_ID, 1 },
     "passthrough",
 

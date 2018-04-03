@@ -1,4 +1,4 @@
-#include "afu.h"
+#include "operator.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -11,7 +11,7 @@
 
 #include "../../metal/metal.h"
 
-#define AFU_READ_MEM_ID 0
+#define AFU_WRITE_MEM_ID 1
 
 static uint64_t _buffer_address = 0;
 static uint64_t _buffer_length = 0;
@@ -28,7 +28,7 @@ static int apply_config(struct snap_action *action) {
     job_struct[1] = htobe64(_buffer_length);
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
+    mjob.job_type = MF_JOB_AFU_MEM_SET_WRITE_BUFFER;
     mjob.job_address = (uint64_t)job_struct;
 
     struct snap_job cjob;
@@ -50,15 +50,20 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
-mtl_afu_specification afu_read_mem_specification = {
-    { AFU_READ_MEM_ID, 0 },
-    "read_mem",
+mtl_operator_specification op_write_mem_specification = {
+    { AFU_WRITE_MEM_ID, 0 },
+    "write_mem",
 
     &handle_opts,
     &apply_config
 };
 
-void afu_read_mem_set_buffer(void *buffer, uint64_t length) {
+void op_write_mem_set_buffer(void *buffer, uint64_t length) {
     _buffer_address = (uint64_t)buffer;
     _buffer_length = length;
+}
+
+uint64_t op_write_mem_get_written_bytes() {
+    // TODO
+    return _buffer_length;
 }

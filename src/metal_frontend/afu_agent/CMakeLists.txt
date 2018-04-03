@@ -14,4 +14,4 @@ SET(AFU_AGENT_SOURCES
 )
 
 add_executable(afu_agent ${AFU_AGENT_SOURCES})
-target_link_libraries(afu_agent metal_afus ${AFU_AGENT_LIBRARIES})
+target_link_libraries(afu_agent metal_operators ${AFU_AGENT_LIBRARIES})

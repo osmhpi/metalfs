@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-#include "../../metal_afus/afus.h"
+#include "../../metal_operators/operators.h"
 
 #include "list/list.h"
 
@@ -11,8 +11,8 @@ extern pthread_mutex_t registered_agent_mutex;
 
 typedef struct registered_agent {
     int pid;
-    afu_id afu_type;
-    mtl_afu_specification *afu_specification;
+    operator_id afu_type;
+    mtl_operator_specification *afu_specification;
     int socket;
 
     int argc;
@@ -40,5 +40,5 @@ typedef struct registered_agent {
     LIST_ENTRY Link;
 } registered_agent_t;
 
-void signal_new_execution_plan(mtl_afu_execution_plan plan);
+void signal_new_execution_plan(mtl_operator_execution_plan plan);
 void* agent_thread(void* args);

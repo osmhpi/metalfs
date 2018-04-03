@@ -17,7 +17,7 @@
 #include <sys/un.h>
 #include <sys/mman.h>
 
-#include "../common/known_afus.h"
+#include "../common/known_operators.h"
 #include "../common/buffer.h"
 #include "../common/message.h"
 
@@ -172,15 +172,15 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
     return 0;
 }
 
-afu_id determine_afu_key(char *filename) {
+operator_id determine_afu_key(char *filename) {
     char *base = basename(filename);
-    for (size_t i = 0; i < sizeof(known_afus); ++i) {
-        if (strcmp(base, known_afus[i]->name) == 0) {
-            return known_afus[i]->id;
+    for (size_t i = 0; i < sizeof(known_operators); ++i) {
+        if (strcmp(base, known_operators[i]->name) == 0) {
+            return known_operators[i]->id;
         }
     }
 
-    return known_afus[0]->id; // we should never get here
+    return known_operators[0]->id; // we should never get here
 }
 
 int main(int argc, char *argv[]) {
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
     own_file_name[len] = '\0';
     // TODO: ...
 
-    afu_id afu = determine_afu_key(own_file_name);
+    operator_id afu = determine_afu_key(own_file_name);
     // TODO: Assert afu !~= 0, 0
 
     char own_fs_mount_point[FILENAME_MAX];

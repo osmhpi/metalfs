@@ -10,13 +10,13 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
-#include "../../metal_afus/afu_read_mem/afu.h"
-#include "../../metal_afus/afu_write_mem/afu.h"
+#include "../../metal_operators/op_read_mem/operator.h"
+#include "../../metal_operators/op_write_mem/operator.h"
 #include "../../metal_pipeline/pipeline.h"
 
 #include "../common/buffer.h"
 #include "../common/message.h"
-#include "../common/known_afus.h"
+#include "../common/known_operators.h"
 #include "list/list.h"
 #include "agent_worker.h"
 
@@ -40,7 +40,7 @@ registered_agent_t* find_agent_with_pid(int pid) {
     return NULL;
 }
 
-uint64_t count_agents_with_afu_id(afu_id id) {
+uint64_t count_agents_with_afu_id(operator_id id) {
     uint64_t result = 0;
 
     if (IsListEmpty(&registered_agents))
@@ -50,7 +50,7 @@ uint64_t count_agents_with_afu_id(afu_id id) {
     do {
         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-        if (memcmp(&current_agent->afu_type, &id, sizeof(afu_id)) == 0)
+        if (memcmp(&current_agent->afu_type, &id, sizeof(operator_id)) == 0)
             ++result;
 
         current_link = current_link->Flink;
@@ -269,9 +269,9 @@ void* start_socket(void* args) {
                 }
 
                 // Look up the AFU specification that should be used
-                for (uint64_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
-                    if (memcmp(&known_afus[i]->id, &current_agent->afu_type, sizeof(afu_id)) == 0) {
-                        current_agent->afu_specification = known_afus[i];
+                for (uint64_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
+                    if (memcmp(&known_operators[i]->id, &current_agent->afu_type, sizeof(operator_id)) == 0) {
+                        current_agent->afu_specification = known_operators[i];
                         break;
                     }
                 }
@@ -349,8 +349,8 @@ void* start_socket(void* args) {
 
             // Apply the configuration, adding implicit read_mem and write_mem afus
             // This obviously needs to be adapted, once we support reading/writing from/to metal files
-            afu_id afu_list[pipeline_length + 2];
-            afu_list[0] = afu_read_mem_specification.id;
+            operator_id afu_list[pipeline_length + 2];
+            afu_list[0] = op_read_mem_specification.id;
             current_link = pipeline_agents.Flink;
             current_afu = 1;
             do {
@@ -361,9 +361,9 @@ void* start_socket(void* args) {
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
-            afu_list[current_afu] = afu_write_mem_specification.id;
+            afu_list[current_afu] = op_write_mem_specification.id;
 
-            mtl_afu_execution_plan execution_plan = { afu_list, pipeline_length + 2 };
+            mtl_operator_execution_plan execution_plan = { afu_list, pipeline_length + 2 };
             mtl_configure_pipeline(execution_plan);
 
             registered_agent_t *input_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);
@@ -399,15 +399,15 @@ void* start_socket(void* args) {
 
                         // Configure write_mem AFU
                         if (size != previous_size) {
-                          afu_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be > 4096
-                          mtl_configure_afu(&afu_write_mem_specification);
+                          op_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be > 4096
+                          mtl_configure_afu(&op_write_mem_specification);
                           previous_size = size;
                         }
                     }
 
                     // Configure the read_mem AFU
-                    afu_read_mem_set_buffer(input_agent->input_buffer, size);
-                    mtl_configure_afu(&afu_read_mem_specification);
+                    op_read_mem_set_buffer(input_agent->input_buffer, size);
+                    mtl_configure_afu(&op_read_mem_specification);
 
                     mtl_run_pipeline();
 

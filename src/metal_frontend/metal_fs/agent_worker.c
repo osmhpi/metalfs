@@ -41,7 +41,7 @@ void* agent_thread(void* args) {
     bool valid = false;
 
     // Look up the AFU specification that should be used
-    mtl_afu_specification *afu_spec = NULL;
+    mtl_operator_specification *afu_spec = NULL;
     for (uint64_t i = 0; i < sizeof(known_afus) / sizeof(known_afus[0]); ++i) {
         if (known_afus[i]->id == agent->afu_type) {
             afu_spec = known_afus[i];
