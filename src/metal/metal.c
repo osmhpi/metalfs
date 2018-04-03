@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <libgen.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <lmdb.h>
 #include <metal_storage/storage.h>
@@ -336,7 +337,7 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
     if (write_end_bytes % metadata.block_size)
         ++write_end_blocks;
 
-    uint64_t current_inode_length_blocks;
+    uint64_t current_inode_length_blocks = 0;
     mtl_file_extent last_extent = { 0, 0 };  // Used to append data if possible
     {
         mtl_inode *inode;
@@ -344,7 +345,9 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
         uint64_t extents_length;
 
         mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
-        current_inode_length_blocks = inode->length;
+        for (uint64_t extent = 0; extent < extents_length; ++extent)
+            current_inode_length_blocks += extents[extent].length;
+
         if (extents_length > 0)
             last_extent = extents[extents_length - 1];
     }
@@ -361,6 +364,7 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
             true
         );
         current_inode_length_blocks += new_extent.length;
+        assert(new_extent.length);  // We don't handle "no space left on device" yet
 
         uint64_t new_length = write_end_bytes > current_inode_length_blocks * metadata.block_size
                 ? current_inode_length_blocks * metadata.block_size
@@ -369,7 +373,7 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
         // If the new_extent offset matches the last_extent offset, we've extended that last_extent
         if (last_extent.length && last_extent.offset == new_extent.offset) {
             last_extent.length += new_extent.length;
-            mtl_extend_last_extent_in_file(txn, inode_id, &new_extent, new_length);
+            mtl_extend_last_extent_in_file(txn, inode_id, &last_extent, new_length);
         } else {
             // Otherwise, assign the new extent to the file
             mtl_add_extent_to_file(txn, inode_id, &new_extent, new_length);

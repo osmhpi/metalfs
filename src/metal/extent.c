@@ -82,18 +82,18 @@ uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, mtl_file_extent *last_e
     // If the last allocated extent is provided, check if we can extend it
     if (last_extent) {
         const mtl_extent *next_extent;
-        res = mtl_load_extent(txn, last_extent->offset + last_extent->length, &next_extent);
+        uint64_t next_extent_offset = last_extent->offset + last_extent->length;
+        res = mtl_load_extent(txn, next_extent_offset, &next_extent);
         assert(res == MTL_SUCCESS);
 
         uint64_t next_extent_length = next_extent->length;
 
         if (next_extent->status == MTL_FREE) {
-            uint64_t next_extent_offset = last_extent->offset + last_extent->length;
 
+            // Delete the next_extent and add its length to last_extent
             res = mtl_heap_delete(txn, next_extent->pq_node);
             assert(res == MTL_SUCCESS);
 
-            // Delete the next_extent and add its length to last_extent
             MDB_val next_extent_key = { .mv_size = sizeof(next_extent_offset), .mv_data = &next_extent_offset };
             res = mdb_del(txn, extents_db, &next_extent_key, NULL);
             assert(res == MDB_SUCCESS);
@@ -120,9 +120,7 @@ uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, mtl_file_extent *last_e
     }
 
     mtl_extent updated_extent = *extent;
-    updated_extent.length += append_extent_length;
-
-    uint64_t extent_length = extent->length;
+    uint64_t extent_length = extent->length + append_extent_length;
 
     // Split up if necessary
     uint64_t total_needed_size = original_extent_length + size;

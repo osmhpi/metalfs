@@ -15,7 +15,6 @@ void *_storage = NULL;
 mtl_file_extent *_extents = NULL;
 uint64_t _extents_length;
 
-
 int mtl_storage_initialize() {
     return MTL_SUCCESS;
 }
@@ -59,6 +58,9 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
             ++current_extent;
 
             // The caller has to make sure the file is large enough to write
+            if (current_extent < _extents_length) {
+                printf("HODL\n");
+            }
             assert(current_extent < _extents_length);
         }
 
