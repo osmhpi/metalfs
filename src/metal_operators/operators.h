@@ -6,12 +6,13 @@
 typedef struct operator_id { uint8_t enable_id; uint8_t stream_id; } operator_id;
 struct snap_action;
 
-typedef const void* (*mtl_operator_handle_opts_f)(int argc, char *argv[], uint64_t *length, bool *valid);
+typedef const void* (*mtl_operator_handle_opts_f)(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid);
 typedef int (*mtl_operator_apply_configuration_f)(struct snap_action *action);
 
 typedef struct mtl_operator_specification {
     operator_id id;
     const char *name;
+    bool is_data_source;
 
     mtl_operator_handle_opts_f handle_opts;
     mtl_operator_apply_configuration_f apply_config;

@@ -20,6 +20,7 @@ int mtl_deinitialize();
 typedef struct mtl_inode mtl_inode;
 struct mtl_dir;
 typedef struct mtl_dir mtl_dir;
+typedef struct mtl_file_extent mtl_file_extent;
 
 int mtl_get_inode(const char *path, mtl_inode *inode);
 int mtl_open(const char *filename, uint64_t *inode_id);
@@ -33,6 +34,8 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset);
 int mtl_truncate(uint64_t inode_id, uint64_t offset);
 int mtl_unlink(const char *filename);
+
+int mtl_load_extents(const char *path, const mtl_file_extent *extents, uint64_t *length);
 
 #ifdef __cplusplus
 }

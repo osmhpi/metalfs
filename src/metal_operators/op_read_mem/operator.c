@@ -16,7 +16,7 @@
 static uint64_t _buffer_address = 0;
 static uint64_t _buffer_length = 0;
 
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, bool *valid) {
+static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
     *length = 0;
     *valid = true;
     return "";
@@ -53,6 +53,7 @@ static int apply_config(struct snap_action *action) {
 mtl_operator_specification op_read_mem_specification = {
     { AFU_READ_MEM_ID, 0 },
     "read_mem",
+    true,
 
     &handle_opts,
     &apply_config

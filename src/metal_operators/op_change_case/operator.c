@@ -33,7 +33,7 @@ static const char help[] =
 static uint64_t _mode = 0;
 
 extern int optind;
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, bool *valid) {
+static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
     optind = 1; // Reset getopt
     _mode = 0;
 
@@ -95,6 +95,7 @@ static int apply_config(struct snap_action *action) {
 mtl_operator_specification op_change_case_specification = {
     { AFU_CHANGE_CASE_ID, 2 },
     "change_case",
+    false,
 
     &handle_opts,
     &apply_config

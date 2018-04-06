@@ -10,7 +10,9 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
+#include "../../metal_operators/op_read_file/operator.h"
 #include "../../metal_operators/op_read_mem/operator.h"
+#include "../../metal_operators/op_write_file/operator.h"
 #include "../../metal_operators/op_write_mem/operator.h"
 #include "../../metal_pipeline/pipeline.h"
 
@@ -133,6 +135,17 @@ void register_agent(agent_hello_data_t *request, int connfd) {
     agent->argc = request->argc;
     memcpy(agent->cwd, request->cwd, FILENAME_MAX);
 
+    uint64_t internal_filename_length = strlen(request->internal_input_filename);
+    if (internal_filename_length) {
+        agent->internal_input_file = malloc(internal_filename_length + 1);
+        strncpy(agent->internal_input_file, request->internal_input_filename, internal_filename_length);
+    }
+    internal_filename_length = strlen(request->internal_output_filename);
+    if (internal_filename_length) {
+        agent->internal_output_file = malloc(internal_filename_length + 1);
+        strncpy(agent->internal_output_file, request->internal_output_filename, internal_filename_length);
+    }
+
     // Read the agent's program args from the socket (if any)
     if (request->argc) {
         agent->argv_buffer = malloc(request->argv_len);
@@ -148,7 +161,8 @@ void register_agent(agent_hello_data_t *request, int connfd) {
 
     // If the agent's input is not connected to another agent, it should
     // have provided a file that will be used for memory-mapped data exchange
-    if (agent->input_agent_pid == 0) {
+    // except when we're writing to an internal file
+    if (agent->input_agent_pid == 0 && !agent->internal_input_file) {
         if (strlen(request->input_buffer_filename) == 0) {
             // Should not happen
             close(connfd);
@@ -160,13 +174,6 @@ void register_agent(agent_hello_data_t *request, int connfd) {
             request->input_buffer_filename,
             &agent->input_file, &agent->input_buffer
         );
-    } else {
-        // Create mutexes for internal signaling
-        // agent->internal_input_buffer_handle = -1;
-        // agent->internal_input_mutex = malloc(sizeof(pthread_mutex_t));
-        // pthread_mutex_init(agent->internal_input_mutex, NULL);
-        // agent->internal_input_condition = malloc(sizeof(pthread_cond_t));
-        // pthread_cond_init(agent->internal_input_condition, NULL);
     }
 
     // Append to list
@@ -176,7 +183,7 @@ void register_agent(agent_hello_data_t *request, int connfd) {
 }
 
 void send_agent_invalid(registered_agent_t *agent) {
-    const char message[] = "An invalid AFU chain was specified.\n";
+    const char message[] = "An invalid operator chain was specified.\n";
 
     message_type_t message_type = SERVER_ACCEPT_AGENT;
     send(agent->socket, &message_type, sizeof(message_type), 0);
@@ -200,8 +207,8 @@ void free_registered_agent(registered_agent_t *agent) {
 
     close(agent->socket);
 
-    free(agent->internal_input_mutex);
-    free(agent->internal_input_condition);
+    free(agent->internal_input_file);
+    free(agent->internal_output_file);
     free(agent->argv_buffer);
     free(agent->argv);
     free(agent);
@@ -301,7 +308,7 @@ void* start_socket(void* args) {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
                 bool afu_valid = true;
                 responses[current_afu] = current_agent->afu_specification->handle_opts(
-                    current_agent->argc, current_agent->argv, response_lengths + current_afu, &afu_valid);
+                    current_agent->argc, current_agent->argv, response_lengths + current_afu, current_agent->cwd, &afu_valid);
                 valid = valid && afu_valid;
 
                 ++current_afu;
@@ -348,12 +355,31 @@ void* start_socket(void* args) {
                 continue;
             }
 
-            // Apply the configuration, adding implicit read_mem and write_mem afus
-            // This obviously needs to be adapted, once we support reading/writing from/to metal files
-            operator_id afu_list[pipeline_length + 2];
-            afu_list[0] = op_read_mem_specification.id;
+            registered_agent_t *input_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);
+            registered_agent_t *output_agent = CONTAINING_LIST_RECORD(pipeline_agents.Blink, registered_agent_t);
+
+            // Add implicit data sources and sinks if necessary
+            if (!input_agent->afu_specification->is_data_source) {
+                ++pipeline_length;
+            }
+
+            // We always need to add a data sink
+            ++pipeline_length;
+
+            // Create the execution plan and apply the configuration
+            operator_id afu_list[pipeline_length];
+            current_afu = 0;
+
+            if (!input_agent->afu_specification->is_data_source) {
+                if (input_agent->internal_input_file) {
+                    afu_list[0] = op_read_file_specification.id;
+                } else {
+                    afu_list[0] = op_read_mem_specification.id;
+                }
+                ++current_afu;
+            }
+
             current_link = pipeline_agents.Flink;
-            current_afu = 1;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
@@ -362,13 +388,16 @@ void* start_socket(void* args) {
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
-            afu_list[current_afu] = op_write_mem_specification.id;
+
+            if (output_agent->internal_output_file) {
+                afu_list[current_afu] = op_write_file_specification.id;
+            } else {
+                afu_list[current_afu] = op_write_mem_specification.id;
+            }
 
             mtl_operator_execution_plan execution_plan = { afu_list, pipeline_length + 2 };
             mtl_configure_pipeline(execution_plan);
 
-            registered_agent_t *input_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);
-            registered_agent_t *output_agent = CONTAINING_LIST_RECORD(pipeline_agents.Blink, registered_agent_t);
 
             size_t previous_size = 0;
 

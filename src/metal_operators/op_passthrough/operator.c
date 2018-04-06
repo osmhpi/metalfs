@@ -12,7 +12,7 @@ static const char help[] =
     "\n";
 
 extern int optind;
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, bool *valid) {
+static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
     optind = 1; // Reset getopt
     while (1) {
         int option_index = 0;
@@ -46,6 +46,7 @@ static int apply_config(struct snap_action *action) {
 mtl_operator_specification op_passthrough_specification = {
     { AFU_PASSTHROUGH_ID, 1 },
     "passthrough",
+    false,
 
     &handle_opts,
     &apply_config

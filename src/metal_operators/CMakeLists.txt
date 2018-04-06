@@ -1,12 +1,16 @@
 set(
     SOURCES
 
+    op_read_file/operator.c
+    op_read_file/operator.h
     op_read_mem/operator.c
     op_read_mem/operator.h
     op_change_case/operator.c
     op_change_case/operator.h
     op_passthrough/operator.c
     op_passthrough/operator.h
+    op_write_file/operator.c
+    op_write_file/operator.h
     op_write_mem/operator.c
     op_write_mem/operator.h
 
