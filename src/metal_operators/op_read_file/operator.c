@@ -7,8 +7,8 @@
 #include <snap_tools.h>
 #include <libsnap.h>
 #include <snap_hls_if.h>
-#include <action_metalfpga.h>
 
+#include "../../metal_fpga/include/action_metalfpga.h"
 #include "../../metal/metal.h"
 
 #define AFU_READ_FILE_ID 2
@@ -78,7 +78,8 @@ void op_read_file_set_extents(const mtl_file_extent *extents, uint64_t length) {
 
 int op_read_file_load_extents_for_filename(const char* file) {
     // Better: take filename and length, allocate space in metadata, ...
-    mtl_file_extent *extents;
-    uint64_t length;
-    int res = mtl_load_extents(filename, length);
+    // mtl_file_extent *extents;
+    // uint64_t length;
+    // int res = mtl_load_extents(filename, length);
+    return MTL_SUCCESS;
 }

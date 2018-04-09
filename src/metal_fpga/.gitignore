@@ -1,0 +1,5 @@
+hw/hlsMetalFPGA_*
+hw/run_hls_script.tcl
+hw/vivado_hls.log
+hw/vhdl
+sw/snap_fs
