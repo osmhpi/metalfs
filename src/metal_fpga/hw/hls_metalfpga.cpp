@@ -23,7 +23,8 @@
 
 static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
-                                snap_membus_t * mem_ddr,
+                                snap_membus_t * mem_ddr_in,
+                                snap_membus_t * mem_ddr_out,
                                 mf_stream &axis_s_0,
                                 mf_stream &axis_s_1,
                                 mf_stream &axis_s_2,
@@ -54,7 +55,8 @@ static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t 
 static mf_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
-    snap_membus_t * mem_ddr,
+    snap_membus_t * mem_ddr_in,
+    snap_membus_t * mem_ddr_out,
     mf_stream &axis_s_0,
     mf_stream &axis_s_1,
     mf_stream &axis_s_2,
@@ -91,7 +93,8 @@ static void action_file_read_block(snap_membus_t * mem_in,
 // Set Environment Variable "SDRAM_USED=TRUE" before compilation.
 void hls_action(snap_membus_t * din,
                 snap_membus_t * dout,
-                snap_membus_t * ddr,
+                snap_membus_t * ddrin,
+                snap_membus_t * ddrout,
                 mf_stream &axis_s_0,
                 mf_stream &axis_s_1,
                 mf_stream &axis_s_2,
@@ -126,9 +129,12 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
 
     // Configure DDR memory Interface
-#pragma HLS INTERFACE m_axi port=ddr bundle=card_mem0 offset=slave depth=512 \
+#pragma HLS INTERFACE m_axi port=ddrin bundle=card_mem0 offset=slave depth=512 \
     max_read_burst_length=64  max_write_burst_length=64
-#pragma HLS INTERFACE s_axilite port=ddr bundle=ctrl_reg offset=0x050
+#pragma HLS INTERFACE s_axilite port=ddrin bundle=ctrl_reg offset=0x050
+#pragma HLS INTERFACE m_axi port=ddrout bundle=card_mem0 offset=slave depth=512 \
+    max_read_burst_length=64  max_write_burst_length=64
+#pragma HLS INTERFACE s_axilite port=ddrout bundle=ctrl_reg offset=0x070
 
     // Configure AXI4 Stream Interface
 #pragma HLS INTERFACE axis port=axis_s_0
@@ -166,7 +172,8 @@ void hls_action(snap_membus_t * din,
         action_reg->Control.Retc = process_action(
             din,
             dout,
-            ddr,
+            ddrin,
+            ddrout,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -197,7 +204,8 @@ void hls_action(snap_membus_t * din,
 // Decode job_type and call appropriate action
 static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
-                                snap_membus_t * mem_ddr,
+                                snap_membus_t * mem_ddr_in,
+                                snap_membus_t * mem_ddr_out,
                                 mf_stream &axis_s_0,
                                 mf_stream &axis_s_1,
                                 mf_stream &axis_s_2,
@@ -231,7 +239,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_ACCESS)
     {
         mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
-        return action_access(mem_in, mem_out, mem_ddr, access_job);
+        return action_access(mem_in, mem_out, mem_ddr_in, access_job);
     }
     else if (act_reg->Data.job_type == MF_JOB_CONFIGURE_STREAMS)
     {
@@ -242,7 +250,8 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
         return action_run_afus(
             mem_in,
             mem_out,
-            mem_ddr,
+            mem_ddr_in,
+            mem_ddr_out,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -264,12 +273,16 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_read_buffer(mf_get64(line, 0), mf_get64(line, 8));
+        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_mem_config);
+        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_ddr_mem_config);
+        return SNAP_RETC_SUCCESS;
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
+        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_mem_config);
+        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_ddr_mem_config);
+        return SNAP_RETC_SUCCESS;
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
@@ -440,7 +453,8 @@ static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t 
 static mf_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
-    snap_membus_t * mem_ddr,
+    snap_membus_t * mem_ddr_in,
+    snap_membus_t * mem_ddr_out,
     mf_stream &axis_s_0,
     mf_stream &axis_s_1,
     mf_stream &axis_s_2,
@@ -467,27 +481,29 @@ static mf_retc_t action_run_afus(
     snap_bool_t enable_6 = _enable_mask[6];
     snap_bool_t enable_7 = _enable_mask[7];
     snap_bool_t enable_8 = _enable_mask[8];
+    snap_bool_t enable_9 = _enable_mask[9];
 
     {
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
 
         // Input AFUs
-        afu_mem_read(mem_in, axis_m_0, enable_0);
+        afu_mem_read(mem_in, axis_m_0, &read_mem_config, enable_0);
+        afu_mem_read(mem_ddr_in, axis_m_1, &read_ddr_mem_config, enable_2);
 
         // Processing AFUs
-        afu_passthrough(axis_s_1, axis_m_1, enable_2);
-        afu_change_case(axis_s_2, axis_m_2, enable_3);
+        afu_passthrough(axis_s_2, axis_m_2, enable_4);
+        afu_change_case(axis_s_3, axis_m_3, enable_5);
 
         // Placeholder AFUs (to be assigned)
-        afu_passthrough(axis_s_3, axis_m_3, enable_4);
-        afu_passthrough(axis_s_4, axis_m_4, enable_5);
-        afu_passthrough(axis_s_5, axis_m_5, enable_6);
-        afu_passthrough(axis_s_6, axis_m_6, enable_7);
-        afu_passthrough(axis_s_7, axis_m_7, enable_8);
+        afu_passthrough(axis_s_4, axis_m_4, enable_6);
+        afu_passthrough(axis_s_5, axis_m_5, enable_7);
+        afu_passthrough(axis_s_6, axis_m_6, enable_8);
+        afu_passthrough(axis_s_7, axis_m_7, enable_9);
 
         // Output AFUs
-        afu_mem_write(axis_s_0, mem_out, enable_1);
+        afu_mem_write(axis_s_0, mem_out, &write_mem_config, enable_1);
+        afu_mem_write(axis_s_1, mem_ddr_out, &write_ddr_mem_config, enable_3);
     }
     return SNAP_RETC_SUCCESS;
 }
