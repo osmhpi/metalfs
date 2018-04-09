@@ -271,16 +271,6 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return afu_mem_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_FILE_SET_READ_BUFFER)
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_file_set_read_buffer(mf_get64(line, 0), mf_get64(line, 8));
-    }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_FILE_SET_WRITE_BUFFER)
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_file_set_write_buffer(mf_get64(line, 0), mf_get64(line, 8));
-    }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
@@ -486,29 +476,27 @@ static mf_retc_t action_run_afus(
     snap_bool_t enable_6 = _enable_mask[6];
     snap_bool_t enable_7 = _enable_mask[7];
     snap_bool_t enable_8 = _enable_mask[8];
-    snap_bool_t enable_9 = _enable_mask[9];
 
     {
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
 
         // Input AFUs
-        afu_mem_read(mem_in, axis_m_0, _enable_0);
-        afu_file_read(mem_ddr, axis_m_1, _enable_2);
+        afu_mem_read(mem_in, axis_m_0, enable_0);
 
         // Processing AFUs
-        afu_passthrough(axis_s_2, axis_m_2, _enable_4);
-        afu_change_case(axis_s_3, axis_m_3, _enable_5);
+        afu_passthrough(axis_s_1, axis_m_1, enable_2);
+        afu_change_case(axis_s_2, axis_m_2, enable_3);
 
         // Placeholder AFUs (to be assigned)
-        afu_passthrough(axis_s_4, axis_m_4, _enable_6);
-        afu_passthrough(axis_s_5, axis_m_5, _enable_7);
-        afu_passthrough(axis_s_6, axis_m_6, _enable_8);
-        afu_passthrough(axis_s_7, axis_m_7, _enable_9);
+        afu_passthrough(axis_s_3, axis_m_3, enable_4);
+        afu_passthrough(axis_s_4, axis_m_4, enable_5);
+        afu_passthrough(axis_s_5, axis_m_5, enable_6);
+        afu_passthrough(axis_s_6, axis_m_6, enable_7);
+        afu_passthrough(axis_s_7, axis_m_7, enable_8);
 
         // Output AFUs
-        afu_mem_write(axis_s_0, mem_out, _enable_1);
-        afu_file_write(axis_s_1, mem_ddr, _enable_3);
+        afu_mem_write(axis_s_0, mem_out, enable_1);
     }
     return SNAP_RETC_SUCCESS;
 }
