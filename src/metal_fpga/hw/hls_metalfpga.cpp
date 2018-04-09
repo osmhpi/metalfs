@@ -273,16 +273,22 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_mem_config);
-        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_ddr_mem_config);
-        return SNAP_RETC_SUCCESS;
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_mem_config);
-        afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_ddr_mem_config);
-        return SNAP_RETC_SUCCESS;
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_mem_config);
+    }
+    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
+    {
+        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_ddr_mem_config);
+    }
+    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
+    {
+        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_ddr_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
