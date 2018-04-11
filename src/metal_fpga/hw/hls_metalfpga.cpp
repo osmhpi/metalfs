@@ -147,7 +147,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_m_5
 #pragma HLS INTERFACE axis port=axis_m_6
 #pragma HLS INTERFACE axis port=axis_m_7
-#pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg
+#pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg offset=0x44A00000
 
 
     // Make memory ports globally accessible
@@ -398,31 +398,22 @@ static mf_retc_t action_access(snap_membus_t * mem_in,
     return SNAP_RETC_SUCCESS;
 }
 
-
-#ifdef NO_SYNTH
-#define AXI_STREAM_SWITCH_ADDR 0x0
-#else
-#define AXI_STREAM_SWITCH_ADDR 0x44A00000
-#endif
-#define AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET 0x40
+#define AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET (0x40 / sizeof(uint32_t))
 
 void switch_set_mapping(snapu32_t *switch_ctrl, snapu32_t data_in, snapu32_t data_out) {
-    snapu32_t *switch_base = switch_ctrl + (AXI_STREAM_SWITCH_ADDR / 4);
-    snapu32_t *switch_mappings = switch_base + (AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET / 4);
+    snapu32_t *switch_mappings = switch_ctrl + AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET;
 
     switch_mappings[data_out] = data_in;
 }
 
 void switch_disable_output(snapu32_t *switch_ctrl, snapu32_t data_out) {
-    snapu32_t *switch_base = switch_ctrl + (AXI_STREAM_SWITCH_ADDR / 4);
-    snapu32_t *switch_mappings = switch_base + (AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET / 4);
+    snapu32_t *switch_mappings = switch_ctrl + AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET;
 
     switch_mappings[data_out] = 0x80000000;
 }
 
 void switch_commit(snapu32_t *switch_ctrl) {
-    snapu32_t *switch_base = switch_ctrl + (AXI_STREAM_SWITCH_ADDR / 4);
-    switch_base[0] = 0x2;
+    switch_ctrl[0] = 0x2;
 }
 
 static snapu64_t _enable_mask = 0;
