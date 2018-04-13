@@ -27,8 +27,8 @@ typedef struct mf_extent {
 #define MF_EXTENT_BYTES (0x1 << MF_EXTENT_BYTE_OFFSET_W)
 
 // Address into the internal extent lists
-#define MF_EXTENT_OFFSET_W 9
-#define MF_EXTENT_COUNT (0x1 << MF_EXTENT_OFFSET_W)
+#define MF_EXTENT_COUNT_W 9
+#define MF_EXTENT_COUNT (0x1 << MF_EXTENT_COUNT_W)
 typedef ap_uint<MF_EXTENT_OFFSET_W> mf_extent_offset_t;
 typedef ap_uint<MF_EXTENT_OFFSET_W+1> mf_extent_count_t;
 
@@ -38,19 +38,11 @@ typedef ap_uint<MF_EXTENT_OFFSET_W+1> mf_extent_count_t;
 typedef ap_uint<MF_EXTENTS_PER_LINE_W> mf_line_extent_offset_t;
 typedef ap_uint<MF_EXTENTS_PER_LINE_W+1> mf_line_extent_count_t;
 
-// Address into the internal slot list
-#define MF_SLOT_OFFSET_W 4
-#define MF_SLOT_COUNT (0x1 << MF_SLOT_OFFSET_W)
-typedef ap_uint<MF_SLOT_OFFSET_W> mf_slot_offset_t;
-typedef ap_uint<MF_SLOT_OFFSET_W+1> mf_slot_count_t;
+/* // Address into the internal slot list */
+/* #define MF_SLOT_OFFSET_W 4 */
+/* #define MF_SLOT_COUNT (0x1 << MF_SLOT_OFFSET_W) */
+/* typedef ap_uint<MF_SLOT_OFFSET_W> mf_slot_offset_t; */
+/* typedef ap_uint<MF_SLOT_OFFSET_W+1> mf_slot_count_t; */
 
-// File Buffer Size
-#define MF_BLOCK_BYTE_OFFSET_W MF_BRAM_BYTE_OFFSET_W
-#define MF_BLOCK_BYTES (0x1<<MF_BLOCK_BYTE_OFFSET_W)
-typedef ap_uint<8> mf_block_t[MF_BLOCK_BYTES];
-typedef ap_uint<MF_BLOCK_BYTE_OFFSET_W> mf_block_offset_t;
-typedef ap_uint<MF_BLOCK_BYTE_OFFSET_W+1> mf_block_count_t;
-#define MF_BLOCK_NUMBER(BYTE_OFFSET) (BYTE_OFFSET>>MF_BLOCK_BYTE_OFFSET_W)
-#define MF_BLOCK_OFFSET(BYTE_OFFSET) (BYTE_OFFSET&MF_MASK(MF_BLOCK_BYTE_OFFSET_W,0))
 
 #endif // __MF_DEFINITIONS_H__
