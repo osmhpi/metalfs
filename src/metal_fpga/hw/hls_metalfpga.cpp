@@ -273,22 +273,22 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_mem_config);
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), read_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_mem_config);
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), write_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &read_ddr_mem_config);
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), read_ddr_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), &write_ddr_mem_config);
+        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), write_ddr_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
@@ -494,8 +494,8 @@ static mf_retc_t action_run_afus(
         // The order should only matter when executing in the test bench
 
         // Input AFUs
-        afu_mem_read(mem_in, axis_m_0, &read_mem_config, enable_0);
-        afu_mem_read(mem_ddr_in, axis_m_1, &read_ddr_mem_config, enable_2);
+        afu_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
+        afu_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
 
         // Processing AFUs
         afu_passthrough(axis_s_2, axis_m_2, enable_4);
@@ -508,8 +508,8 @@ static mf_retc_t action_run_afus(
         afu_passthrough(axis_s_7, axis_m_7, enable_9);
 
         // Output AFUs
-        afu_mem_write(axis_s_0, mem_out, &write_mem_config, enable_1);
-        afu_mem_write(axis_s_1, mem_ddr_out, &write_ddr_mem_config, enable_3);
+        afu_mem_write(axis_s_0, mem_out, write_mem_config, enable_1);
+        afu_mem_write(axis_s_1, mem_ddr_out, write_ddr_mem_config, enable_3);
     }
     return SNAP_RETC_SUCCESS;
 }
