@@ -496,6 +496,7 @@ static mf_retc_t action_run_afus(
         // Input AFUs
         afu_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
         afu_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
+        // afu_mem_readwrite(axis_s_1, axis_m_1, mem_ddr_in, read_ddr_mem_config, write_ddr_mem_config, enable_2, enable_3);
 
         // Processing AFUs
         afu_passthrough(axis_s_2, axis_m_2, enable_4);

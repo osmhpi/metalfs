@@ -81,3 +81,25 @@ void afu_mem_write(mf_stream &in, snap_membus_t *dout_gmem, mf_mem_configuration
     stream_widen(mem_stream, in, enable);
     afu_mem_write_impl(mem_stream, dout_gmem, config, enable);
 }
+
+void afu_mem_readwrite(
+    mf_stream &in,
+    mf_stream &out,
+    snap_membus_t *mem,
+    mf_mem_configuration &read_config,
+    mf_mem_configuration &write_config,
+    snap_bool_t read_enable,
+    snap_bool_t write_enable) {
+
+    if (read_enable && !write_enable) {
+        afu_mem_read(mem, out, read_config, true);
+    } else if (!read_enable && write_enable) {
+        afu_mem_write(in, mem, write_config, true);
+    } else if (read_enable && write_enable) {
+        for (;;) {
+            mf_stream_element element = in.read();
+            if (element.last)
+                break;
+        }
+    }
+}
