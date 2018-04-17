@@ -273,8 +273,9 @@ static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_
     uint64_t enable_mask = 0;
     enable_mask |= (1 << 0);
     enable_mask |= (1 << 1);
-    enable_mask |= (1 << 2);
-    enable_mask = enable_mask | (1 << 3);
+    // enable_mask |= (1 << 2);
+    // enable_mask |= (1 << 3);
+    enable_mask |= (1 << 4);
 
     uint64_t *job_struct_enable = (uint64_t*)mjob->job_address;
     *job_struct_enable = htobe64(enable_mask);
@@ -321,6 +322,30 @@ static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, met
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     job_struct[0] = htobe64((uint64_t)buffer);
+    job_struct[1] = htobe64(length);
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
+    mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64(0x0);
+    job_struct[1] = htobe64(length);
+    snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
+}
+
+static void snap_prepare_afu_mem_set_dram_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
+{
+    memset(mjob, 0, sizeof(*mjob));
+    mjob->job_type = MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER;
+    mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
+
+    uint64_t *job_struct = (uint64_t*)mjob->job_address;
+    job_struct[0] = htobe64(0xf0000);
     job_struct[1] = htobe64(length);
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
