@@ -16,14 +16,14 @@
 
 static uint64_t *_job_config = NULL;
 
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
+static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     *length = 0;
     *valid = true;
     return "";
 }
 
-static const uint64_t get_file_length() {
-    return 0;
+static const char* get_filename() {
+    return NULL;
 }
 
 static int apply_config(struct snap_action *action) {
@@ -55,7 +55,7 @@ mtl_operator_specification op_write_file_specification = {
 
     &handle_opts,
     &apply_config,
-    &get_file_length
+    &get_filename
 };
 
 void op_write_file_set_buffer(uint64_t offset, uint64_t length) {

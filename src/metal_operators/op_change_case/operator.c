@@ -34,7 +34,7 @@ static const char help[] =
 static uint64_t _mode = 0;
 
 extern int optind;
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
+static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
     _mode = 0;
 
@@ -45,7 +45,7 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
             { "lowercase", no_argument, NULL, 'l' }
         };
 
-        int ch = getopt_long(argc, argv, "lh", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "lh", long_options, &option_index);
         if (ch == -1)
             break;
 
@@ -66,8 +66,8 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
-static const uint64_t get_file_length() {
-    return 0;
+static const char* get_filename() {
+    return NULL;
 }
 
 static int apply_config(struct snap_action *action) {
@@ -104,5 +104,5 @@ mtl_operator_specification op_change_case_specification = {
 
     &handle_opts,
     &apply_config,
-    &get_file_length
+    &get_filename
 };

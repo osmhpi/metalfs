@@ -136,6 +136,7 @@ void register_agent(agent_hello_data_t *request, int connfd) {
     agent->output_agent_pid = request->output_agent_pid;
     agent->argc = request->argc;
     memcpy(agent->cwd, request->cwd, FILENAME_MAX);
+    memcpy(agent->metal_mountpoint, request->metal_mountpoint, FILENAME_MAX);
 
     uint64_t internal_filename_length = strlen(request->internal_input_filename);
     if (internal_filename_length) {
@@ -309,8 +310,14 @@ void* start_socket(void* args) {
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
                 bool afu_valid = true;
+                mtl_operator_invocation_args args = {
+                    current_agent->cwd,
+                    current_agent->metal_mountpoint,
+                    current_agent->argc,
+                    current_agent->argv
+                };
                 responses[current_operator] = current_agent->afu_specification->handle_opts(
-                    current_agent->argc, current_agent->argv, response_lengths + current_operator, current_agent->cwd, &afu_valid);
+                    &args, response_lengths + current_operator, &afu_valid);
                 valid = valid && afu_valid;
 
                 ++current_operator;
@@ -406,8 +413,8 @@ void* start_socket(void* args) {
             // The op_read_file does this internally, so no action required here.
             uint64_t internal_input_file_length = 0;
             if (input_agent->afu_specification->is_data_source) {
-                // TODO: Rethink
-                internal_input_file_length = input_agent->afu_specification->get_file_length();
+                // TODO: Catch if file does not exist
+                mtl_prepare_storage_for_reading(input_agent->afu_specification->get_filename(), &internal_input_file_length);
             } else if (input_agent->internal_input_file) {
                 // TODO: Catch if file does not exist
                 mtl_prepare_storage_for_reading(input_agent->internal_input_file, &internal_input_file_length);

@@ -266,6 +266,7 @@ int main(int argc, char *argv[]) {
 
     // Add the working directory to the request
     getcwd(request.cwd, FILENAME_MAX);
+    strncpy(request.metal_mountpoint, own_fs_mount_point, FILENAME_MAX);
 
     // If there's no agent connected to stdin, we have to create a memory-mapped file
     if (stdin_pid == 0) {
