@@ -10,14 +10,8 @@ set(CMAKE_C_FLAGS "-Wall -Wextra -std=gnu11")
 find_package(FUSE REQUIRED)
 find_package(Threads REQUIRED)
 find_package(LMDB REQUIRED)
-
-option(WITH_SNAP "Build with snap" ON)
-
-if(WITH_SNAP)
-    add_definitions(-DWITH_SNAP)
-    find_package(snap REQUIRED)
-    find_package(cxl REQUIRED)
-endif()
+find_package(snap REQUIRED)
+find_package(cxl REQUIRED)
 
 add_subdirectory(src)
 
