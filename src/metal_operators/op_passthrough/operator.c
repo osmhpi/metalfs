@@ -38,6 +38,10 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
+static const uint64_t get_file_length() {
+    return 0;
+}
+
 static int apply_config(struct snap_action *action) {
     // Nothing to do
     return MTL_SUCCESS;
@@ -49,5 +53,6 @@ mtl_operator_specification op_passthrough_specification = {
     false,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_file_length
 };

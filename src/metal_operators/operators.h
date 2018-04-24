@@ -8,6 +8,7 @@ struct snap_action;
 
 typedef const void* (*mtl_operator_handle_opts_f)(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid);
 typedef int (*mtl_operator_apply_configuration_f)(struct snap_action *action);
+typedef uint64_t (*mtl_operator_get_length_f)();
 
 typedef struct mtl_operator_specification {
     operator_id id;
@@ -16,6 +17,7 @@ typedef struct mtl_operator_specification {
 
     mtl_operator_handle_opts_f handle_opts;
     mtl_operator_apply_configuration_f apply_config;
+    mtl_operator_get_length_f get_file_length;
 } mtl_operator_specification;
 
 typedef struct mtl_operator_execution_plan {

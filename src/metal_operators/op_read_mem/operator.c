@@ -23,6 +23,10 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
+static const uint64_t get_file_length() {
+    return 0;
+}
+
 static int apply_config(struct snap_action *action) {
     uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
     job_struct[0] = htobe64(_buffer_address);
@@ -57,7 +61,8 @@ mtl_operator_specification op_read_mem_specification = {
     true,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_file_length
 };
 
 void op_read_mem_set_buffer(void *buffer, uint64_t length) {

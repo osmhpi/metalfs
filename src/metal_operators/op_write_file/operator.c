@@ -22,6 +22,10 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
+static const uint64_t get_file_length() {
+    return 0;
+}
+
 static int apply_config(struct snap_action *action) {
     metalfpga_job_t mjob;
     mjob.job_type = MF_JOB_MAP;
@@ -50,8 +54,13 @@ mtl_operator_specification op_write_file_specification = {
     false,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_file_length
 };
+
+void op_write_file_set_buffer(uint64_t offset, uint64_t length) {
+
+}
 
 void op_write_file_set_extents(const mtl_file_extent *extents, uint64_t length) {
     if (_job_config) {

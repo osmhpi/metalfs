@@ -35,7 +35,8 @@ uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offse
 int mtl_truncate(uint64_t inode_id, uint64_t offset);
 int mtl_unlink(const char *filename);
 
-int mtl_load_extents(const char *path, const mtl_file_extent *extents, uint64_t *length);
+int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size);
+int mtl_prepare_storage_for_writing(const char *filename, uint64_t size);
 
 #ifdef __cplusplus
 }

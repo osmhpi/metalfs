@@ -66,6 +66,10 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
+static const uint64_t get_file_length() {
+    return 0;
+}
+
 static int apply_config(struct snap_action *action) {
     uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
     job_struct[0] = htobe64(_mode);
@@ -99,5 +103,6 @@ mtl_operator_specification op_change_case_specification = {
     false,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_file_length
 };
