@@ -17,6 +17,10 @@ typedef ap_uint<1> mf_bool_t;
 #define MF_BRAM_BYTE_OFFSET_W (MF_BRAM_BIT_OFFSET_W-4)
 #define MF_BRAM_BYTES (0x1<<MF_BRAM_BYTE_OFFSET_W)
 
+// File Block Size
+#define MF_BLOCK_BYTE_OFFSET_W MF_BRAM_BYTE_OFFSET_W
+#define MF_BLOCK_BYTES (0x1<<MF_BLOCK_BYTE_OFFSET_W)
+
 // A file extent consisting of a begin physical block number
 // and a block count
 typedef struct mf_extent {
@@ -29,8 +33,8 @@ typedef struct mf_extent {
 // Address into the internal extent lists
 #define MF_EXTENT_COUNT_W 9
 #define MF_EXTENT_COUNT (0x1 << MF_EXTENT_COUNT_W)
-typedef ap_uint<MF_EXTENT_OFFSET_W> mf_extent_offset_t;
-typedef ap_uint<MF_EXTENT_OFFSET_W+1> mf_extent_count_t;
+typedef ap_uint<MF_EXTENT_COUNT_W> mf_extent_offset_t;
+typedef ap_uint<MF_EXTENT_COUNT_W+1> mf_extent_count_t;
 
 // Address into a memory line with extents
 #define MF_EXTENTS_PER_LINE_W (ADDR_RIGHT_SHIFT - MF_EXTENT_BYTE_OFFSET_W)

@@ -26,4 +26,16 @@ void mf_file_flush(mf_extmap_t & map,
                    mf_filebuf_t & buffer,
                    snap_membus_t * ddr);
 
+mf_bool_t mf_file_load_buffer(snapu32_t * nvme_ctrl,
+                              mf_extmap_t & map,
+                              snapu64_t lblock,
+                              snapu64_t dest,
+                              snapu64_t length);
+
+mf_bool_t mf_file_write_buffer(snapu32_t * nvme_ctrl,
+                               mf_extmap_t & map,
+                               snapu64_t lblock,
+                               snapu64_t dest,
+                               snapu64_t length);
+
 #endif // __MF_FILE_H__

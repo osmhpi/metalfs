@@ -47,7 +47,21 @@ extern "C" {
 //   word2: file_byte_offset    | R
 //   word3: file_byte_count     | R
 
-#define MF_JOB_CONFIGURE_STREAMS 3
+#define MF_JOB_MOUNT 3
+// 64bit words at job_address:
+//   word0: slot                | R
+//   word1: file_offset (blocks)| R
+//   word2: dram_offset         | R
+//   word3: length (blocks)     | R
+
+#define MF_JOB_WRITEBACK 4
+// 64bit words at job_address:
+//   word0: slot                | R
+//   word1: file_offset (blocks)| R
+//   word2: dram_offset         | R
+//   word3: length (blocks)     | R
+
+#define MF_JOB_CONFIGURE_STREAMS 5
 // 64bit words at job_address:
 //   word0: enable_mask         | R
 //   word1:                     | R
@@ -58,30 +72,30 @@ extern "C" {
 //     halfword0: stream 6 dest | R
 //     halfword1: stream 7 dest | R
 
-#define MF_JOB_RUN_AFUS 4
+#define MF_JOB_RUN_AFUS 6
 // no payload data
 
-#define MF_JOB_AFU_MEM_SET_READ_BUFFER 5
+#define MF_JOB_AFU_MEM_SET_READ_BUFFER 7
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 6
+#define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 8
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 7
+#define MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 9
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 8
+#define MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 10
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_CHANGE_CASE_SET_MODE 9
+#define MF_JOB_AFU_CHANGE_CASE_SET_MODE 11
 // 64bit words at job_address:
 //   word0: mode                | R
 

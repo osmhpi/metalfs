@@ -25,6 +25,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
                                 snap_membus_t * mem_ddr_in,
                                 snap_membus_t * mem_ddr_out,
+                                snapu32_t * nvme,
                                 mf_stream &axis_s_0,
                                 mf_stream &axis_s_1,
                                 mf_stream &axis_s_2,
@@ -45,11 +46,13 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
                                 action_reg * act_reg);
 
 static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
-static mf_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mf_job_query_t & job);
-static mf_retc_t action_access(snap_membus_t * mem_in,
-                               snap_membus_t * mem_out,
-                               snap_membus_t * mem_ddr,
-                               const mf_job_access_t & job);
+// static mf_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mf_job_query_t & job);
+// static mf_retc_t action_access(snap_membus_t * mem_in,
+//                                snap_membus_t * mem_out,
+//                                snap_membus_t * mem_ddr,
+//                                const mf_job_access_t & job);
+static mf_retc_t action_mount(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job);
+static mf_retc_t action_writeback(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job);
 
 static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
 static mf_retc_t action_run_afus(
@@ -75,17 +78,18 @@ static mf_retc_t action_run_afus(
     mf_stream &axis_m_7
 );
 
-static void action_file_write_block(snap_membus_t * mem_in,
-                                   mf_slot_offset_t slot,
-                                   snapu64_t buffer_address,
-                                   mf_block_offset_t begin_offset,
-                                   mf_block_offset_t end_offset);
-static void action_file_read_block(snap_membus_t * mem_in,
-                                    snap_membus_t * mem_out,
-                                    mf_slot_offset_t slot,
-                                    snapu64_t buffer_address,
-                                    mf_block_offset_t begin_offset,
-                                    mf_block_offset_t end_offset);
+// static void action_file_write_block(snap_membus_t * mem_in,
+//                                    mf_slot_offset_t slot,
+//                                    snapu64_t buffer_address,
+//                                    mf_block_offset_t begin_offset,
+//                                    mf_block_offset_t end_offset);
+// static void action_file_read_block(snap_membus_t * mem_in,
+//                                     snap_membus_t * mem_out,
+//                                     snapu64_t slot,
+//                                     snapu64_t buffer_address,
+//                                     mf_block_offset_t begin_offset,
+//                                     mf_block_offset_t end_offset);
+
 // ------------------------------------------------
 // -------------- ACTION ENTRY POINT --------------
 // ------------------------------------------------
@@ -95,6 +99,7 @@ void hls_action(snap_membus_t * din,
                 snap_membus_t * dout,
                 snap_membus_t * ddrin,
                 snap_membus_t * ddrout,
+                snapu32_t * nvme,
                 mf_stream &axis_s_0,
                 mf_stream &axis_s_1,
                 mf_stream &axis_s_2,
@@ -136,6 +141,10 @@ void hls_action(snap_membus_t * din,
     max_read_burst_length=64  max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=ddrout bundle=ctrl_reg offset=0x070
 
+    //NVME Config Interface
+#pragma HLS INTERFACE m_axi port=nvme bundle=nvme //offset=slave
+//#pragma HLS INTERFACE s_axilite port=nvme bundle=ctrl_reg offset=0x060
+
     // Configure AXI4 Stream Interface
 #pragma HLS INTERFACE axis port=axis_s_0
 #pragma HLS INTERFACE axis port=axis_s_1
@@ -174,6 +183,7 @@ void hls_action(snap_membus_t * din,
             dout,
             ddrin,
             ddrout,
+            nvme,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -206,6 +216,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
                                 snap_membus_t * mem_ddr_in,
                                 snap_membus_t * mem_ddr_out,
+                                snapu32_t * nvme,
                                 mf_stream &axis_s_0,
                                 mf_stream &axis_s_1,
                                 mf_stream &axis_s_2,
@@ -230,16 +241,26 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
         mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
         return action_map(mem_in, map_job);
     }
-    else if (act_reg->Data.job_type == MF_JOB_QUERY)
+    // else if (act_reg->Data.job_type == MF_JOB_QUERY)
+    // {
+    //     mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
+    //     mf_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
+    //     return retc;
+    // }
+    // else if (act_reg->Data.job_type == MF_JOB_ACCESS)
+    // {
+    //     mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
+    //     return action_access(mem_in, mem_out, mem_ddr_in, access_job);
+    // }
+    else if (act_reg->Data.job_type == MF_JOB_MOUNT)
     {
-        mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
-        mf_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
-        return retc;
+        mf_job_fileop_t mount_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
+        return action_mount(nvme, mem_in, mem_ddr_in, mount_job);
     }
-    else if (act_reg->Data.job_type == MF_JOB_ACCESS)
+    else if (act_reg->Data.job_type == MF_JOB_WRITEBACK)
     {
-        mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
-        return action_access(mem_in, mem_out, mem_ddr_in, access_job);
+        mf_job_fileop_t writeback_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
+        return action_writeback(nvme, mem_in, mem_ddr_in, writeback_job);
     }
     else if (act_reg->Data.job_type == MF_JOB_CONFIGURE_STREAMS)
     {
@@ -302,120 +323,137 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
 static mf_retc_t action_map(snap_membus_t * mem_in,
                             const mf_job_map_t & job)
 {
-    if (job.slot >= MF_SLOT_COUNT)
-    {
-        return SNAP_RETC_FAILURE + 4;
-    }
-    mf_slot_offset_t slot = job.slot;
-
-    if (job.map_else_unmap)
-    {
-        if (job.extent_count > MF_EXTENT_COUNT)
-        {
-            return SNAP_RETC_FAILURE + 1;
+    switch (job.slot) {
+        case 0: {
+            mf_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
         }
-        mf_extent_count_t extent_count = job.extent_count;
-
-        if (!mf_file_open(slot, extent_count, job.extent_address, mem_in))
-        {
-            mf_file_close(slot);
-            return SNAP_RETC_FAILURE +2;
+        case 1: {
+            mf_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+        default: {
+            return SNAP_RETC_FAILURE;
         }
     }
-    else
-    {
-        if (!mf_file_close(slot))
-        {
-            return SNAP_RETC_FAILURE + 3;
-        }
-    }
-    // return SNAP_RETC_SUCCESS;
-    return 0x1000 + (mf_file_get_extent_count(job.slot)<<4) + mf_file_is_open(job.slot);
 }
 
-static mf_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mf_job_query_t & job)
+// static mf_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mf_job_query_t & job)
+// {
+//     snap_membus_t line;
+//     snapu64_t lblk = job.lblock_to_pblock;
+//     if (job.query_mapping)
+//     {
+//         job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
+//     }
+//     if (job.query_state)
+//     {
+//         job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
+//         job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
+//         job.extent_count = mf_file_get_extent_count(job.slot);
+//         job.block_count = mf_file_get_block_count(job.slot);
+//         job.current_lblock = mf_file_get_lblock(job.slot);
+//         job.current_pblock = mf_file_get_pblock(job.slot);
+//     }
+//     mf_write_job_query(mem_out, job_address, job);
+//     return SNAP_RETC_SUCCESS;
+// }
+
+static mf_retc_t action_mount(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job)
 {
-    snap_membus_t line;
-    snapu64_t lblk = job.lblock_to_pblock;
-    if (job.query_mapping)
-    {
-        job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
+    switch (job.slot) {
+        case 0: {
+            mf_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        case 1: {
+            mf_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        default: {
+            return SNAP_RETC_FAILURE;
+        }
     }
-    if (job.query_state)
-    {
-        job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
-        job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
-        job.extent_count = mf_file_get_extent_count(job.slot);
-        job.block_count = mf_file_get_block_count(job.slot);
-        job.current_lblock = mf_file_get_lblock(job.slot);
-        job.current_pblock = mf_file_get_pblock(job.slot);
-    }
-    mf_write_job_query(mem_out, job_address, job);
-    // return SNAP_RETC_SUCCESS;
-    return 0x1000 + (mf_file_get_extent_count(job.slot)<<4) + mf_file_is_open(job.slot);
 }
 
-static mf_retc_t action_access(snap_membus_t * mem_in,
-                               snap_membus_t * mem_out,
-                               snap_membus_t * mem_ddr,
-                               const mf_job_access_t & job)
+static mf_retc_t action_writeback(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job)
 {
-    if (! mf_file_is_open(job.slot))
-    {
-        return SNAP_RETC_FAILURE;
-    }
-
-    const snapu64_t file_blocks = mf_file_get_block_count(job.slot);
-    const snapu64_t file_bytes = file_blocks * MF_BLOCK_BYTES;
-    if (job.file_byte_offset + job.file_byte_count > file_bytes)
-    {
-        return SNAP_RETC_FAILURE;
-    }
-
-    const mf_block_offset_t file_begin_offset = MF_BLOCK_OFFSET(job.file_byte_offset);
-    const snapu64_t file_begin_block = MF_BLOCK_NUMBER(job.file_byte_offset);
-    const mf_block_offset_t file_end_offset = MF_BLOCK_OFFSET(job.file_byte_offset + job.file_byte_count - 1);
-    const snapu64_t file_end_block = MF_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
-
-    snapu64_t buffer_address = job.buffer_address;
-    if (! mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE)) return SNAP_RETC_FAILURE;
-    for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
-    {
-        /* mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0; */
-        /* mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1; */
-        mf_block_offset_t begin_offset = 0;
-        if (i_block == file_begin_block)
-        {
-            begin_offset = file_begin_offset;
+    switch (job.slot) {
+        case 0: {
+            mf_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
         }
-        mf_block_offset_t end_offset = MF_BLOCK_BYTES - 1;
-        if (i_block == file_end_block)
-        {
-            end_offset = file_end_offset;
+        case 1: {
+            mf_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
         }
-
-        if (job.write_else_read)
-        {
-            action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
-        }
-        else
-        {
-            action_file_read_block(mem_in, mem_out, job.slot, buffer_address, begin_offset, end_offset);
-        }
-
-        buffer_address += end_offset - begin_offset + 1;
-
-        if (i_block == file_end_block)
-        {
-            if (! mf_file_flush(mem_ddr, job.slot)) return SNAP_RETC_FAILURE;
-        }
-        else
-        {
-            if (! mf_file_next(mem_ddr, job.slot, MF_TRUE)) return SNAP_RETC_FAILURE;
+        default: {
+            return SNAP_RETC_FAILURE;
         }
     }
-    return SNAP_RETC_SUCCESS;
 }
+
+// static mf_retc_t action_access(snap_membus_t * mem_in,
+//                                snap_membus_t * mem_out,
+//                                snap_membus_t * mem_ddr,
+//                                const mf_job_access_t & job)
+// {
+//     if (! mf_file_is_open(job.slot))
+//     {
+//         return SNAP_RETC_FAILURE;
+//     }
+
+//     const snapu64_t file_blocks = mf_file_get_block_count(job.slot);
+//     const snapu64_t file_bytes = file_blocks * MF_BLOCK_BYTES;
+//     if (job.file_byte_offset + job.file_byte_count > file_bytes)
+//     {
+//         return SNAP_RETC_FAILURE;
+//     }
+
+//     const mf_block_offset_t file_begin_offset = MF_BLOCK_OFFSET(job.file_byte_offset);
+//     const snapu64_t file_begin_block = MF_BLOCK_NUMBER(job.file_byte_offset);
+//     const mf_block_offset_t file_end_offset = MF_BLOCK_OFFSET(job.file_byte_offset + job.file_byte_count - 1);
+//     const snapu64_t file_end_block = MF_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
+
+//     snapu64_t buffer_address = job.buffer_address;
+//     if (! mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE)) return SNAP_RETC_FAILURE;
+//     for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
+//     {
+//         /* mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0; */
+//         /* mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1; */
+//         mf_block_offset_t begin_offset = 0;
+//         if (i_block == file_begin_block)
+//         {
+//             begin_offset = file_begin_offset;
+//         }
+//         mf_block_offset_t end_offset = MF_BLOCK_BYTES - 1;
+//         if (i_block == file_end_block)
+//         {
+//             end_offset = file_end_offset;
+//         }
+
+//         if (job.write_else_read)
+//         {
+//             action_file_write_block(mem_in, job.slot, buffer_address, begin_offset, end_offset);
+//         }
+//         else
+//         {
+//             action_file_read_block(mem_in, mem_out, job.slot, buffer_address, begin_offset, end_offset);
+//         }
+
+//         buffer_address += end_offset - begin_offset + 1;
+
+//         if (i_block == file_end_block)
+//         {
+//             if (! mf_file_flush(mem_ddr, job.slot)) return SNAP_RETC_FAILURE;
+//         }
+//         else
+//         {
+//             if (! mf_file_next(mem_ddr, job.slot, MF_TRUE)) return SNAP_RETC_FAILURE;
+//         }
+//     }
+//     return SNAP_RETC_SUCCESS;
+// }
 
 #define AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET (0x40 / sizeof(uint32_t))
 
@@ -515,75 +553,76 @@ static mf_retc_t action_run_afus(
     return SNAP_RETC_SUCCESS;
 }
 
-static void action_file_write_block(snap_membus_t * mem_in,
-                                    mf_slot_offset_t slot,
-                                    snapu64_t buffer_address,
-                                    mf_block_offset_t begin_offset,
-                                    mf_block_offset_t end_offset)
-{
-    snapu64_t end_address = buffer_address + end_offset - begin_offset;
+// static void action_file_write_block(snap_membus_t * mem_in,
+//                                     mf_slot_offset_t slot,
+//                                     snapu64_t buffer_address,
+//                                     mf_block_offset_t begin_offset,
+//                                     mf_block_offset_t end_offset)
+// {
+//     snapu64_t end_address = buffer_address + end_offset - begin_offset;
 
-    snapu64_t begin_line = MFB_ADDRESS(buffer_address);
-    mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
-    snapu64_t end_line = MFB_ADDRESS(end_address);
-    mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
+//     snapu64_t begin_line = MFB_ADDRESS(buffer_address);
+//     mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
+//     snapu64_t end_line = MFB_ADDRESS(end_address);
+//     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
 
-    mf_block_offset_t offset = begin_offset;
-    for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
-    {
-        snap_membus_t line = mem_in[i_line];
-        mfb_bytecount_t begin_byte = 0;
-        if (i_line == begin_line)
-        {
-            begin_byte = begin_line_offset;
-        }
-        mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
-        if (i_line == end_line)
-        {
-            end_byte = end_line_offset;
-        }
-        for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
-        {
-            mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
-        }
-    }
-}
+//     mf_block_offset_t offset = begin_offset;
+//     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
+//     {
+//         snap_membus_t line = mem_in[i_line];
+//         mfb_bytecount_t begin_byte = 0;
+//         if (i_line == begin_line)
+//         {
+//             begin_byte = begin_line_offset;
+//         }
+//         mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
+//         if (i_line == end_line)
+//         {
+//             end_byte = end_line_offset;
+//         }
+//         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
+//         {
+//             mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
+//         }
+//     }
+// }
 
-static void action_file_read_block(snap_membus_t * mem_in,
-                                   snap_membus_t * mem_out,
-                                   mf_slot_offset_t slot,
-                                   snapu64_t buffer_address,
-                                   mf_block_offset_t begin_offset,
-                                   mf_block_offset_t end_offset)
-{
-    snapu64_t end_address = buffer_address + end_offset - begin_offset;
+// static void action_file_read_block(snap_membus_t * mem_in,
+//                                    snap_membus_t * mem_out,
+//                                    mf_slot_offset_t slot,
+//                                    snapu64_t buffer_address,
+//                                    mf_block_offset_t begin_offset,
+//                                    mf_block_offset_t end_offset)
+// {
+//     snapu64_t end_address = buffer_address + end_offset - begin_offset;
 
-    snapu64_t begin_line = MFB_ADDRESS(buffer_address);
-    mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
-    snapu64_t end_line = MFB_ADDRESS(end_address);
-    mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
+//     snapu64_t begin_line = MFB_ADDRESS(buffer_address);
+//     mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
+//     snapu64_t end_line = MFB_ADDRESS(end_address);
+//     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
 
-    mf_block_offset_t offset = begin_offset;
-    for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
-    {
-        snap_membus_t line = mem_in[i_line];
-        mfb_bytecount_t begin_byte = 0;
-        if (i_line == begin_line)
-        {
-            begin_byte = begin_line_offset;
-        }
-        mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
-        if (i_line == end_line)
-        {
-            end_byte = end_line_offset;
-        }
-        for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
-        {
-            mf_set8(line, i_byte, mf_file_buffers[slot][offset++]);
-        }
-        mem_out[i_line] = line;
-    }
-}
+//     mf_block_offset_t offset = begin_offset;
+//     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
+//     {
+//         snap_membus_t line = mem_in[i_line];
+//         mfb_bytecount_t begin_byte = 0;
+//         if (i_line == begin_line)
+//         {
+//             begin_byte = begin_line_offset;
+//         }
+//         mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
+//         if (i_line == end_line)
+//         {
+//             end_byte = end_line_offset;
+//         }
+//         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
+//         {
+//             mf_set8(line, i_byte, mf_file_buffers[slot][offset++]);
+//         }
+//         mem_out[i_line] = line;
+//     }
+// }
+
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------
 //-----------------------------------------------------------------------------

@@ -33,32 +33,32 @@ void mf_file_flush(mf_extmap_t & slot,
     //TODO-lw WRITE BLOCK map.current_pblock
 }
 
-static mf_bool_t mf_file_write_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
-{
-    snap_membus_t line = 0;
-    ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
-    for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
-        line = (line << 8) | slot.buffer[i_byte];
-        if (i_byte % ADDR_RIGHT_SHIFT == ADDR_RIGHT_SHIFT - 1) {
-            mem[i_line++] = line;
-        }
-    }
-    return MF_TRUE;
-}
+// static mf_bool_t mf_file_write_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
+// {
+//     snap_membus_t line = 0;
+//     ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
+//     for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
+//         line = (line << 8) | slot.buffer[i_byte];
+//         if (i_byte % ADDR_RIGHT_SHIFT == ADDR_RIGHT_SHIFT - 1) {
+//             mem[i_line++] = line;
+//         }
+//     }
+//     return MF_TRUE;
+// }
 
-static mf_bool_t mf_file_read_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
-{
-    snap_membus_t line = 0;
-    ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
-    for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
-        if (i_byte % ADDR_RIGHT_SHIFT == 0) {
-            line = mem[i_line++];
-        }
-        slot.buffer[i_byte] = (line >> (MEMDW - 8)) & 0xff;
-        line = (line << 8);
-    }
-    return MF_TRUE;
-}
+// static mf_bool_t mf_file_read_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
+// {
+//     snap_membus_t line = 0;
+//     ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
+//     for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
+//         if (i_byte % ADDR_RIGHT_SHIFT == 0) {
+//             line = mem[i_line++];
+//         }
+//         slot.buffer[i_byte] = (line >> (MEMDW - 8)) & 0xff;
+//         line = (line << 8);
+//     }
+//     return MF_TRUE;
+// }
 
 static mf_bool_t mf_nvme_write_burst(snapu32_t *d_nvme,
                  snapu64_t ddr_addr,
@@ -132,14 +132,75 @@ static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
     }
 }
 
-static mf_bool_t mf_file_store_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
-{
-    return mf_file_write_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot) &&
-            mf_nvme_write_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512);
+// static mf_bool_t mf_file_store_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
+// {
+//     return mf_file_write_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot) &&
+//             mf_nvme_write_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512);
+// }
+
+// static mf_bool_t mf_file_load_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
+// {
+//     return mf_nvme_read_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512) &&
+//             mf_file_read_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot);
+// }
+
+mf_bool_t mf_file_load_buffer(snapu32_t * nvme_ctrl,
+    mf_extmap_t & map,
+    snapu64_t lblock,
+    snapu64_t dest,
+    snapu64_t length) {
+
+    mf_extmap_seek(map, lblock);
+    snapu64_t remaining_blocks = length;
+    snapu64_t current_offset = 0;
+    snapu64_t end = lblock + length;
+
+    if (lblock + remaining_blocks > mf_extmap_block_count(map)) {
+        return MF_FALSE;
+    }
+
+    while (remaining_blocks > 0) {
+        snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
+        mf_nvme_read_burst(nvme_ctrl,
+            dest + (current_offset * MF_BLOCK_BYTES),
+            mf_extmap_pblock(map),
+            0,
+            current_extent_mount_length * (MF_BLOCK_BYTES / 512)
+        );
+        current_offset += current_extent_mount_length;
+        remaining_blocks -= current_extent_mount_length;
+    }
+
+    return MF_TRUE;
 }
 
-static mf_bool_t mf_file_load_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
-{
-    return mf_nvme_read_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512) &&
-            mf_file_read_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot);
+mf_bool_t mf_file_write_buffer(snapu32_t * nvme_ctrl,
+    mf_extmap_t & map,
+    snapu64_t lblock,
+    snapu64_t dest,
+    snapu64_t length) {
+
+    mf_extmap_seek(map, lblock);
+    snapu64_t remaining_blocks = length;
+    snapu64_t current_offset = 0;
+    snapu64_t end = lblock + length;
+
+    if (lblock + remaining_blocks > mf_extmap_block_count(map)) {
+        return MF_FALSE;
+    }
+
+    while (remaining_blocks > 0) {
+        snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
+        mf_nvme_write_burst(nvme_ctrl,
+            dest + (current_offset * MF_BLOCK_BYTES),
+            mf_extmap_pblock(map),
+            0,
+            current_extent_mount_length * (MF_BLOCK_BYTES / 512)
+        );
+        current_offset += current_extent_mount_length;
+        remaining_blocks -= current_extent_mount_length;
+    }
+
+    return MF_TRUE;
+
 }
