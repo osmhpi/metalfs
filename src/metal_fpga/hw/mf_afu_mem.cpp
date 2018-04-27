@@ -60,13 +60,22 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
             // We can only write entire words to memory, so the strb value does not matter here.
             typedef char word_t[BPERDW];
             word_t current_word;
+            uint16_t word_length = 0;
             for (int i = 0; i < BPERDW; ++i) {
 #pragma HLS unroll
                 current_word[i] = uint8_t(element.data >> ((sizeof(element.data) - 1) * 8));
                 element.data <<= 8;
+                if (element.strb[i]) ++word_length;
             }
 
-            memcpy(dout_gmem + config.offset + MFB_ADDRESS(mem_offset), (char*) current_word, sizeof(current_word));
+            if (word_length == sizeof(current_word)) {
+                // Write burst
+                memcpy(dout_gmem + config.offset + MFB_ADDRESS(mem_offset), (char*) current_word, sizeof(current_word));
+            } else {
+                char *dout_gmemb = (char*)dout_gmem;
+                for (uint16_t mi = 0; mi < word_length; ++mi)
+                    dout_gmemb[(config.offset + MFB_ADDRESS(mem_offset)) * sizeof(current_word)] = current_word[mi];
+            }
 
             if (element.last) {
                 break;
