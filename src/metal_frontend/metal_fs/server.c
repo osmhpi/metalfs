@@ -10,6 +10,8 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
+#include "../../metal/metal.h"
+
 #include "../../metal_operators/op_read_file/operator.h"
 #include "../../metal_operators/op_read_mem/operator.h"
 #include "../../metal_operators/op_write_file/operator.h"
@@ -134,6 +136,7 @@ void register_agent(agent_hello_data_t *request, int connfd) {
     agent->output_agent_pid = request->output_agent_pid;
     agent->argc = request->argc;
     memcpy(agent->cwd, request->cwd, FILENAME_MAX);
+    memcpy(agent->metal_mountpoint, request->metal_mountpoint, FILENAME_MAX);
 
     uint64_t internal_filename_length = strlen(request->internal_input_filename);
     if (internal_filename_length) {
@@ -303,15 +306,21 @@ void* start_socket(void* args) {
             const char *responses[pipeline_length];
             uint64_t response_lengths[pipeline_length];
             current_link = pipeline_agents.Flink;
-            uint64_t current_afu = 0;
+            uint64_t current_operator = 0;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
                 bool afu_valid = true;
-                responses[current_afu] = current_agent->afu_specification->handle_opts(
-                    current_agent->argc, current_agent->argv, response_lengths + current_afu, current_agent->cwd, &afu_valid);
+                mtl_operator_invocation_args args = {
+                    current_agent->cwd,
+                    current_agent->metal_mountpoint,
+                    current_agent->argc,
+                    current_agent->argv
+                };
+                responses[current_operator] = current_agent->afu_specification->handle_opts(
+                    &args, response_lengths + current_operator, &afu_valid);
                 valid = valid && afu_valid;
 
-                ++current_afu;
+                ++current_operator;
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
@@ -319,16 +328,16 @@ void* start_socket(void* args) {
             // Send the responses and wait for incoming processing requests
             agent_push_buffer_data_t processing_request;
             current_link = pipeline_agents.Flink;
-            current_afu = 0;
+            current_operator = 0;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
                 message_type_t message_type = SERVER_ACCEPT_AGENT;
                 send(current_agent->socket, &message_type, sizeof(message_type), 0);
-                server_accept_agent_data_t accept_data = { response_lengths[current_afu], valid };
+                server_accept_agent_data_t accept_data = { response_lengths[current_operator], valid };
                 send(current_agent->socket, &accept_data, sizeof(accept_data), 0);
-                if (response_lengths[current_afu]) {
-                    send(current_agent->socket, responses[current_afu], response_lengths[current_afu], 0);
+                if (response_lengths[current_operator]) {
+                    send(current_agent->socket, responses[current_operator], response_lengths[current_operator], 0);
                 }
 
                 message_type_t incoming_message_type;
@@ -338,10 +347,10 @@ void* start_socket(void* args) {
 
                 // The only processing request that we really care about is the input agent's
                 agent_push_buffer_data_t tmp_processing_request;
-                recv(current_agent->socket, current_afu == 0 ? &processing_request : &tmp_processing_request,
+                recv(current_agent->socket, current_operator == 0 ? &processing_request : &tmp_processing_request,
                     sizeof(processing_request), 0);
 
-                ++current_afu;
+                ++current_operator;
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
@@ -367,39 +376,53 @@ void* start_socket(void* args) {
             ++pipeline_length;
 
             // Create the execution plan and apply the configuration
-            operator_id afu_list[pipeline_length];
-            current_afu = 0;
+            operator_id operator_list[pipeline_length];
+            current_operator = 0;
 
             if (!input_agent->afu_specification->is_data_source) {
                 if (input_agent->internal_input_file) {
-                    afu_list[0] = op_read_file_specification.id;
+                    operator_list[0] = op_read_file_specification.id;
                 } else {
-                    afu_list[0] = op_read_mem_specification.id;
+                    operator_list[0] = op_read_mem_specification.id;
                 }
-                ++current_afu;
+                ++current_operator;
             }
 
             current_link = pipeline_agents.Flink;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-                mtl_configure_afu(current_agent->afu_specification);
-                afu_list[current_afu++] = current_agent->afu_type;
+                if (!current_agent->afu_specification->is_data_source) {
+                    mtl_configure_afu(current_agent->afu_specification);
+                }
+                operator_list[current_operator++] = current_agent->afu_type;
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
 
             if (output_agent->internal_output_file) {
-                afu_list[current_afu] = op_write_file_specification.id;
+                operator_list[current_operator] = op_write_file_specification.id;
             } else {
-                afu_list[current_afu] = op_write_mem_specification.id;
+                operator_list[current_operator] = op_write_mem_specification.id;
             }
 
-            mtl_operator_execution_plan execution_plan = { afu_list, pipeline_length + 2 };
+            mtl_operator_execution_plan execution_plan = { operator_list, pipeline_length };
             mtl_configure_pipeline(execution_plan);
 
+            // If we're interacting with an FPGA file, we have to set up the extents initially.
+            // The op_read_file does this internally, so no action required here.
+            uint64_t internal_input_file_length = 0;
+            if (input_agent->afu_specification->is_data_source) {
+                // TODO: Catch if file does not exist
+                mtl_prepare_storage_for_reading(input_agent->afu_specification->get_filename(), &internal_input_file_length);
+            } else if (input_agent->internal_input_file) {
+                // TODO: Catch if file does not exist
+                mtl_prepare_storage_for_reading(input_agent->internal_input_file, &internal_input_file_length);
+            }
 
-            size_t previous_size = 0;
+            uint64_t internal_input_file_offset = 0;
+            uint64_t internal_output_file_offset = 0;
+            bool internal_output_file_initialized = false;
 
             for (;;) {
                 server_processed_buffer_data_t processing_response = {};
@@ -409,13 +432,32 @@ void* start_socket(void* args) {
 
                 size_t output_size = 0;
 
-                // Use input agent-provided input data
-                size = processing_request.size;
-                eof = processing_request.eof;
+                if (internal_input_file_length) {
+                    size = BUFFER_SIZE < internal_input_file_length - internal_input_file_offset ? BUFFER_SIZE : internal_input_file_length - internal_input_file_offset;
+                    eof = internal_input_file_offset + size == internal_input_file_length;
+                } else {
+                    // Use input agent-provided input data
+                    size = processing_request.size;
+                    eof = processing_request.eof;
+                }
 
                 if (size) {
-                    // If we haven't yet established an output buffer for the output agent, do it now
-                    if (!output_agent->output_buffer) {
+                    if (output_agent->internal_output_file) {
+                        if (!internal_output_file_initialized) {
+                            if (internal_input_file_length) {
+                                // When reading from internal input file, we know upfront how big the output file will be
+                                mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_input_file_length);
+                                internal_output_file_initialized = true;
+                            } else {
+                                // Increment size otherwise
+                                mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_output_file_offset + size);
+                            }
+                        }
+
+                        op_write_file_set_buffer(internal_output_file_offset, size);
+                        mtl_configure_afu(&op_write_mem_specification);
+                    } else if (!output_agent->output_buffer) {
+                        // If we haven't yet established an output buffer for the output agent, do it now
                         message_type_t output_buffer_message_type = SERVER_INITIALIZE_OUTPUT_BUFFER;
                         server_initialize_output_buffer_data_t output_buffer_message;
 
@@ -428,16 +470,18 @@ void* start_socket(void* args) {
                         send(output_agent->socket, &output_buffer_message, sizeof(output_buffer_message), 0);
 
                         // Configure write_mem AFU
-                        if (size != previous_size) {
-                          op_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be > 4096
-                          mtl_configure_afu(&op_write_mem_specification);
-                          previous_size = size;
-                        }
+                        op_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be different from input size
+                        mtl_configure_afu(&op_write_mem_specification);
                     }
 
-                    // Configure the read_mem AFU
-                    op_read_mem_set_buffer(input_agent->input_buffer, size);
-                    mtl_configure_afu(&op_read_mem_specification);
+                    if (internal_input_file_length) {
+                        op_read_file_set_buffer(internal_input_file_offset, size);
+                        mtl_configure_afu(&op_read_file_specification);
+                    } else {
+                        // Configure the read_mem AFU
+                        op_read_mem_set_buffer(input_agent->input_buffer, size);
+                        mtl_configure_afu(&op_read_mem_specification);
+                    }
 
                     mtl_run_pipeline();
 
@@ -448,27 +492,37 @@ void* start_socket(void* args) {
 
                 message_type_t message_type = SERVER_PROCESSED_BUFFER;
 
-                // Tell the input agent that we've processed the data
-                if (input_agent != output_agent) {
-                    processing_response.size = 0;
-                    processing_response.eof = eof;
-                    send(input_agent->socket, &message_type, sizeof(message_type), 0);
-                    send(input_agent->socket, &processing_response, sizeof(processing_response), 0);
+                if (internal_input_file_length) {
+                    internal_input_file_offset += size;
+                } else {
+                    // Tell the input agent that we've processed the data
+                    if (input_agent != output_agent || output_agent->internal_output_file) {
+                        processing_response.size = 0;
+                        processing_response.eof = eof;
+                        send(input_agent->socket, &message_type, sizeof(message_type), 0);
+                        send(input_agent->socket, &processing_response, sizeof(processing_response), 0);
+                    }
                 }
 
-                // Tell the output agent to take the processing result
-                processing_response.size = output_size;
-                processing_response.eof = eof;
-                send(output_agent->socket, &message_type, sizeof(message_type), 0);
-                send(output_agent->socket, &processing_response, sizeof(processing_response), 0);
+                if (output_agent->internal_output_file) {
+                    internal_output_file_offset += size;
+                } else {
+                    // Tell the output agent to take the processing result
+                    processing_response.size = output_size;
+                    processing_response.eof = eof;
+                    send(output_agent->socket, &message_type, sizeof(message_type), 0);
+                    send(output_agent->socket, &processing_response, sizeof(processing_response), 0);
+                }
 
                 if (eof) {
-                    // Terminate all other agents, too
+                    // Terminate all other agents, but don't send another message to input or output agents
+                    // If we've already notified them above
                     current_link = pipeline_agents.Flink;
                     do {
                         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-                        if (current_agent != input_agent && current_agent != output_agent) {
+                        if ((current_agent != input_agent || internal_input_file_length) &&
+                            (current_agent != output_agent || output_agent->internal_output_file)) {
                             processing_response.size = 0;
                             processing_response.eof = eof;
                             send(current_agent->socket, &message_type, sizeof(message_type), 0);
@@ -480,28 +534,32 @@ void* start_socket(void* args) {
                     break;
                 }
 
-                // Wait until the output agent is ready
-                if (input_agent != output_agent) {
-                    message_type_t incoming_message_type;
-                    recv(output_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
-                    assert(incoming_message_type == AGENT_PUSH_BUFFER);
-                    agent_push_buffer_data_t tmp_processing_request;
-                    recv(output_agent->socket, &tmp_processing_request, sizeof(tmp_processing_request), 0);
+                if (!output_agent->internal_output_file) {
+                    // Wait until the output agent is ready
+                    if (input_agent != output_agent || internal_input_file_length) {
+                        message_type_t incoming_message_type;
+                        recv(output_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
+                        assert(incoming_message_type == AGENT_PUSH_BUFFER);
+                        agent_push_buffer_data_t tmp_processing_request;
+                        recv(output_agent->socket, &tmp_processing_request, sizeof(tmp_processing_request), 0);
+                    }
                 }
 
-                // Wait until the input agent has sent the next chunk of data
-                {
-                    // There should be a better way how we handle crashed/disconnected clients
-                    // (a good idea might be to check the results of all send/recv calls)
-                    // For now, we'll just check if the input agent is still alive at this point
-                    message_type_t incoming_message_type;
-                    int received = recv(input_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
-                    if (received == 0) {
-                        break;
+                if (!internal_input_file_length) {
+                    // Wait until the input agent has sent the next chunk of data
+                    {
+                        // There should be a better way how we handle crashed/disconnected clients
+                        // (a good idea might be to check the results of all send/recv calls)
+                        // For now, we'll just check if the input agent is still alive at this point
+                        message_type_t incoming_message_type;
+                        int received = recv(input_agent->socket, &incoming_message_type, sizeof(incoming_message_type), 0);
+                        if (received == 0) {
+                            break;
+                        }
+                        // Don't assert -- if we exit abnormally the card/action is left in a bad state
+                        // assert(incoming_message_type == AGENT_PUSH_BUFFER);
+                        recv(input_agent->socket, &processing_request, sizeof(processing_request), 0);
                     }
-                    // Don't assert -- if we exit abnormally the card/action is left in a bad state
-                    // assert(incoming_message_type == AGENT_PUSH_BUFFER);
-                    recv(input_agent->socket, &processing_request, sizeof(processing_request), 0);
                 }
             }
 

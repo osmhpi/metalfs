@@ -15,10 +15,14 @@
 
 static uint64_t *_job_config = NULL;
 
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
+static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     *length = 0;
     *valid = true;
     return "";
+}
+
+static const char* get_filename() {
+    return NULL;
 }
 
 static int apply_config(struct snap_action *action) {
@@ -49,8 +53,13 @@ mtl_operator_specification op_read_file_specification = {
     true,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_filename
 };
+
+void op_read_file_set_buffer(uint64_t offset, uint64_t length) {
+
+}
 
 void op_read_file_set_extents(const mtl_file_extent *extents, uint64_t length) {
     if (_job_config) {
@@ -74,12 +83,4 @@ void op_read_file_set_extents(const mtl_file_extent *extents, uint64_t length) {
         _job_config[8 + 2*i + 0] = extents[i].offset;
         _job_config[8 + 2*i + 1] = extents[i].length;
     }
-}
-
-int op_read_file_load_extents_for_filename(const char* file) {
-    // Better: take filename and length, allocate space in metadata, ...
-    // mtl_file_extent *extents;
-    // uint64_t length;
-    // int res = mtl_load_extents(filename, length);
-    return MTL_SUCCESS;
 }

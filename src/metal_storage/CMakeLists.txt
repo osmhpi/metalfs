@@ -8,25 +8,19 @@ include_directories(
 set(
     SOURCES
 
-    in_memory.c
+    # in_memory.c
     # metal_fpga.c
-    # metal_pipeline.c
-    # metal_hdl_example.c
+    metal_pipeline.c
+    # hdl_example.c
 
     storage.h
 )
 
 set(
     METAL_STORAGE_LIBRARIES
+    ${SNAP_LIBRARY}
+    ${CXL_LIBRARY}
 )
-
-if(WITH_SNAP)
-    SET(METAL_STORAGE_LIBRARIES
-        ${METAL_STORAGE_LIBRARIES}
-        ${SNAP_LIBRARY}
-        ${CXL_LIBRARY}
-    )
-endif()
 
 include_directories(
     ${SNAP_INCLUDE_DIR}

@@ -71,12 +71,12 @@ extern "C" {
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_FILE_SET_READ_BUFFER 7
+#define MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 7
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_FILE_SET_WRITE_BUFFER 8
+#define MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 8
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R

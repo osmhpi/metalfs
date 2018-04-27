@@ -4,10 +4,27 @@
 #include "mf_definitions.h"
 #include "mf_stream.h"
 
-mf_retc_t afu_mem_set_read_buffer(uint64_t read_offset, uint64_t read_size);
-mf_retc_t afu_mem_set_write_buffer(uint64_t write_offset, uint64_t write_size);
+typedef struct mf_mem_configuration {
+    uint64_t offset;
+    uint64_t size;
+} mf_mem_configuration;
 
-void afu_mem_read(snap_membus_t *din_gmem, mf_stream &out, snap_bool_t enable);
-void afu_mem_write(mf_stream &in, snap_membus_t *dout_gmem, snap_bool_t enable);
+mf_retc_t afu_mem_set_config(uint64_t offset, uint64_t size, mf_mem_configuration &config);
+
+void afu_mem_read(snap_membus_t *din_gmem, mf_stream &out, mf_mem_configuration &config, snap_bool_t enable);
+void afu_mem_write(mf_stream &in, snap_membus_t *dout_gmem, mf_mem_configuration &config, snap_bool_t enable);
+void afu_mem_readwrite(
+    mf_stream &in,
+    mf_stream &out,
+    snap_membus_t *mem,
+    mf_mem_configuration &read_config,
+    mf_mem_configuration &write_config,
+    snap_bool_t read_enable,
+    snap_bool_t write_enable);
+
+extern mf_mem_configuration read_mem_config;
+extern mf_mem_configuration write_mem_config;
+extern mf_mem_configuration read_ddr_mem_config;
+extern mf_mem_configuration write_ddr_mem_config;
 
 #endif // __MF_AFU_MEM_H__

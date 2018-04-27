@@ -16,6 +16,7 @@ typedef struct registered_agent {
     int socket;
 
     char cwd[FILENAME_MAX];
+    char metal_mountpoint[FILENAME_MAX];
     int argc;
     char *argv_buffer;
     char **argv;

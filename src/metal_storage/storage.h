@@ -17,7 +17,8 @@ int mtl_storage_deinitialize();
 
 int mtl_storage_get_metadata(mtl_storage_metadata *metadata);
 
-int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length);
+int mtl_storage_set_active_read_extent_list(const mtl_file_extent *extents, uint64_t length);
+int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uint64_t length);
 
 int mtl_storage_write(
     uint64_t offset, // The target file offset in bytes

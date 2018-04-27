@@ -77,7 +77,10 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
 
     uint8_t previous_afu_stream = execution_plan.length ? execution_plan.afus[0].stream_id : 0;
     for (uint64_t i = 1; i < execution_plan.length; ++i) {
-        job_struct[previous_afu_stream] = htobe32(execution_plan.afus[i].stream_id);
+        // From the perspective of the Stream Switch:
+        // Which Master port (output) should be
+        // sourced from which Slave port (input)
+        job_struct[execution_plan.afus[i].stream_id] = htobe32(previous_afu_stream);
         previous_afu_stream = execution_plan.afus[i].stream_id;
     }
 

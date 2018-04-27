@@ -33,7 +33,15 @@ int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
     return 0;
 }
 
-int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t length) {
+int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uint64_t length) {
+    free(_extents);
+
+    _extents = malloc(length * sizeof(mtl_file_extent));
+    memcpy(_extents, extents, length * sizeof(mtl_file_extent));
+    _extents_length = length;
+}
+
+int mtl_storage_set_active_read_extent_list(const mtl_file_extent *extents, uint64_t length) {
     free(_extents);
 
     _extents = malloc(length * sizeof(mtl_file_extent));

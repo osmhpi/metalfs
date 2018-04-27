@@ -364,13 +364,13 @@ int mtl_create(const char *filename, uint64_t *inode_id) {
     return MTL_SUCCESS;
 }
 
-int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
+int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, 0, &txn);
 
     // Check how long we intend to write
-    uint64_t write_end_bytes = offset + size;
+    uint64_t write_end_bytes = size;
     uint64_t write_end_blocks = write_end_bytes / metadata.block_size;
     if (write_end_bytes % metadata.block_size)
         ++write_end_blocks;
@@ -421,12 +421,20 @@ int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t off
 
     mdb_txn_commit(txn);
 
+    return MTL_SUCCESS;
+}
+
+int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
+
+    mtl_expand_inode(inode_id, offset + size);
+
     // Prepare the storage
+    MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
-    mtl_storage_set_active_extent_list(extents, extents_length);
+    mtl_storage_set_active_write_extent_list(extents, extents_length);
     mdb_txn_abort(txn);
 
     // Copy the actual data to storage
@@ -454,7 +462,7 @@ uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offse
         read_len -= (offset + size) - inode->length;
     }
 
-    mtl_storage_set_active_extent_list(extents, extents_length);
+    mtl_storage_set_active_read_extent_list(extents, extents_length);
 
     mdb_txn_abort(txn);
 
@@ -560,4 +568,88 @@ int mtl_unlink(const char *filename) {
     free(basec);
 
     return MTL_SUCCESS;
+}
+
+int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size) {
+
+    int res;
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    // Resolve inode
+    uint64_t inode_id;
+    res = mtl_resolve_inode(txn, filename, &inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    // Load extents
+    mtl_inode *inode;
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    res = mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    // Transfer extents to storage layer
+    res = mtl_storage_set_active_read_extent_list(extents, extents_length);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    if (size) {
+        *size = inode->length;
+    }
+
+    mdb_txn_abort(txn);
+    return res;
+}
+
+int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
+
+    int res;
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+
+    // Resolve inode
+    uint64_t inode_id;
+    res = mtl_resolve_inode(txn, filename, &inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    mdb_txn_abort(txn);
+
+    res = mtl_expand_inode(inode_id, size);
+    if (res != MTL_SUCCESS) {
+        return res;
+    }
+
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+
+    // Load extents
+    const mtl_file_extent *extents;
+    uint64_t extents_length;
+    res = mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    // Transfer extents to storage layer
+    res = mtl_storage_set_active_write_extent_list(extents, extents_length);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    mdb_txn_abort(txn);
+    return res;
 }

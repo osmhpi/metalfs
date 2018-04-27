@@ -12,7 +12,7 @@ static const char help[] =
     "\n";
 
 extern int optind;
-static const void* handle_opts(int argc, char *argv[], uint64_t *length, const char* cwd, bool *valid) {
+static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
     while (1) {
         int option_index = 0;
@@ -20,7 +20,7 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
             { "help", no_argument, NULL, 'h' }
         };
 
-        int ch = getopt_long(argc, argv, "h", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "h", long_options, &option_index);
         if (ch == -1)
             break;
 
@@ -38,6 +38,10 @@ static const void* handle_opts(int argc, char *argv[], uint64_t *length, const c
     return "";
 }
 
+static const char* get_filename() {
+    return NULL;
+}
+
 static int apply_config(struct snap_action *action) {
     // Nothing to do
     return MTL_SUCCESS;
@@ -49,5 +53,6 @@ mtl_operator_specification op_passthrough_specification = {
     false,
 
     &handle_opts,
-    &apply_config
+    &apply_config,
+    &get_filename
 };
