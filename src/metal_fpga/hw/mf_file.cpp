@@ -169,6 +169,8 @@ mf_bool_t mf_file_load_buffer(snapu32_t * nvme_ctrl,
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;
+
+        mf_extmap_next_extent(map);
     }
 
     return MF_TRUE;
@@ -199,8 +201,9 @@ mf_bool_t mf_file_write_buffer(snapu32_t * nvme_ctrl,
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;
+
+        mf_extmap_next_extent(map);
     }
 
     return MF_TRUE;
-
 }

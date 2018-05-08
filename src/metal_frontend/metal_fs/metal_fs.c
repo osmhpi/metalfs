@@ -399,13 +399,13 @@ int main(int argc, char *argv[])
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
 
     mtl_initialize("metadata_store");
-    mtl_pipeline_initialize();
+    // mtl_pipeline_initialize();
 
     int retc = fuse_main(argc, argv, &fuse_example_operations, NULL);
 
-    // This de-allocates the action/card, so this should definitely be called
+    // This de-allocates the action/card, so this must be called every time we exit
     mtl_deinitialize();
-    mtl_pipeline_deinitialize();
+    // mtl_pipeline_deinitialize();
 
     return retc;
 }

@@ -534,7 +534,6 @@ static mf_retc_t action_run_afus(
         // Input AFUs
         afu_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
         afu_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
-        // afu_mem_readwrite(axis_s_1, axis_m_1, mem_ddr_in, read_ddr_mem_config, write_ddr_mem_config, enable_2, enable_3);
 
         // Processing AFUs
         afu_passthrough(axis_s_2, axis_m_2, enable_4);
@@ -642,8 +641,8 @@ int main()
 
     // Streams
     static snapu32_t switch_ctrl[32];
-    static mf_stream stream_0_1;
-    static mf_stream stream_1_2;
+    static mf_stream stream_0_2;
+    static mf_stream stream_1_1; // Shortcut for disabled op
     static mf_stream stream_2_3;
     static mf_stream stream_3_4;
     static mf_stream stream_4_5;
@@ -652,16 +651,16 @@ int main()
     static mf_stream stream_7_0;
 
     mf_stream &axis_s_0 = stream_7_0;
-    mf_stream &axis_s_1 = stream_0_1;
-    mf_stream &axis_s_2 = stream_1_2;
+    mf_stream &axis_s_1 = stream_1_1;
+    mf_stream &axis_s_2 = stream_0_2;
     mf_stream &axis_s_3 = stream_2_3;
     mf_stream &axis_s_4 = stream_3_4;
     mf_stream &axis_s_5 = stream_4_5;
     mf_stream &axis_s_6 = stream_5_6;
     mf_stream &axis_s_7 = stream_6_7;
 
-    mf_stream &axis_m_0 = stream_0_1;
-    mf_stream &axis_m_1 = stream_1_2;
+    mf_stream &axis_m_0 = stream_0_2;
+    mf_stream &axis_m_1 = stream_1_1;
     mf_stream &axis_m_2 = stream_2_3;
     mf_stream &axis_m_3 = stream_3_4;
     mf_stream &axis_m_4 = stream_4_5;
@@ -671,7 +670,7 @@ int main()
 
     // read action config:
     act_reg.Control.flags = 0x0;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     fprintf(stderr, "ACTION_TYPE:   %08x\nRELEASE_LEVEL: %08x\nRETC:          %04x\n",
         (unsigned int)act_config.action_type,
         (unsigned int)act_config.release_level,
@@ -698,7 +697,7 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_MAP;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// MAP slot 7 1200:8,1500:24\n");
@@ -714,7 +713,7 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_MAP;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// QUERY slot 2, lblock 9\n");
@@ -727,7 +726,7 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_QUERY;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
 
@@ -754,7 +753,7 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_ACCESS;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// ACCESS slot 2, read 100 @ offset 3077\n");
@@ -767,56 +766,74 @@ int main()
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_ACCESS;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// CONFIGURE STREAMS\n");
-    job_mem[0] = htobe64(0xffffffffffffffff); // Enable all
-    //job_mem[0] = htobe64(0 | (1 << 0) | (1 << 1) | (1 << 2));
-    job_mem_h[2] = htobe32(7);
-    job_mem_h[3] = htobe32(0);
-    job_mem_h[4] = htobe32(1);
-    job_mem_h[5] = htobe32(2);
-    job_mem_h[6] = htobe32(3);
-    job_mem_h[7] = htobe32(4);
-    job_mem_h[8] = htobe32(5);
-    job_mem_h[9] = htobe32(6);
+    uint64_t enable = 0;
+    enable |= (1 << 0);
+    enable |= (1 << 1);
+    // enable |= (1 << 2);
+    // enable |= (1 << 3);
+    enable |= (1 << 4);
+    enable |= (1 << 5);
+    enable |= (1 << 6);
+    enable |= (1 << 7);
+    enable |= (1 << 8);
+    enable |= (1 << 9);
+
+    job_mem[0] = htobe64(enable);
+
+    uint32_t *master_source = job_mem_h + 2;
+    master_source[0] = htobe32(7);
+    master_source[1] = htobe32(0);
+    master_source[2] = htobe32(1);
+    master_source[3] = htobe32(2);
+    master_source[4] = htobe32(3);
+    master_source[5] = htobe32(4);
+    master_source[6] = htobe32(5);
+    master_source[7] = htobe32(6);
+
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_CONFIGURE_STREAMS;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
     fprintf(stderr, "// AFU MEM SET READ BUFFER\n");
-    job_mem[0] = htobe64(0x80);
-    job_mem[1] = htobe64(64);
+    job_mem[0] = htobe64(0x81);
+    job_mem[1] = htobe64(126);
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
     fprintf(stderr, "// AFU MEM SET WRITE BUFFER\n");
-    job_mem[0] = htobe64(0x100);
-    job_mem[1] = htobe64(64);
+    job_mem[0] = htobe64(0x101);
+    job_mem[1] = htobe64(126);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_AFU_MEM_SET_WRITE_BUFFER;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
     fprintf(stderr, "// AFU CHANGE CASE SET MODE\n");
     job_mem[0] = htobe64(0);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
     fprintf(stderr, "// RUN AFUS\n");
-    // Fill the memory with 'c' characters
+    // Fill the memory with 'c' and 'd' characters
     memset(&job_mem_b[0x80], 'c', 64);
+    memset(&job_mem_b[0x80 + 64], 'd', 64);
+
+    // Dummy output data
+    memset(&job_mem_b[0x100], 'e', 128);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_RUN_AFUS;
-    hls_action(host_gmem, host_gmem, dram_gmem, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+    hls_action(host_gmem, host_gmem, dram_gmem, dram_gmem, NULL, axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
-    *(char *)(job_mem_b + 0x100 + 64) = '\0';
+    *(char *)(job_mem_b + 0x100 + 128) = '\0';
     fprintf(stderr, "Result is : %s\n", (char *)(job_mem_b + 0x100));
 
     return 0;

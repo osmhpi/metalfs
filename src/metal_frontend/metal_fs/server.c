@@ -455,7 +455,7 @@ void* start_socket(void* args) {
                         }
 
                         op_write_file_set_buffer(internal_output_file_offset, size);
-                        mtl_configure_afu(&op_write_mem_specification);
+                        mtl_configure_afu(&op_write_file_specification);
                     } else if (!output_agent->output_buffer) {
                         // If we haven't yet established an output buffer for the output agent, do it now
                         message_type_t output_buffer_message_type = SERVER_INITIALIZE_OUTPUT_BUFFER;
