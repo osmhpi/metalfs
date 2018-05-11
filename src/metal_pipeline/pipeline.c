@@ -63,6 +63,16 @@ void mtl_configure_afu(mtl_operator_specification *afu_spec) {
     pthread_mutex_unlock(&snap_mutex);
 }
 
+void mtl_finalize_afu(mtl_operator_specification *afu_spec) {
+    if (afu_spec->finalize) {
+        pthread_mutex_lock(&snap_mutex);
+
+        afu_spec->finalize(_action);
+
+        pthread_mutex_unlock(&snap_mutex);
+    }
+}
+
 void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     uint64_t enable_mask = 0;
     for (uint64_t i = 0; i < execution_plan.length; ++i)

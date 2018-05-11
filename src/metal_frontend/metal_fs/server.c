@@ -488,6 +488,11 @@ void* start_socket(void* args) {
                     // TODO:
                     // output_size = afu_write_mem_get_written_bytes();
                     output_size = size; // This is fine for now because we always get out the same amount of bytes
+
+                    if (output_agent->internal_output_file) {
+                        // This transfers the data from card DRAM to NVMe
+                        mtl_finalize_afu(&op_write_file_specification);
+                    }
                 }
 
                 message_type_t message_type = SERVER_PROCESSED_BUFFER;

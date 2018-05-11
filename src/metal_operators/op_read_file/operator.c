@@ -93,6 +93,7 @@ mtl_operator_specification op_read_file_specification = {
 
     &handle_opts,
     &apply_config,
+    NULL,
     &get_filename
 };
 

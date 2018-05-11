@@ -7,17 +7,12 @@
 
 #include "../metal/metal.h"
 
-#include <libsnap.h>
-#include <snap_tools.h>
-#include <snap_s_regs.h>
-#include <snap_hls_if.h>
+#include "../metal_pipeline/pipeline.h"
 
-#include "../metal_fpga/include/action_metalfpga.h"
-
-#define ACTION_WAIT_TIME        1                /* Default timeout in sec */
-
-struct snap_card *card = NULL;
-struct snap_action *action = NULL;
+#include "../metal_operators/op_read_file/operator.h"
+#include "../metal_operators/op_read_mem/operator.h"
+#include "../metal_operators/op_write_file/operator.h"
+#include "../metal_operators/op_write_mem/operator.h"
 
 int mtl_storage_initialize() {
 
@@ -50,90 +45,42 @@ int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uin
     return MTL_SUCCESS;
 }
 
-int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
+int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
 
-    // Allocate job struct memory aligned on a page boundary
-    uint64_t *job_words = (uint64_t*)snap_malloc(sizeof(uint64_t) * 4);
+    // Build and run a pipeline
+    operator_id operator_list[] = { op_read_file_specification.id, op_write_mem_specification.id };
 
-    uint8_t *job_bytes = (uint8_t*) job_words;
-    job_bytes[0] = 0;  // slot
-    job_bytes[1] = true;  // write, don't read
+    mtl_operator_execution_plan execution_plan = { operator_list, 2 };
+    mtl_configure_pipeline(execution_plan);
 
-    // Align the input buffer
-    uint64_t aligned_length = length % 64 == 0 ? length : (length / 64 + 1) * 64;
-    void *aligned_buffer = snap_malloc(aligned_length);
-    memcpy(aligned_buffer, buffer, length);
+    op_read_file_set_buffer(offset, length);
+    mtl_configure_afu(&op_read_file_specification);
 
-    job_words[1] = (uint64_t) aligned_buffer;
-    job_words[2] = offset;
-    job_words[3] = length;
+    op_write_mem_set_buffer(buffer, length);
+    mtl_configure_afu(&op_write_mem_specification);
 
-    metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_ACCESS;
-    mjob.job_address = (uint64_t)job_words;
-
-    struct snap_job cjob;
-    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
-
-    int timeout = ACTION_WAIT_TIME;
-    int rc = snap_action_sync_execute_job(action, &cjob, timeout);
-
-    free(aligned_buffer);
-    free(job_words);
-
-    if (rc != 0) {
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
-
-    if (cjob.retc != SNAP_RETC_SUCCESS) {
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
+    mtl_run_pipeline();
 
     return MTL_SUCCESS;
 }
 
-int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
+int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
 
-    // Allocate job struct memory aligned on a page boundary
-    uint64_t *job_words = (uint64_t*)snap_malloc(sizeof(uint64_t) * 4);
+    // Build and run a pipeline
+    operator_id operator_list[] = { op_read_mem_specification.id, op_write_file_specification.id };
 
-    uint8_t *job_bytes = (uint8_t*) job_words;
-    job_bytes[0] = 0;  // slot
-    job_bytes[1] = false;  // read, don't write
+    mtl_operator_execution_plan execution_plan = { operator_list, 2 };
+    mtl_configure_pipeline(execution_plan);
 
-    // Align the temporary output buffer
-    uint64_t aligned_length = length % 64 == 0 ? length : (length / 64 + 1) * 64;
-    void *aligned_buffer = snap_malloc(aligned_length);
+    op_read_mem_set_buffer(buffer, length);
+    mtl_configure_afu(&op_read_mem_specification);
 
-    job_words[1] = (uint64_t) aligned_buffer;
-    job_words[2] = offset;
-    job_words[3] = length;
+    op_write_file_set_buffer(offset, length);
+    mtl_configure_afu(&op_write_file_specification);
 
-    metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_ACCESS;
-    mjob.job_address = (uint64_t)job_words;
+    mtl_run_pipeline();
 
-    struct snap_job cjob;
-    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
-
-    int timeout = ACTION_WAIT_TIME;
-    int rc = snap_action_sync_execute_job(action, &cjob, timeout);
-
-    free(job_words);
-
-    if (rc != 0) {
-        free(aligned_buffer);
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
-
-    if (cjob.retc != SNAP_RETC_SUCCESS) {
-        free(aligned_buffer);
-        return MTL_ERROR_INVALID_ARGUMENT;
-    }
-
-    memcpy(buffer, aligned_buffer, length);
-
-    free(aligned_buffer);
+    mtl_finalize_afu(&op_write_file_specification);
 
     return MTL_SUCCESS;
 }
