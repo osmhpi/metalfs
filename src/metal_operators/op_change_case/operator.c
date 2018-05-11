@@ -12,8 +12,6 @@
 
 #include "../../metal/metal.h"
 
-#define AFU_CHANGE_CASE_ID 3
-
 static const char help[] =
     "Usage: change_case [-h]\n"
     "  -l, --lowercase              transform to lowercase\n"
@@ -94,7 +92,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_operator_specification op_change_case_specification = {
-    { AFU_CHANGE_CASE_ID, 2 },
+    { OP_CHANGE_CASE_ENABLE_ID, OP_CHANGE_CASE_STREAM_ID },
     "change_case",
     false,
 

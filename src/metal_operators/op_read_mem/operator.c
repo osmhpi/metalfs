@@ -12,8 +12,6 @@
 
 #include "../../metal/metal.h"
 
-#define AFU_READ_MEM_ID 0
-
 static uint64_t _buffer_address = 0;
 static uint64_t _buffer_length = 0;
 
@@ -52,7 +50,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_operator_specification op_read_mem_specification = {
-    { AFU_READ_MEM_ID, 0 },
+    { OP_READ_MEM_ENABLE_ID, OP_MEM_STREAM_ID },
     "read_mem",
     true,
 

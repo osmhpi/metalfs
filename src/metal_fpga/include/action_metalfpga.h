@@ -104,6 +104,20 @@ typedef struct metalfpga_job {
     uint64_t job_type;
 } metalfpga_job_t;
 
+// Pipeline operator identifiers
+
+#define OP_READ_MEM_ENABLE_ID 0
+#define OP_WRITE_MEM_ENABLE_ID 1
+#define OP_READ_DRAM_ENABLE_ID 2
+#define OP_WRITE_DRAM_ENABLE_ID 3
+#define OP_PASSTHROUGH_ENABLE_ID 4
+#define OP_CHANGE_CASE_ENABLE_ID 5
+
+#define OP_MEM_STREAM_ID 0
+#define OP_DRAM_STREAM_ID 1
+#define OP_PASSTHROUGH_STREAM_ID 2
+#define OP_CHANGE_CASE_STREAM_ID 3
+
 #ifdef __cplusplus
 }
 #endif

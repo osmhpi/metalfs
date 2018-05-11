@@ -11,8 +11,6 @@
 #include "../../metal_fpga/include/action_metalfpga.h"
 #include "../../metal/metal.h"
 
-#define AFU_READ_FILE_ID 2
-
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     *length = 0;
     *valid = true;
@@ -87,7 +85,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_operator_specification op_read_file_specification = {
-    { AFU_READ_FILE_ID, 1 },
+    { OP_READ_DRAM_ENABLE_ID, OP_DRAM_STREAM_ID },
     "metal_cat",
     true,
 

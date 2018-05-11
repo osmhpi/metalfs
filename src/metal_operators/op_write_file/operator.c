@@ -12,8 +12,6 @@
 
 #include "../../metal/metal.h"
 
-#define AFU_WRITE_FILE_ID 2
-
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     *length = 0;
     *valid = true;
@@ -121,7 +119,7 @@ static int finalize(struct snap_action *action) {
 }
 
 mtl_operator_specification op_write_file_specification = {
-    { AFU_WRITE_FILE_ID, 1 },
+    { OP_WRITE_DRAM_ENABLE_ID, OP_DRAM_STREAM_ID },
     "write_file",
     false,
 

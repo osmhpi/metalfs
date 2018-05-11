@@ -5,7 +5,7 @@
 
 #include "../../metal/metal.h"
 
-#define AFU_PASSTHROUGH_ID 2
+#include "../../metal_fpga/include/action_metalfpga.h"
 
 static const char help[] =
     "Usage: passthrough [-h]\n"
@@ -44,7 +44,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_operator_specification op_passthrough_specification = {
-    { AFU_PASSTHROUGH_ID, 1 },
+    { OP_PASSTHROUGH_ENABLE_ID, OP_PASSTHROUGH_STREAM_ID },
     "passthrough",
     false,
 
