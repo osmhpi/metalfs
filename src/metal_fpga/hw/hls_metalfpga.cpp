@@ -294,27 +294,27 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), read_mem_config);
+        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), read_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), write_mem_config);
+        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), write_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), read_ddr_mem_config);
+        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), read_ddr_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64(line, 0), mf_get64(line, 8), write_ddr_mem_config);
+        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), write_ddr_mem_config);
     }
     else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_change_case_set_mode(mf_get64(line, 0));
+        return afu_change_case_set_mode(mf_get64<0>(line));
     }
     return SNAP_RETC_FAILURE;
 }

@@ -72,6 +72,22 @@ static inline snapu64_t mf_get64be(const snap_membus_t & busline,
            ((snapu64_t)pattern(63, 56) <<  0);
 }
 
+template<int lowest_byte>
+static snapu64_t mf_get64be(const snap_membus_t & busline)
+{
+    mfb_bitoffset_t o_bit = MFB_TOBITOFFSET(lowest_byte);
+    snapu64_t pattern = busline(o_bit+63, o_bit);
+
+    return ((snapu64_t)pattern( 7,  0) << 56) +
+           ((snapu64_t)pattern(15,  8) << 48) +
+           ((snapu64_t)pattern(23, 16) << 40) +
+           ((snapu64_t)pattern(31, 24) << 32) +
+           ((snapu64_t)pattern(39, 32) << 24) +
+           ((snapu64_t)pattern(47, 40) << 16) +
+           ((snapu64_t)pattern(55, 48) <<  8) +
+           ((snapu64_t)pattern(63, 56) <<  0);
+}
+
 
 static inline void mf_set32le(snap_membus_t & busline,
                               mfb_byteoffset_t lowest_byte,

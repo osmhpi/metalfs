@@ -16,11 +16,10 @@ mf_retc_t afu_mem_set_config(uint64_t offset, uint64_t size, mf_mem_configuratio
 typedef stream_element<sizeof(snap_membus_t)> word_stream_element;
 
 void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element> &mem_stream, mf_mem_configuration &config, snap_bool_t enable) {
-    typedef char word_t[BPERDW];
-    word_t current_word;
+    snap_membus_t current_word;
 
     /* Read in one memory word */
-    memcpy((char*) current_word, &din_gmem[MFB_ADDRESS(config.offset)], sizeof(current_word));
+    memcpy(&current_word, &din_gmem[MFB_ADDRESS(config.offset)], sizeof(current_word));
     uint64_t subword_offset = config.offset % BPERDW;
     uint64_t buffer_offset = 0;
 
@@ -32,15 +31,14 @@ void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element>
         snap_bool_t last = buffer_offset + sizeof(current_word) >= config.size;
 
         word_stream_element element;
-        for (int i = 0; i < BPERDW; ++i) {
-#pragma HLS unroll
-            element.data = (element.data << 8) | ap_uint<512>(current_word[i]);
-            element.strb = (element.strb << 1) | ap_uint<64>(i < subword_offset + bytes_to_transfer);
-        }
+        element.data = current_word;
+        element.strb = 0xffffffffffffffff;
+        uint8_t valid_bytes = subword_offset + bytes_to_transfer;
+        element.strb <<= sizeof(current_word) - valid_bytes;
 
         if (!last || bytes_to_transfer > sizeof(current_word) - subword_offset) {
             // We still need more data, so read the next line from memory already
-            memcpy((char*) current_word, &din_gmem[MFB_ADDRESS(config.offset) + read_memline + 1], sizeof(current_word));
+            memcpy(&current_word, &din_gmem[MFB_ADDRESS(config.offset) + read_memline + 1], sizeof(current_word));
         }
 
         if (subword_offset > 0) {
@@ -51,11 +49,10 @@ void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element>
             // from the next to obtain 64 bytes of payload data
             if (bytes_to_transfer > sizeof(current_word) - subword_offset) {
                 word_stream_element temp_element;
-                for (int i = 0; i < BPERDW; ++i) {
-        #pragma HLS unroll
-                    temp_element.data = (temp_element.data << 8) | ap_uint<512>(current_word[i]);
-                    temp_element.strb = (temp_element.strb << 1) | ap_uint<64>(i < bytes_to_transfer - sizeof(current_word) - subword_offset);
-                }
+                temp_element.data = current_word;
+                temp_element.strb = 0xffffffffffffffff;
+                valid_bytes = bytes_to_transfer > subword_offset ? subword_offset : bytes_to_transfer;
+                temp_element.strb <<= sizeof(current_word) - valid_bytes;
 
                 temp_element.data >>= (sizeof(current_word) - subword_offset) * 8;
                 temp_element.strb >>= (sizeof(current_word) - subword_offset);
@@ -69,9 +66,9 @@ void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element>
 
         uint64_t bytes_written = 0;
         for (int i = 0; i < BPERDW; ++i) {
-	#pragma HLS unroll
-        	if (element.strb[i]) bytes_written++;
-		}
+    #pragma HLS unroll
+            bytes_written += element.strb[i];
+        }
         buffer_offset += bytes_written;
 
         mem_stream.write(element);
@@ -90,6 +87,29 @@ void afu_mem_read(snap_membus_t *din_gmem, mf_stream &out, mf_mem_configuration 
     stream_narrow(out, mem_stream, enable);
 }
 
+uint64_t write_bytewise(snap_membus_t *mem, uint64_t offset, snap_membus_t &data, snapu64_t strb, uint64_t length) {
+    uint64_t bytes_written = 0;
+
+    char *memb = (char*)mem;
+
+    typedef char word_t[BPERDW];
+    word_t current_word;
+    for (int i = 0; i < BPERDW; ++i) {
+        #pragma HLS unroll
+        current_word[i] = uint8_t(data >> ((sizeof(data) - 1) * 8));
+        data <<= 8;
+    }
+
+    for (int mi = 0; mi < BPERDW; ++mi) {
+        if (strb[BPERDW - 1 - mi] && bytes_written < length) {
+            memb[offset + bytes_written] = current_word[mi];
+            bytes_written += 1;
+        }
+    }
+
+    return bytes_written;
+}
+
 void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membus_t *dout_gmem, mf_mem_configuration &config, snap_bool_t enable) {
     if (enable) {
         word_stream_element rest;
@@ -98,8 +118,6 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
 
         uint16_t offset = config.offset % BPERDW;
         uint64_t bytes_written = 0;
-
-        char *dout_gmemb = (char*)dout_gmem;
 
         while (true) {
             word_stream_element input;
@@ -118,25 +136,26 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
             rest.data <<= (BPERDW - offset) * 8;
             rest.strb <<= (BPERDW - offset);
 
-            typedef char word_t[BPERDW];
-            word_t current_word;
-            for (int i = 0; i < BPERDW; ++i) {
-                #pragma HLS unroll
-                current_word[i] = uint8_t(output.data >> ((sizeof(output.data) - 1) * 8));
-                output.data <<= 8;
-            }
+            // typedef char word_t[BPERDW];
+            // word_t current_word;
+            // for (int i = 0; i < BPERDW; ++i) {
+            //     #pragma HLS unroll
+            //     current_word[i] = uint8_t(output.data >> ((sizeof(output.data) - 1) * 8));
+            //     output.data <<= 8;
+            // }
 
             if (output.strb == 0xffffffffffffffff && config.size - bytes_written >= BPERDW) {
                 // Write burst
-                memcpy(dout_gmem + MFB_ADDRESS(config.offset + bytes_written), (char*) current_word, sizeof(current_word));
+                memcpy(dout_gmem + MFB_ADDRESS(config.offset + bytes_written), &output.data, sizeof(output.data));
                 bytes_written += BPERDW;
             } else {
-                for (int mi = 0; mi < BPERDW; ++mi) {
-                    if (output.strb[BPERDW - 1 - mi] && bytes_written < config.size) {
-                        dout_gmemb[config.offset + bytes_written] = current_word[mi];
-                        bytes_written += 1;
-                    }
-                }
+                bytes_written += write_bytewise(dout_gmem, config.offset + bytes_written, output.data, output.strb, config.size - bytes_written);
+                // for (int mi = 0; mi < BPERDW; ++mi) {
+                //     if (output.strb[BPERDW - 1 - mi] && bytes_written < config.size) {
+                //         dout_gmemb[config.offset + bytes_written] = current_word[mi];
+                //         bytes_written += 1;
+                //     }
+                // }
             }
 
             if (bytes_written == config.size) {
@@ -145,105 +164,24 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
 
             if (input.last) {
                 if (rest.strb) {
-                    for (int i = 0; i < BPERDW; ++i) {
-                        #pragma HLS unroll
-                        current_word[i] = uint8_t(output.data >> ((sizeof(output.data) - 1) * 8));
-                        output.data <<= 8;
-                    }
-                    for (int mi = 0; mi < BPERDW; ++mi) {
-                        if (rest.strb[BPERDW - 1 - mi] && bytes_written < config.size) {
-                            dout_gmemb[config.offset + bytes_written] = current_word[mi];
-                            bytes_written += 1;
-                        }
-                    }
+                    bytes_written += write_bytewise(dout_gmem, config.offset + bytes_written, rest.data, rest.strb, config.size - bytes_written);
+                    // for (int i = 0; i < BPERDW; ++i) {
+                    //     #pragma HLS unroll
+                    //     current_word[i] = uint8_t(output.data >> ((sizeof(output.data) - 1) * 8));
+                    //     output.data <<= 8;
+                    // }
+                    // for (int mi = 0; mi < BPERDW; ++mi) {
+                    //     if (rest.strb[BPERDW - 1 - mi] && bytes_written < config.size) {
+                    //         dout_gmemb[config.offset + bytes_written] = current_word[mi];
+                    //         bytes_written += 1;
+                    //     }
+                    // }
                 }
 
                 break;
             }
         }
     }
-
-
-    // if (enable) {
-    //     word_stream_element input_element;
-    //     word_stream_element write_element;
-
-    //     uint64_t subword_offset = config.offset % BPERDW;
-    //     uint64_t write_rest_bytes = BPERDW - subword_offset;
-
-    //     // First, read some input that we can write
-    //     mem_stream.read(input_element);
-
-    //     for (uint64_t mem_offset = 0; mem_offset < config.size; mem_offset += sizeof(write_element.data)) {
-    //         // Write the next element to memory
-
-    //         // Move data to the right position
-    //         word_stream_element temp_element;
-    //         for (int i = 0; i < BPERDW; ++i) {
-    // #pragma HLS unroll
-    //             temp_element.data = i < write_rest_bytes ? (temp_element.data << 8) | ap_uint<512>(uint8_t(input_element.data >> ((sizeof(input_element.data) - 1) * 8))) : temp_element.data;
-    //             temp_element.strb = i < write_rest_bytes ? (temp_element.strb << 1) | ap_uint<64>(uint8_t(input_element.data >> ((sizeof(input_element.strb) - 1)))) : temp_element.strb;
-    //         }
-
-    //         write_element.data |= temp_element.data;
-    //         write_element.strb |= temp_element.strb;
-
-    //     }
-    // }
-
-
-
-
-
-    // if (enable) {
-    //     uint64_t subword_offset = config.offset % BPERDW;
-    //     word_stream_element element;
-    //     mem_stream.read(element);
-
-    //     word_stream_element temp_element;
-    //     for (uint64_t mem_offset = 0; mem_offset < config.size; mem_offset += sizeof(element.data)) {
-    //         word_stream_element temp_temp_element;
-
-    //         for (int i = 0; i < BPERDW; ++i) {
-    // #pragma HLS unroll
-    //             temp_temp_element.data = i < subword_offset ? (temp_temp_element.data << 8) | ap_uint<512>(current_word[i]) : temp_temp_element.data;
-    //             temp_temp_element.strb = i < subword_offset ? (temp_temp_element.strb << 1) | ap_uint<64>(i < bytes_to_transfer - sizeof(current_word) - subword_offset) : temp_temp_element.strb;
-    //         }
-
-    //         temp_element.data |= temp_temp_element.data;
-    //         temp_element.strb |= temp_temp_element.strb;
-
-    //         if (temp_element.strb == 0xff) {
-    //             // Write burst
-
-    //             typedef char word_t[BPERDW];
-    //             word_t current_word;
-    //             for (int i = 0; i < BPERDW; ++i) {
-    //                 #pragma HLS unroll
-    //                 current_word[i] = uint8_t(element.data >> ((sizeof(element.data) - 1) * 8));
-    //                 element.data <<= 8;
-    //             }
-
-    //             memcpy(dout_gmem + MFB_ADDRESS(config.offset + mem_offset), (char*) current_word, sizeof(current_word));
-    //         } else {
-    //             char *dout_gmemb = (char*)dout_gmem;
-    //             for (uint16_t mi = 0; mi < write_length; ++mi)
-    //                 dout_gmemb[config.offset + mem_offset] = current_word[mi];
-    //         }
-
-    //         if (element.last) {
-    //             break;
-    //         }
-
-    //         if (subword_offset > 0) {
-    //             for (int i = 0; i < BPERDW; ++i) {
-    //     #pragma HLS unroll
-    //                 temp_element.data = i < subword_offset ? (temp_element.data << 8) | ap_uint<512>(current_word[i]) : temp_element.data;
-    //                 temp_element.strb = i < subword_offset ? (temp_element.strb << 1) | ap_uint<64>(i < bytes_to_transfer - sizeof(current_word) - subword_offset) : temp_element.strb;
-    //             }
-    //         }
-    //     }
-    // }
 }
 
 void afu_mem_write(mf_stream &in, snap_membus_t *dout_gmem, mf_mem_configuration &config, snap_bool_t enable) {
