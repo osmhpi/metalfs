@@ -86,21 +86,20 @@ int determine_process_or_file_connected_to_std_fd (
     fd_file[len] = '\0';
 
     // Is this an actual file?
-    if (access(fd_file, F_OK) != -1) {
+    if (access(fd_file, F_OK) == 0) {
         // Check if it's an FPGA file
         char files_prefix[FILENAME_MAX]; // TODO: Use format constant
         snprintf(files_prefix, FILENAME_MAX, "%s/files/", metal_mountpoint);
         int files_prefix_len = strlen(files_prefix);
 
-        char* internal_input_filename = "";
+        char internal_filename [FILENAME_MAX] = {0};
         int fd_file_len = strlen(fd_file);
         if (strncmp(files_prefix, fd_file, files_prefix_len > fd_file_len ? fd_file_len : files_prefix_len) == 0) {
-            // TODO: This is not correct, can also contain subpath
-            internal_input_filename = basename(fd_file);
+            strncpy(internal_filename, fd_file + strlen(files_prefix) - 1, FILENAME_MAX);
         }
 
-        if (strlen(internal_input_filename)) {
-            strncpy(filename, internal_input_filename, filename_size);
+        if (strlen(internal_filename)) {
+            strncpy(filename, internal_filename, filename_size);
             *is_metal_file = true;
             *pid = 0;
             return 0;

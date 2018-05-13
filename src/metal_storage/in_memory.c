@@ -30,7 +30,7 @@ int mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
         metadata->block_size = BLOCK_SIZE;
     }
 
-    return 0;
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uint64_t length) {
@@ -39,6 +39,8 @@ int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uin
     _extents = malloc(length * sizeof(mtl_file_extent));
     memcpy(_extents, extents, length * sizeof(mtl_file_extent));
     _extents_length = length;
+
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_set_active_read_extent_list(const mtl_file_extent *extents, uint64_t length) {
@@ -47,6 +49,8 @@ int mtl_storage_set_active_read_extent_list(const mtl_file_extent *extents, uint
     _extents = malloc(length * sizeof(mtl_file_extent));
     memcpy(_extents, extents, length * sizeof(mtl_file_extent));
     _extents_length = length;
+
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
@@ -87,7 +91,7 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
         length -= current_extent_write_length;
     }
 
-    return 0;
+    return MTL_SUCCESS;
 }
 
 int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
@@ -125,5 +129,5 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
         length -= current_extent_read_length;
     }
 
-    return 0;
+    return MTL_SUCCESS;
 }

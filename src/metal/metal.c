@@ -607,7 +607,7 @@ int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size) {
     }
 
     mdb_txn_abort(txn);
-    return res;
+    return MTL_SUCCESS;
 }
 
 int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
@@ -651,5 +651,5 @@ int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
     }
 
     mdb_txn_abort(txn);
-    return res;
+    return MTL_SUCCESS;
 }
