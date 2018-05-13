@@ -21,17 +21,19 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
 uint64_t _offset;
 uint64_t _length;
 
+static uint64_t block_size = 4096; // TODO: Source this from a constant
+static uint64_t dram_baseaddr = 0x80000000;
+
 static int apply_config(struct snap_action *action) {
    // Copy file contents to DRAM and point the DRAM write_mem operator to the right address
-
-    uint64_t block_size = 4096; // TODO: Source this from a constant
-    uint64_t dram_baseaddr = 0x80000000;
 
     uint64_t block_offset = _offset / block_size;
     uint64_t end_block_offset = (_offset + _length) / block_size;
     uint64_t blocks_length = end_block_offset - block_offset + 1;
 
-    uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
+    // printf("Mounting %lu blocks starting from %lu to addr %lx for writing\n", blocks_length, block_offset, dram_baseaddr);
+
+    uint64_t *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
     job_struct[0] = htobe64(1); // Slot
     job_struct[1] = htobe64(block_offset); // File offset
     job_struct[2] = htobe64(dram_baseaddr); // DRAM target address
@@ -82,14 +84,13 @@ static int apply_config(struct snap_action *action) {
 }
 
 static int finalize(struct snap_action *action) {
-    uint64_t block_size = 4096; // TODO: Source this from a constant
-    uint64_t dram_baseaddr = 0x80000000;
-
     uint64_t block_offset = _offset / block_size;
     uint64_t end_block_offset = (_offset + _length) / block_size;
     uint64_t blocks_length = end_block_offset - block_offset + 1;
 
-    uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
+    // printf("Writing back %lu blocks starting from %lu to addr %lx\n", blocks_length, block_offset, dram_baseaddr);
+
+    uint64_t *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
     job_struct[0] = htobe64(1); // Slot
     job_struct[1] = htobe64(block_offset); // File offset
     job_struct[2] = htobe64(dram_baseaddr); // DRAM target address

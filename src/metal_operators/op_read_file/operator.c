@@ -21,20 +21,22 @@ static const char* get_filename() {
     return NULL;
 }
 
+static uint64_t block_size = 4096; // TODO: Source this from a constant
+static uint64_t dram_baseaddr = 0x00;
+
 uint64_t _offset;
 uint64_t _length;
 
 static int apply_config(struct snap_action *action) {
     // Copy file contents to DRAM and point the DRAM read_mem operator to the right address
 
-    uint64_t block_size = 4096; // TODO: Source this from a constant
-    uint64_t dram_baseaddr = 0x00;
-
     uint64_t block_offset = _offset / block_size;
     uint64_t end_block_offset = (_offset + _length) / block_size;
     uint64_t blocks_length = end_block_offset - block_offset + 1;
 
-    uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
+    // printf("Mounting %lu blocks starting from %lu to addr %lx\n", blocks_length, block_offset, dram_baseaddr);
+
+    uint64_t *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
     job_struct[0] = htobe64(0); // Slot
     job_struct[1] = htobe64(block_offset); // File offset
     job_struct[2] = htobe64(dram_baseaddr); // DRAM target address

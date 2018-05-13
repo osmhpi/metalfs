@@ -21,6 +21,14 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
     return "";
 }
 
+static void print_memory_64(uint8_t * mem)
+{
+    for (int i = 0; i < 64; ++i) {
+        printf("%02x ", ((uint8_t*)mem)[i]);
+        if (i%8 == 7) printf("\n");
+    }
+}
+
 static int apply_config(struct snap_action *action) {
     uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
     job_struct[0] = htobe64(_buffer_address);
@@ -37,6 +45,9 @@ static int apply_config(struct snap_action *action) {
     int rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
     free(job_struct);
+
+    // printf("Input memory is set to\n");
+    // print_memory_64((uint8_t*)_buffer_address);
 
     if (rc != 0)
         // Some error occurred

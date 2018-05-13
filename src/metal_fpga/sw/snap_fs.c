@@ -349,7 +349,7 @@ static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob,
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
-    job_struct[0] = htobe64(0x0);
+    job_struct[0] = htobe64(0);
     job_struct[1] = htobe64(length);
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
@@ -375,9 +375,9 @@ static void snap_prepare_simple_map_job(struct snap_job *cjob, metalfpga_job_t *
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
     job_struct[0] = htobe64(slot);
     job_struct[1] = htobe64(1);
-    job_struct[1] = htobe64(1);
-    job_struct[8] = htobe64(0);
-    job_struct[9] = htobe64(1);
+    job_struct[2] = htobe64(1);
+    job_struct[8] = htobe64(0); // offset
+    job_struct[9] = htobe64(1); // length
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
@@ -454,7 +454,7 @@ int main(int argc, char *argv[])
     uint8_t *in_data = (uint8_t*)snap_malloc(64);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-            in_data[i * 8 + j] = 'a' + i;
+            in_data[i * 8 + j] = 'a' + i * 8 + j;
         }
     }
 
@@ -467,8 +467,8 @@ int main(int argc, char *argv[])
     print_memory_64(out_data);
 
     if (true) {
-        printf("Copying data to dram...\n");
 
+        // printf("Mapping extents...\n");
         snap_prepare_simple_map_job(&cjob, &mjob, 0);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
@@ -487,6 +487,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
+        // printf("Copying data to dram...\n");
         snap_prepare_configure_streams_job(&cjob, &mjob, 0);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
@@ -523,6 +524,8 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
+        // printf("Writing back...\n");
+
         snap_prepare_writeback_job(&cjob, &mjob);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
@@ -531,6 +534,8 @@ int main(int argc, char *argv[])
             goto out_error2;
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
+
+        // printf("Re-Mounting...\n");
 
         snap_prepare_mount_job(&cjob, &mjob, 0);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
@@ -541,6 +546,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
+        // printf("Copying back to host ram...\n");
         snap_prepare_configure_streams_job(&cjob, &mjob, 1);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {

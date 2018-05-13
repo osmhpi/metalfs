@@ -154,13 +154,15 @@ void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint
         )
     );
 
-    job_words[0] = 0;  // slot number
-    job_words[1] = true;  // map (vs unmap)
-    job_words[2] = length;  // extent count
+    // printf("Mapping %lu extents for reading\n", length);
+    job_words[0] = htobe64(0);  // slot number
+    job_words[1] = htobe64(true);  // map (vs unmap)
+    job_words[2] = htobe64(length);  // extent count
 
     for (uint64_t i = 0; i < length; ++i) {
-        job_words[8 + 2*i + 0] = extents[i].offset;
-        job_words[8 + 2*i + 1] = extents[i].length;
+        // printf("   Extent %lu has length %lu and starts at %lu\n", i, extents[i].length, extents[i].offset);
+        job_words[8 + 2*i + 0] = htobe64(extents[i].offset);
+        job_words[8 + 2*i + 1] = htobe64(extents[i].length);
     }
 
     metalfpga_job_t mjob;
@@ -196,13 +198,15 @@ void mtl_pipeline_set_file_write_extent_list(const mtl_file_extent *extents, uin
         )
     );
 
-    job_words[0] = 1;  // slot number
-    job_words[1] = true;  // map (vs unmap)
-    job_words[2] = length;  // extent count
+    // printf("Mapping %lu extents for writing\n", length);
+    job_words[0] = htobe64(1);  // slot number
+    job_words[1] = htobe64(true);  // map (vs unmap)
+    job_words[2] = htobe64(length);  // extent count
 
     for (uint64_t i = 0; i < length; ++i) {
-        job_words[8 + 2*i + 0] = extents[i].offset;
-        job_words[8 + 2*i + 1] = extents[i].length;
+        // printf("   Extent %lu has length %lu and starts at %lu\n", i, extents[i].length, extents[i].offset);
+        job_words[8 + 2*i + 0] = htobe64(extents[i].offset);
+        job_words[8 + 2*i + 1] = htobe64(extents[i].length);
     }
 
     metalfpga_job_t mjob;
