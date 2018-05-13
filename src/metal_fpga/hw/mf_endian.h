@@ -195,6 +195,13 @@ static inline void mf_set8(snap_membus_t & busline,
     busline(o_bit +  7, o_bit +  0) = value;
 }
 
+template<int lowest_byte>
+static inline snapu8_t mf_get8(const snap_membus_t & busline)
+{
+    mfb_bitoffset_t o_bit= MFB_TOBITOFFSET(lowest_byte);
+    return busline(o_bit +  7, o_bit +  0);
+}
+
 static inline snapu8_t mf_get8(const snap_membus_t & busline,
                                mfb_byteoffset_t lowest_byte)
 {
@@ -202,6 +209,74 @@ static inline snapu8_t mf_get8(const snap_membus_t & busline,
     return busline(o_bit +  7, o_bit +  0);
 }
 
+static inline snap_membus_t swap_membus_endianness(snap_membus_t value) {
+    return (
+        mf_get8<0>(value),
+        mf_get8<1>(value),
+        mf_get8<2>(value),
+        mf_get8<3>(value),
+        mf_get8<4>(value),
+        mf_get8<5>(value),
+        mf_get8<6>(value),
+        mf_get8<7>(value),
+        mf_get8<8>(value),
+        mf_get8<9>(value),
+        mf_get8<10>(value),
+        mf_get8<11>(value),
+        mf_get8<12>(value),
+        mf_get8<13>(value),
+        mf_get8<14>(value),
+        mf_get8<15>(value),
+        mf_get8<16>(value),
+        mf_get8<17>(value),
+        mf_get8<18>(value),
+        mf_get8<19>(value),
+        mf_get8<20>(value),
+        mf_get8<21>(value),
+        mf_get8<22>(value),
+        mf_get8<23>(value),
+        mf_get8<24>(value),
+        mf_get8<25>(value),
+        mf_get8<26>(value),
+        mf_get8<27>(value),
+        mf_get8<28>(value),
+        mf_get8<29>(value),
+        mf_get8<30>(value),
+        mf_get8<31>(value),
+        mf_get8<32>(value),
+        mf_get8<33>(value),
+        mf_get8<34>(value),
+        mf_get8<35>(value),
+        mf_get8<36>(value),
+        mf_get8<37>(value),
+        mf_get8<38>(value),
+        mf_get8<39>(value),
+        mf_get8<40>(value),
+        mf_get8<41>(value),
+        mf_get8<42>(value),
+        mf_get8<43>(value),
+        mf_get8<44>(value),
+        mf_get8<45>(value),
+        mf_get8<46>(value),
+        mf_get8<47>(value),
+        mf_get8<48>(value),
+        mf_get8<49>(value),
+        mf_get8<50>(value),
+        mf_get8<51>(value),
+        mf_get8<52>(value),
+        mf_get8<53>(value),
+        mf_get8<54>(value),
+        mf_get8<55>(value),
+        mf_get8<56>(value),
+        mf_get8<57>(value),
+        mf_get8<58>(value),
+        mf_get8<59>(value),
+        mf_get8<60>(value),
+        mf_get8<61>(value),
+        mf_get8<62>(value),
+        mf_get8<63>(value)
+    );
+}
 
 #define mf_get64 mf_get64be
 #define mf_set64 mf_set64be
