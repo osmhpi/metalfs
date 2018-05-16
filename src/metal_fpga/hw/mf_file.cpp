@@ -66,6 +66,7 @@ static mf_bool_t mf_nvme_write_burst(snapu32_t *d_nvme,
                  snap_bool_t drive_id,
                  snapu32_t num_of_blocks_to_transfer)
 {
+    short rc;
     snapu32_t status;
 
     // Set card ddr address
@@ -84,16 +85,22 @@ static mf_bool_t mf_nvme_write_burst(snapu32_t *d_nvme,
     // Initiate ssd read
     ((volatile int*)d_nvme)[5] = (drive_id == 0)? 0x11: 0x31;
 
+    rc = 1;
+
     // Poll the status register until the operation is finished
-    while(1) {
-        if((status = ((volatile int*)d_nvme)[1])) {
-            if(status & 0x10) {
-                return MF_TRUE;
-            } else {
-                return MF_FALSE;
-            }
+    while(1)
+    {
+        if((status = ((volatile int*)d_nvme)[1]))
+        {
+            if(status & 0x10)
+                rc = 1;
+            else
+                rc = 0;
+            break;
         }
     }
+
+    return rc == 1 ? MF_TRUE : MF_FALSE;
 }
 
 static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
@@ -102,6 +109,7 @@ static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
                   snap_bool_t drive_id,
                   snapu32_t num_of_blocks_to_transfer)
 {
+    short rc;
     snapu32_t status;
 
     // Set card ddr address
@@ -120,16 +128,22 @@ static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
     // Initiate ssd read
     ((volatile int*)d_nvme)[5] = (drive_id == 0)? 0x10: 0x30;
 
+    rc = 1;
+
     // Poll the status register until the operation is finished
-    while(1) {
-        if((status = ((volatile snapu32_t*)d_nvme)[1])) {
-            if(status & 0x10) {
-                return MF_TRUE;
-            } else {
-                return MF_FALSE;
-            }
+    while(1)
+    {
+        if((status = ((volatile int*)d_nvme)[1]))
+        {
+            if(status & 0x10)
+                rc = 1;
+            else
+                rc = 0;
+            break;
         }
     }
+
+    return rc == 1 ? MF_TRUE : MF_FALSE;
 }
 
 // static mf_bool_t mf_file_store_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
@@ -163,9 +177,9 @@ mf_bool_t mf_file_load_buffer(snapu32_t * nvme_ctrl,
         snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
         mf_nvme_read_burst(nvme_ctrl,
             dest + (current_offset * MF_BLOCK_BYTES),
-            mf_extmap_pblock(map),
+            mf_extmap_pblock(map) * (MF_BLOCK_BYTES / 512),
             0,
-            current_extent_mount_length * (MF_BLOCK_BYTES / 512)
+            current_extent_mount_length * (MF_BLOCK_BYTES / 512) - 1 // length is zero-based
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;
@@ -195,9 +209,9 @@ mf_bool_t mf_file_write_buffer(snapu32_t * nvme_ctrl,
         snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
         mf_nvme_write_burst(nvme_ctrl,
             dest + (current_offset * MF_BLOCK_BYTES),
-            mf_extmap_pblock(map),
+            mf_extmap_pblock(map) * (MF_BLOCK_BYTES / 512),
             0,
-            current_extent_mount_length * (MF_BLOCK_BYTES / 512)
+            current_extent_mount_length * (MF_BLOCK_BYTES / 512) - 1 // length is zero-based
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;

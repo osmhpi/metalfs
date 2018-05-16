@@ -376,8 +376,8 @@ static void snap_prepare_simple_map_job(struct snap_job *cjob, metalfpga_job_t *
     job_struct[0] = htobe64(slot);
     job_struct[1] = htobe64(1);
     job_struct[2] = htobe64(1);
-    job_struct[8] = htobe64(0); // offset
-    job_struct[9] = htobe64(1); // length
+    job_struct[8] = htobe64(0);
+    job_struct[9] = htobe64(1);
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
