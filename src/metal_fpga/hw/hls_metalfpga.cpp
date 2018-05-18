@@ -50,8 +50,8 @@ static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
 //                                snap_membus_t * mem_out,
 //                                snap_membus_t * mem_ddr,
 //                                const mf_job_access_t & job);
-static mf_retc_t action_mount(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job);
-static mf_retc_t action_writeback(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job);
+static mf_retc_t action_mount(snapu32_t * nvme, const mf_job_fileop_t & job);
+static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job);
 
 static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
 static mf_retc_t action_run_afus(
@@ -273,7 +273,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     {
 #ifdef NVME_ENABLED
         mf_job_fileop_t mount_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
-        return action_mount(nvme, mem_in, mem_ddr_in, mount_job);
+        return action_mount(nvme, mount_job);
 #else
         return SNAP_RETC_SUCCESS;
 #endif
@@ -282,7 +282,7 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
     {
 #ifdef NVME_ENABLED
         mf_job_fileop_t writeback_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
-        return action_writeback(nvme, mem_in, mem_ddr_in, writeback_job);
+        return action_writeback(nvme, writeback_job);
 #else
         return SNAP_RETC_SUCCESS;
 #endif
@@ -386,7 +386,7 @@ static mf_retc_t action_map(snap_membus_t * mem_in,
 //     return SNAP_RETC_SUCCESS;
 // }
 
-static mf_retc_t action_mount(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job)
+static mf_retc_t action_mount(snapu32_t * nvme, const mf_job_fileop_t & job)
 {
     switch (job.slot) {
         case 0: {
@@ -403,7 +403,7 @@ static mf_retc_t action_mount(snapu32_t * nvme, snap_membus_t * mem_in, snap_mem
     }
 }
 
-static mf_retc_t action_writeback(snapu32_t * nvme, snap_membus_t * mem_in, snap_membus_t * ddr, const mf_job_fileop_t & job)
+static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job)
 {
     switch (job.slot) {
         case 0: {
@@ -951,6 +951,23 @@ int main()
 
     *(char *)(job_mem_b + 0x100 + 128) = '\0';
     fprintf(stderr, "Result is : %s\n", (char *)(job_mem_b + 0x100));
+
+    fprintf(stderr, "// WRITEBACK \n");
+        job_mem[0] = htobe64(0);
+        job_mem[1] = htobe64(0);
+        job_mem[2] = htobe64(0x80);
+        job_mem[3] = htobe64(1);
+        act_reg.Data.job_address = 0;
+        act_reg.Data.job_type = MF_JOB_WRITEBACK;
+        hls_action(host_gmem, host_gmem,
+    #ifdef DRAM_ENABLED
+            dram_gmem, dram_gmem,
+    #endif
+    #ifdef NVME_ENABLED
+            NULL,
+    #endif
+            axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+
 
     return 0;
 }
