@@ -104,14 +104,24 @@ void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap
             words_in.read(inval);
             last_word = inval.last;
 
+            //tmpword = (tmpword >> 8) |
+            // (ap_uint<NB * 8>(tmpbyte) << ((NB - 1) * 8));
+
             // Shift words in "big endian" order
-            tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-            tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+            // tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
+            // tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+
+            // Shift words in "little endian" order
+            tmpword.data = (tmpword.data >> (sizeof(inval.data) * 8)) | (ap_uint<sizeof(tmpword.data) * 8>(inval.data) << ((sizeof(tmpword.data) / sizeof(inval.data) - 1) * sizeof(inval.data) * 8));
+            tmpword.strb = (tmpword.strb >> (sizeof(inval.strb))) | (ap_uint<sizeof(tmpword.strb)>(inval.strb) << ((sizeof(tmpword.data) / sizeof(inval.data) - 1) * sizeof(inval.data)));
+
+            // tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
+            // tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
 
             if (last_word) {
                 // If this was the last word, shift the rest and increase i so that the result is written afterwards
-                tmpword.data <<= 8 * sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
-                tmpword.strb <<= sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
+                tmpword.data >>= 8 * sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
+                tmpword.strb >>= sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
                 i += ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
             }
 
@@ -139,10 +149,17 @@ void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, sna
             for (int i = 0; i < sizeof(tmpword) / sizeof(outval.data); i++) {
 
                 // shift words out in "big endian" order
-                outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data) * 8));
-                outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data)));
-                tmpword <<= sizeof(outval.data) * 8;
-                tmpstrb <<= sizeof(outval.data);
+                // outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data) * 8));
+                // outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data)));
+                // tmpword <<= sizeof(outval.data) * 8;
+                // tmpstrb <<= sizeof(outval.data);
+
+                // shift words out in "little endian" order
+                outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword);
+                outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb);
+                tmpword >>= sizeof(outval.data) * 8;
+                tmpstrb >>= sizeof(outval.data);
+
                 outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
 
                 words_out.write(outval);

@@ -61,15 +61,15 @@ void afu_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element>
             uint64_t current_strb = 0;
 
             if (buffer_offset < final_offset) {
-                typedef char word_t[BPERDW];
-                word_t current_word_buf;
-                // current_word = din_gmem[MFB_ADDRESS(config.offset + buffer_offset)];
-                memcpy((char*) current_word_buf, &din_gmem[MFB_ADDRESS(config.offset + buffer_offset)], sizeof(current_word_buf));
-                // This reverses the byte order
-                for (int i = 0; i < BPERDW; ++i) {
-                #pragma HLS unroll
-                    current_word = (current_word << 8) | ap_uint<512>(current_word_buf[i]);
-                }
+                // typedef char word_t[BPERDW];
+                // word_t current_word_buf;
+                current_word = din_gmem[MFB_ADDRESS(config.offset + buffer_offset)];
+                // memcpy((char*) current_word_buf, &din_gmem[MFB_ADDRESS(config.offset + buffer_offset)], sizeof(current_word_buf));
+                // // This reverses the byte order
+                // for (int i = 0; i < BPERDW; ++i) {
+                // #pragma HLS unroll
+                //     current_word = (current_word << 8) | ap_uint<512>(current_word_buf[i]);
+                // }
 
                 current_strb = 0xffffffffffffffff;
                 if (buffer_offset == 0) {
@@ -194,7 +194,7 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
             rest.data <<= (BPERDW - offset) * 8;
             rest.strb <<= (BPERDW - offset);
 
-            output.data = swap_membus_endianness(output.data);
+            // output.data = swap_membus_endianness(output.data);
 
             // if (output.strb == 0xffffffffffffffff && config.size - bytes_written >= BPERDW) {
                 dout_gmem[MFB_ADDRESS(config.offset) + MFB_ADDRESS(bytes_written)] = output.data;
@@ -216,7 +216,7 @@ void afu_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membu
 
             if (input.last) {
                 if (rest.strb) {
-                    rest.data = swap_membus_endianness(rest.data);
+                    // rest.data = swap_membus_endianness(rest.data);
                     // snap_membus_t temp = dout_gmem[MFB_ADDRESS(config.offset + bytes_written)];
                     // rest.data |= temp;
                     // memcpy(dout_gmem + MFB_ADDRESS(config.offset) + MFB_ADDRESS(bytes_written), &rest.data, sizeof(rest.data));
