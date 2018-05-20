@@ -110,17 +110,6 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         return 0;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s/file1", files_dir);
-    if (strcmp(path, test_filename) == 0) {
-        int res;
-
-        res = lstat("./test.txt", stbuf);
-        if (res == -1)
-            return -errno;
-
-        return 0;
-    }
-
     return -ENOENT;
 }
 
@@ -231,7 +220,24 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     struct fuse_file_info *fi) {
 
+    if (fi->fh != 0) {
+        return mtl_read(fi->fh, buf, size, offset);
+    }
+
     char test_filename[FILENAME_MAX];
+
+    snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
+    if (strncmp(path, test_filename, strlen(test_filename)) == 0) {
+        int res;
+
+        // TODO: It would be nice if this would work within a single transaction
+        uint64_t inode_id;
+        res = mtl_open(path + 6, &inode_id);
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return mtl_read(inode_id, buf, size, offset);
+    }
 
     for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
         snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_operators[i]->name);
@@ -242,10 +248,10 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         int fd;
         int res;
 
-        if (fi == NULL || true)
-            fd = open(agent_filepath, O_RDONLY);
-        else
-            fd = fi->fh;
+        // if (fi == NULL || true)
+        fd = open(agent_filepath, O_RDONLY);
+        // else
+        //     fd = fi->fh;
 
         if (fd == -1)
             return -errno;
@@ -257,10 +263,6 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         if(fi == NULL || true)
             close(fd);
         return res;
-    }
-
-    if (fi->fh != 0) {
-        return mtl_read(fi->fh, buf, size, offset);
     }
 
     return -ENOSYS;
