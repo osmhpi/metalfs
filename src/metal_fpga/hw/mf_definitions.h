@@ -18,8 +18,8 @@ typedef ap_uint<1> mf_bool_t;
 #define MF_BRAM_BYTES (0x1<<MF_BRAM_BYTE_OFFSET_W)
 
 // File Block Size
-#define MF_BLOCK_BYTE_OFFSET_W MF_BRAM_BYTE_OFFSET_W
-#define MF_BLOCK_BYTES (0x1<<MF_BLOCK_BYTE_OFFSET_W)
+#define MF_BLOCK_BYTE_OFFSET_W 12
+#define MF_BLOCK_BYTES 4096
 
 // A file extent consisting of a begin physical block number
 // and a block count

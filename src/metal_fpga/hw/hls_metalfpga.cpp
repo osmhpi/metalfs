@@ -669,8 +669,260 @@ static mf_retc_t action_run_afus(
 #include <stdio.h>
 #include <endian.h>
 
+int test_afu_mem_read() {
+    static snap_membus_t src_mem[16];
+    static uint8_t *src_memb = (uint8_t *) src_mem;
+    static mf_stream out_stream;
+
+    // Fill the memory with data
+    for (int i = 0; i < 1024; ++i) {
+        src_memb[i] = i % 256;
+    }
+
+    bool success = true;
+    uint64_t offset, size;
+
+    {
+        // AFU mem read should stream entire memory line
+        offset = 0, size = 64;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        // A memory line produces 8 stream elements
+        mf_stream_element result;
+        for (int element = 0; element < 8; ++element) {
+            result = out_stream.read();
+            success &= memcmp(&result.data, &src_memb[element * 8], 8) == 0;
+            success &= result.strb == 0xff;
+        }
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem read should stream two entire memory lines
+        offset = 0, size = 128;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        // A memory line produces 8 stream elements
+        mf_stream_element result;
+        for (int element = 0; element < 2 * 8; ++element) {
+            result = out_stream.read();
+            success &= memcmp(&result.data, &src_memb[element * 8], 8) == 0;
+            success &= result.strb == 0xff;
+        }
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem read should stream a half memory line starting at offset
+        offset = 16, size = 32;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        // A memory line produces 8 stream elements
+        mf_stream_element result;
+        for (int element = 0; element < 8 / 2; ++element) {
+            result = out_stream.read();
+            success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
+            success &= result.strb == 0xff;
+        }
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem read should stream one and a half memory line starting at offset
+        offset = 16, size = 96;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        mf_stream_element result;
+        for (int element = 0; element < 12; ++element) {
+            result = out_stream.read();
+            success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
+            success &= result.strb == 0xff;
+        }
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem read should stream one and a half memory line
+        offset = 0, size = 96;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        // A memory line produces 8 stream elements
+        mf_stream_element result;
+        for (int element = 0; element < 12; ++element) {
+            result = out_stream.read();
+            success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
+            success &= result.strb == 0xff;
+        }
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem read should stream a half stream word starting at offset
+        offset = 16, size = 4;
+        afu_mem_set_config(offset, size, read_mem_config);
+        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+
+        mf_stream_element result = out_stream.read();
+        success &= memcmp(&result.data, &src_memb[offset], 4) == 0;
+        success &= result.strb == 0x0f;
+        success &= result.last == true;
+
+        if (!success) return -1;
+    }
+
+    return 0;
+}
+
+int test_afu_mem_write() {
+    static mf_stream in_stream;
+    static snap_membus_t dest_mem[16];
+    static uint8_t *dest_memb = (uint8_t *) dest_mem;
+    static mf_stream_element stream_elements[128];
+    static uint8_t reference_data[1024];
+
+    // Fill the stream elements with data
+    for (int i = 0; i < 1024; ++i) {
+        reference_data[i] = i % 256;
+    }
+    for (int i = 0; i < 128; ++i) {
+        uint8_t *data = (uint8_t*) &stream_elements[i].data;
+        for (int j = 0; j < 8; ++j) {
+            data[j] = (i * 8 + j) % 256;
+        }
+    }
+
+    bool success = true;
+    uint64_t offset, size;
+
+    {
+        // AFU mem write should store entire memory line
+        offset = 0, size = 64;
+        memset(dest_memb, 0, 1024);
+
+        // 8 stream elements make up a memory line
+        for (int element = 0; element < 8; ++element) {
+            mf_stream_element e = stream_elements[element];
+            e.strb = 0xff;
+            e.last = element == 7;
+            in_stream.write(e);
+        }
+
+        afu_mem_set_config(offset, size, write_mem_config);
+        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+
+        success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem write should store two entire memory lines
+        offset = 0, size = 128;
+        memset(dest_memb, 0, 1024);
+
+        // 8 stream elements make up a memory line
+        for (int element = 0; element < 16; ++element) {
+            mf_stream_element e = stream_elements[element];
+            e.strb = 0xff;
+            e.last = element == 15;
+            in_stream.write(e);
+        }
+
+        afu_mem_set_config(offset, size, write_mem_config);
+        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+
+        success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem write should store a half memory line
+        offset = 0, size = 32;
+        memset(dest_memb, 0, 1024);
+
+        // 8 stream elements make up a memory line
+        for (int element = 0; element < 4; ++element) {
+            mf_stream_element e = stream_elements[element];
+            e.strb = 0xff;
+            e.last = element == 3;
+            in_stream.write(e);
+        }
+
+        afu_mem_set_config(offset, size, write_mem_config);
+        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+
+        success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+
+        if (!success) return -1;
+    }
+
+    {
+        // AFU mem write should store a half memory line at offset
+        offset = 16, size = 32;
+        memset(dest_memb, 0, 1024);
+
+        // 8 stream elements make up a memory line
+        for (int element = 0; element < 4; ++element) {
+            mf_stream_element e = stream_elements[element];
+            e.strb = 0xff;
+            e.last = element == 3;
+            in_stream.write(e);
+        }
+
+        afu_mem_set_config(offset, size, write_mem_config);
+        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+
+        success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+
+        if (!success) return -1;
+    }
+
+    {
+		// AFU mem write should store one and a half memory lines at offset
+		offset = 16, size = 96;
+		memset(dest_memb, 0, 1024);
+
+		// 8 stream elements make up a memory line
+		for (int element = 0; element < 12; ++element) {
+			mf_stream_element e = stream_elements[element];
+			e.strb = 0xff;
+			e.last = element == 11;
+			in_stream.write(e);
+		}
+
+		afu_mem_set_config(offset, size, write_mem_config);
+		afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+
+		success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+
+		if (!success) return -1;
+	}
+
+    return 0;
+}
+
 int main()
 {
+    // Poor man's unit tests:
+    if (test_afu_mem_read()) printf("Test failure\n"); else printf("Test success\n");
+    if (test_afu_mem_write()) printf("Test failure\n"); else printf("Test success\n");
+
     static snap_membus_t host_gmem[1024];
     static snap_membus_t dram_gmem[1024];
     //static snapu32_t nvme_gmem[];
@@ -888,7 +1140,7 @@ int main()
 
     fprintf(stderr, "// AFU MEM SET READ BUFFER\n");
     job_mem[0] = htobe64(0x80);
-    job_mem[1] = htobe64(5);
+    job_mem[1] = htobe64(68);
     act_reg.Data.job_address = 0;
     act_reg.Data.job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
     hls_action(host_gmem, host_gmem,
@@ -931,8 +1183,8 @@ int main()
 
     fprintf(stderr, "// RUN AFUS\n");
     // Fill the memory with 'c' and 'd' characters
-    memset(&job_mem_b[0x80], 0, 128);
-    memset(&job_mem_b[0x80], 'c', 5);
+    memset(&job_mem_b[0x80], 0, 1024);
+    memset(&job_mem_b[0x80], 'c', 64);
     memset(&job_mem_b[0x80 + 64], 'd', 64);
 
     // Dummy output data
