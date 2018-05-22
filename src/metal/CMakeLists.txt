@@ -4,7 +4,7 @@ set(
     inode.c
     meta.c
     metal.c
-    hollow_heap.c
+    heap.c
 )
 
 set(

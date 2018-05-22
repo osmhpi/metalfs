@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #include "metal.h"
-#include "hollow_heap.h"
+#include "heap.h"
 
 #include "extent.h"
 
@@ -242,7 +242,7 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
     mdb_cursor_close(cursor);
 
     // Insert resulting extent into heap
-    if (pq_node != INVALID_NODE) {
+    if (memcmp(&pq_node, &INVALID_NODE, sizeof(mtl_heap_node_id)) != 0) {
         mtl_heap_increase_key(txn, pq_node, extent_size, &pq_node);
     } else {
         mtl_heap_insert(txn, extent_size, extent_offset, &pq_node);

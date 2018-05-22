@@ -10,7 +10,7 @@
 #include <lmdb.h>
 #include <metal_storage/storage.h>
 
-#include "hollow_heap.h"
+#include "heap.h"
 #include "extent.h"
 #include "inode.h"
 #include "meta.h"
@@ -624,6 +624,8 @@ int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
         mdb_txn_abort(txn);
         return res;
     }
+
+    printf("writing to inode %lu\n", inode_id);
 
     mdb_txn_abort(txn);
 
