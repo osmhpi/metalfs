@@ -112,7 +112,7 @@ int mtl_storage_set_active_extent_list(const mtl_file_extent *extents, uint64_t 
     }
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_MAP;
+    mjob.job_type = MTL_JOB_MAP;
     mjob.job_address = (uint64_t)job_words;
 
     struct snap_job cjob;
@@ -153,7 +153,7 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
     job_words[3] = length;
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_ACCESS;
+    mjob.job_type = MTL_JOB_ACCESS;
     mjob.job_address = (uint64_t)job_words;
 
     struct snap_job cjob;
@@ -194,7 +194,7 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
     job_words[3] = length;
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_ACCESS;
+    mjob.job_type = MTL_JOB_ACCESS;
     mjob.job_address = (uint64_t)job_words;
 
     struct snap_job cjob;

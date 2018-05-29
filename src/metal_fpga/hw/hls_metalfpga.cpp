@@ -1,14 +1,14 @@
 #include "action_metalfpga.H"
 
-#include "mf_endian.h"
-#include "mf_file.h"
-#include "mf_jobstruct.h"
-#include "mf_stream.h"
+#include "mtl_endian.h"
+#include "mtl_file.h"
+#include "mtl_jobstruct.h"
+#include "mtl_stream.h"
 
-#include "mf_afu_mem.h"
-#include "mf_afu_file.h"
-#include "mf_afu_passthrough.h"
-#include "mf_afu_change_case.h"
+#include "mtl_afu_mem.h"
+#include "mtl_afu_file.h"
+#include "mtl_afu_passthrough.h"
+#include "mtl_afu_change_case.h"
 
 #define HW_RELEASE_LEVEL       0x00000013
 
@@ -16,7 +16,7 @@
 #define NVME_ENABLED
 
 
-static mf_retc_t process_action(snap_membus_t * mem_in,
+static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
                                 snap_membus_t * mem_ddr_in,
@@ -25,71 +25,71 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mf_stream &axis_s_0,
-                                mf_stream &axis_s_1,
-                                mf_stream &axis_s_2,
-                                mf_stream &axis_s_3,
-                                mf_stream &axis_s_4,
-                                mf_stream &axis_s_5,
-                                mf_stream &axis_s_6,
-                                mf_stream &axis_s_7,
-                                mf_stream &axis_m_0,
-                                mf_stream &axis_m_1,
-                                mf_stream &axis_m_2,
-                                mf_stream &axis_m_3,
-                                mf_stream &axis_m_4,
-                                mf_stream &axis_m_5,
-                                mf_stream &axis_m_6,
-                                mf_stream &axis_m_7,
+                                mtl_stream &axis_s_0,
+                                mtl_stream &axis_s_1,
+                                mtl_stream &axis_s_2,
+                                mtl_stream &axis_s_3,
+                                mtl_stream &axis_s_4,
+                                mtl_stream &axis_s_5,
+                                mtl_stream &axis_s_6,
+                                mtl_stream &axis_s_7,
+                                mtl_stream &axis_m_0,
+                                mtl_stream &axis_m_1,
+                                mtl_stream &axis_m_2,
+                                mtl_stream &axis_m_3,
+                                mtl_stream &axis_m_4,
+                                mtl_stream &axis_m_5,
+                                mtl_stream &axis_m_6,
+                                mtl_stream &axis_m_7,
                                 snapu32_t *switch_ctrl,
                                 action_reg * act_reg);
 
-static mf_retc_t action_map(snap_membus_t * mem_in, const mf_job_map_t & job);
-// static mf_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mf_job_query_t & job);
-// static mf_retc_t action_access(snap_membus_t * mem_in,
+static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job);
+// static mtl_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mtl_job_query_t & job);
+// static mtl_retc_t action_access(snap_membus_t * mem_in,
 //                                snap_membus_t * mem_out,
 //                                snap_membus_t * mem_ddr,
-//                                const mf_job_access_t & job);
-static mf_retc_t action_mount(snapu32_t * nvme, const mf_job_fileop_t & job);
-static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job);
+//                                const mtl_job_access_t & job);
+static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job);
+static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job);
 
-static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
-static mf_retc_t action_run_afus(
+static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
+static mtl_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    mf_stream &axis_s_0,
-    mf_stream &axis_s_1,
-    mf_stream &axis_s_2,
-    mf_stream &axis_s_3,
-    mf_stream &axis_s_4,
-    mf_stream &axis_s_5,
-    mf_stream &axis_s_6,
-    mf_stream &axis_s_7,
-    mf_stream &axis_m_0,
-    mf_stream &axis_m_1,
-    mf_stream &axis_m_2,
-    mf_stream &axis_m_3,
-    mf_stream &axis_m_4,
-    mf_stream &axis_m_5,
-    mf_stream &axis_m_6,
-    mf_stream &axis_m_7
+    mtl_stream &axis_s_0,
+    mtl_stream &axis_s_1,
+    mtl_stream &axis_s_2,
+    mtl_stream &axis_s_3,
+    mtl_stream &axis_s_4,
+    mtl_stream &axis_s_5,
+    mtl_stream &axis_s_6,
+    mtl_stream &axis_s_7,
+    mtl_stream &axis_m_0,
+    mtl_stream &axis_m_1,
+    mtl_stream &axis_m_2,
+    mtl_stream &axis_m_3,
+    mtl_stream &axis_m_4,
+    mtl_stream &axis_m_5,
+    mtl_stream &axis_m_6,
+    mtl_stream &axis_m_7
 );
 
 // static void action_file_write_block(snap_membus_t * mem_in,
-//                                    mf_slot_offset_t slot,
+//                                    mtl_slot_offset_t slot,
 //                                    snapu64_t buffer_address,
-//                                    mf_block_offset_t begin_offset,
-//                                    mf_block_offset_t end_offset);
+//                                    mtl_block_offset_t begin_offset,
+//                                    mtl_block_offset_t end_offset);
 // static void action_file_read_block(snap_membus_t * mem_in,
 //                                     snap_membus_t * mem_out,
 //                                     snapu64_t slot,
 //                                     snapu64_t buffer_address,
-//                                     mf_block_offset_t begin_offset,
-//                                     mf_block_offset_t end_offset);
+//                                     mtl_block_offset_t begin_offset,
+//                                     mtl_block_offset_t end_offset);
 
 // ------------------------------------------------
 // -------------- ACTION ENTRY POINT --------------
@@ -105,22 +105,22 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
                 snapu32_t * nvme,
 #endif
-                mf_stream &axis_s_0,
-                mf_stream &axis_s_1,
-                mf_stream &axis_s_2,
-                mf_stream &axis_s_3,
-                mf_stream &axis_s_4,
-                mf_stream &axis_s_5,
-                mf_stream &axis_s_6,
-                mf_stream &axis_s_7,
-                mf_stream &axis_m_0,
-                mf_stream &axis_m_1,
-                mf_stream &axis_m_2,
-                mf_stream &axis_m_3,
-                mf_stream &axis_m_4,
-                mf_stream &axis_m_5,
-                mf_stream &axis_m_6,
-                mf_stream &axis_m_7,
+                mtl_stream &axis_s_0,
+                mtl_stream &axis_s_1,
+                mtl_stream &axis_s_2,
+                mtl_stream &axis_s_3,
+                mtl_stream &axis_s_4,
+                mtl_stream &axis_s_5,
+                mtl_stream &axis_s_6,
+                mtl_stream &axis_s_7,
+                mtl_stream &axis_m_0,
+                mtl_stream &axis_m_1,
+                mtl_stream &axis_m_2,
+                mtl_stream &axis_m_3,
+                mtl_stream &axis_m_4,
+                mtl_stream &axis_m_5,
+                mtl_stream &axis_m_6,
+                mtl_stream &axis_m_7,
                 snapu32_t *switch_ctrl,
                 action_reg * action_reg,
                 action_RO_config_reg * action_config)
@@ -225,7 +225,7 @@ void hls_action(snap_membus_t * din,
 // ------------------------------------------------
 
 // Decode job_type and call appropriate action
-static mf_retc_t process_action(snap_membus_t * mem_in,
+static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
                                 snap_membus_t * mem_ddr_in,
@@ -234,64 +234,64 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mf_stream &axis_s_0,
-                                mf_stream &axis_s_1,
-                                mf_stream &axis_s_2,
-                                mf_stream &axis_s_3,
-                                mf_stream &axis_s_4,
-                                mf_stream &axis_s_5,
-                                mf_stream &axis_s_6,
-                                mf_stream &axis_s_7,
-                                mf_stream &axis_m_0,
-                                mf_stream &axis_m_1,
-                                mf_stream &axis_m_2,
-                                mf_stream &axis_m_3,
-                                mf_stream &axis_m_4,
-                                mf_stream &axis_m_5,
-                                mf_stream &axis_m_6,
-                                mf_stream &axis_m_7,
+                                mtl_stream &axis_s_0,
+                                mtl_stream &axis_s_1,
+                                mtl_stream &axis_s_2,
+                                mtl_stream &axis_s_3,
+                                mtl_stream &axis_s_4,
+                                mtl_stream &axis_s_5,
+                                mtl_stream &axis_s_6,
+                                mtl_stream &axis_s_7,
+                                mtl_stream &axis_m_0,
+                                mtl_stream &axis_m_1,
+                                mtl_stream &axis_m_2,
+                                mtl_stream &axis_m_3,
+                                mtl_stream &axis_m_4,
+                                mtl_stream &axis_m_5,
+                                mtl_stream &axis_m_6,
+                                mtl_stream &axis_m_7,
                                 snapu32_t *switch_ctrl,
                                 action_reg * act_reg)
 {
-    if (act_reg->Data.job_type == MF_JOB_MAP)
+    if (act_reg->Data.job_type == MTL_JOB_MAP)
     {
-        mf_job_map_t map_job = mf_read_job_map(mem_in, act_reg->Data.job_address);
+        mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
         return action_map(mem_in, map_job);
     }
-    // else if (act_reg->Data.job_type == MF_JOB_QUERY)
+    // else if (act_reg->Data.job_type == MTL_JOB_QUERY)
     // {
-    //     mf_job_query_t query_job = mf_read_job_query(mem_in, act_reg->Data.job_address);
-    //     mf_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
+    //     mtl_job_query_t query_job = mtl_read_job_query(mem_in, act_reg->Data.job_address);
+    //     mtl_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
     //     return retc;
     // }
-    // else if (act_reg->Data.job_type == MF_JOB_ACCESS)
+    // else if (act_reg->Data.job_type == MTL_JOB_ACCESS)
     // {
-    //     mf_job_access_t access_job = mf_read_job_access(mem_in, act_reg->Data.job_address);
+    //     mtl_job_access_t access_job = mtl_read_job_access(mem_in, act_reg->Data.job_address);
     //     return action_access(mem_in, mem_out, mem_ddr_in, access_job);
     // }
-    else if (act_reg->Data.job_type == MF_JOB_MOUNT)
+    else if (act_reg->Data.job_type == MTL_JOB_MOUNT)
     {
 #ifdef NVME_ENABLED
-        mf_job_fileop_t mount_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
+        mtl_job_fileop_t mount_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
         return action_mount(nvme, mount_job);
 #else
         return SNAP_RETC_SUCCESS;
 #endif
     }
-    else if (act_reg->Data.job_type == MF_JOB_WRITEBACK)
+    else if (act_reg->Data.job_type == MTL_JOB_WRITEBACK)
     {
 #ifdef NVME_ENABLED
-        mf_job_fileop_t writeback_job = mf_read_job_fileop(mem_in, act_reg->Data.job_address);
+        mtl_job_fileop_t writeback_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
         return action_writeback(nvme, writeback_job);
 #else
         return SNAP_RETC_SUCCESS;
 #endif
     }
-    else if (act_reg->Data.job_type == MF_JOB_CONFIGURE_STREAMS)
+    else if (act_reg->Data.job_type == MTL_JOB_CONFIGURE_STREAMS)
     {
         return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
-    else if (act_reg->Data.job_type == MF_JOB_RUN_AFUS)
+    else if (act_reg->Data.job_type == MTL_JOB_RUN_AFUS)
     {
         return action_run_afus(
             mem_in,
@@ -318,45 +318,45 @@ static mf_retc_t process_action(snap_membus_t * mem_in,
             axis_m_7
         );
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_READ_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), read_mem_config);
+        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_mem_config);
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_WRITE_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), write_mem_config);
+        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_mem_config);
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), read_ddr_mem_config);
+        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mf_get64<0>(line), mf_get64<8>(line), write_ddr_mem_config);
+        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MF_JOB_AFU_CHANGE_CASE_SET_MODE)
+    else if (act_reg->Data.job_type == MTL_JOB_AFU_CHANGE_CASE_SET_MODE)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_change_case_set_mode(mf_get64<0>(line));
+        return afu_change_case_set_mode(mtl_get64<0>(line));
     }
     return SNAP_RETC_FAILURE;
 }
 
 // File Map / Unmap Operation:
-static mf_retc_t action_map(snap_membus_t * mem_in,
-                            const mf_job_map_t & job)
+static mtl_retc_t action_map(snap_membus_t * mem_in,
+                            const mtl_job_map_t & job)
 {
     switch (job.slot) {
         case 0: {
-            mf_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
+            mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mf_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
+            mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -365,36 +365,36 @@ static mf_retc_t action_map(snap_membus_t * mem_in,
     }
 }
 
-// static mf_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mf_job_query_t & job)
+// static mtl_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mtl_job_query_t & job)
 // {
 //     snap_membus_t line;
 //     snapu64_t lblk = job.lblock_to_pblock;
 //     if (job.query_mapping)
 //     {
-//         job.lblock_to_pblock = mf_file_map_pblock(job.slot, job.lblock_to_pblock);
+//         job.lblock_to_pblock = mtl_file_map_pblock(job.slot, job.lblock_to_pblock);
 //     }
 //     if (job.query_state)
 //     {
-//         job.is_open = mf_file_is_open(job.slot)? MF_TRUE : MF_FALSE;
-//         job.is_active = mf_file_is_active(job.slot)? MF_TRUE : MF_FALSE;
-//         job.extent_count = mf_file_get_extent_count(job.slot);
-//         job.block_count = mf_file_get_block_count(job.slot);
-//         job.current_lblock = mf_file_get_lblock(job.slot);
-//         job.current_pblock = mf_file_get_pblock(job.slot);
+//         job.is_open = mtl_file_is_open(job.slot)? MTL_TRUE : MTL_FALSE;
+//         job.is_active = mtl_file_is_active(job.slot)? MTL_TRUE : MTL_FALSE;
+//         job.extent_count = mtl_file_get_extent_count(job.slot);
+//         job.block_count = mtl_file_get_block_count(job.slot);
+//         job.current_lblock = mtl_file_get_lblock(job.slot);
+//         job.current_pblock = mtl_file_get_pblock(job.slot);
 //     }
-//     mf_write_job_query(mem_out, job_address, job);
+//     mtl_write_job_query(mem_out, job_address, job);
 //     return SNAP_RETC_SUCCESS;
 // }
 
-static mf_retc_t action_mount(snapu32_t * nvme, const mf_job_fileop_t & job)
+static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
 {
     switch (job.slot) {
         case 0: {
-            mf_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mf_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -403,15 +403,15 @@ static mf_retc_t action_mount(snapu32_t * nvme, const mf_job_fileop_t & job)
     }
 }
 
-static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job)
+static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
 {
     switch (job.slot) {
         case 0: {
-            mf_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mf_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -420,40 +420,40 @@ static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job)
     }
 }
 
-// static mf_retc_t action_access(snap_membus_t * mem_in,
+// static mtl_retc_t action_access(snap_membus_t * mem_in,
 //                                snap_membus_t * mem_out,
 //                                snap_membus_t * mem_ddr,
-//                                const mf_job_access_t & job)
+//                                const mtl_job_access_t & job)
 // {
-//     if (! mf_file_is_open(job.slot))
+//     if (! mtl_file_is_open(job.slot))
 //     {
 //         return SNAP_RETC_FAILURE;
 //     }
 
-//     const snapu64_t file_blocks = mf_file_get_block_count(job.slot);
-//     const snapu64_t file_bytes = file_blocks * MF_BLOCK_BYTES;
+//     const snapu64_t file_blocks = mtl_file_get_block_count(job.slot);
+//     const snapu64_t file_bytes = file_blocks * MTL_BLOCK_BYTES;
 //     if (job.file_byte_offset + job.file_byte_count > file_bytes)
 //     {
 //         return SNAP_RETC_FAILURE;
 //     }
 
-//     const mf_block_offset_t file_begin_offset = MF_BLOCK_OFFSET(job.file_byte_offset);
-//     const snapu64_t file_begin_block = MF_BLOCK_NUMBER(job.file_byte_offset);
-//     const mf_block_offset_t file_end_offset = MF_BLOCK_OFFSET(job.file_byte_offset + job.file_byte_count - 1);
-//     const snapu64_t file_end_block = MF_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
+//     const mtl_block_offset_t file_begin_offset = MTL_BLOCK_OFFSET(job.file_byte_offset);
+//     const snapu64_t file_begin_block = MTL_BLOCK_NUMBER(job.file_byte_offset);
+//     const mtl_block_offset_t file_end_offset = MTL_BLOCK_OFFSET(job.file_byte_offset + job.file_byte_count - 1);
+//     const snapu64_t file_end_block = MTL_BLOCK_NUMBER(job.file_byte_offset + job.file_byte_count - 1);
 
 //     snapu64_t buffer_address = job.buffer_address;
-//     if (! mf_file_seek(mem_ddr, job.slot, file_begin_block, MF_FALSE)) return SNAP_RETC_FAILURE;
+//     if (! mtl_file_seek(mem_ddr, job.slot, file_begin_block, MTL_FALSE)) return SNAP_RETC_FAILURE;
 //     for (snapu64_t i_block = file_begin_block; i_block <= file_end_block; ++i_block)
 //     {
-//         /* mf_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0; */
-//         /* mf_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MF_BLOCK_BYTES - 1; */
-//         mf_block_offset_t begin_offset = 0;
+//         /* mtl_block_offset_t begin_offset = (i_block == file_begin_block)? file_begin_offset : 0; */
+//         /* mtl_block_offset_t end_offset = (i_block == file_end_block)? file_end_offset : MTL_BLOCK_BYTES - 1; */
+//         mtl_block_offset_t begin_offset = 0;
 //         if (i_block == file_begin_block)
 //         {
 //             begin_offset = file_begin_offset;
 //         }
-//         mf_block_offset_t end_offset = MF_BLOCK_BYTES - 1;
+//         mtl_block_offset_t end_offset = MTL_BLOCK_BYTES - 1;
 //         if (i_block == file_end_block)
 //         {
 //             end_offset = file_end_offset;
@@ -472,11 +472,11 @@ static mf_retc_t action_writeback(snapu32_t * nvme, const mf_job_fileop_t & job)
 
 //         if (i_block == file_end_block)
 //         {
-//             if (! mf_file_flush(mem_ddr, job.slot)) return SNAP_RETC_FAILURE;
+//             if (! mtl_file_flush(mem_ddr, job.slot)) return SNAP_RETC_FAILURE;
 //         }
 //         else
 //         {
-//             if (! mf_file_next(mem_ddr, job.slot, MF_TRUE)) return SNAP_RETC_FAILURE;
+//             if (! mtl_file_next(mem_ddr, job.slot, MTL_TRUE)) return SNAP_RETC_FAILURE;
 //         }
 //     }
 //     return SNAP_RETC_SUCCESS;
@@ -502,48 +502,48 @@ void switch_commit(snapu32_t *switch_ctrl) {
 
 static snapu64_t _enable_mask = 0;
 
-static mf_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
+static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
     // Everything fits into one memory line
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
 
-    _enable_mask = mf_get64(line, 0);
+    _enable_mask = mtl_get64(line, 0);
 
-    switch_set_mapping(switch_ctrl, mf_get32(line,  8), 0);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 12), 1);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 16), 2);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 20), 3);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 24), 4);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 28), 5);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 32), 6);
-    switch_set_mapping(switch_ctrl, mf_get32(line, 36), 7);
+    switch_set_mapping(switch_ctrl, mtl_get32(line,  8), 0);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 12), 1);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 16), 2);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 20), 3);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 24), 4);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 28), 5);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 32), 6);
+    switch_set_mapping(switch_ctrl, mtl_get32(line, 36), 7);
     switch_commit(switch_ctrl);
 
     return SNAP_RETC_SUCCESS;
 }
 
-static mf_retc_t action_run_afus(
+static mtl_retc_t action_run_afus(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    mf_stream &axis_s_0,
-    mf_stream &axis_s_1,
-    mf_stream &axis_s_2,
-    mf_stream &axis_s_3,
-    mf_stream &axis_s_4,
-    mf_stream &axis_s_5,
-    mf_stream &axis_s_6,
-    mf_stream &axis_s_7,
-    mf_stream &axis_m_0,
-    mf_stream &axis_m_1,
-    mf_stream &axis_m_2,
-    mf_stream &axis_m_3,
-    mf_stream &axis_m_4,
-    mf_stream &axis_m_5,
-    mf_stream &axis_m_6,
-    mf_stream &axis_m_7
+    mtl_stream &axis_s_0,
+    mtl_stream &axis_s_1,
+    mtl_stream &axis_s_2,
+    mtl_stream &axis_s_3,
+    mtl_stream &axis_s_4,
+    mtl_stream &axis_s_5,
+    mtl_stream &axis_s_6,
+    mtl_stream &axis_s_7,
+    mtl_stream &axis_m_0,
+    mtl_stream &axis_m_1,
+    mtl_stream &axis_m_2,
+    mtl_stream &axis_m_3,
+    mtl_stream &axis_m_4,
+    mtl_stream &axis_m_5,
+    mtl_stream &axis_m_6,
+    mtl_stream &axis_m_7
 ) {
     snap_bool_t enable_0 = _enable_mask[0];
     snap_bool_t enable_1 = _enable_mask[1];
@@ -591,10 +591,10 @@ static mf_retc_t action_run_afus(
 }
 
 // static void action_file_write_block(snap_membus_t * mem_in,
-//                                     mf_slot_offset_t slot,
+//                                     mtl_slot_offset_t slot,
 //                                     snapu64_t buffer_address,
-//                                     mf_block_offset_t begin_offset,
-//                                     mf_block_offset_t end_offset)
+//                                     mtl_block_offset_t begin_offset,
+//                                     mtl_block_offset_t end_offset)
 // {
 //     snapu64_t end_address = buffer_address + end_offset - begin_offset;
 
@@ -603,7 +603,7 @@ static mf_retc_t action_run_afus(
 //     snapu64_t end_line = MFB_ADDRESS(end_address);
 //     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
 
-//     mf_block_offset_t offset = begin_offset;
+//     mtl_block_offset_t offset = begin_offset;
 //     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
 //     {
 //         snap_membus_t line = mem_in[i_line];
@@ -619,17 +619,17 @@ static mf_retc_t action_run_afus(
 //         }
 //         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
 //         {
-//             mf_file_buffers[slot][offset++] = mf_get8(line, i_byte);
+//             mtl_file_buffers[slot][offset++] = mtl_get8(line, i_byte);
 //         }
 //     }
 // }
 
 // static void action_file_read_block(snap_membus_t * mem_in,
 //                                    snap_membus_t * mem_out,
-//                                    mf_slot_offset_t slot,
+//                                    mtl_slot_offset_t slot,
 //                                    snapu64_t buffer_address,
-//                                    mf_block_offset_t begin_offset,
-//                                    mf_block_offset_t end_offset)
+//                                    mtl_block_offset_t begin_offset,
+//                                    mtl_block_offset_t end_offset)
 // {
 //     snapu64_t end_address = buffer_address + end_offset - begin_offset;
 
@@ -638,7 +638,7 @@ static mf_retc_t action_run_afus(
 //     snapu64_t end_line = MFB_ADDRESS(end_address);
 //     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
 
-//     mf_block_offset_t offset = begin_offset;
+//     mtl_block_offset_t offset = begin_offset;
 //     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
 //     {
 //         snap_membus_t line = mem_in[i_line];
@@ -654,7 +654,7 @@ static mf_retc_t action_run_afus(
 //         }
 //         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
 //         {
-//             mf_set8(line, i_byte, mf_file_buffers[slot][offset++]);
+//             mtl_set8(line, i_byte, mtl_file_buffers[slot][offset++]);
 //         }
 //         mem_out[i_line] = line;
 //     }
@@ -672,7 +672,7 @@ static mf_retc_t action_run_afus(
 int test_afu_mem_read() {
     static snap_membus_t src_mem[16];
     static uint8_t *src_memb = (uint8_t *) src_mem;
-    static mf_stream out_stream;
+    static mtl_stream out_stream;
 
     // Fill the memory with data
     for (int i = 0; i < 1024; ++i) {
@@ -689,7 +689,7 @@ int test_afu_mem_read() {
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
-        mf_stream_element result;
+        mtl_stream_element result;
         for (int element = 0; element < 8; ++element) {
             result = out_stream.read();
             success &= memcmp(&result.data, &src_memb[element * 8], 8) == 0;
@@ -707,7 +707,7 @@ int test_afu_mem_read() {
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
-        mf_stream_element result;
+        mtl_stream_element result;
         for (int element = 0; element < 2 * 8; ++element) {
             result = out_stream.read();
             success &= memcmp(&result.data, &src_memb[element * 8], 8) == 0;
@@ -725,7 +725,7 @@ int test_afu_mem_read() {
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
-        mf_stream_element result;
+        mtl_stream_element result;
         for (int element = 0; element < 8 / 2; ++element) {
             result = out_stream.read();
             success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
@@ -742,7 +742,7 @@ int test_afu_mem_read() {
         afu_mem_set_config(offset, size, read_mem_config);
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
-        mf_stream_element result;
+        mtl_stream_element result;
         for (int element = 0; element < 12; ++element) {
             result = out_stream.read();
             success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
@@ -760,7 +760,7 @@ int test_afu_mem_read() {
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
-        mf_stream_element result;
+        mtl_stream_element result;
         for (int element = 0; element < 12; ++element) {
             result = out_stream.read();
             success &= memcmp(&result.data, &src_memb[element * 8 + offset], 8) == 0;
@@ -777,7 +777,7 @@ int test_afu_mem_read() {
         afu_mem_set_config(offset, size, read_mem_config);
         afu_mem_read(src_mem, out_stream, read_mem_config, true);
 
-        mf_stream_element result = out_stream.read();
+        mtl_stream_element result = out_stream.read();
         success &= memcmp(&result.data, &src_memb[offset], 4) == 0;
         success &= result.strb == 0x0f;
         success &= result.last == true;
@@ -789,10 +789,10 @@ int test_afu_mem_read() {
 }
 
 int test_afu_mem_write() {
-    static mf_stream in_stream;
+    static mtl_stream in_stream;
     static snap_membus_t dest_mem[16];
     static uint8_t *dest_memb = (uint8_t *) dest_mem;
-    static mf_stream_element stream_elements[128];
+    static mtl_stream_element stream_elements[128];
     static uint8_t reference_data[1024];
 
     // Fill the stream elements with data
@@ -816,7 +816,7 @@ int test_afu_mem_write() {
 
         // 8 stream elements make up a memory line
         for (int element = 0; element < 8; ++element) {
-            mf_stream_element e = stream_elements[element];
+            mtl_stream_element e = stream_elements[element];
             e.strb = 0xff;
             e.last = element == 7;
             in_stream.write(e);
@@ -837,7 +837,7 @@ int test_afu_mem_write() {
 
         // 8 stream elements make up a memory line
         for (int element = 0; element < 16; ++element) {
-            mf_stream_element e = stream_elements[element];
+            mtl_stream_element e = stream_elements[element];
             e.strb = 0xff;
             e.last = element == 15;
             in_stream.write(e);
@@ -858,7 +858,7 @@ int test_afu_mem_write() {
 
         // 8 stream elements make up a memory line
         for (int element = 0; element < 4; ++element) {
-            mf_stream_element e = stream_elements[element];
+            mtl_stream_element e = stream_elements[element];
             e.strb = 0xff;
             e.last = element == 3;
             in_stream.write(e);
@@ -879,7 +879,7 @@ int test_afu_mem_write() {
 
         // 8 stream elements make up a memory line
         for (int element = 0; element < 4; ++element) {
-            mf_stream_element e = stream_elements[element];
+            mtl_stream_element e = stream_elements[element];
             e.strb = 0xff;
             e.last = element == 3;
             in_stream.write(e);
@@ -900,7 +900,7 @@ int test_afu_mem_write() {
 
 		// 8 stream elements make up a memory line
 		for (int element = 0; element < 12; ++element) {
-			mf_stream_element e = stream_elements[element];
+			mtl_stream_element e = stream_elements[element];
 			e.strb = 0xff;
 			e.last = element == 11;
 			in_stream.write(e);
@@ -931,32 +931,32 @@ int main()
 
     // Streams
     static snapu32_t switch_ctrl[32];
-    static mf_stream stream_0_2;
-    static mf_stream stream_1_1; // Shortcut for disabled op
-    static mf_stream stream_2_3;
-    static mf_stream stream_3_4;
-    static mf_stream stream_4_5;
-    static mf_stream stream_5_6;
-    static mf_stream stream_6_7;
-    static mf_stream stream_7_0;
+    static mtl_stream stream_0_2;
+    static mtl_stream stream_1_1; // Shortcut for disabled op
+    static mtl_stream stream_2_3;
+    static mtl_stream stream_3_4;
+    static mtl_stream stream_4_5;
+    static mtl_stream stream_5_6;
+    static mtl_stream stream_6_7;
+    static mtl_stream stream_7_0;
 
-    mf_stream &axis_s_0 = stream_7_0;
-    mf_stream &axis_s_1 = stream_1_1;
-    mf_stream &axis_s_2 = stream_0_2;
-    mf_stream &axis_s_3 = stream_2_3;
-    mf_stream &axis_s_4 = stream_3_4;
-    mf_stream &axis_s_5 = stream_4_5;
-    mf_stream &axis_s_6 = stream_5_6;
-    mf_stream &axis_s_7 = stream_6_7;
+    mtl_stream &axis_s_0 = stream_7_0;
+    mtl_stream &axis_s_1 = stream_1_1;
+    mtl_stream &axis_s_2 = stream_0_2;
+    mtl_stream &axis_s_3 = stream_2_3;
+    mtl_stream &axis_s_4 = stream_3_4;
+    mtl_stream &axis_s_5 = stream_4_5;
+    mtl_stream &axis_s_6 = stream_5_6;
+    mtl_stream &axis_s_7 = stream_6_7;
 
-    mf_stream &axis_m_0 = stream_0_2;
-    mf_stream &axis_m_1 = stream_1_1;
-    mf_stream &axis_m_2 = stream_2_3;
-    mf_stream &axis_m_3 = stream_3_4;
-    mf_stream &axis_m_4 = stream_4_5;
-    mf_stream &axis_m_5 = stream_5_6;
-    mf_stream &axis_m_6 = stream_6_7;
-    mf_stream &axis_m_7 = stream_7_0;
+    mtl_stream &axis_m_0 = stream_0_2;
+    mtl_stream &axis_m_1 = stream_1_1;
+    mtl_stream &axis_m_2 = stream_2_3;
+    mtl_stream &axis_m_3 = stream_3_4;
+    mtl_stream &axis_m_4 = stream_4_5;
+    mtl_stream &axis_m_5 = stream_5_6;
+    mtl_stream &axis_m_6 = stream_6_7;
+    mtl_stream &axis_m_7 = stream_7_0;
 
     // read action config:
     act_reg.Control.flags = 0x0;
@@ -993,7 +993,7 @@ int main()
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_MAP;
+    act_reg.Data.job_type = MTL_JOB_MAP;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1016,7 +1016,7 @@ int main()
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_MAP;
+    act_reg.Data.job_type = MTL_JOB_MAP;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1036,7 +1036,7 @@ int main()
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_QUERY;
+    act_reg.Data.job_type = MTL_JOB_QUERY;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1056,21 +1056,21 @@ int main()
     job_mem[3] = htobe64(6144); // 6K length
 
     snap_membus_t data_line = 0;
-    mf_set64(data_line, 0, 0xda7a111100000001ull);
-    mf_set64(data_line, 8, 0xda7a222200000002ull);
-    mf_set64(data_line, 16, 0xda7a333300000003ull);
-    mf_set64(data_line, 24, 0xda7a444400000004ull);
-    mf_set64(data_line, 32, 0xda7a555500000005ull);
-    mf_set64(data_line, 40, 0xda7a666600000006ull);
-    mf_set64(data_line, 48, 0xda7a777700000007ull);
-    mf_set64(data_line, 56, 0xda7a888800000008ull);
+    mtl_set64(data_line, 0, 0xda7a111100000001ull);
+    mtl_set64(data_line, 8, 0xda7a222200000002ull);
+    mtl_set64(data_line, 16, 0xda7a333300000003ull);
+    mtl_set64(data_line, 24, 0xda7a444400000004ull);
+    mtl_set64(data_line, 32, 0xda7a555500000005ull);
+    mtl_set64(data_line, 40, 0xda7a666600000006ull);
+    mtl_set64(data_line, 48, 0xda7a777700000007ull);
+    mtl_set64(data_line, 56, 0xda7a888800000008ull);
     for (int i = 0; i < 96; ++i) {
         host_gmem[2+i] = data_line;
     }
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_ACCESS;
+    act_reg.Data.job_type = MTL_JOB_ACCESS;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1090,7 +1090,7 @@ int main()
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_ACCESS;
+    act_reg.Data.job_type = MTL_JOB_ACCESS;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1128,7 +1128,7 @@ int main()
 
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_CONFIGURE_STREAMS;
+    act_reg.Data.job_type = MTL_JOB_CONFIGURE_STREAMS;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1142,7 +1142,7 @@ int main()
     job_mem[0] = htobe64(0x80);
     job_mem[1] = htobe64(68);
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
+    act_reg.Data.job_type = MTL_JOB_AFU_MEM_SET_READ_BUFFER;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1157,7 +1157,7 @@ int main()
     job_mem[1] = htobe64(126);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_AFU_MEM_SET_WRITE_BUFFER;
+    act_reg.Data.job_type = MTL_JOB_AFU_MEM_SET_WRITE_BUFFER;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1171,7 +1171,7 @@ int main()
     job_mem[0] = htobe64(0);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
+    act_reg.Data.job_type = MTL_JOB_AFU_CHANGE_CASE_SET_MODE;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1191,7 +1191,7 @@ int main()
     memset(&job_mem_b[0x100], 'e', 128);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MF_JOB_RUN_AFUS;
+    act_reg.Data.job_type = MTL_JOB_RUN_AFUS;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1210,7 +1210,7 @@ int main()
         job_mem[2] = htobe64(0x80);
         job_mem[3] = htobe64(1);
         act_reg.Data.job_address = 0;
-        act_reg.Data.job_type = MF_JOB_WRITEBACK;
+        act_reg.Data.job_type = MTL_JOB_WRITEBACK;
         hls_action(host_gmem, host_gmem,
     #ifdef DRAM_ENABLED
             dram_gmem, dram_gmem,

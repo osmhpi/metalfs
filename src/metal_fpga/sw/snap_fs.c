@@ -22,7 +22,7 @@
 
 typedef struct {
     uint64_t map;
-    mf_extent_t * extents;
+    mtl_extent_t * extents;
     uint16_t extent_count;
 } map_options_t;
 
@@ -97,27 +97,27 @@ static void read_options(int argc, char ** argv)
             opts.slot_no = strtol(optarg, (char **)NULL, 0);
             break;
         case 'm':
-            opts.func_type = MF_JOB_MAP;
+            opts.func_type = MTL_JOB_MAP;
             opts.func_options.map_opts.map = 0xFFFFFFFFFFFFFFFF;
             read_extent_list(&opts.func_options.map_opts.extents, &opts.func_options.map_opts.extent_count, optarg);
             break;
         case 'S':
-            opts.func_type = MF_JOB_QUERY;
+            opts.func_type = MTL_JOB_QUERY;
             opts.func_options.query_opts.query_state = 0xFF;
             // replace with query
-            //opts.operation = MF_FILEMAP_MODE_TEST;
+            //opts.operation = MTL_FILEMAP_MODE_TEST;
             //opts.logical_block = strtol(optarg, (char **)NULL, 0);
             break;
         case 'M':
-            opts.func_type = MF_JOB_QUERY;
+            opts.func_type = MTL_JOB_QUERY;
             opts.func_options.query_opts.query_mapping = 0xFF;
             opts.func_options.query_opts.lblock = strtol(optarg, (char **)NULL, 0);
             // replace with query
-            //opts.operation = MF_FILEMAP_MODE_TEST;
+            //opts.operation = MTL_FILEMAP_MODE_TEST;
             //opts.logical_block = strtol(optarg, (char **)NULL, 0);
             break;
         case 'u':
-            opts.func_type = MF_JOB_MAP;
+            opts.func_type = MTL_JOB_MAP;
             opts.func_options.map_opts.map = 0;
             break;
         case 'v':
@@ -156,13 +156,13 @@ static char * tokenize(char *input, char delimeter, char **next_token, int *char
 }
 
 // parses extents from input string, extents need to be formatted as <start>:<length>,<start>:length>...
-static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, char * input)
+static void read_extent_list(mtl_extent_t ** extents, uint16_t * extent_count, char * input)
 {
     if (*extents)
     {
         free(*extents);
     }
-    *extents = malloc(sizeof(mf_extent_t));
+    *extents = malloc(sizeof(mtl_extent_t));
     uint16_t extent_vector_size = 1;
     *extent_count = 0;
 
@@ -182,11 +182,11 @@ static void read_extent_list(mf_extent_t ** extents, uint16_t * extent_count, ch
         if (*extent_count > extent_vector_size)
         {
             extent_vector_size *= 2;
-            *extents = realloc(*extents, extent_vector_size * sizeof(mf_extent_t));
+            *extents = realloc(*extents, extent_vector_size * sizeof(mtl_extent_t));
         }
 
         // parse extent_start and extent_length from token and store it in extents
-        mf_extent_t *new_extent = *extents + (unsigned int)*extent_count - 1;
+        mtl_extent_t *new_extent = *extents + (unsigned int)*extent_count - 1;
         char *extent_length;
         int token_length = strlen(token);
         char *extent_start = tokenize(token, ':', &extent_length, &token_length); // rest of token get's put into extent_length, conveniently the rest of the token IS the current extent's length.
@@ -209,7 +209,7 @@ static void snap_prepare_query_job(struct snap_job *cjob, metalfpga_job_t *mjob)
         return;
     }*/
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
-    mjob->job_type = MF_JOB_QUERY;
+    mjob->job_type = MTL_JOB_QUERY;
 
     // build query job struct
     uint8_t *job_flags = (uint8_t*) job_struct;
@@ -242,7 +242,7 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
         return;
     }*/
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
-    mjob->job_type = MF_JOB_MAP;
+    mjob->job_type = MTL_JOB_MAP;
 
     // build map job struct
     job_struct[0] = htobe64(opts.slot_no);
@@ -267,7 +267,7 @@ static void snap_prepare_map_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_job_t *mjob, int config)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_CONFIGURE_STREAMS;
+    mjob->job_type = MTL_JOB_CONFIGURE_STREAMS;
     mjob->job_address = (uint64_t)snap_malloc(sizeof(uint32_t) * 10);
 
     uint64_t enable_mask = 0;
@@ -312,7 +312,7 @@ static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_
 static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_RUN_AFUS;
+    mjob->job_type = MTL_JOB_RUN_AFUS;
     mjob->job_address = 0;
 
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
@@ -321,7 +321,7 @@ static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mj
 static void snap_prepare_afu_mem_set_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_AFU_MEM_SET_READ_BUFFER;
+    mjob->job_type = MTL_JOB_AFU_MEM_SET_READ_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -333,7 +333,7 @@ static void snap_prepare_afu_mem_set_read_buffer_job(struct snap_job *cjob, meta
 static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_AFU_MEM_SET_WRITE_BUFFER;
+    mjob->job_type = MTL_JOB_AFU_MEM_SET_WRITE_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -345,7 +345,7 @@ static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, met
 static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
+    mjob->job_type = MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -357,7 +357,7 @@ static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob,
 static void snap_prepare_afu_mem_set_dram_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER;
+    mjob->job_type = MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -369,7 +369,7 @@ static void snap_prepare_afu_mem_set_dram_write_buffer_job(struct snap_job *cjob
 static void snap_prepare_simple_map_job(struct snap_job *cjob, metalfpga_job_t *mjob, int slot)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_MAP;
+    mjob->job_type = MTL_JOB_MAP;
     mjob->job_address = (uint64_t)snap_malloc(10 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -384,7 +384,7 @@ static void snap_prepare_simple_map_job(struct snap_job *cjob, metalfpga_job_t *
 static void snap_prepare_mount_job(struct snap_job *cjob, metalfpga_job_t *mjob, int slot)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_MOUNT;
+    mjob->job_type = MTL_JOB_MOUNT;
     mjob->job_address = (uint64_t)snap_malloc(4 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -398,7 +398,7 @@ static void snap_prepare_mount_job(struct snap_job *cjob, metalfpga_job_t *mjob,
 static void snap_prepare_writeback_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MF_JOB_WRITEBACK;
+    mjob->job_type = MTL_JOB_WRITEBACK;
     mjob->job_address = (uint64_t)snap_malloc(4 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -412,7 +412,7 @@ static void snap_prepare_writeback_job(struct snap_job *cjob, metalfpga_job_t *m
 // static void snap_prepare_afu_change_case_set_mode_job(struct snap_job *cjob, metalfpga_job_t *mjob, uint64_t mode)
 // {
 //     memset(mjob, 0, sizeof(*mjob));
-//     mjob->job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
+//     mjob->job_type = MTL_JOB_AFU_CHANGE_CASE_SET_MODE;
 //     mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
 
 //     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -577,10 +577,10 @@ int main(int argc, char *argv[])
         snap_prepare_run_afus_job(&cjob, &mjob);
     } else {
     switch(opts.func_type) {
-        case MF_JOB_MAP:
+        case MTL_JOB_MAP:
             snap_prepare_map_job(&cjob, &mjob);
             break;
-        case MF_JOB_QUERY:
+        case MTL_JOB_QUERY:
             snap_prepare_query_job(&cjob, &mjob);
             break;
     }
@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
     print_memory_64(out_data);
 
     // output query results
-    if (opts.func_type == MF_JOB_QUERY) {
+    if (opts.func_type == MTL_JOB_QUERY) {
         query_options_t query_opts = opts.func_options.query_opts;
         uint64_t *result = (uint64_t *)mjob.job_address;
         print_memory_64((uint8_t*)(result));

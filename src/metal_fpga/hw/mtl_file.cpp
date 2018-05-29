@@ -1,66 +1,66 @@
-#include "mf_file.h"
+#include "mtl_file.h"
 
-#include "mf_endian.h"
+#include "mtl_endian.h"
 
 
-mf_bool_t mf_file_seek(mf_extmap_t & map,
-                       mf_filebuf_t & buffer,
+mtl_bool_t mtl_file_seek(mtl_extmap_t & map,
+                       mtl_filebuf_t & buffer,
                        snap_membus_t * ddr,
                        snapu64_t lblock)
 {
-    if (!mf_extmap_seek(map, lblock)) {
-        return MF_FALSE;
+    if (!mtl_extmap_seek(map, lblock)) {
+        return MTL_FALSE;
     }
     //TODO-lw READ BLOCK map.current_pblock
-    return MF_TRUE;
+    return MTL_TRUE;
 }
 
-mf_bool_t mf_file_next(mf_extmap_t & map,
-                       mf_filebuf_t & buffer,
+mtl_bool_t mtl_file_next(mtl_extmap_t & map,
+                       mtl_filebuf_t & buffer,
                        snap_membus_t * ddr)
 {
-    if (!mf_extmap_next(map)) {
-        return MF_FALSE;
+    if (!mtl_extmap_next(map)) {
+        return MTL_FALSE;
     }
     //TODO-lw READ BLOCK map.current_pblock
-    return MF_TRUE;
+    return MTL_TRUE;
 }
 
-void mf_file_flush(mf_extmap_t & slot,
-                   mf_filebuf_t & buffer,
+void mtl_file_flush(mtl_extmap_t & slot,
+                   mtl_filebuf_t & buffer,
                    snap_membus_t * ddr)
 {
     //TODO-lw WRITE BLOCK map.current_pblock
 }
 
-// static mf_bool_t mf_file_write_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
+// static mtl_bool_t mtl_file_write_buffer(snap_membus_t * mem, mtl_slot_state_t & slot)
 // {
 //     snap_membus_t line = 0;
-//     ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
-//     for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
+//     ap_uint<MTL_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
+//     for (mtl_block_count_t i_byte = 0; i_byte < MTL_BLOCK_BYTES; ++i_byte) {
 //         line = (line << 8) | slot.buffer[i_byte];
 //         if (i_byte % ADDR_RIGHT_SHIFT == ADDR_RIGHT_SHIFT - 1) {
 //             mem[i_line++] = line;
 //         }
 //     }
-//     return MF_TRUE;
+//     return MTL_TRUE;
 // }
 
-// static mf_bool_t mf_file_read_buffer(snap_membus_t * mem, mf_slot_state_t & slot)
+// static mtl_bool_t mtl_file_read_buffer(snap_membus_t * mem, mtl_slot_state_t & slot)
 // {
 //     snap_membus_t line = 0;
-//     ap_uint<MF_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
-//     for (mf_block_count_t i_byte = 0; i_byte < MF_BLOCK_BYTES; ++i_byte) {
+//     ap_uint<MTL_BLOCK_BYTE_OFFSET_W - ADDR_RIGHT_SHIFT> i_line = 0;
+//     for (mtl_block_count_t i_byte = 0; i_byte < MTL_BLOCK_BYTES; ++i_byte) {
 //         if (i_byte % ADDR_RIGHT_SHIFT == 0) {
 //             line = mem[i_line++];
 //         }
 //         slot.buffer[i_byte] = (line >> (MEMDW - 8)) & 0xff;
 //         line = (line << 8);
 //     }
-//     return MF_TRUE;
+//     return MTL_TRUE;
 // }
 
-static mf_bool_t mf_nvme_write_burst(snapu32_t *d_nvme,
+static mtl_bool_t mtl_nvme_write_burst(snapu32_t *d_nvme,
                  snapu64_t ddr_addr,
                  snapu64_t ssd_lb_addr,
                  snap_bool_t drive_id,
@@ -100,10 +100,10 @@ static mf_bool_t mf_nvme_write_burst(snapu32_t *d_nvme,
         }
     }
 
-    return rc == 1 ? MF_TRUE : MF_FALSE;
+    return rc == 1 ? MTL_TRUE : MTL_FALSE;
 }
 
-static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
+static mtl_bool_t mtl_nvme_read_burst(snapu32_t *d_nvme,
                   snapu64_t ddr_addr,
                   snapu64_t ssd_lb_addr,
                   snap_bool_t drive_id,
@@ -143,81 +143,81 @@ static mf_bool_t mf_nvme_read_burst(snapu32_t *d_nvme,
         }
     }
 
-    return rc == 1 ? MF_TRUE : MF_FALSE;
+    return rc == 1 ? MTL_TRUE : MTL_FALSE;
 }
 
-// static mf_bool_t mf_file_store_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
+// static mtl_bool_t mtl_file_store_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mtl_slot_state_t & slot)
 // {
-//     return mf_file_write_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot) &&
-//             mf_nvme_write_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512);
+//     return mtl_file_write_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot) &&
+//             mtl_nvme_write_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MTL_BLOCK_BYTES/512);
 // }
 
-// static mf_bool_t mf_file_load_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mf_slot_state_t & slot)
+// static mtl_bool_t mtl_file_load_buffer(snap_membus_t * mem, snapu32_t * nvme_ctrl, mtl_slot_state_t & slot)
 // {
-//     return mf_nvme_read_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MF_BLOCK_BYTES/512) &&
-//             mf_file_read_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot);
+//     return mtl_nvme_read_burst(nvme_ctrl, slot.block_buffer_address, slot.current_pblock, false, MTL_BLOCK_BYTES/512) &&
+//             mtl_file_read_buffer(mem + MFB_ADDRESS(slot.block_buffer_address), slot);
 // }
 
-mf_bool_t mf_file_load_buffer(snapu32_t * nvme_ctrl,
-    mf_extmap_t & map,
+mtl_bool_t mtl_file_load_buffer(snapu32_t * nvme_ctrl,
+    mtl_extmap_t & map,
     snapu64_t lblock,
     snapu64_t dest,
     snapu64_t length) {
 
-    mf_extmap_seek(map, lblock);
+    mtl_extmap_seek(map, lblock);
     snapu64_t remaining_blocks = length;
     snapu64_t current_offset = 0;
     snapu64_t end = lblock + length;
 
-    if (lblock + remaining_blocks > mf_extmap_block_count(map)) {
-        return MF_FALSE;
+    if (lblock + remaining_blocks > mtl_extmap_block_count(map)) {
+        return MTL_FALSE;
     }
 
     while (remaining_blocks > 0) {
-        snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
-        mf_nvme_read_burst(nvme_ctrl,
-            dest + (current_offset * MF_BLOCK_BYTES),
-            mf_extmap_pblock(map) * (MF_BLOCK_BYTES / 512),
+        snapu64_t current_extent_mount_length = mtl_extmap_remaining_blocks(map, end);
+        mtl_nvme_read_burst(nvme_ctrl,
+            dest + (current_offset * MTL_BLOCK_BYTES),
+            mtl_extmap_pblock(map) * (MTL_BLOCK_BYTES / 512),
             0,
-            current_extent_mount_length * (MF_BLOCK_BYTES / 512) - 1 // length is zero-based
+            current_extent_mount_length * (MTL_BLOCK_BYTES / 512) - 1 // length is zero-based
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;
 
-        mf_extmap_next_extent(map);
+        mtl_extmap_next_extent(map);
     }
 
-    return MF_TRUE;
+    return MTL_TRUE;
 }
 
-mf_bool_t mf_file_write_buffer(snapu32_t * nvme_ctrl,
-    mf_extmap_t & map,
+mtl_bool_t mtl_file_write_buffer(snapu32_t * nvme_ctrl,
+    mtl_extmap_t & map,
     snapu64_t lblock,
     snapu64_t dest,
     snapu64_t length) {
 
-    mf_extmap_seek(map, lblock);
+    mtl_extmap_seek(map, lblock);
     snapu64_t remaining_blocks = length;
     snapu64_t current_offset = 0;
     snapu64_t end = lblock + length;
 
-    if (lblock + remaining_blocks > mf_extmap_block_count(map)) {
-        return MF_FALSE;
+    if (lblock + remaining_blocks > mtl_extmap_block_count(map)) {
+        return MTL_FALSE;
     }
 
     while (remaining_blocks > 0) {
-        snapu64_t current_extent_mount_length = mf_extmap_remaining_blocks(map, end);
-        mf_nvme_write_burst(nvme_ctrl,
-            dest + (current_offset * MF_BLOCK_BYTES),
-            mf_extmap_pblock(map) * (MF_BLOCK_BYTES / 512),
+        snapu64_t current_extent_mount_length = mtl_extmap_remaining_blocks(map, end);
+        mtl_nvme_write_burst(nvme_ctrl,
+            dest + (current_offset * MTL_BLOCK_BYTES),
+            mtl_extmap_pblock(map) * (MTL_BLOCK_BYTES / 512),
             0,
-            current_extent_mount_length * (MF_BLOCK_BYTES / 512) - 1 // length is zero-based
+            current_extent_mount_length * (MTL_BLOCK_BYTES / 512) - 1 // length is zero-based
         );
         current_offset += current_extent_mount_length;
         remaining_blocks -= current_extent_mount_length;
 
-        mf_extmap_next_extent(map);
+        mtl_extmap_next_extent(map);
     }
 
-    return MF_TRUE;
+    return MTL_TRUE;
 }

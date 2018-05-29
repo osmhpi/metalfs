@@ -96,7 +96,7 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     }
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_CONFIGURE_STREAMS;
+    mjob.job_type = MTL_JOB_CONFIGURE_STREAMS;
     mjob.job_address = (uint64_t)job_struct_enable;
 
     struct snap_job cjob;
@@ -122,7 +122,7 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
 
 void mtl_run_pipeline() {
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_RUN_AFUS;
+    mjob.job_type = MTL_JOB_RUN_AFUS;
     mjob.job_address = 0;
 
     struct snap_job cjob;
@@ -166,7 +166,7 @@ void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint
     }
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_MAP;
+    mjob.job_type = MTL_JOB_MAP;
     mjob.job_address = (uint64_t)job_words;
 
     struct snap_job cjob;
@@ -210,7 +210,7 @@ void mtl_pipeline_set_file_write_extent_list(const mtl_file_extent *extents, uin
     }
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_MAP;
+    mjob.job_type = MTL_JOB_MAP;
     mjob.job_address = (uint64_t)job_words;
 
     struct snap_job cjob;

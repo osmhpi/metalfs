@@ -69,7 +69,7 @@ static int apply_config(struct snap_action *action) {
     job_struct[0] = htobe64(_mode);
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_AFU_CHANGE_CASE_SET_MODE;
+    mjob.job_type = MTL_JOB_AFU_CHANGE_CASE_SET_MODE;
     mjob.job_address = (uint64_t)job_struct;
 
     struct snap_job cjob;

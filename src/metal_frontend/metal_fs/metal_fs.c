@@ -21,7 +21,7 @@
 
 static char agent_filepath[255];
 
-static const char *afus_dir = "afus";
+static const char *operators_dir = "operators";
 static const char *files_dir = "files";
 static const char *socket_alias = ".hello";
 static char socket_filename[255];
@@ -44,7 +44,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         return 0;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s", afus_dir);
+    snprintf(test_filename, FILENAME_MAX, "/%s", operators_dir);
     if (strcmp(path, test_filename) == 0) {
         stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
@@ -98,7 +98,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     }
 
     for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_operators[i]->name);
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
@@ -124,12 +124,12 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         filler(buf, ".", NULL, 0);
         filler(buf, "..", NULL, 0);
         filler(buf, socket_alias, NULL, 0);
-        filler(buf, afus_dir, NULL, 0);
+        filler(buf, operators_dir, NULL, 0);
         filler(buf, files_dir, NULL, 0);
         return 0;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s", afus_dir);
+    snprintf(test_filename, FILENAME_MAX, "/%s", operators_dir);
     if (strcmp(path, test_filename) == 0) {
         filler(buf, ".", NULL, 0);
         filler(buf, "..", NULL, 0);
@@ -240,7 +240,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     }
 
     for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", afus_dir, known_operators[i]->name);
+        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
         if (strcmp(path, test_filename) != 0) {
             continue;
         }
@@ -392,10 +392,10 @@ int main(int argc, char *argv[])
     tmpnam(temp);
     strncpy(socket_filename, temp, 255);
 
-    // Determine the path to the afu_agent executable
+    // Determine the path to the operator_agent executable
     strncpy(agent_filepath, argv[0], sizeof(agent_filepath));
     dirname(agent_filepath);
-    strncat(agent_filepath, "/afu_agent", sizeof(agent_filepath));
+    strncat(agent_filepath, "/operator_agent", sizeof(agent_filepath));
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);

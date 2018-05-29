@@ -13,9 +13,9 @@ extern "C" {
 
 #define METALFPGA_ACTION_TYPE 0x00000216
 
-#define MF_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
+#define MTL_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
-#define MF_JOB_MAP 0
+#define MTL_JOB_MAP 0
 // 64bit words at job_address:
 //   word0: slot                | R
 //   word1: map_else_unmap      | R
@@ -24,7 +24,7 @@ extern "C" {
 //   word(2n+8): extent n begin | R
 //   word(2n+9): extent n count | R
 
-#define MF_JOB_QUERY 1
+#define MTL_JOB_QUERY 1
 // 64bit words at job_address:
 //   word0:                     |
 //     byte0: slot              | R
@@ -38,7 +38,7 @@ extern "C" {
 //   word4: current_lblock      | W  if query_state
 //   word5: current_pblock      | W  if query_state
 
-#define MF_JOB_ACCESS 2
+#define MTL_JOB_ACCESS 2
 // 64bit words at job_address:
 //   word0:                     |
 //     byte0: slot              | R
@@ -47,21 +47,21 @@ extern "C" {
 //   word2: file_byte_offset    | R
 //   word3: file_byte_count     | R
 
-#define MF_JOB_MOUNT 3
+#define MTL_JOB_MOUNT 3
 // 64bit words at job_address:
 //   word0: slot                | R
 //   word1: file_offset (blocks)| R
 //   word2: dram_offset         | R
 //   word3: length (blocks)     | R
 
-#define MF_JOB_WRITEBACK 4
+#define MTL_JOB_WRITEBACK 4
 // 64bit words at job_address:
 //   word0: slot                | R
 //   word1: file_offset (blocks)| R
 //   word2: dram_offset         | R
 //   word3: length (blocks)     | R
 
-#define MF_JOB_CONFIGURE_STREAMS 5
+#define MTL_JOB_CONFIGURE_STREAMS 5
 // 64bit words at job_address:
 //   word0: enable_mask         | R
 //   word1:                     | R
@@ -72,30 +72,30 @@ extern "C" {
 //     halfword0: stream 6 dest | R
 //     halfword1: stream 7 dest | R
 
-#define MF_JOB_RUN_AFUS 6
+#define MTL_JOB_RUN_AFUS 6
 // no payload data
 
-#define MF_JOB_AFU_MEM_SET_READ_BUFFER 7
+#define MTL_JOB_AFU_MEM_SET_READ_BUFFER 7
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_WRITE_BUFFER 8
+#define MTL_JOB_AFU_MEM_SET_WRITE_BUFFER 8
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 9
+#define MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 9
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 10
+#define MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 10
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MF_JOB_AFU_CHANGE_CASE_SET_MODE 11
+#define MTL_JOB_AFU_CHANGE_CASE_SET_MODE 11
 // 64bit words at job_address:
 //   word0: mode                | R
 

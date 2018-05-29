@@ -43,7 +43,7 @@ static int apply_config(struct snap_action *action) {
     job_struct[3] = htobe64(blocks_length); // number of blocks to load
 
     metalfpga_job_t mjob;
-    mjob.job_type = MF_JOB_MOUNT;
+    mjob.job_type = MTL_JOB_MOUNT;
     mjob.job_address = (uint64_t)job_struct;
 
     struct snap_job cjob;
@@ -66,7 +66,7 @@ static int apply_config(struct snap_action *action) {
     job_struct[0] = htobe64(dram_baseaddr + (_offset % block_size));
     job_struct[1] = htobe64(_length);
 
-    mjob.job_type = MF_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
+    mjob.job_type = MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
     mjob.job_address = (uint64_t)job_struct;
 
     snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);

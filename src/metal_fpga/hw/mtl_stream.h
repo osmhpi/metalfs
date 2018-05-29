@@ -1,5 +1,5 @@
-#ifndef __MF_STREAM_H__
-#define __MF_STREAM_H__
+#ifndef __MTL_STREAM_H__
+#define __MTL_STREAM_H__
 
 #include <stdint.h>
 #include <ap_int.h>
@@ -10,7 +10,7 @@ struct byte_stream_element {
     snapu8_t data;
     snap_bool_t last;
 };
-typedef hls::stream<byte_stream_element> mf_byte_stream;
+typedef hls::stream<byte_stream_element> mtl_byte_stream;
 
 template<uint8_t NB>
 struct stream_element {
@@ -19,13 +19,13 @@ struct stream_element {
     snap_bool_t last;
 };
 
-typedef stream_element<8> mf_stream_element;
-typedef hls::stream<mf_stream_element> mf_stream;
+typedef stream_element<8> mtl_stream_element;
+typedef hls::stream<mtl_stream_element> mtl_stream;
 
 // // Convert a stream of bytes (uint8_t) to a stream of arbitrary width
 // // (on byte boundaries) words
 // template<typename T, bool BS>
-// void stream_bytes2words(hls::stream<T> &words_out, mf_byte_stream &bytes_in, snap_bool_t enable)
+// void stream_bytes2words(hls::stream<T> &words_out, mtl_byte_stream &bytes_in, snap_bool_t enable)
 // {
 //     if (enable) {
 //         T tmpword;
@@ -56,7 +56,7 @@ typedef hls::stream<mf_stream_element> mf_stream;
 // // Convert an arbitrary width (on byte boundaries) words into a stream of
 // // bytes (uint8_t)
 // template<typename T, bool BS>
-// void stream_words2bytes(mf_byte_stream &bytes_out, hls::stream<T> &words_in, snap_bool_t enable)
+// void stream_words2bytes(mtl_byte_stream &bytes_out, hls::stream<T> &words_in, snap_bool_t enable)
 // {
 //     //if (enable) {
 //         T inval;
@@ -174,4 +174,4 @@ void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, sna
     }
 }
 
-#endif // __MF_STREAM_H__
+#endif // __MTL_STREAM_H__

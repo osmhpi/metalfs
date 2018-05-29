@@ -1,18 +1,18 @@
-#include "mf_afu_change_case.h"
+#include "mtl_afu_change_case.h"
 
 #include <snap_types.h>
 
 static uint64_t _mode = 0;
 
-mf_retc_t afu_change_case_set_mode(uint64_t mode) {
+mtl_retc_t afu_change_case_set_mode(uint64_t mode) {
     _mode = mode;
     return SNAP_RETC_SUCCESS;
 }
 
-void afu_change_case(mf_stream &in, mf_stream &out, snap_bool_t enable) {
+void afu_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
     if (enable) {
         for (;;) {
-            mf_stream_element element = in.read();
+            mtl_stream_element element = in.read();
 
             if (_mode == 0) {
                 for (int i = 0; i < sizeof(element.data); ++i)
