@@ -11,8 +11,8 @@ extern pthread_mutex_t registered_agent_mutex;
 
 typedef struct registered_agent {
     int pid;
-    operator_id afu_type;
-    mtl_operator_specification *afu_specification;
+    operator_id op_type;
+    mtl_operator_specification *op_specification;
     int socket;
 
     char cwd[FILENAME_MAX];

@@ -113,17 +113,17 @@ int determine_process_or_file_connected_to_std_fd (
 
     // fd_file is probably the name of a pipe
 
-    // Determine if the process that's talking to us is another AFU
+    // Determine if the process that's talking to us is another operator
     char stdin_executable[FILENAME_MAX] = { 0 };
     get_process_connected_to_std_fd(fd_no, stdin_executable, sizeof(stdin_executable), pid);
 
     if (strlen(stdin_executable)) {
-        char afus_prefix[FILENAME_MAX]; // TODO: Use format constant
-        snprintf(afus_prefix, FILENAME_MAX, "%s/afus/", metal_mountpoint);
-        int afus_prefix_len = strlen(afus_prefix);
+        char operators_prefix[FILENAME_MAX]; // TODO: Use format constant
+        snprintf(operators_prefix, FILENAME_MAX, "%s/operators/", metal_mountpoint);
+        int operators_prefix_len = strlen(operators_prefix);
 
         int stdin_executable_len = strlen(stdin_executable);
-        if (strncmp(afus_prefix, stdin_executable, afus_prefix_len > stdin_executable_len ? stdin_executable_len : afus_prefix_len) != 0) {
+        if (strncmp(operators_prefix, stdin_executable, operators_prefix_len > stdin_executable_len ? stdin_executable_len : operators_prefix_len) != 0) {
             // Reset pid
             *pid = 0;
         }
@@ -171,7 +171,7 @@ int get_mount_point_of_filesystem(char *path, char * result, size_t size) {
     return 0;
 }
 
-operator_id determine_afu_key(char *filename) {
+operator_id determine_op_key(char *filename) {
     char *base = basename(filename);
     for (size_t i = 0; i < sizeof(known_operators); ++i) {
         if (strcmp(base, known_operators[i]->name) == 0) {
@@ -190,14 +190,14 @@ int main(int argc, char *argv[]) {
     own_file_name[len] = '\0';
     // TODO: ...
 
-    operator_id afu = determine_afu_key(own_file_name);
-    // TODO: Assert afu !~= 0, 0
+    operator_id operator = determine_op_key(own_file_name);
+    // TODO: Assert operator !~= (0, 0)
 
     char own_fs_mount_point[FILENAME_MAX];
     if (get_mount_point_of_filesystem(own_file_name, own_fs_mount_point, FILENAME_MAX))
         printf("oopsie\n");
 
-    // Donate our current time slice, hoping that all other afu processes in the pipe are
+    // Donate our current time slice, hoping that all other operator processes in the pipe are
     // spawned and recognizable afterwards. Seems to solve this race condition effectively.
     usleep(100);
 
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 
     agent_hello_data_t request = {
         .pid = getpid(),
-        .afu_type = afu,
+        .op_type = operator,
         .input_agent_pid = stdin_pid,
         .output_agent_pid = stdout_pid,
         .argc = argc,

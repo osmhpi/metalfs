@@ -309,19 +309,19 @@ static void snap_prepare_configure_streams_job(struct snap_job *cjob, metalfpga_
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-static void snap_prepare_run_afus_job(struct snap_job *cjob, metalfpga_job_t *mjob)
+static void snap_prepare_run_operators_job(struct snap_job *cjob, metalfpga_job_t *mjob)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MTL_JOB_RUN_AFUS;
+    mjob->job_type = MTL_JOB_RUN_OPERATORS;
     mjob->job_address = 0;
 
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-static void snap_prepare_afu_mem_set_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
+static void snap_prepare_op_mem_set_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MTL_JOB_AFU_MEM_SET_READ_BUFFER;
+    mjob->job_type = MTL_JOB_OP_MEM_SET_READ_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -330,10 +330,10 @@ static void snap_prepare_afu_mem_set_read_buffer_job(struct snap_job *cjob, meta
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
+static void snap_prepare_op_mem_set_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, void *buffer, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MTL_JOB_AFU_MEM_SET_WRITE_BUFFER;
+    mjob->job_type = MTL_JOB_OP_MEM_SET_WRITE_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -342,10 +342,10 @@ static void snap_prepare_afu_mem_set_write_buffer_job(struct snap_job *cjob, met
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
+static void snap_prepare_op_mem_set_dram_read_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER;
+    mjob->job_type = MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -354,10 +354,10 @@ static void snap_prepare_afu_mem_set_dram_read_buffer_job(struct snap_job *cjob,
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-static void snap_prepare_afu_mem_set_dram_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
+static void snap_prepare_op_mem_set_dram_write_buffer_job(struct snap_job *cjob, metalfpga_job_t *mjob, size_t length)
 {
     memset(mjob, 0, sizeof(*mjob));
-    mjob->job_type = MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER;
+    mjob->job_type = MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER;
     mjob->job_address = (uint64_t)snap_malloc(2 * sizeof(uint64_t));
 
     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -409,10 +409,10 @@ static void snap_prepare_writeback_job(struct snap_job *cjob, metalfpga_job_t *m
     snap_job_set(cjob, mjob, sizeof(*mjob), NULL, 0);
 }
 
-// static void snap_prepare_afu_change_case_set_mode_job(struct snap_job *cjob, metalfpga_job_t *mjob, uint64_t mode)
+// static void snap_prepare_op_change_case_set_mode_job(struct snap_job *cjob, metalfpga_job_t *mjob, uint64_t mode)
 // {
 //     memset(mjob, 0, sizeof(*mjob));
-//     mjob->job_type = MTL_JOB_AFU_CHANGE_CASE_SET_MODE;
+//     mjob->job_type = MTL_JOB_OP_CHANGE_CASE_SET_MODE;
 //     mjob->job_address = (uint64_t)snap_malloc(sizeof(uint64_t));
 
 //     uint64_t *job_struct = (uint64_t*)mjob->job_address;
@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_afu_mem_set_read_buffer_job(&cjob, &mjob, in_data, 64);
+        snap_prepare_op_mem_set_read_buffer_job(&cjob, &mjob, in_data, 64);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,
@@ -506,7 +506,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_afu_mem_set_dram_write_buffer_job(&cjob, &mjob, 64);
+        snap_prepare_op_mem_set_dram_write_buffer_job(&cjob, &mjob, 64);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,
@@ -515,7 +515,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_run_afus_job(&cjob, &mjob);
+        snap_prepare_run_operators_job(&cjob, &mjob);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,
@@ -556,7 +556,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_afu_mem_set_dram_read_buffer_job(&cjob, &mjob, 64);
+        snap_prepare_op_mem_set_dram_read_buffer_job(&cjob, &mjob, 64);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,
@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_afu_mem_set_write_buffer_job(&cjob, &mjob, out_data, 64);
+        snap_prepare_op_mem_set_write_buffer_job(&cjob, &mjob, out_data, 64);
         rc = snap_action_sync_execute_job(action, &cjob, timeout);
         if (rc != 0) {
             fprintf(stderr, "err: job execution %d: %s!\n", rc,
@@ -574,7 +574,7 @@ int main(int argc, char *argv[])
         }
         fprintf(stdout, "RETC=%x\n", cjob.retc);
 
-        snap_prepare_run_afus_job(&cjob, &mjob);
+        snap_prepare_run_operators_job(&cjob, &mjob);
     } else {
     switch(opts.func_type) {
         case MTL_JOB_MAP:

@@ -72,30 +72,30 @@ extern "C" {
 //     halfword0: stream 6 dest | R
 //     halfword1: stream 7 dest | R
 
-#define MTL_JOB_RUN_AFUS 6
+#define MTL_JOB_RUN_OPERATORS 6
 // no payload data
 
-#define MTL_JOB_AFU_MEM_SET_READ_BUFFER 7
+#define MTL_JOB_OP_MEM_SET_READ_BUFFER 7
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_AFU_MEM_SET_WRITE_BUFFER 8
+#define MTL_JOB_OP_MEM_SET_WRITE_BUFFER 8
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER 9
+#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 9
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER 10
+#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 10
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_AFU_CHANGE_CASE_SET_MODE 11
+#define MTL_JOB_OP_CHANGE_CASE_SET_MODE 11
 // 64bit words at job_address:
 //   word0: mode                | R
 

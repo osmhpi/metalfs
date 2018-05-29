@@ -63,11 +63,11 @@ memset(aligned_buffer, 0, length);
 
     // printf("Set file buffer\n");
     op_read_file_set_buffer(offset, length);
-    mtl_configure_afu(&op_read_file_specification);
+    mtl_configure_operator(&op_read_file_specification);
 
     // printf("Set memory buffer\n");
     op_write_mem_set_buffer(aligned_buffer, length);
-    mtl_configure_afu(&op_write_mem_specification);
+    mtl_configure_operator(&op_write_mem_specification);
 
     // printf("Running pipeline\n");
     mtl_run_pipeline();
@@ -91,16 +91,16 @@ memcpy(aligned_buffer, buffer, length);
 
     // printf("Set memory buffer\n");
     op_read_mem_set_buffer(aligned_buffer, length);
-    mtl_configure_afu(&op_read_mem_specification);
+    mtl_configure_operator(&op_read_mem_specification);
 
     // printf("Set file buffer\n");
     op_write_file_set_buffer(offset, length);
-    mtl_configure_afu(&op_write_file_specification);
+    mtl_configure_operator(&op_write_file_specification);
 
     // printf("Running pipeline\n");
     mtl_run_pipeline();
 
-    mtl_finalize_afu(&op_write_file_specification);
+    mtl_finalize_operator(&op_write_file_specification);
 
 free(aligned_buffer);
     return MTL_SUCCESS;

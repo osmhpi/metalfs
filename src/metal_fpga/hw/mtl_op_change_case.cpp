@@ -1,15 +1,15 @@
-#include "mtl_afu_change_case.h"
+#include "mtl_op_change_case.h"
 
 #include <snap_types.h>
 
 static uint64_t _mode = 0;
 
-mtl_retc_t afu_change_case_set_mode(uint64_t mode) {
+mtl_retc_t op_change_case_set_mode(uint64_t mode) {
     _mode = mode;
     return SNAP_RETC_SUCCESS;
 }
 
-void afu_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
+void op_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
     if (enable) {
         for (;;) {
             mtl_stream_element element = in.read();

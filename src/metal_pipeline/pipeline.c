@@ -55,19 +55,19 @@ int mtl_pipeline_deinitialize() {
     return MTL_SUCCESS;
 }
 
-void mtl_configure_afu(mtl_operator_specification *afu_spec) {
+void mtl_configure_operator(mtl_operator_specification *op_spec) {
     pthread_mutex_lock(&snap_mutex);
 
-    afu_spec->apply_config(_action);
+    op_spec->apply_config(_action);
 
     pthread_mutex_unlock(&snap_mutex);
 }
 
-void mtl_finalize_afu(mtl_operator_specification *afu_spec) {
-    if (afu_spec->finalize) {
+void mtl_finalize_operator(mtl_operator_specification *op_spec) {
+    if (op_spec->finalize) {
         pthread_mutex_lock(&snap_mutex);
 
-        afu_spec->finalize(_action);
+        op_spec->finalize(_action);
 
         pthread_mutex_unlock(&snap_mutex);
     }
@@ -76,7 +76,7 @@ void mtl_finalize_afu(mtl_operator_specification *afu_spec) {
 void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     uint64_t enable_mask = 0;
     for (uint64_t i = 0; i < execution_plan.length; ++i)
-        enable_mask |= (1 << execution_plan.afus[i].enable_id);
+        enable_mask |= (1 << execution_plan.operators[i].enable_id);
 
     uint64_t *job_struct_enable = (uint64_t*)snap_malloc(sizeof(uint32_t) * 10);
     *job_struct_enable = htobe64(enable_mask);
@@ -86,13 +86,13 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     for (int i = 0; i < 8; ++i)
         job_struct[i] = htobe32(disable);
 
-    uint8_t previous_afu_stream = execution_plan.length ? execution_plan.afus[0].stream_id : 0;
+    uint8_t previous_op_stream = execution_plan.length ? execution_plan.operators[0].stream_id : 0;
     for (uint64_t i = 1; i < execution_plan.length; ++i) {
         // From the perspective of the Stream Switch:
         // Which Master port (output) should be
         // sourced from which Slave port (input)
-        job_struct[execution_plan.afus[i].stream_id] = htobe32(previous_afu_stream);
-        previous_afu_stream = execution_plan.afus[i].stream_id;
+        job_struct[execution_plan.operators[i].stream_id] = htobe32(previous_op_stream);
+        previous_op_stream = execution_plan.operators[i].stream_id;
     }
 
     metalfpga_job_t mjob;
@@ -122,7 +122,7 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
 
 void mtl_run_pipeline() {
     metalfpga_job_t mjob;
-    mjob.job_type = MTL_JOB_RUN_AFUS;
+    mjob.job_type = MTL_JOB_RUN_OPERATORS;
     mjob.job_address = 0;
 
     struct snap_job cjob;

@@ -44,7 +44,7 @@ registered_agent_t* find_agent_with_pid(int pid) {
     return NULL;
 }
 
-uint64_t count_agents_with_afu_id(operator_id id) {
+uint64_t count_agents_with_op_id(operator_id id) {
     uint64_t result = 0;
 
     if (IsListEmpty(&registered_agents))
@@ -54,7 +54,7 @@ uint64_t count_agents_with_afu_id(operator_id id) {
     do {
         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-        if (memcmp(&current_agent->afu_type, &id, sizeof(operator_id)) == 0)
+        if (memcmp(&current_agent->op_type, &id, sizeof(operator_id)) == 0)
             ++result;
 
         current_link = current_link->Flink;
@@ -131,7 +131,7 @@ void register_agent(agent_hello_data_t *request, int connfd) {
     registered_agent_t *agent = calloc(1, sizeof(registered_agent_t));
     agent->socket = connfd;
     agent->pid = request->pid;
-    agent->afu_type = request->afu_type;
+    agent->op_type = request->op_type;
     agent->input_agent_pid = request->input_agent_pid;
     agent->output_agent_pid = request->output_agent_pid;
     agent->argc = request->argc;
@@ -266,28 +266,28 @@ void* start_socket(void* args) {
             // Tell all remaining agents to go home
             send_all_agents_invalid(&registered_agents);
 
-            // Check if each requested afu is used only once and look up the
-            // AFU specification
+            // Check if each requested operator is used only once and look up the
+            // operator specification
             bool valid = true;
             uint64_t pipeline_length = 0;
             PLIST_ENTRY current_link = pipeline_agents.Flink;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-                if (count_agents_with_afu_id(current_agent->afu_type) > 1) {
+                if (count_agents_with_op_id(current_agent->op_type) > 1) {
                     valid = false;
                     break;
                 }
 
-                // Look up the AFU specification that should be used
+                // Look up the operator specification that should be used
                 for (uint64_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-                    if (memcmp(&known_operators[i]->id, &current_agent->afu_type, sizeof(operator_id)) == 0) {
-                        current_agent->afu_specification = known_operators[i];
+                    if (memcmp(&known_operators[i]->id, &current_agent->op_type, sizeof(operator_id)) == 0) {
+                        current_agent->op_specification = known_operators[i];
                         break;
                     }
                 }
 
-                if (!current_agent->afu_specification) {
+                if (!current_agent->op_specification) {
                     valid = false;
                     break;
                 }
@@ -302,23 +302,23 @@ void* start_socket(void* args) {
                 continue;
             }
 
-            // Execute configuration step for each afu
+            // Execute configuration step for each operator
             const char *responses[pipeline_length];
             uint64_t response_lengths[pipeline_length];
             current_link = pipeline_agents.Flink;
             uint64_t current_operator = 0;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
-                bool afu_valid = true;
+                bool op_valid = true;
                 mtl_operator_invocation_args args = {
                     current_agent->cwd,
                     current_agent->metal_mountpoint,
                     current_agent->argc,
                     current_agent->argv
                 };
-                responses[current_operator] = current_agent->afu_specification->handle_opts(
-                    &args, response_lengths + current_operator, &afu_valid);
-                valid = valid && afu_valid;
+                responses[current_operator] = current_agent->op_specification->handle_opts(
+                    &args, response_lengths + current_operator, &op_valid);
+                valid = valid && op_valid;
 
                 ++current_operator;
 
@@ -368,7 +368,7 @@ void* start_socket(void* args) {
             registered_agent_t *output_agent = CONTAINING_LIST_RECORD(pipeline_agents.Blink, registered_agent_t);
 
             // Add implicit data sources and sinks if necessary
-            if (!input_agent->afu_specification->is_data_source) {
+            if (!input_agent->op_specification->is_data_source) {
                 ++pipeline_length;
             }
 
@@ -379,7 +379,7 @@ void* start_socket(void* args) {
             operator_id operator_list[pipeline_length];
             current_operator = 0;
 
-            if (!input_agent->afu_specification->is_data_source) {
+            if (!input_agent->op_specification->is_data_source) {
                 if (input_agent->internal_input_file) {
                     operator_list[0] = op_read_file_specification.id;
                 } else {
@@ -392,10 +392,10 @@ void* start_socket(void* args) {
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
-                if (!current_agent->afu_specification->is_data_source) {
-                    mtl_configure_afu(current_agent->afu_specification);
+                if (!current_agent->op_specification->is_data_source) {
+                    mtl_configure_operator(current_agent->op_specification);
                 }
-                operator_list[current_operator++] = current_agent->afu_type;
+                operator_list[current_operator++] = current_agent->op_type;
 
                 current_link = current_link->Flink;
             } while (current_link != &pipeline_agents);
@@ -412,9 +412,9 @@ void* start_socket(void* args) {
             // If we're interacting with an FPGA file, we have to set up the extents initially.
             // The op_read_file does this internally, so no action required here.
             uint64_t internal_input_file_length = 0;
-            if (input_agent->afu_specification->is_data_source) {
+            if (input_agent->op_specification->is_data_source) {
                 // TODO: Catch if file does not exist
-                mtl_prepare_storage_for_reading(input_agent->afu_specification->get_filename(), &internal_input_file_length);
+                mtl_prepare_storage_for_reading(input_agent->op_specification->get_filename(), &internal_input_file_length);
             } else if (input_agent->internal_input_file) {
                 // TODO: Catch if file does not exist
                 mtl_prepare_storage_for_reading(input_agent->internal_input_file, &internal_input_file_length);
@@ -455,7 +455,7 @@ void* start_socket(void* args) {
                         }
 
                         op_write_file_set_buffer(internal_output_file_offset, size);
-                        mtl_configure_afu(&op_write_file_specification);
+                        mtl_configure_operator(&op_write_file_specification);
                     } else if (!output_agent->output_buffer) {
                         // If we haven't yet established an output buffer for the output agent, do it now
                         message_type_t output_buffer_message_type = SERVER_INITIALIZE_OUTPUT_BUFFER;
@@ -469,29 +469,29 @@ void* start_socket(void* args) {
                         send(output_agent->socket, &output_buffer_message_type, sizeof(output_buffer_message_type), 0);
                         send(output_agent->socket, &output_buffer_message, sizeof(output_buffer_message), 0);
 
-                        // Configure write_mem AFU
+                        // Configure write_mem operator
                         op_write_mem_set_buffer(output_agent->output_buffer, size); // TODO size may be different from input size
-                        mtl_configure_afu(&op_write_mem_specification);
+                        mtl_configure_operator(&op_write_mem_specification);
                     }
 
                     if (internal_input_file_length) {
                         op_read_file_set_buffer(internal_input_file_offset, size);
-                        mtl_configure_afu(&op_read_file_specification);
+                        mtl_configure_operator(&op_read_file_specification);
                     } else {
-                        // Configure the read_mem AFU
+                        // Configure the read_mem operator
                         op_read_mem_set_buffer(input_agent->input_buffer, size);
-                        mtl_configure_afu(&op_read_mem_specification);
+                        mtl_configure_operator(&op_read_mem_specification);
                     }
 
                     mtl_run_pipeline();
 
                     // TODO:
-                    // output_size = afu_write_mem_get_written_bytes();
+                    // output_size = op_write_mem_get_written_bytes();
                     output_size = size; // This is fine for now because we always get out the same amount of bytes
 
                     if (output_agent->internal_output_file) {
                         // This transfers the data from card DRAM to NVMe
-                        mtl_finalize_afu(&op_write_file_specification);
+                        mtl_finalize_operator(&op_write_file_specification);
                     }
                 }
 

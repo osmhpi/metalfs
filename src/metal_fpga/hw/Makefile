@@ -38,6 +38,6 @@ endif
 # This is solution specific. Check if we can replace this by generics too.
 SOLUTION_NAME ?= metalfpga
 SOLUTION_DIR ?= hlsMetalFPGA
-srcs += mtl_extmap.cpp mtl_nvme.cpp mtl_file.cpp mtl_jobstruct.cpp mtl_afu_mem.cpp mtl_afu_file.cpp mtl_afu_passthrough.cpp mtl_afu_change_case.cpp hls_metalfpga.cpp
+srcs += mtl_extmap.cpp mtl_nvme.cpp mtl_file.cpp mtl_jobstruct.cpp mtl_op_mem.cpp mtl_op_file.cpp mtl_op_passthrough.cpp mtl_op_change_case.cpp hls_metalfpga.cpp
 
 include $(SNAP_ROOT)/actions/hls.mk

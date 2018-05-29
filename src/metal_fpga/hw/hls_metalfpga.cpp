@@ -5,10 +5,10 @@
 #include "mtl_jobstruct.h"
 #include "mtl_stream.h"
 
-#include "mtl_afu_mem.h"
-#include "mtl_afu_file.h"
-#include "mtl_afu_passthrough.h"
-#include "mtl_afu_change_case.h"
+#include "mtl_op_mem.h"
+#include "mtl_op_file.h"
+#include "mtl_op_passthrough.h"
+#include "mtl_op_change_case.h"
 
 #define HW_RELEASE_LEVEL       0x00000013
 
@@ -54,7 +54,7 @@ static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job);
 static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job);
 
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
-static mtl_retc_t action_run_afus(
+static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
@@ -291,9 +291,9 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     {
         return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_RUN_AFUS)
+    else if (act_reg->Data.job_type == MTL_JOB_RUN_OPERATORS)
     {
-        return action_run_afus(
+        return action_run_operators(
             mem_in,
             mem_out,
 #ifdef DRAM_ENABLED
@@ -318,30 +318,30 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_7
         );
     }
-    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_READ_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_WRITE_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_DRAM_READ_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_ddr_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_AFU_MEM_SET_DRAM_WRITE_BUFFER)
+    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_ddr_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_AFU_CHANGE_CASE_SET_MODE)
+    else if (act_reg->Data.job_type == MTL_JOB_OP_CHANGE_CASE_SET_MODE)
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return afu_change_case_set_mode(mtl_get64<0>(line));
+        return op_change_case_set_mode(mtl_get64<0>(line));
     }
     return SNAP_RETC_FAILURE;
 }
@@ -521,7 +521,7 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     return SNAP_RETC_SUCCESS;
 }
 
-static mtl_retc_t action_run_afus(
+static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
@@ -560,31 +560,31 @@ static mtl_retc_t action_run_afus(
 #pragma HLS DATAFLOW
         // The order should only matter when executing in the test bench
 
-        // Input AFUs
-        afu_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
+        // Input Operators
+        op_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
 #ifdef DRAM_ENABLED
-        afu_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
+        op_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
 #endif
 
-        // Processing AFUs
-        afu_passthrough(axis_s_2, axis_m_2, enable_4);
-        afu_change_case(axis_s_3, axis_m_3, enable_5);
+        // Processing Operators
+        op_passthrough(axis_s_2, axis_m_2, enable_4);
+        op_change_case(axis_s_3, axis_m_3, enable_5);
 
-        // Placeholder AFUs (to be assigned)
-        afu_passthrough(axis_s_4, axis_m_4, enable_6);
-        afu_passthrough(axis_s_5, axis_m_5, enable_7);
-        afu_passthrough(axis_s_6, axis_m_6, enable_8);
-        afu_passthrough(axis_s_7, axis_m_7, enable_9);
+        // Placeholder Operators (to be assigned)
+        op_passthrough(axis_s_4, axis_m_4, enable_6);
+        op_passthrough(axis_s_5, axis_m_5, enable_7);
+        op_passthrough(axis_s_6, axis_m_6, enable_8);
+        op_passthrough(axis_s_7, axis_m_7, enable_9);
 
-        // Output AFUs
-        afu_mem_write(axis_s_0, mem_out, write_mem_config, enable_1);
+        // Output Operators
+        op_mem_write(axis_s_0, mem_out, write_mem_config, enable_1);
 #ifdef DRAM_ENABLED
-        afu_mem_write(axis_s_1, mem_ddr_out, write_ddr_mem_config, enable_3);
+        op_mem_write(axis_s_1, mem_ddr_out, write_ddr_mem_config, enable_3);
 #endif
 
         // If DRAM is disabled, we have to do something with axis_*_1 in order to set streaming direction
 #ifndef DRAM_ENABLED
-        afu_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
+        op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
 #endif
     }
     return SNAP_RETC_SUCCESS;
@@ -669,7 +669,7 @@ static mtl_retc_t action_run_afus(
 #include <stdio.h>
 #include <endian.h>
 
-int test_afu_mem_read() {
+int test_op_mem_read() {
     static snap_membus_t src_mem[16];
     static uint8_t *src_memb = (uint8_t *) src_mem;
     static mtl_stream out_stream;
@@ -683,10 +683,10 @@ int test_afu_mem_read() {
     uint64_t offset, size;
 
     {
-        // AFU mem read should stream entire memory line
+        // Op mem read should stream entire memory line
         offset = 0, size = 64;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
         mtl_stream_element result;
@@ -701,10 +701,10 @@ int test_afu_mem_read() {
     }
 
     {
-        // AFU mem read should stream two entire memory lines
+        // Op mem read should stream two entire memory lines
         offset = 0, size = 128;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
         mtl_stream_element result;
@@ -719,10 +719,10 @@ int test_afu_mem_read() {
     }
 
     {
-        // AFU mem read should stream a half memory line starting at offset
+        // Op mem read should stream a half memory line starting at offset
         offset = 16, size = 32;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
         mtl_stream_element result;
@@ -737,10 +737,10 @@ int test_afu_mem_read() {
     }
 
     {
-        // AFU mem read should stream one and a half memory line starting at offset
+        // Op mem read should stream one and a half memory line starting at offset
         offset = 16, size = 96;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         mtl_stream_element result;
         for (int element = 0; element < 12; ++element) {
@@ -754,10 +754,10 @@ int test_afu_mem_read() {
     }
 
     {
-        // AFU mem read should stream one and a half memory line
+        // Op mem read should stream one and a half memory line
         offset = 0, size = 96;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         // A memory line produces 8 stream elements
         mtl_stream_element result;
@@ -772,10 +772,10 @@ int test_afu_mem_read() {
     }
 
     {
-        // AFU mem read should stream a half stream word starting at offset
+        // Op mem read should stream a half stream word starting at offset
         offset = 16, size = 4;
-        afu_mem_set_config(offset, size, read_mem_config);
-        afu_mem_read(src_mem, out_stream, read_mem_config, true);
+        op_mem_set_config(offset, size, read_mem_config);
+        op_mem_read(src_mem, out_stream, read_mem_config, true);
 
         mtl_stream_element result = out_stream.read();
         success &= memcmp(&result.data, &src_memb[offset], 4) == 0;
@@ -788,7 +788,7 @@ int test_afu_mem_read() {
     return 0;
 }
 
-int test_afu_mem_write() {
+int test_op_mem_write() {
     static mtl_stream in_stream;
     static snap_membus_t dest_mem[16];
     static uint8_t *dest_memb = (uint8_t *) dest_mem;
@@ -810,7 +810,7 @@ int test_afu_mem_write() {
     uint64_t offset, size;
 
     {
-        // AFU mem write should store entire memory line
+        // Op mem write should store entire memory line
         offset = 0, size = 64;
         memset(dest_memb, 0, 1024);
 
@@ -822,8 +822,8 @@ int test_afu_mem_write() {
             in_stream.write(e);
         }
 
-        afu_mem_set_config(offset, size, write_mem_config);
-        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+        op_mem_set_config(offset, size, write_mem_config);
+        op_mem_write(in_stream, dest_mem, write_mem_config, true);
 
         success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
 
@@ -831,7 +831,7 @@ int test_afu_mem_write() {
     }
 
     {
-        // AFU mem write should store two entire memory lines
+        // Op mem write should store two entire memory lines
         offset = 0, size = 128;
         memset(dest_memb, 0, 1024);
 
@@ -843,8 +843,8 @@ int test_afu_mem_write() {
             in_stream.write(e);
         }
 
-        afu_mem_set_config(offset, size, write_mem_config);
-        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+        op_mem_set_config(offset, size, write_mem_config);
+        op_mem_write(in_stream, dest_mem, write_mem_config, true);
 
         success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
 
@@ -852,7 +852,7 @@ int test_afu_mem_write() {
     }
 
     {
-        // AFU mem write should store a half memory line
+        // Op mem write should store a half memory line
         offset = 0, size = 32;
         memset(dest_memb, 0, 1024);
 
@@ -864,8 +864,8 @@ int test_afu_mem_write() {
             in_stream.write(e);
         }
 
-        afu_mem_set_config(offset, size, write_mem_config);
-        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+        op_mem_set_config(offset, size, write_mem_config);
+        op_mem_write(in_stream, dest_mem, write_mem_config, true);
 
         success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
 
@@ -873,7 +873,7 @@ int test_afu_mem_write() {
     }
 
     {
-        // AFU mem write should store a half memory line at offset
+        // Op mem write should store a half memory line at offset
         offset = 16, size = 32;
         memset(dest_memb, 0, 1024);
 
@@ -885,8 +885,8 @@ int test_afu_mem_write() {
             in_stream.write(e);
         }
 
-        afu_mem_set_config(offset, size, write_mem_config);
-        afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+        op_mem_set_config(offset, size, write_mem_config);
+        op_mem_write(in_stream, dest_mem, write_mem_config, true);
 
         success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
 
@@ -894,25 +894,25 @@ int test_afu_mem_write() {
     }
 
     {
-		// AFU mem write should store one and a half memory lines at offset
-		offset = 16, size = 96;
-		memset(dest_memb, 0, 1024);
+        // Op mem write should store one and a half memory lines at offset
+        offset = 16, size = 96;
+        memset(dest_memb, 0, 1024);
 
-		// 8 stream elements make up a memory line
-		for (int element = 0; element < 12; ++element) {
-			mtl_stream_element e = stream_elements[element];
-			e.strb = 0xff;
-			e.last = element == 11;
-			in_stream.write(e);
-		}
+        // 8 stream elements make up a memory line
+        for (int element = 0; element < 12; ++element) {
+            mtl_stream_element e = stream_elements[element];
+            e.strb = 0xff;
+            e.last = element == 11;
+            in_stream.write(e);
+        }
 
-		afu_mem_set_config(offset, size, write_mem_config);
-		afu_mem_write(in_stream, dest_mem, write_mem_config, true);
+        op_mem_set_config(offset, size, write_mem_config);
+        op_mem_write(in_stream, dest_mem, write_mem_config, true);
 
-		success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
+        success &= memcmp(reference_data, &dest_memb[offset], size) == 0;
 
-		if (!success) return -1;
-	}
+        if (!success) return -1;
+    }
 
     return 0;
 }
@@ -920,8 +920,8 @@ int test_afu_mem_write() {
 int main()
 {
     // Poor man's unit tests:
-    if (test_afu_mem_read()) printf("Test failure\n"); else printf("Test success\n");
-    if (test_afu_mem_write()) printf("Test failure\n"); else printf("Test success\n");
+    if (test_op_mem_read()) printf("Test failure\n"); else printf("Test success\n");
+    if (test_op_mem_write()) printf("Test failure\n"); else printf("Test success\n");
 
     static snap_membus_t host_gmem[1024];
     static snap_membus_t dram_gmem[1024];
@@ -1138,11 +1138,11 @@ int main()
 #endif
         axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
-    fprintf(stderr, "// AFU MEM SET READ BUFFER\n");
+    fprintf(stderr, "// OP MEM SET READ BUFFER\n");
     job_mem[0] = htobe64(0x80);
     job_mem[1] = htobe64(68);
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MTL_JOB_AFU_MEM_SET_READ_BUFFER;
+    act_reg.Data.job_type = MTL_JOB_OP_MEM_SET_READ_BUFFER;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1152,12 +1152,12 @@ int main()
 #endif
         axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
-    fprintf(stderr, "// AFU MEM SET WRITE BUFFER\n");
+    fprintf(stderr, "// OP MEM SET WRITE BUFFER\n");
     job_mem[0] = htobe64(0x100);
     job_mem[1] = htobe64(126);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MTL_JOB_AFU_MEM_SET_WRITE_BUFFER;
+    act_reg.Data.job_type = MTL_JOB_OP_MEM_SET_WRITE_BUFFER;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1167,11 +1167,11 @@ int main()
 #endif
         axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
-    fprintf(stderr, "// AFU CHANGE CASE SET MODE\n");
+    fprintf(stderr, "// OP CHANGE CASE SET MODE\n");
     job_mem[0] = htobe64(0);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MTL_JOB_AFU_CHANGE_CASE_SET_MODE;
+    act_reg.Data.job_type = MTL_JOB_OP_CHANGE_CASE_SET_MODE;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,
@@ -1181,7 +1181,7 @@ int main()
 #endif
         axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
 
-    fprintf(stderr, "// RUN AFUS\n");
+    fprintf(stderr, "// RUN OPERATORS\n");
     // Fill the memory with 'c' and 'd' characters
     memset(&job_mem_b[0x80], 0, 1024);
     memset(&job_mem_b[0x80], 'c', 64);
@@ -1191,7 +1191,7 @@ int main()
     memset(&job_mem_b[0x100], 'e', 128);
     act_reg.Control.flags = 0x1;
     act_reg.Data.job_address = 0;
-    act_reg.Data.job_type = MTL_JOB_RUN_AFUS;
+    act_reg.Data.job_type = MTL_JOB_RUN_OPERATORS;
     hls_action(host_gmem, host_gmem,
 #ifdef DRAM_ENABLED
         dram_gmem, dram_gmem,

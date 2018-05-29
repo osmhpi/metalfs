@@ -1,8 +1,8 @@
-#ifndef __MTL_AFU_PASSTHROUGH_H__
-#define __MTL_AFU_PASSTHROUGH_H__
+#ifndef __MTL_OP_PASSTHROUGH_H__
+#define __MTL_OP_PASSTHROUGH_H__
 
 #include "mtl_stream.h"
 
-void afu_passthrough(mtl_stream &in, mtl_stream &out, snap_bool_t enable);
+void op_passthrough(mtl_stream &in, mtl_stream &out, snap_bool_t enable);
 
-#endif // __MTL_AFU_PASSTHROUGH_H__
+#endif // __MTL_OP_PASSTHROUGH_H__

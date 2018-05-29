@@ -30,6 +30,6 @@ typedef struct mtl_operator_specification {
 } mtl_operator_specification;
 
 typedef struct mtl_operator_execution_plan {
-    const operator_id* afus;
+    const operator_id* operators;
     uint64_t length;
 } mtl_operator_execution_plan;

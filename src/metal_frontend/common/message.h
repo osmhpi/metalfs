@@ -20,7 +20,7 @@ typedef struct agent_hello_data {
     uint64_t pid;
     char cwd[FILENAME_MAX];
     char metal_mountpoint[FILENAME_MAX]; // There should actually be no need to tell the fs server about this
-    operator_id afu_type;
+    operator_id op_type;
     uint64_t input_agent_pid;
     uint64_t output_agent_pid;
     uint64_t argc;

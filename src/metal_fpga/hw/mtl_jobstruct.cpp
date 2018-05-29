@@ -1,7 +1,5 @@
 #include "mtl_jobstruct.h"
 
-#include "hls_globalmem.h"
-
 #include "mtl_definitions.h"
 #include "mtl_endian.h"
 

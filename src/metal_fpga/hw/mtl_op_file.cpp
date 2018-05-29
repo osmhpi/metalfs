@@ -1,4 +1,4 @@
-#include "mtl_afu_file.h"
+#include "mtl_op_file.h"
 
 #include "mtl_file.h"
 
@@ -17,18 +17,18 @@ mtl_extmap_t write_extmap;
 // static uint64_t _write_offset = 0;
 // static uint64_t _write_size = 0;
 
-// mtl_retc_t afu_file_set_read_buffer(uint64_t read_offset, uint64_t read_size) {
+// mtl_retc_t op_file_set_read_buffer(uint64_t read_offset, uint64_t read_size) {
 //     _read_offset = read_offset;
 //     _read_size = read_size;
 //     return SNAP_RETC_SUCCESS;
 // }
-// mtl_retc_t afu_file_set_write_buffer(uint64_t write_offset, uint64_t write_size) {
+// mtl_retc_t op_file_set_write_buffer(uint64_t write_offset, uint64_t write_size) {
 //     _write_offset = write_offset;
 //     _write_size = write_size;
 //     return SNAP_RETC_SUCCESS;
 // }
 
-// void afu_file_read(snap_membus_t *mem_ddr, mtl_stream &out, snap_bool_t enable) {
+// void op_file_read(snap_membus_t *mem_ddr, mtl_stream &out, snap_bool_t enable) {
 //     const snapu64_t file_blocks = mtl_file_get_block_count(READ_SLOT);
 //     const snapu64_t file_bytes = file_blocks * MTL_BLOCK_BYTES;
 //     if (_read_offset + _read_size > file_bytes)
@@ -75,7 +75,7 @@ mtl_extmap_t write_extmap;
 //     return ;//SNAP_RETC_SUCCESS;
 // }
 
-// void afu_file_write(mtl_stream & in, snap_membus_t *mem_ddr, snap_bool_t enable) {
+// void op_file_write(mtl_stream & in, snap_membus_t *mem_ddr, snap_bool_t enable) {
 //     const snapu64_t file_blocks = mtl_file_get_block_count(WRITE_SLOT);
 //     const snapu64_t file_bytes = file_blocks * MTL_BLOCK_BYTES;
 //     if (_read_offset + _read_size > file_bytes)
