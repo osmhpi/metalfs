@@ -99,6 +99,14 @@ extern "C" {
 // 64bit words at job_address:
 //   word0: mode                | R
 
+#define MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY 12
+// 32bit words at job_address:
+//   word0..3: key              | R
+
+#define MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY 13
+// 32bit words at job_address:
+//   word0..3: key              | R
+
 typedef struct metalfpga_job {
     uint64_t job_address;
     uint64_t job_type;
@@ -112,11 +120,15 @@ typedef struct metalfpga_job {
 #define OP_WRITE_DRAM_ENABLE_ID 3
 #define OP_PASSTHROUGH_ENABLE_ID 4
 #define OP_CHANGE_CASE_ENABLE_ID 5
+#define OP_BLOWFISH_ENCRYPT_ENABLE_ID 6
+#define OP_BLOWFISH_DECRYPT_ENABLE_ID 7
 
 #define OP_MEM_STREAM_ID 0
 #define OP_DRAM_STREAM_ID 1
 #define OP_PASSTHROUGH_STREAM_ID 2
 #define OP_CHANGE_CASE_STREAM_ID 3
+#define OP_BLOWFISH_ENCRYPT_STREAM_ID 4
+#define OP_BLOWFISH_DECRYPT_STREAM_ID 5
 
 #ifdef __cplusplus
 }

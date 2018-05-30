@@ -1,6 +1,10 @@
 set(
     SOURCES
 
+    op_blowfish_encrypt/operator.c
+    op_blowfish_encrypt/operator.h
+    op_blowfish_decrypt/operator.c
+    op_blowfish_decrypt/operator.h
     op_read_file/operator.c
     op_read_file/operator.h
     op_read_mem/operator.c
