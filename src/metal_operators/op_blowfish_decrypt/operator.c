@@ -58,7 +58,7 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
             { "key", required_argument, NULL, 'k' }
         };
 
-        int ch = getopt_long(args->argc, args->argv, "lh", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "kh", long_options, &option_index);
         if (ch == -1)
             break;
 
