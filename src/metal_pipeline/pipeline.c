@@ -144,6 +144,94 @@ void mtl_run_pipeline() {
     return;
 }
 
+void mtl_configure_perfmon(uint64_t stream_id) {
+    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(uint64_t));
+    *job_struct = htobe64(stream_id);
+
+    metalfpga_job_t mjob;
+    mjob.job_type = MTL_JOB_CONFIGURE_PERFMON;
+    mjob.job_address = (uint64_t)job_struct;
+
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
+
+    pthread_mutex_lock(&snap_mutex);
+    const unsigned long timeout = 10;
+    int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
+    pthread_mutex_unlock(&snap_mutex);
+
+    free(job_struct);
+
+    if (rc != 0)
+        // Some error occurred
+        return;
+
+    if (cjob.retc != SNAP_RETC_SUCCESS)
+        // Some error occurred
+        return;
+
+    return;
+}
+
+void mtl_print_perfmon() {
+    uint32_t *job_struct = (uint32_t*)snap_malloc(sizeof(uint32_t) * 7);
+
+    metalfpga_job_t mjob;
+    mjob.job_type = MTL_JOB_READ_PERFMON_COUNTERS;
+    mjob.job_address = (uint64_t)job_struct;
+
+    struct snap_job cjob;
+    snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
+
+    pthread_mutex_lock(&snap_mutex);
+    const unsigned long timeout = 10;
+    int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
+    pthread_mutex_unlock(&snap_mutex);
+
+    if (rc != 0) {
+        // Some error occurred
+        free(job_struct);
+        return;
+    }
+
+    if (cjob.retc != SNAP_RETC_SUCCESS) {
+        // Some error occurred
+        free(job_struct);
+        return;
+    }
+
+    printf("Performance counters\n");
+
+    printf("  Transfer Cycle Count: %u\n", be32toh(job_struct[0]));
+    printf("    Gives the total number of cycles the data is transferred.\n");
+    printf("\n");
+
+    printf("  Packet Count: %u\n", be32toh(job_struct[1]));
+    printf("    Gives the total number of packets transferred.\n");
+    printf("\n");
+
+    printf("  Data Byte Count: %u\n", be32toh(job_struct[2]));
+    printf("    Gives the total number of data bytes transferred.\n");
+    printf("\n");
+
+    printf("  Position Byte Count: %u\n", be32toh(job_struct[3]));
+    printf("    Gives the total number of position bytes transferred.\n");
+    printf("\n");
+
+    printf("  Null Byte Count: %u\n", be32toh(job_struct[4]));
+    printf("    Gives the total number of null bytes transferred.\n");
+    printf("\n");
+
+    printf("  Slv_Idle_Cnt: %u\n", be32toh(job_struct[5]));
+    printf("    Gives the number of idle cycles caused by the slave.\n");
+    printf("\n");
+
+    printf("  Mst_Idle_Cnt: %u\n", be32toh(job_struct[6]));
+    printf("    Gives the number of idle cycles caused by the master.\n");
+
+    return;
+}
+
 void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint64_t length) {
 
     // Allocate job struct memory aligned on a page boundary

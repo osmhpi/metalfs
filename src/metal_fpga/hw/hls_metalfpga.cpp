@@ -12,9 +12,8 @@
 
 #define HW_RELEASE_LEVEL       0x00000013
 
-#define DRAM_ENABLED
-#define NVME_ENABLED
-
+// #define DRAM_ENABLED
+// #define NVME_ENABLED
 
 static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
@@ -42,6 +41,7 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
                                 snapu32_t *switch_ctrl,
+                                snapu32_t *perfmon_ctrl,
                                 action_reg * act_reg);
 
 static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job);
@@ -54,6 +54,8 @@ static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job);
 static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job);
 
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
+static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id);
+static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctrl);
 static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
@@ -61,6 +63,7 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
+    snapu32_t *perfmon_ctrl,
     mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
@@ -122,6 +125,7 @@ void hls_action(snap_membus_t * din,
                 mtl_stream &axis_m_6,
                 mtl_stream &axis_m_7,
                 snapu32_t *switch_ctrl,
+                snapu32_t *perfmon_ctrl,
                 action_reg * action_reg,
                 action_RO_config_reg * action_config)
 {
@@ -172,6 +176,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_m_6
 #pragma HLS INTERFACE axis port=axis_m_7
 #pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg offset=0x44A00000
+#pragma HLS INTERFACE m_axi port=perfmon_ctrl bundle=perfmon_ctrl_reg offset=0x44A00000
 
 
     // Make memory ports globally accessible
@@ -214,6 +219,7 @@ void hls_action(snap_membus_t * din,
             axis_m_6,
             axis_m_7,
             switch_ctrl,
+            perfmon_ctrl,
             action_reg);
         break;
     }
@@ -250,26 +256,28 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_5,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
+                                snapu32_t *perfmon_ctrl,
                                 snapu32_t *switch_ctrl,
                                 action_reg * act_reg)
 {
-    if (act_reg->Data.job_type == MTL_JOB_MAP)
+    switch (act_reg->Data.job_type) {
+    case MTL_JOB_MAP:
     {
         mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
         return action_map(mem_in, map_job);
     }
-    // else if (act_reg->Data.job_type == MTL_JOB_QUERY)
+    // case MTL_JOB_QUERY:
     // {
     //     mtl_job_query_t query_job = mtl_read_job_query(mem_in, act_reg->Data.job_address);
     //     mtl_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
     //     return retc;
     // }
-    // else if (act_reg->Data.job_type == MTL_JOB_ACCESS)
+    // case MTL_JOB_ACCESS:
     // {
     //     mtl_job_access_t access_job = mtl_read_job_access(mem_in, act_reg->Data.job_address);
     //     return action_access(mem_in, mem_out, mem_ddr_in, access_job);
     // }
-    else if (act_reg->Data.job_type == MTL_JOB_MOUNT)
+    case MTL_JOB_MOUNT:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t mount_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
@@ -278,7 +286,7 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         return SNAP_RETC_SUCCESS;
 #endif
     }
-    else if (act_reg->Data.job_type == MTL_JOB_WRITEBACK)
+    case MTL_JOB_WRITEBACK:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t writeback_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
@@ -287,11 +295,21 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         return SNAP_RETC_SUCCESS;
 #endif
     }
-    else if (act_reg->Data.job_type == MTL_JOB_CONFIGURE_STREAMS)
+    case MTL_JOB_CONFIGURE_STREAMS:
     {
         return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_RUN_OPERATORS)
+    case MTL_JOB_CONFIGURE_PERFMON:
+    {
+        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+        return action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line));
+    }
+    case MTL_JOB_READ_PERFMON_COUNTERS:
+    {
+        return action_perfmon_read
+    (mem_in + MFB_ADDRESS(act_reg->Data.job_address), perfmon_ctrl);
+    }
+    case MTL_JOB_RUN_OPERATORS:
     {
         return action_run_operators(
             mem_in,
@@ -300,6 +318,7 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             mem_ddr_in,
             mem_ddr_out,
 #endif
+            perfmon_ctrl,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -318,32 +337,34 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_7
         );
     }
-    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_READ_BUFFER)
+    case MTL_JOB_OP_MEM_SET_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_WRITE_BUFFER)
+    case MTL_JOB_OP_MEM_SET_WRITE_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER)
+    case MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER)
+    case MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_ddr_mem_config);
     }
-    else if (act_reg->Data.job_type == MTL_JOB_OP_CHANGE_CASE_SET_MODE)
+    case MTL_JOB_OP_CHANGE_CASE_SET_MODE:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         return op_change_case_set_mode(mtl_get64<0>(line));
     }
-    return SNAP_RETC_FAILURE;
+    default:
+        return SNAP_RETC_FAILURE;
+    }
 }
 
 // File Map / Unmap Operation:
@@ -521,6 +542,84 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     return SNAP_RETC_SUCCESS;
 }
 
+static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id) {
+    // Metrics Computed for AXI4-Stream Agent
+
+    // 16
+    // Transfer Cycle Count
+    // Gives the total number of cycles the data is transferred.
+
+    // 17
+    // Packet Count
+    // Gives the total number of packets transferred.
+
+    // 18
+    // Data Byte Count
+    // Gives the total number of data bytes transferred.
+
+    // 19
+    // Position Byte Count
+    // Gives the total number of position bytes transferred.
+
+    // 20
+    // Null Byte Count
+    // Gives the total number of null bytes transferred.
+
+    // 21
+    // Slv_Idle_Cnt
+    // Gives the number of idle cycles caused by the slave.
+
+    // 22
+    // Mst_Idle_Cnt
+    // Gives the number of idle cycles caused by the master.
+
+    // Write metric ids in reverse order to achieve the following slot mapping:
+    // Slot 0 : 16
+    // Slot 1 : 17
+    // ...
+    // Slot 6 : 22
+
+    // uint32_t metrics_0 = 0;
+    uint32_t metrics_0 = 0x13121110
+        | stream_id << (0 * 8) + 5
+        | stream_id << (1 * 8) + 5
+        | stream_id << (2 * 8) + 5
+        | stream_id << (3 * 8) + 5;
+    // for (int metric_id = 19; metric_id >= 16; --metric_id) // 16..19
+    //     metrics_0 = (metrics_0 << 8) | (stream_id << 5) | metric_id;
+
+    // uint32_t metrics_1 = 0;
+    uint32_t metrics_1 = 0x00161514
+        | stream_id << (0 * 8) + 5
+        | stream_id << (1 * 8) + 5
+        | stream_id << (2 * 8) + 5
+        | stream_id << (3 * 8) + 5;
+    // for (int metric_id = 22; metric_id >= 20; ++metric_id) // 20..22
+    //     metrics_1 = (metrics_1 << 8) | (stream_id << 5) | metric_id;
+
+    // Write Metric Selection Register 0
+    perfmon_ctrl[0x44 / sizeof(uint32_t)] = metrics_0;
+    // Write Metric Selection Register 1
+    perfmon_ctrl[0x48 / sizeof(uint32_t)] = metrics_1;
+}
+
+static mtl_retc_t perfmon_reset(snapu32_t *perfmon_ctrl) {
+    // Enable Metric Counters
+    // Global_Clk_Cnt_Reset = 1
+    // Global_Clk_Cnt_En = 1
+    // Metrics_Cnt_Reset = 1
+    // Metrics_Cnt_En = 1
+    perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x00020002;
+}
+
+static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctrl) {
+    snap_membus_t result = 0;
+    for (int i = 0; i < 7; ++i) {
+        result = (result << sizeof(uint32_t) * 8) | perfmon_ctrl[(0x100 + i * sizeof(uint32_t) * 4) / sizeof(uint32_t)];
+    }
+    *mem = result;
+}
+
 static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
@@ -528,6 +627,7 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
+    snapu32_t *perfmon_ctrl,
     mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
@@ -555,6 +655,8 @@ static mtl_retc_t action_run_operators(
     snap_bool_t enable_7 = _enable_mask[7];
     snap_bool_t enable_8 = _enable_mask[8];
     snap_bool_t enable_9 = _enable_mask[9];
+
+    // perfmon_reset(perfmon_ctrl);
 
     {
 #pragma HLS DATAFLOW

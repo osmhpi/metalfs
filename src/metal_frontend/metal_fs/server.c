@@ -16,6 +16,7 @@
 #include "../../metal_operators/op_read_mem/operator.h"
 #include "../../metal_operators/op_write_file/operator.h"
 #include "../../metal_operators/op_write_mem/operator.h"
+#include "../../metal_operators/op_change_case/operator.h"
 #include "../../metal_pipeline/pipeline.h"
 
 #include "../common/buffer.h"
@@ -23,6 +24,8 @@
 #include "../common/known_operators.h"
 #include "list/list.h"
 #include "registered_agent.h"
+
+#define PERFMON_STREAM op_change_case_specification.id.stream_id
 
 LIST_ENTRY registered_agents;
 LIST_ENTRY pipeline_agents;
@@ -409,6 +412,10 @@ void* start_socket(void* args) {
             mtl_operator_execution_plan execution_plan = { operator_list, pipeline_length };
             mtl_configure_pipeline(execution_plan);
 
+#ifdef PERFMON_STREAM
+            mtl_configure_perfmon(PERFMON_STREAM);
+#endif
+
             // If we're interacting with an FPGA file, we have to set up the extents initially.
             // The op_read_file does this internally, so no action required here.
             uint64_t internal_input_file_length = 0;
@@ -484,6 +491,10 @@ void* start_socket(void* args) {
                     }
 
                     mtl_run_pipeline();
+
+#ifdef PERFMON_STREAM
+                    mtl_print_perfmon();
+#endif
 
                     // TODO:
                     // output_size = op_write_mem_get_written_bytes();
