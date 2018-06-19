@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <dirent.h>
 
 #include <pthread.h>
 
@@ -399,6 +400,13 @@ int main(int argc, char *argv[])
 
     pthread_t server_thread;
     pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
+
+    DIR* dir = opendir("metadata_store");
+    if (dir) {
+        closedir(dir);
+    } else if (ENOENT == errno) {
+        mkdir("metadata_store", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
 
     mtl_initialize("metadata_store");
     // mtl_pipeline_initialize();
