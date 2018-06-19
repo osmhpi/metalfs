@@ -72,44 +72,50 @@ extern "C" {
 //     halfword0: stream 6 dest | R
 //     halfword1: stream 7 dest | R
 
-#define MTL_JOB_CONFIGURE_PERFMON 6
+#define MTL_JOB_RESET_PERFMON 6
+
+#define MTL_JOB_CONFIGURE_PERFMON 7
 // 64bit words at job_address:
 //   word0: stream id           | R
 
-#define MTL_JOB_READ_PERFMON_COUNTERS 7
+#define MTL_JOB_READ_PERFMON_COUNTERS 8
 // 32bit words at job_address:
-//   word0: counter0            | W
-//   word1: counter1            | W
-//   word2: counter2            | W
-//   word3: counter3            | W
-//   word4: counter4            | W
-//   word5: counter5            | W
-//   word6: counter6            | W
+//   word0: global clock ctr    | W
+//   word1: counter0            | W
+//   word2: counter1            | W
+//   word3: counter2            | W
+//   word4: counter3            | W
+//   word5: counter4            | W
+//   word6: counter5            | W
+//   word7: counter6            | W
+//   word8: counter7            | W
+//   word9: counter8            | W
+//   word10: counter9           | W
 
-#define MTL_JOB_RUN_OPERATORS 8
+#define MTL_JOB_RUN_OPERATORS 9
 // no payload data
 
-#define MTL_JOB_OP_MEM_SET_READ_BUFFER 9
+#define MTL_JOB_OP_MEM_SET_READ_BUFFER 10
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_OP_MEM_SET_WRITE_BUFFER 10
+#define MTL_JOB_OP_MEM_SET_WRITE_BUFFER 11
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 11
+#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 12
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 12
+#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 13
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
 
-#define MTL_JOB_OP_CHANGE_CASE_SET_MODE 13
+#define MTL_JOB_OP_CHANGE_CASE_SET_MODE 14
 // 64bit words at job_address:
 //   word0: mode                | R
 

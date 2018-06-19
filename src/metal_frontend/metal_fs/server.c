@@ -413,6 +413,7 @@ void* start_socket(void* args) {
             mtl_configure_pipeline(execution_plan);
 
 #ifdef PERFMON_STREAM
+            mtl_reset_perfmon();
             mtl_configure_perfmon(PERFMON_STREAM);
 #endif
 

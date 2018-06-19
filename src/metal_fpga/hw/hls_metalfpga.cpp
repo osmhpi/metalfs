@@ -14,7 +14,7 @@
 
 // #define DRAM_ENABLED
 // #define NVME_ENABLED
-static mtl_retc_t perfmon_reset(snapu32_t *perfmon_ctrl);
+
 static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
 #ifdef DRAM_ENABLED
@@ -42,7 +42,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_7,
                                 snapu32_t *switch_ctrl,
                                 snapu32_t *perfmon_ctrl,
-                                // volatile ap_uint<1> &perfmon_enable,
                                 action_reg * act_reg);
 
 static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job);
@@ -64,8 +63,6 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    // snapu32_t *perfmon_ctrl,
-    // volatile ap_uint<1> &perfmon_enable,
     mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
@@ -128,7 +125,6 @@ void hls_action(snap_membus_t * din,
                 mtl_stream &axis_m_7,
                 snapu32_t *switch_ctrl,
                 snapu32_t *perfmon_ctrl,
-                // ap_uint<1> *perfmon_enable,
                 action_reg * action_reg,
                 action_RO_config_reg * action_config)
 {
@@ -180,7 +176,6 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_m_7
 #pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg offset=0x44A00000
 #pragma HLS INTERFACE m_axi port=perfmon_ctrl bundle=perfmon_ctrl_reg offset=0x44A00000
-// #pragma HLS INTERFACE ap_none register port=perfmon_enable
 
     // Required Action Type Detection
     switch (action_reg->Control.flags) {
@@ -218,7 +213,6 @@ void hls_action(snap_membus_t * din,
             axis_m_7,
             switch_ctrl,
             perfmon_ctrl,
-            // *perfmon_enable,
             action_reg);
         break;
     }
@@ -228,6 +222,10 @@ void hls_action(snap_membus_t * din,
 // ------------------------------------------------
 // --------------- ACTION FUNCTIONS ---------------
 // ------------------------------------------------
+
+static mtl_retc_t perfmon_reset(snapu32_t *perfmon_ctrl);
+static mtl_retc_t perfmon_enable(snapu32_t *perfmon_ctrl);
+static mtl_retc_t perfmon_disable(snapu32_t *perfmon_ctrl);
 
 // Decode job_type and call appropriate action
 static mtl_retc_t process_action(snap_membus_t * mem_in,
@@ -257,7 +255,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_7,
                                 snapu32_t *switch_ctrl,
                                 snapu32_t *perfmon_ctrl,
-                                // volatile ap_uint<1> &perfmon_enable,
                                 action_reg * act_reg)
 {
     switch (act_reg->Data.job_type) {
@@ -299,6 +296,11 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     {
         return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
+    case MTL_JOB_RESET_PERFMON:
+    {
+        perfmon_reset(perfmon_ctrl);
+        return SNAP_RETC_SUCCESS;
+    }
     case MTL_JOB_CONFIGURE_PERFMON:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
@@ -310,7 +312,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case MTL_JOB_RUN_OPERATORS:
     {
-        perfmon_reset(perfmon_ctrl);
+        perfmon_enable(perfmon_ctrl);
+
         action_run_operators(
             mem_in,
             mem_out,
@@ -318,8 +321,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             mem_ddr_in,
             mem_ddr_out,
 #endif
-            // perfmon_ctrl,
-            // perfmon_enable,
             axis_s_0,
             axis_s_1,
             axis_s_2,
@@ -337,8 +338,9 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_6,
             axis_m_7
         );
-
+        // perfmon_disable(perfmon_ctrl);
         perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
+
         return SNAP_RETC_SUCCESS;
     }
     case MTL_JOB_OP_MEM_SET_READ_BUFFER:
@@ -583,22 +585,28 @@ static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stre
     // ...
     // Slot 6 : 22
 
-    uint32_t metrics_0 = 0x13121110
+    uint32_t metrics_0 = 0x15121110
         | stream_id << (0 * 8) + 5
         | stream_id << (1 * 8) + 5
         | stream_id << (2 * 8) + 5
         | stream_id << (3 * 8) + 5;
 
-    uint32_t metrics_1 = 0x00161514
+    uint32_t metrics_1 = 0x12111016
         | stream_id << (0 * 8) + 5
-        | stream_id << (1 * 8) + 5
-        | stream_id << (2 * 8) + 5
-        | stream_id << (3 * 8) + 5;
+        | 0 << (1 * 8) + 5
+        | 0 << (2 * 8) + 5
+        | 0 << (3 * 8) + 5;
+
+    uint32_t metrics_2 = 0x00001615
+        | 0 << (0 * 8) + 5
+        | 0 << (1 * 8) + 5;
 
     // Write Metric Selection Register 0
     perfmon_ctrl[0x44 / sizeof(uint32_t)] = metrics_0;
     // Write Metric Selection Register 1
     perfmon_ctrl[0x48 / sizeof(uint32_t)] = metrics_1;
+    // Write Metric Selection Register 2
+    perfmon_ctrl[0x4C / sizeof(uint32_t)] = metrics_2;
 
     return SNAP_RETC_SUCCESS;
 }
@@ -608,11 +616,22 @@ static mtl_retc_t perfmon_reset(snapu32_t *perfmon_ctrl) {
     // Metrics_Cnt_Reset = 1
     perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x00020002;
 
-    // // Enable Metric Counters
+    // perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x00010001;
 
-    // // Global_Clk_Cnt_En = 1
-    // // Metrics_Cnt_En = 1
+    return SNAP_RETC_SUCCESS;
+}
+
+static mtl_retc_t perfmon_enable(snapu32_t *perfmon_ctrl) {
+    // Enable Metric Counters
+    // Global_Clk_Cnt_En = 1
+    // Metrics_Cnt_En = 1
     perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x00010001;
+
+    return SNAP_RETC_SUCCESS;
+}
+
+static mtl_retc_t perfmon_disable(snapu32_t *perfmon_ctrl) {
+    perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
 
     return SNAP_RETC_SUCCESS;
 }
@@ -620,13 +639,19 @@ static mtl_retc_t perfmon_reset(snapu32_t *perfmon_ctrl) {
 static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctrl) {
     snap_membus_t result = 0;
 
-    mtl_set32<0 * 4>(result, perfmon_ctrl[(0x100 + 0 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<1 * 4>(result, perfmon_ctrl[(0x100 + 1 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<2 * 4>(result, perfmon_ctrl[(0x100 + 2 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<3 * 4>(result, perfmon_ctrl[(0x100 + 3 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<4 * 4>(result, perfmon_ctrl[(0x100 + 4 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<5 * 4>(result, perfmon_ctrl[(0x100 + 5 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<6 * 4>(result, perfmon_ctrl[(0x100 + 6 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    // Global Clock Count
+    mtl_set32<0 * 4>(result, perfmon_ctrl[0x0004 / sizeof(uint32_t)]);
+
+    mtl_set32<1 * 4>(result, perfmon_ctrl[(0x100 + 0 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<2 * 4>(result, perfmon_ctrl[(0x100 + 1 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<3 * 4>(result, perfmon_ctrl[(0x100 + 2 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<4 * 4>(result, perfmon_ctrl[(0x100 + 3 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<5 * 4>(result, perfmon_ctrl[(0x100 + 4 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<6 * 4>(result, perfmon_ctrl[(0x100 + 5 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<7 * 4>(result, perfmon_ctrl[(0x100 + 6 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<8 * 4>(result, perfmon_ctrl[(0x100 + 7 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<9 * 4>(result, perfmon_ctrl[(0x100 + 8 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<10 * 4>(result, perfmon_ctrl[(0x100 + 9 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
 
     *mem = result;
 
@@ -640,8 +665,6 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    // snapu32_t *perfmon_ctrl,
-    // volatile ap_uint<1> &perfmon_enable,
     mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
@@ -669,10 +692,6 @@ static mtl_retc_t action_run_operators(
     snap_bool_t enable_7 = _enable_mask[7];
     snap_bool_t enable_8 = _enable_mask[8];
     snap_bool_t enable_9 = _enable_mask[9];
-
-    // perfmon_reset(perfmon_ctrl);
-
-    // perfmon_enable = 1;
 
     {
 #pragma HLS DATAFLOW
@@ -705,8 +724,6 @@ static mtl_retc_t action_run_operators(
         op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
 #endif
     }
-
-    // perfmon_enable = 0;
 
     return SNAP_RETC_SUCCESS;
 }
