@@ -76,7 +76,8 @@ extern "C" {
 
 #define MTL_JOB_CONFIGURE_PERFMON 7
 // 64bit words at job_address:
-//   word0: stream id           | R
+//   word0: stream id 0         | R
+//   word0: stream id 1         | R
 
 #define MTL_JOB_READ_PERFMON_COUNTERS 8
 // 32bit words at job_address:

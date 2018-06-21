@@ -414,7 +414,7 @@ void* start_socket(void* args) {
 
 #ifdef PERFMON_STREAM
             mtl_reset_perfmon();
-            mtl_configure_perfmon(PERFMON_STREAM);
+            mtl_configure_perfmon(PERFMON_STREAM, 0);
 #endif
 
             // If we're interacting with an FPGA file, we have to set up the extents initially.

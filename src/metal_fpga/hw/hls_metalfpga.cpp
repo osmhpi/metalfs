@@ -13,8 +13,8 @@
 
 #define HW_RELEASE_LEVEL       0x00000013
 
-// #define DRAM_ENABLED
-// #define NVME_ENABLED
+#define DRAM_ENABLED
+#define NVME_ENABLED
 
 static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,
@@ -55,7 +55,7 @@ static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job);
 static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job);
 
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_out, const uint64_t job_address);
-static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id);
+static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id0, uint8_t stream_id1);
 static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctrl);
 static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
@@ -305,7 +305,7 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     case MTL_JOB_CONFIGURE_PERFMON:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line));
+        return action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line), mtl_get64<8>(line));
     }
     case MTL_JOB_READ_PERFMON_COUNTERS:
     {
@@ -559,7 +559,7 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     return SNAP_RETC_SUCCESS;
 }
 
-static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id) {
+static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id0, uint8_t stream_id1) {
     // Metrics Computed for AXI4-Stream Agent
 
     // 16
@@ -597,20 +597,20 @@ static mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stre
     // Slot 6 : 22
 
     uint32_t metrics_0 = 0x15121110
-        | stream_id << (0 * 8) + 5
-        | stream_id << (1 * 8) + 5
-        | stream_id << (2 * 8) + 5
-        | stream_id << (3 * 8) + 5;
+        | stream_id0 << (0 * 8) + 5
+        | stream_id0 << (1 * 8) + 5
+        | stream_id0 << (2 * 8) + 5
+        | stream_id0 << (3 * 8) + 5;
 
     uint32_t metrics_1 = 0x12111016
-        | stream_id << (0 * 8) + 5
-        | 0 << (1 * 8) + 5
-        | 0 << (2 * 8) + 5
-        | 0 << (3 * 8) + 5;
+        | stream_id0 << (0 * 8) + 5
+        | stream_id1 << (1 * 8) + 5
+        | stream_id1 << (2 * 8) + 5
+        | stream_id1 << (3 * 8) + 5;
 
     uint32_t metrics_2 = 0x00001615
-        | 0 << (0 * 8) + 5
-        | 0 << (1 * 8) + 5;
+        | stream_id1 << (0 * 8) + 5
+        | stream_id1 << (1 * 8) + 5;
 
     // Write Metric Selection Register 0
     perfmon_ctrl[0x44 / sizeof(uint32_t)] = metrics_0;

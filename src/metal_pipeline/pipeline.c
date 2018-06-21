@@ -169,9 +169,10 @@ void mtl_reset_perfmon() {
     return;
 }
 
-void mtl_configure_perfmon(uint64_t stream_id) {
+void mtl_configure_perfmon(uint64_t stream_id0, uint64_t stream_id1) {
     uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(uint64_t));
-    *job_struct = htobe64(stream_id);
+    job_struct[0] = htobe64(stream_id0);
+    job_struct[1] = htobe64(stream_id1);
 
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_CONFIGURE_PERFMON;
