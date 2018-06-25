@@ -47,4 +47,5 @@ typedef struct server_accept_agent_data {
 typedef struct server_processed_buffer_data {
     uint64_t size;
     bool eof;
+    uint64_t message_length;
 } server_processed_buffer_data_t;

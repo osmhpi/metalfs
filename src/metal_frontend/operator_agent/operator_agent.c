@@ -358,6 +358,12 @@ int main(int argc, char *argv[]) {
                 fwrite(output_buffer, sizeof(char), processing_response.size, stdout);
             }
 
+            if (processing_response.message_length) {
+                char mesg [processing_response.message_length];
+                recv(sock, &mesg, processing_response.message_length, 0);
+                fprintf(stderr, "%s\n", mesg);
+            }
+
             eof = processing_response.eof;
 
             if (eof && output_buffer) {

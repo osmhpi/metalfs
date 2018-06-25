@@ -493,10 +493,6 @@ void* start_socket(void* args) {
 
                     mtl_run_pipeline();
 
-#ifdef PERFMON_STREAM
-                    mtl_print_perfmon();
-#endif
-
                     // TODO:
                     // output_size = op_write_mem_get_written_bytes();
                     output_size = size; // This is fine for now because we always get out the same amount of bytes
@@ -532,6 +528,11 @@ void* start_socket(void* args) {
                 }
 
                 if (eof) {
+#ifdef PERFMON_STREAM
+                    char perfmon_results[4096];
+                    uint64_t perfmon_results_size = mtl_read_perfmon(perfmon_results, sizeof(perfmon_results) - 1);
+#endif
+
                     // Terminate all other agents, but don't send another message to input or output agents
                     // If we've already notified them above
                     current_link = pipeline_agents.Flink;
@@ -542,8 +543,15 @@ void* start_socket(void* args) {
                             (current_agent != output_agent || output_agent->internal_output_file)) {
                             processing_response.size = 0;
                             processing_response.eof = eof;
+                            processing_response.message_length = 0;
+                            if (PERFMON_STREAM == current_agent->op_specification->id.stream_id) {
+                                processing_response.message_length = perfmon_results_size + 1;
+                            }
                             send(current_agent->socket, &message_type, sizeof(message_type), 0);
                             send(current_agent->socket, &processing_response, sizeof(processing_response), 0);
+                            if (PERFMON_STREAM == current_agent->op_specification->id.stream_id) {
+                                send(current_agent->socket, &perfmon_results, perfmon_results_size + 1, 0);
+                            }
                         }
 
                         current_link = current_link->Flink;

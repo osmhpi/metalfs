@@ -199,7 +199,7 @@ void mtl_configure_perfmon(uint64_t stream_id0, uint64_t stream_id1) {
     return;
 }
 
-void mtl_print_perfmon() {
+uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size) {
     uint32_t *job_struct = (uint32_t*)snap_malloc(sizeof(uint32_t) * 11);
 
     metalfpga_job_t mjob;
@@ -226,51 +226,53 @@ void mtl_print_perfmon() {
         return;
     }
 
-    printf("Global Clock Count: %u\n", be32toh(job_struct[0]));
+    char *current_offset = buffer;
 
-    printf("Performance counters\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Global Clock Count: %u\n", be32toh(job_struct[0]));
 
-    printf("  Transfer Cycle Count: %u\n", be32toh(job_struct[1]));
-    printf("    Gives the total number of cycles the data is transferred.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Input stream:\n");
 
-    printf("  Packet Count: %u\n", be32toh(job_struct[2]));
-    printf("    Gives the total number of packets transferred.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[1]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Data Byte Count: %u\n", be32toh(job_struct[3]));
-    printf("    Gives the total number of data bytes transferred.\n");
-    printf("\n");
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[2]));
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Slv_Idle_Cnt: %u\n", be32toh(job_struct[4]));
-    printf("    Gives the number of idle cycles caused by the slave.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[3]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Mst_Idle_Cnt: %u\n", be32toh(job_struct[5]));
-    printf("    Gives the number of idle cycles caused by the master.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[4]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("Performance counters\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[5]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
 
-    printf("  Transfer Cycle Count: %u\n", be32toh(job_struct[6]));
-    printf("    Gives the total number of cycles the data is transferred.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Output stream\n");
 
-    printf("  Packet Count: %u\n", be32toh(job_struct[7]));
-    printf("    Gives the total number of packets transferred.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[6]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Data Byte Count: %u\n", be32toh(job_struct[8]));
-    printf("    Gives the total number of data bytes transferred.\n");
-    printf("\n");
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[7]));
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
+    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Slv_Idle_Cnt: %u\n", be32toh(job_struct[9]));
-    printf("    Gives the number of idle cycles caused by the slave.\n");
-    printf("\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[8]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    printf("  Mst_Idle_Cnt: %u\n", be32toh(job_struct[10]));
-    printf("    Gives the number of idle cycles caused by the master.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[9]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    return;
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[10]));
+    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
+
+    return current_offset - buffer_size;
 }
 
 void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint64_t length) {
