@@ -30,26 +30,32 @@ static const char help[] =
     "\n";
 
 static uint64_t _mode = 0;
+static bool _profile = 0;
 
 extern int optind;
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
     _mode = 0;
+    _profile = 0;
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             { "help", no_argument, NULL, 'h' },
-            { "lowercase", no_argument, NULL, 'l' }
+            { "lowercase", no_argument, NULL, 'l' },
+            { "profile", no_argument, NULL, 'p' },
         };
 
-        int ch = getopt_long(args->argc, args->argv, "lh", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "lhp", long_options, &option_index);
         if (ch == -1)
             break;
 
         switch (ch) {
         case 'l':
             _mode = 1;
+            break;
+        case 'p':
+            _profile = 1;
             break;
         case 'h':
         default:
@@ -91,6 +97,10 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
+bool get_profile_enabled() {
+    return _profile;
+}
+
 mtl_operator_specification op_change_case_specification = {
     { OP_CHANGE_CASE_ENABLE_ID, OP_CHANGE_CASE_STREAM_ID },
     "change_case",
@@ -99,5 +109,6 @@ mtl_operator_specification op_change_case_specification = {
     &handle_opts,
     &apply_config,
     NULL,
-    NULL
+    NULL,
+    &get_profile_enabled
 };

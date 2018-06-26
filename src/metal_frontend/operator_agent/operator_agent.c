@@ -360,8 +360,8 @@ int main(int argc, char *argv[]) {
 
             if (processing_response.message_length) {
                 char mesg [processing_response.message_length];
-                recv(sock, &mesg, processing_response.message_length, 0);
-                fprintf(stderr, "%s\n", mesg);
+                recv(sock, mesg, processing_response.message_length, 0);
+                fprintf(stderr, "%s", mesg);
             }
 
             eof = processing_response.eof;

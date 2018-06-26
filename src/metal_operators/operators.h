@@ -17,6 +17,7 @@ typedef const void* (*mtl_operator_handle_opts_f)(mtl_operator_invocation_args *
 typedef int (*mtl_operator_apply_configuration_f)(struct snap_action *action);
 typedef int (*mtl_operator_finalize_f)(struct snap_action *action);
 typedef const char* (*mtl_operator_get_filename_f)();
+typedef bool (*mtl_operator_get_profile_enabled_f)();
 
 typedef struct mtl_operator_specification {
     operator_id id;
@@ -27,6 +28,7 @@ typedef struct mtl_operator_specification {
     mtl_operator_apply_configuration_f apply_config;
     mtl_operator_finalize_f finalize;
     mtl_operator_get_filename_f get_filename;
+    mtl_operator_get_profile_enabled_f get_profile_enabled;
 } mtl_operator_specification;
 
 typedef struct mtl_operator_execution_plan {

@@ -25,8 +25,6 @@
 #include "list/list.h"
 #include "registered_agent.h"
 
-#define PERFMON_STREAM op_change_case_specification.id.stream_id
-
 LIST_ENTRY registered_agents;
 LIST_ENTRY pipeline_agents;
 
@@ -391,12 +389,21 @@ void* start_socket(void* args) {
                 ++current_operator;
             }
 
+            int profile_input_stream = -1, profile_output_stream = -1; // Initialize with invalid ids
+
             current_link = pipeline_agents.Flink;
             do {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
 
                 if (!current_agent->op_specification->is_data_source) {
                     mtl_configure_operator(current_agent->op_specification);
+                }
+                if (current_agent->op_specification->get_profile_enabled
+                    && current_agent->op_specification->get_profile_enabled()) {
+                    profile_input_stream = current_agent->op_specification->id.stream_id;
+                    profile_output_stream = -1;
+                } else if (profile_input_stream >= 0 && profile_output_stream == -1) {
+                    profile_output_stream = current_agent->op_specification->id.stream_id;
                 }
                 operator_list[current_operator++] = current_agent->op_type;
 
@@ -405,17 +412,23 @@ void* start_socket(void* args) {
 
             if (output_agent->internal_output_file) {
                 operator_list[current_operator] = op_write_file_specification.id;
+                if (profile_input_stream >= 0 && profile_output_stream == -1) {
+                    profile_output_stream = op_write_file_specification.id.stream_id;
+                }
             } else {
                 operator_list[current_operator] = op_write_mem_specification.id;
+                if (profile_input_stream >= 0 && profile_output_stream == -1) {
+                    profile_output_stream = op_write_mem_specification.id.stream_id;
+                }
             }
 
             mtl_operator_execution_plan execution_plan = { operator_list, pipeline_length };
             mtl_configure_pipeline(execution_plan);
 
-#ifdef PERFMON_STREAM
             mtl_reset_perfmon();
-            mtl_configure_perfmon(PERFMON_STREAM, 0);
-#endif
+            if (profile_input_stream >= 0 && profile_output_stream >= 0) {
+                mtl_configure_perfmon(profile_input_stream, profile_output_stream);
+            }
 
             // If we're interacting with an FPGA file, we have to set up the extents initially.
             // The op_read_file does this internally, so no action required here.
@@ -503,6 +516,9 @@ void* start_socket(void* args) {
                     }
                 }
 
+                char perfmon_results[4096];
+                uint64_t perfmon_results_size = mtl_read_perfmon(perfmon_results, sizeof(perfmon_results) - 1);
+
                 message_type_t message_type = SERVER_PROCESSED_BUFFER;
 
                 if (internal_input_file_length) {
@@ -512,8 +528,12 @@ void* start_socket(void* args) {
                     if (input_agent != output_agent || output_agent->internal_output_file) {
                         processing_response.size = 0;
                         processing_response.eof = eof;
+                        processing_response.message_length = profile_input_stream == input_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
                         send(input_agent->socket, &message_type, sizeof(message_type), 0);
                         send(input_agent->socket, &processing_response, sizeof(processing_response), 0);
+                        if (processing_response.message_length) {
+                            send(input_agent->socket, perfmon_results, perfmon_results_size + 1, 0);
+                        }
                     }
                 }
 
@@ -523,18 +543,17 @@ void* start_socket(void* args) {
                     // Tell the output agent to take the processing result
                     processing_response.size = output_size;
                     processing_response.eof = eof;
+                    processing_response.message_length = profile_input_stream == output_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
                     send(output_agent->socket, &message_type, sizeof(message_type), 0);
                     send(output_agent->socket, &processing_response, sizeof(processing_response), 0);
+                    if (processing_response.message_length) {
+                        send(output_agent->socket, perfmon_results, perfmon_results_size + 1, 0);
+                    }
                 }
 
                 if (eof) {
-#ifdef PERFMON_STREAM
-                    char perfmon_results[4096];
-                    uint64_t perfmon_results_size = mtl_read_perfmon(perfmon_results, sizeof(perfmon_results) - 1);
-#endif
-
                     // Terminate all other agents, but don't send another message to input or output agents
-                    // If we've already notified them above
+                    // if we've already notified them above
                     current_link = pipeline_agents.Flink;
                     do {
                         registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
@@ -543,14 +562,11 @@ void* start_socket(void* args) {
                             (current_agent != output_agent || output_agent->internal_output_file)) {
                             processing_response.size = 0;
                             processing_response.eof = eof;
-                            processing_response.message_length = 0;
-                            if (PERFMON_STREAM == current_agent->op_specification->id.stream_id) {
-                                processing_response.message_length = perfmon_results_size + 1;
-                            }
+                            processing_response.message_length = profile_input_stream == current_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
                             send(current_agent->socket, &message_type, sizeof(message_type), 0);
                             send(current_agent->socket, &processing_response, sizeof(processing_response), 0);
-                            if (PERFMON_STREAM == current_agent->op_specification->id.stream_id) {
-                                send(current_agent->socket, &perfmon_results, perfmon_results_size + 1, 0);
+                            if (processing_response.message_length) {
+                                send(current_agent->socket, perfmon_results, perfmon_results_size + 1, 0);
                             }
                         }
 

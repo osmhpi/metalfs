@@ -217,62 +217,62 @@ uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size) {
     if (rc != 0) {
         // Some error occurred
         free(job_struct);
-        return;
+        return 0;
     }
 
     if (cjob.retc != SNAP_RETC_SUCCESS) {
         // Some error occurred
         free(job_struct);
-        return;
+        return 0;
     }
 
     char *current_offset = buffer;
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Global Clock Count: %u\n", be32toh(job_struct[0]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "Global Clock Count: %u\n", be32toh(job_struct[0]));
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Input stream:\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "Input stream:\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[1]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[1]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[2]));
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[2]));
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[3]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[3]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[4]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[4]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[5]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[5]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "Output stream\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "Output stream\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[6]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Transfer Cycle Count: %u\n", be32toh(job_struct[6]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of cycles the data is transferred.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[7]));
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
-    // current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Packet Count: %u\n", be32toh(job_struct[7]));
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of packets transferred.\n");
+    // current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[8]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Data Byte Count: %u\n", be32toh(job_struct[8]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the total number of data bytes transferred.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[9]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Slv_Idle_Cnt: %u\n", be32toh(job_struct[9]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the slave.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "\n");
 
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[10]));
-    current_offset += sprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "  Mst_Idle_Cnt: %u\n", be32toh(job_struct[10]));
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "    Gives the number of idle cycles caused by the master.\n");
 
-    return current_offset - buffer_size;
+    return current_offset - buffer;
 }
 
 void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint64_t length) {

@@ -41,7 +41,7 @@ void op_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element> 
                 current_strb = 0xffffffffffffffff;
                 if (buffer_offset == 0) {
                     // Mask out bytes at the beginning
-                	// (lower addresses are located at the right of the snap_membus_t word)
+                    // (lower addresses are located at the right of the snap_membus_t word)
                     current_strb >>= word_offset;
                     current_strb <<= word_offset;
                 }
@@ -66,7 +66,7 @@ void op_mem_read_impl(snap_membus_t *din_gmem, hls::stream<word_stream_element> 
             output_strb |= current_strb;
 
             snap_bool_t last_element = (word_offset > 0 && next_output_strb == 0)
-            		|| (word_offset == 0 && buffer_offset + BPERDW >= final_offset);
+                    || (word_offset == 0 && buffer_offset + BPERDW >= final_offset);
 
             if (output_strb) {
                 word_stream_element element;
