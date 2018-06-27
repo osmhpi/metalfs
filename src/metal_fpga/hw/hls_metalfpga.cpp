@@ -340,7 +340,9 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_7
         );
         // perfmon_disable(perfmon_ctrl);
+    #ifndef NO_SYNTH
         perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
+    #endif
 
         return SNAP_RETC_SUCCESS;
     }
@@ -636,7 +638,9 @@ static mtl_retc_t perfmon_enable(snapu32_t *perfmon_ctrl) {
     // Enable Metric Counters
     // Global_Clk_Cnt_En = 1
     // Metrics_Cnt_En = 1
+#ifndef NO_SYNTH
     perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x00010001;
+#endif
 
     return SNAP_RETC_SUCCESS;
 }
@@ -1116,7 +1120,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     fprintf(stderr, "ACTION_TYPE:   %08x\nRELEASE_LEVEL: %08x\nRETC:          %04x\n",
         (unsigned int)act_config.action_type,
         (unsigned int)act_config.release_level,
@@ -1150,7 +1154,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// MAP slot 7 1200:8,1500:24\n");
@@ -1173,7 +1177,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// QUERY slot 2, lblock 9\n");
@@ -1193,7 +1197,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
 
@@ -1227,7 +1231,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// ACCESS slot 2, read 100 @ offset 3077\n");
@@ -1247,7 +1251,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
     printf("-> %x\n\n", (unsigned int)act_reg.Control.Retc);
 
     fprintf(stderr, "// CONFIGURE STREAMS\n");
@@ -1285,7 +1289,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
     fprintf(stderr, "// OP MEM SET READ BUFFER\n");
     job_mem[0] = htobe64(0x80);
@@ -1299,7 +1303,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
     fprintf(stderr, "// OP MEM SET WRITE BUFFER\n");
     job_mem[0] = htobe64(0x100);
@@ -1314,7 +1318,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
     fprintf(stderr, "// OP CHANGE CASE SET MODE\n");
     job_mem[0] = htobe64(0);
@@ -1328,7 +1332,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
     fprintf(stderr, "// RUN OPERATORS\n");
     // Fill the memory with 'c' and 'd' characters
@@ -1348,7 +1352,7 @@ int main()
 #ifdef NVME_ENABLED
         NULL,
 #endif
-        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+        axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
     *(char *)(job_mem_b + 0x100 + 128) = '\0';
     fprintf(stderr, "Result is : %s\n", (char *)(job_mem_b + 0x100));
@@ -1367,7 +1371,7 @@ int main()
     #ifdef NVME_ENABLED
             NULL,
     #endif
-            axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, &act_reg, &act_config);
+            axis_s_0, axis_s_1, axis_s_2, axis_s_3, axis_s_4, axis_s_5, axis_s_6, axis_s_7, axis_m_0, axis_m_1, axis_m_2, axis_m_3, axis_m_4, axis_m_5, axis_m_6, axis_m_7, switch_ctrl, NULL, &act_reg, &act_config);
 
 
     return 0;

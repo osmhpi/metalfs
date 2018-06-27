@@ -216,7 +216,7 @@ static bf_halfBlock_t bf_f(bf_halfBlock_t h, bf_SiC_t iCpy, bf_key_t &key)
 
 static void bf_encrypt(bf_halfBlock_t & left, bf_halfBlock_t & right, bf_SiC_t iCpy, bf_key_t &key)
 {
-    printf("bf_encrypt(0x%08x, 0x%08x, %d)", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right), *((uint32_t *)(void *)iCpy));
+    // printf("bf_encrypt(0x%08x, 0x%08x, %d)", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right), *((uint32_t *)(void *)iCpy));
 
 BF_ENCRYPT:
     for (int i = 0; i < 16; i += 2) {
@@ -233,12 +233,12 @@ BF_ENCRYPT:
     bf_halfBlock_t tmp = left;
     left = right;
     right = tmp;
-    printf(" -> 0x%08x, 0x%08x\n", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right));
+    // printf(" -> 0x%08x, 0x%08x\n", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right));
 }
 
 static void bf_decrypt(bf_halfBlock_t & left, bf_halfBlock_t & right, bf_SiC_t iCpy, bf_key_t &key)
 {
-    printf("bf_decrypt(0x%08x, 0x%08x, %d)", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right), *((uint32_t *)(void *)iCpy));
+    // printf("bf_decrypt(0x%08x, 0x%08x, %d)", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right), *((uint32_t *)(void *)iCpy));
 
 BF_DECRYPT:
     for (int i = 16; i > 0; i -= 2) {
@@ -255,12 +255,12 @@ BF_DECRYPT:
     bf_halfBlock_t tmp = left;
     left = right;
     right = tmp;
-    printf(" -> 0x%08x, 0x%08x\n", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right));
+    // printf(" -> 0x%08x, 0x%08x\n", *((uint32_t *)(void *)&left), *((uint32_t *)(void *)&right));
 }
 
 static void bf_keyInit(bf_halfBlock_t key[16], bf_key_t &dest)
 {
-    printf("bf_keyInit() <- \n");
+    // printf("bf_keyInit() <- \n");
 
     // init P and S from initP, initS and key
     for (int i = 0; i < 16; ++i) {
