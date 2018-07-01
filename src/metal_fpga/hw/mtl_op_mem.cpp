@@ -133,7 +133,7 @@ void op_mem_read_impl(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configur
 }
 
 void op_mem_read(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configuration &config, snap_bool_t enable) {
-#pragma HLS inline
+#pragma HLS dataflow
     if (enable) {
         op_mem_read_impl(din_gmem, out, config);
     }
