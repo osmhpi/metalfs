@@ -97,7 +97,7 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
-bool get_profile_enabled() {
+static bool get_profile_enabled() {
     return _profile;
 }
 

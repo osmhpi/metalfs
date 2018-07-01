@@ -528,7 +528,7 @@ void* start_socket(void* args) {
                     if (input_agent != output_agent || output_agent->internal_output_file) {
                         processing_response.size = 0;
                         processing_response.eof = eof;
-                        processing_response.message_length = profile_input_stream == input_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
+                        processing_response.message_length = eof && profile_input_stream == input_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
                         send(input_agent->socket, &message_type, sizeof(message_type), 0);
                         send(input_agent->socket, &processing_response, sizeof(processing_response), 0);
                         if (processing_response.message_length) {
@@ -543,7 +543,7 @@ void* start_socket(void* args) {
                     // Tell the output agent to take the processing result
                     processing_response.size = output_size;
                     processing_response.eof = eof;
-                    processing_response.message_length = profile_input_stream == output_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
+                    processing_response.message_length = eof && profile_input_stream == output_agent->op_specification->id.stream_id ? perfmon_results_size : 0;
                     send(output_agent->socket, &message_type, sizeof(message_type), 0);
                     send(output_agent->socket, &processing_response, sizeof(processing_response), 0);
                     if (processing_response.message_length) {
