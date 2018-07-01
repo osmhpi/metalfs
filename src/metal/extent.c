@@ -1,5 +1,6 @@
 #include <lmdb.h>
 
+#include <stdio.h>
 #include <stddef.h>
 #include <assert.h>
 
@@ -84,27 +85,28 @@ uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size, mtl_file_extent *last_e
         const mtl_extent *next_extent;
         uint64_t next_extent_offset = last_extent->offset + last_extent->length;
         res = mtl_load_extent(txn, next_extent_offset, &next_extent);
-        assert(res == MTL_SUCCESS);
 
-        uint64_t next_extent_length = next_extent->length;
+        if (res == MTL_SUCCESS) { // If the last extent ends at the very end, we can't extend it
+            uint64_t next_extent_length = next_extent->length;
 
-        if (next_extent->status == MTL_FREE) {
+            if (next_extent->status == MTL_FREE) {
 
-            // Delete the next_extent and add its length to last_extent
-            res = mtl_heap_delete(txn, next_extent->pq_node);
-            assert(res == MTL_SUCCESS);
+                // Delete the next_extent and add its length to last_extent
+                res = mtl_heap_delete(txn, next_extent->pq_node);
+                assert(res == MTL_SUCCESS);
 
-            MDB_val next_extent_key = { .mv_size = sizeof(next_extent_offset), .mv_data = &next_extent_offset };
-            res = mdb_del(txn, extents_db, &next_extent_key, NULL);
-            assert(res == MDB_SUCCESS);
+                MDB_val next_extent_key = { .mv_size = sizeof(next_extent_offset), .mv_data = &next_extent_offset };
+                res = mdb_del(txn, extents_db, &next_extent_key, NULL);
+                assert(res == MDB_SUCCESS);
 
-            // Load last_extent
-            extent_offset = last_extent->offset;
-            res = mtl_load_extent(txn, extent_offset, &extent);
-            assert(res == MTL_SUCCESS);
+                // Load last_extent
+                extent_offset = last_extent->offset;
+                res = mtl_load_extent(txn, extent_offset, &extent);
+                assert(res == MTL_SUCCESS);
 
-            append_extent_length = next_extent_length;
-            original_extent_length = extent->length;
+                append_extent_length = next_extent_length;
+                original_extent_length = extent->length;
+            }
         }
     }
 
@@ -258,6 +260,33 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
     MDB_val updated_extent_key = { .mv_size = sizeof(extent_offset), .mv_data = &extent_offset };
     MDB_val updated_extent_value = { .mv_size = sizeof(updated_extent), .mv_data = &updated_extent };
     mdb_put(txn, extents_db, &updated_extent_key, &updated_extent_value, 0);
+
+    return MTL_SUCCESS;
+}
+
+int mtl_dump_extents(MDB_txn *txn) {
+
+    mtl_ensure_extents_db_open(txn);
+
+
+    MDB_cursor *cursor;
+    mdb_cursor_open(txn, extents_db, &cursor);
+
+    int res;
+
+    MDB_val next_extent_key;
+    MDB_val next_extent_value;
+    res = mdb_cursor_get(cursor, &next_extent_key, &next_extent_value, MDB_FIRST);
+    printf("Extents:\n");
+    do {
+
+        printf("  Offset: %lu\tLength: %lu\n", *(uint64_t*)next_extent_key.mv_data, ((mtl_extent*) next_extent_value.mv_data)->length);
+        
+        res = mdb_cursor_get(cursor, &next_extent_key, &next_extent_value, MDB_NEXT);    
+    } while (res == MDB_SUCCESS);
+
+
+    mdb_cursor_close(cursor);
 
     return MTL_SUCCESS;
 }

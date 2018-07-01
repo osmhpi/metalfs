@@ -52,6 +52,8 @@ int mtl_initialize(const char *metadata_store) {
     // Create a single extent spanning the entire storage (if necessary)
     mtl_initialize_extents(txn, metadata.num_blocks);
 
+    // mtl_dump_extents(txn);
+
     mdb_txn_commit(txn);
 
     return MTL_SUCCESS;
@@ -402,7 +404,7 @@ int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
             true
         );
         current_inode_length_blocks += new_extent.length;
-        assert(new_extent.length);  // We don't handle "no space left on device" yet
+        assert(new_extent.length);  // TODO: We don't handle "no space left on device" yet
 
         uint64_t new_length = write_end_bytes > current_inode_length_blocks * metadata.block_size
                 ? current_inode_length_blocks * metadata.block_size
