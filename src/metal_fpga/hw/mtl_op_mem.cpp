@@ -143,61 +143,128 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
 
     #pragma HLS dataflow
 
+    mtl_stream aligned_stream;
     hls::stream<word_stream_element> word_stream;
-    hls::stream<word_stream_element> aligned_word_stream;
+    hls::stream<word_stream_element> padded_word_stream;
+
+    {
+        mtl_stream_element element = { 0, 0, 0 };
+        mtl_stream_element current_element = { 0, 0, 0 };
+        uint8_t begin_line_offset = config.offset % 8;
+        uint8_t insert_padding_elements = (config.offset % BPERDW) / 8;
+        adjust_alignment:
+        do {
+            if (insert_padding_elements > 0) {
+                --insert_padding_elements;
+            } else {
+                element = in.read();
+            }
+
+            current_element.data |= element.data << (begin_line_offset * 8);
+            current_element.strb |= element.strb << (begin_line_offset);
+
+            mtl_stream_element next_element = { 0, 0, 0 };
+            next_element.data = element.data >> ((BPERDW - begin_line_offset) * 8);
+            next_element.strb = element.strb >> (BPERDW - begin_line_offset);
+
+            current_element.last = element.last && next_element.strb == 0;
+
+            aligned_stream.write(current_element);
+
+            if (element.last && next_element.strb != 0) {
+                next_element.last = true;
+                aligned_stream.write(next_element);
+            }
+
+            current_element = next_element;
+        } while (!element.last);
+    }
 
     {
         mtl_stream_element element;
         word_stream_element out_element = { 0, 0, 0 };
-        uint8_t current_subword = 0;
+        ap_uint<3> current_subword = 0;
         widen_stream:
         do {
-            element = in.read();
-            out_element.data |= (ap_uint<512>)element.data << (current_subword * sizeof(element.data) * 8);
-            out_element.strb |= (ap_uint<64>)element.strb << (current_subword * sizeof(element.data));
+            element = aligned_stream.read();
+
+            switch (current_subword) {
+                case 0:
+                    mtl_set64le<0 * 8>(out_element.data, element.data);
+                    out_element.strb(0 * 8 + 7, 0 * 8) = element.strb;
+                    break;
+                case 1:
+                    mtl_set64le<1 * 8>(out_element.data, element.data);
+                    out_element.strb(1 * 8 + 7, 1 * 8) = element.strb;
+                    break;
+                case 2:
+                    mtl_set64le<2 * 8>(out_element.data, element.data);
+                    out_element.strb(2 * 8 + 7, 2 * 8) = element.strb;
+                    break;
+                case 3:
+                    mtl_set64le<3 * 8>(out_element.data, element.data);
+                    out_element.strb(3 * 8 + 7, 3 * 8) = element.strb;
+                    break;
+                case 4:
+                    mtl_set64le<4 * 8>(out_element.data, element.data);
+                    out_element.strb(4 * 8 + 7, 4 * 8) = element.strb;
+                    break;
+                case 5:
+                    mtl_set64le<5 * 8>(out_element.data, element.data);
+                    out_element.strb(5 * 8 + 7, 5 * 8) = element.strb;
+                    break;
+                case 6:
+                    mtl_set64le<6 * 8>(out_element.data, element.data);
+                    out_element.strb(6 * 8 + 7, 6 * 8) = element.strb;
+                    break;
+                case 7:
+                default:
+                    mtl_set64le<7 * 8>(out_element.data, element.data);
+                    out_element.strb(7 * 8 + 7, 7 * 8) = element.strb;
+                    break;
+            }
+
             out_element.last = element.last;
 
             ++current_subword;
 
-            if (out_element.strb == 0xffffffffffffffff) {
+            if (current_subword == 7 ||
+                (element.last && out_element.strb != 0)
+            ) {
                 word_stream.write(out_element);
                 current_subword = 0;
                 out_element.data = 0;
                 out_element.strb = 0;
-            }
-
-            if (element.last && out_element.strb != 0) {
-                word_stream.write(out_element);
             }
         } while(!element.last);
     }
 
     {
         word_stream_element element;
-        word_stream_element current_element = { 0, 0, 0 };
-        uint8_t begin_line_offset = config.offset % BPERDW;
-        adjust_alignment:
+        uint64_t element_counter = 0;
+        snap_bool_t apply_padding = false;
         do {
             element = word_stream.read();
+            ++element_counter;
 
-            current_element.data |= element.data << (begin_line_offset * 8);
-            current_element.strb |= element.strb << (begin_line_offset);
-
-            word_stream_element next_element = { 0, 0, 0 };
-            next_element.data = element.data >> ((BPERDW - begin_line_offset) * 8);
-            next_element.strb = element.strb >> (BPERDW - begin_line_offset);
-
-            current_element.last = element.last && next_element.strb == 0;
-            
-            aligned_word_stream.write(current_element);
-
-            if (element.last && next_element.strb != 0) {
-            	next_element.last = true;
-                aligned_word_stream.write(next_element);
+            if (element.last && element_counter % 64) {
+                apply_padding = true;
+                element.last = false;
             }
 
-            current_element = next_element;
-        } while(!element.last);
+            padded_word_stream.write(element);
+
+            if (apply_padding) {
+                element.data = 0;
+                element.strb = 0;
+                while (element_counter % 64) {
+                    ++element_counter;
+                    element.last = element_counter % 64 == 0;
+                    padded_word_stream.write(element);
+                }
+            }
+
+        } while (!element.last);
     }
 
     {
@@ -206,12 +273,16 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
         const uint64_t write_words = (last_word - first_word) + 1;
 
         word_stream_element element = { 0, 0, 0 };
-
+        uint64_t total_words = 0;
         write_to_mem:
-        for (int k = 0; k < write_words && !element.last; k++) {
-            #pragma HLS PIPELINE
-            element = aligned_word_stream.read();
-            (dout_gmem + config.offset / BPERDW)[k] = element.data; // Unfortunately, we can't pass the strobe
+        while (!element.last && total_words < write_words) {
+            // Always do burst writes of 4K
+            for (int k = 0; k < 64; k++) {
+                #pragma HLS PIPELINE
+                element = padded_word_stream.read();
+                (dout_gmem + config.offset / BPERDW)[k] = element.data; // Unfortunately, we can't pass the strobe
+                ++total_words;
+            }
         }
     }
 }

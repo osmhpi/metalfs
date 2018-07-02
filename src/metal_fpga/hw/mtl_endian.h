@@ -22,6 +22,23 @@ static inline void mtl_set64le(snap_membus_t & busline,
     busline(o_bit+63, o_bit) = pattern;
 }
 
+template<int lowest_byte>
+static inline void mtl_set64le(snap_membus_t & busline, snapu64_t value)
+{
+    snapu64_t pattern = 0;
+    pattern( 7,  0) = value >>  0;
+    pattern(15,  8) = value >>  8;
+    pattern(23, 16) = value >> 16;
+    pattern(31, 24) = value >> 24;
+    pattern(39, 32) = value >> 32;
+    pattern(47, 40) = value >> 40;
+    pattern(55, 48) = value >> 48;
+    pattern(63, 56) = value >> 56;
+
+    mfb_bitoffset_t o_bit = MFB_TOBITOFFSET(lowest_byte);
+    busline(o_bit+63, o_bit) = pattern;
+}
+
 static inline void mtl_set64be(snap_membus_t & busline,
                               mfb_byteoffset_t lowest_byte,
                               snapu64_t value)
