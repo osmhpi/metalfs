@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch accfs",
+            "name": "(gdb) Launch metal_fs",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/accfs",
-            "args": ["-d", "-s", "-f", "/tmp/example"],
+            "program": "${workspaceFolder}/build/metal_fs",
+            "args": ["-o", "big_writes", "-s", "-f", "/mnt/metal_fs"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "environment": [],

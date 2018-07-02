@@ -139,55 +139,86 @@ void op_mem_read(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configuration
     }
 }
 
-void op_mem_write_impl(hls::stream<word_stream_element> &mem_stream, snap_membus_t *dout_gmem, mtl_mem_configuration &config, snap_bool_t enable) {
-    if (enable) {
-        word_stream_element rest;
-        rest.data = 0;
-        rest.strb = 0;
+void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configuration &config) {
 
-        uint16_t offset = config.offset % BPERDW;
-        uint64_t current_memory_line = 0;
-        uint64_t bytes_written = 0;
+    #pragma HLS dataflow
 
-        while (true) {
-            word_stream_element input;
-            word_stream_element output;
+    hls::stream<word_stream_element> word_stream;
+    hls::stream<word_stream_element> aligned_word_stream;
 
-            input = mem_stream.read();
+    {
+        mtl_stream_element element;
+        word_stream_element out_element = { 0, 0, 0 };
+        uint8_t current_subword = 0;
+        widen_stream:
+        do {
+            element = in.read();
+            out_element.data |= (ap_uint<512>)element.data << (current_subword * sizeof(element.data) * 8);
+            out_element.strb |= (ap_uint<64>)element.strb << (current_subword * sizeof(element.data));
+            out_element.last = element.last;
 
-            output = input;
-            output.data <<= offset * 8;
-            output.strb <<= offset;
+            ++current_subword;
 
-            output.data |= rest.data;
-            output.strb |= rest.strb;
-
-            rest = input;
-            rest.data >>= (BPERDW - offset) * 8;
-            rest.strb >>= (BPERDW - offset);
-
-            dout_gmem[MFB_ADDRESS(config.offset) + current_memory_line] = output.data;
-            bytes_written += current_memory_line == 0 ? BPERDW - offset : BPERDW;
-            current_memory_line++;
-
-            if (bytes_written >= config.size) {
-                break;
+            if (out_element.strb == 0xffffffffffffffff) {
+                word_stream.write(out_element);
+                current_subword = 0;
+                out_element.data = 0;
+                out_element.strb = 0;
             }
 
-            if (input.last) {
-                if (rest.strb) {
-                    dout_gmem[MFB_ADDRESS(config.offset) + current_memory_line] = rest.data;
-                }
-
-                break;
+            if (element.last && out_element.strb != 0) {
+                word_stream.write(out_element);
             }
+        } while(!element.last);
+    }
+
+    {
+        word_stream_element element;
+        word_stream_element current_element = { 0, 0, 0 };
+        uint8_t begin_line_offset = config.offset % BPERDW;
+        adjust_alignment:
+        do {
+            element = word_stream.read();
+
+            current_element.data |= element.data << (begin_line_offset * 8);
+            current_element.strb |= element.strb << (begin_line_offset);
+
+            word_stream_element next_element = { 0, 0, 0 };
+            next_element.data = element.data >> ((BPERDW - begin_line_offset) * 8);
+            next_element.strb = element.strb >> (BPERDW - begin_line_offset);
+
+            current_element.last = element.last && next_element.strb == 0;
+            
+            aligned_word_stream.write(current_element);
+
+            if (element.last && next_element.strb != 0) {
+            	next_element.last = true;
+                aligned_word_stream.write(next_element);
+            }
+
+            current_element = next_element;
+        } while(!element.last);
+    }
+
+    {
+        const uint64_t first_word = config.offset / BPERDW;
+        const uint64_t last_word = (config.offset + config.size - 1) / BPERDW;
+        const uint64_t write_words = (last_word - first_word) + 1;
+
+        word_stream_element element = { 0, 0, 0 };
+
+        write_to_mem:
+        for (int k = 0; k < write_words && !element.last; k++) {
+            #pragma HLS PIPELINE
+            element = aligned_word_stream.read();
+            (dout_gmem + config.offset / BPERDW)[k] = element.data; // Unfortunately, we can't pass the strobe
         }
     }
 }
 
 void op_mem_write(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configuration &config, snap_bool_t enable) {
 #pragma HLS dataflow
-    hls::stream<word_stream_element> mem_stream;
-    stream_widen(mem_stream, in, enable);
-    op_mem_write_impl(mem_stream, dout_gmem, config, enable);
+    if (enable) {
+        op_mem_write_impl(in, dout_gmem, config);
+    }
 }
