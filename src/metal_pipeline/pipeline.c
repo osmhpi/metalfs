@@ -200,7 +200,8 @@ void mtl_configure_perfmon(uint64_t stream_id0, uint64_t stream_id1) {
 }
 
 uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size) {
-    uint32_t *job_struct = (uint32_t*)snap_malloc(sizeof(uint32_t) * 11);
+    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(uint64_t) * 6);
+    uint32_t *counters = (uint32_t*)(job_struct + 1);
 
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_READ_PERFMON_COUNTERS;
@@ -230,30 +231,30 @@ uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size) {
     const double freq = 250;
     const double onehundred = 100;
 
-    uint32_t global_clock_count = be32toh(job_struct[0]);
+    uint64_t global_clock_count = be64toh(job_struct[0]);
 
-    uint32_t input_data_byte_count = be32toh(job_struct[3]);
-    uint32_t input_transfer_cycle_count = be32toh(job_struct[1]);
+    uint32_t input_data_byte_count = be32toh(counters[2]);
+    uint32_t input_transfer_cycle_count = be32toh(counters[0]);
     double input_transfer_cycle_percent = input_transfer_cycle_count * onehundred / global_clock_count;
-    uint32_t input_slave_idle_count = be32toh(job_struct[4]);
+    uint32_t input_slave_idle_count = be32toh(counters[3]);
     double input_slave_idle_percent = input_slave_idle_count * onehundred / global_clock_count;
-    uint32_t input_master_idle_count = be32toh(job_struct[5]);
+    uint32_t input_master_idle_count = be32toh(counters[4]);
     double input_master_idle_percent = input_master_idle_count * onehundred / global_clock_count;
     double input_mbps = (input_data_byte_count * freq) / (double)global_clock_count;
 
-    uint32_t output_data_byte_count = be32toh(job_struct[8]);
-    uint32_t output_transfer_cycle_count = be32toh(job_struct[6]);
+    uint32_t output_data_byte_count = be32toh(counters[7]);
+    uint32_t output_transfer_cycle_count = be32toh(counters[5]);
     double output_transfer_cycle_percent = output_transfer_cycle_count * onehundred / global_clock_count;
-    uint32_t output_slave_idle_count = be32toh(job_struct[9]);
+    uint32_t output_slave_idle_count = be32toh(counters[8]);
     double output_slave_idle_percent = output_slave_idle_count * onehundred / global_clock_count;
-    uint32_t output_master_idle_count = be32toh(job_struct[10]);
+    uint32_t output_master_idle_count = be32toh(counters[9]);
     double output_master_idle_percent = output_master_idle_count * onehundred / global_clock_count;
     double output_mbps = (output_data_byte_count * freq) / (double)global_clock_count;
 
     current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s\n");
 
-    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12u  %-4.2f\n", input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count, input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, global_clock_count, input_mbps);
-    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12u  %-4.2f\n", output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count, output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, global_clock_count, output_mbps);
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n", input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count, input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, global_clock_count, input_mbps);
+    current_offset += snprintf(current_offset, buffer + buffer_size - current_offset, "output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n", output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count, output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, global_clock_count, output_mbps);
 
     return current_offset - buffer;
 }

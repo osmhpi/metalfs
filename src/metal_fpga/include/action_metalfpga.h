@@ -80,18 +80,19 @@ extern "C" {
 //   word0: stream id 1         | R
 
 #define MTL_JOB_READ_PERFMON_COUNTERS 8
-// 32bit words at job_address:
+// 64bit words at job_address:
 //   word0: global clock ctr    | W
-//   word1: counter0            | W
-//   word2: counter1            | W
-//   word3: counter2            | W
-//   word4: counter3            | W
-//   word5: counter4            | W
-//   word6: counter5            | W
-//   word7: counter6            | W
-//   word8: counter7            | W
-//   word9: counter8            | W
-//   word10: counter9           | W
+// 32bit words at job_address + 8:
+//   word0: counter0            | W
+//   word1: counter1            | W
+//   word2: counter2            | W
+//   word3: counter3            | W
+//   word4: counter4            | W
+//   word5: counter5            | W
+//   word6: counter6            | W
+//   word7: counter7            | W
+//   word8: counter8            | W
+//   word9: counter9            | W
 
 #define MTL_JOB_RUN_OPERATORS 9
 // no payload data

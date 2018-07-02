@@ -655,18 +655,18 @@ static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctr
     snap_membus_t result = 0;
 
     // Global Clock Count
-    mtl_set32<0 * 4>(result, perfmon_ctrl[0x0004 / sizeof(uint32_t)]);
+    mtl_set64<0 * 4>(result, (perfmon_ctrl[0x0000 / sizeof(uint32_t)], perfmon_ctrl[0x0004 / sizeof(uint32_t)]));
 
-    mtl_set32<1 * 4>(result, perfmon_ctrl[(0x100 + 0 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<2 * 4>(result, perfmon_ctrl[(0x100 + 1 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<3 * 4>(result, perfmon_ctrl[(0x100 + 2 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<4 * 4>(result, perfmon_ctrl[(0x100 + 3 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<5 * 4>(result, perfmon_ctrl[(0x100 + 4 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<6 * 4>(result, perfmon_ctrl[(0x100 + 5 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<7 * 4>(result, perfmon_ctrl[(0x100 + 6 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<8 * 4>(result, perfmon_ctrl[(0x100 + 7 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<9 * 4>(result, perfmon_ctrl[(0x100 + 8 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
-    mtl_set32<10 * 4>(result, perfmon_ctrl[(0x100 + 9 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<0 * 4 + 8>(result, perfmon_ctrl[(0x100 + 0 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<1 * 4 + 8>(result, perfmon_ctrl[(0x100 + 1 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<2 * 4 + 8>(result, perfmon_ctrl[(0x100 + 2 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<3 * 4 + 8>(result, perfmon_ctrl[(0x100 + 3 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<4 * 4 + 8>(result, perfmon_ctrl[(0x100 + 4 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<5 * 4 + 8>(result, perfmon_ctrl[(0x100 + 5 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<6 * 4 + 8>(result, perfmon_ctrl[(0x100 + 6 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<7 * 4 + 8>(result, perfmon_ctrl[(0x100 + 7 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<8 * 4 + 8>(result, perfmon_ctrl[(0x100 + 8 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
+    mtl_set32<9 * 4 + 8>(result, perfmon_ctrl[(0x100 + 9 * sizeof(uint32_t) * 4) / sizeof(uint32_t)]);
 
     *mem = result;
 
