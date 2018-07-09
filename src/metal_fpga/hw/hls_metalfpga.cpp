@@ -130,9 +130,12 @@ void hls_action(snap_membus_t * din,
                 action_RO_config_reg * action_config)
 {
     // Configure Host Memory AXI Interface
-#pragma HLS INTERFACE m_axi port=din bundle=host_mem offset=slave depth=512
-#pragma HLS INTERFACE m_axi port=dout bundle=host_mem offset=slave depth=512
+#pragma HLS INTERFACE m_axi port=din bundle=host_mem offset=slave depth=512 \
+    max_read_burst_length=64 max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=din bundle=ctrl_reg offset=0x030
+
+#pragma HLS INTERFACE m_axi port=dout bundle=host_mem offset=slave depth=512 \
+    max_read_burst_length=64 max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=dout bundle=ctrl_reg offset=0x040
 
     // Configure Host Memory AXI Lite Master Interface
@@ -147,6 +150,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE m_axi port=ddrin bundle=card_mem0 offset=slave depth=512 \
     max_read_burst_length=64  max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=ddrin bundle=ctrl_reg offset=0x050
+
 #pragma HLS INTERFACE m_axi port=ddrout bundle=card_mem0 offset=slave depth=512 \
     max_read_burst_length=64  max_write_burst_length=64
 #pragma HLS INTERFACE s_axilite port=ddrout bundle=ctrl_reg offset=0x070
