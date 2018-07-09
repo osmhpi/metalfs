@@ -240,11 +240,21 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
     }
 
     {
-        word_stream_element element;
+        word_stream_element element = { 0, 0, 0 };
         uint64_t element_counter = 0;
         snap_bool_t apply_padding = false;
+
+        ap_uint<6> insert_padding_elements = (config.offset % MTL_BLOCK_BYTES) / BPERDW;
+
+        // Insert padding elements on a 64-byte word level so that we always
+        // start and stop writing on a page / block boundary
         do {
-            element = word_stream.read();
+            if (insert_padding_elements > 0) {
+                --insert_padding_elements;
+            } else {
+                element = word_stream.read();
+            }
+
             ++element_counter;
 
             if (element.last && element_counter % 64) {
@@ -268,21 +278,21 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
     }
 
     {
-        const uint64_t first_word = config.offset / BPERDW;
-        const uint64_t last_word = (config.offset + config.size - 1) / BPERDW;
-        const uint64_t write_words = (last_word - first_word) + 1;
+        const uint64_t first_block = config.offset / MTL_BLOCK_BYTES;
+        const uint64_t last_block = (config.offset + config.size - 1) / MTL_BLOCK_BYTES;
+        const uint64_t write_blocks = (last_block - first_block) + 1;
 
         word_stream_element element = { 0, 0, 0 };
-        uint64_t total_words = 0;
+        uint64_t total_blocks = 0;
         write_to_mem:
-        while (!element.last && total_words < write_words) {
-            // Always do burst writes of 4K
+        while (!element.last && total_blocks < write_blocks) {
+            // Always do burst writes of 4KB (one page / block)
             for (int k = 0; k < 64; k++) {
                 #pragma HLS PIPELINE
                 element = padded_word_stream.read();
                 (dout_gmem + config.offset / BPERDW)[k] = element.data; // Unfortunately, we can't pass the strobe
-                ++total_words;
             }
+            ++total_blocks;
         }
     }
 }
