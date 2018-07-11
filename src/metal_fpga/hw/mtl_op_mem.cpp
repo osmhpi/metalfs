@@ -29,7 +29,7 @@ void op_mem_read_impl(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configur
         const uint64_t read_words = (last_word - first_word) + 1;
         uint64_t total_read_words = 0;
 
-        while (total_read_words < read_words>) {
+        while (total_read_words < read_words) {
             uint64_t read_burst = (read_words - total_read_words) > 64 ? 64 : (read_words - total_read_words);
             read_memory:
             for (int k = 0; k < read_burst; k++) {
@@ -37,7 +37,7 @@ void op_mem_read_impl(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configur
                 word_stream_element element;
                 element.data = (din_gmem + config.offset / BPERDW)[total_read_words + k];
                 element.strb = 0xffffffffffffffff;
-                element.last = k == read_words - 1;
+                element.last = total_read_words + k == read_words - 1;
                 word_stream.write(element);
             }
             total_read_words += read_burst;
