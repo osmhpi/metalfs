@@ -27,22 +27,28 @@ void op_mem_read_impl(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configur
         const uint64_t first_word = config.offset / BPERDW;
         const uint64_t last_word = (config.offset + config.size - 1) / BPERDW;
         const uint64_t read_words = (last_word - first_word) + 1;
-        read_memory:
-        for (int k = 0; k < read_words; k++) {
-            #pragma HLS PIPELINE
-            word_stream_element element;
-            element.data = (din_gmem + config.offset / BPERDW)[k];
-            element.strb = 0xffffffffffffffff;
-            element.last = k == read_words - 1;
-            word_stream.write(element);
+        uint64_t total_read_words = 0;
+
+        while (total_read_words < read_words>) {
+            uint64_t read_burst = (read_words - total_read_words) > 64 ? 64 : (read_words - total_read_words);
+            read_memory:
+            for (int k = 0; k < read_burst; k++) {
+                #pragma HLS PIPELINE
+                word_stream_element element;
+                element.data = (din_gmem + config.offset / BPERDW)[total_read_words + k];
+                element.strb = 0xffffffffffffffff;
+                element.last = k == read_words - 1;
+                word_stream.write(element);
+            }
+            total_read_words += read_burst;
         }
     }
 
     {
         uint8_t begin_line_offset = config.offset % BPERDW;
-        uint8_t end_line_offset = config.offset + config.size % BPERDW;
+        uint8_t end_line_offset = (config.offset + config.size) % BPERDW;
         uint64_t first_line_strb = 0xffffffffffffffff << begin_line_offset;
-        uint64_t last_line_strb = 0xffffffffffffffff >> (BPERDW - end_line_offset);
+        uint64_t last_line_strb = end_line_offset ? 0xffffffffffffffff >> (BPERDW - end_line_offset) : 0xffffffffffffffff;
 
         uint64_t word_count = 0;
 
@@ -218,15 +224,12 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
                     out_element.strb(6 * 8 + 7, 6 * 8) = element.strb;
                     break;
                 case 7:
-                default:
                     mtl_set64le<7 * 8>(out_element.data, element.data);
                     out_element.strb(7 * 8 + 7, 7 * 8) = element.strb;
                     break;
             }
 
             out_element.last = element.last;
-
-            ++current_subword;
 
             if (current_subword == 7 ||
                 (element.last && out_element.strb != 0)
@@ -235,6 +238,8 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
                 current_subword = 0;
                 out_element.data = 0;
                 out_element.strb = 0;
+            } else {
+                ++current_subword;
             }
         } while(!element.last);
     }
@@ -290,7 +295,7 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
             for (int k = 0; k < 64; k++) {
                 #pragma HLS PIPELINE
                 element = padded_word_stream.read();
-                (dout_gmem + config.offset / BPERDW)[k] = element.data; // Unfortunately, we can't pass the strobe
+                (dout_gmem + config.offset / BPERDW)[total_blocks * 64 + k] = element.data; // Unfortunately, we can't pass the strobe
             }
             ++total_blocks;
         }
