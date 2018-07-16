@@ -10,14 +10,12 @@
 ### Software
  - CMake is required to build the software, as well as FUSE (`libfuse-dev` on Ubuntu), LMDB (`liblmdb-dev`) and libcxl (part of [PSLSE](https://github.com/ibm-capi/pslse) when simulating)
  - Create a build directory: `mkdir build && cd build`
- - Run CMake, explicitly specifying paths to SNAP and libcxl if necessary (the other dependencies should be automatically resolved):
+ - Specify environment variables pointing to SNAP (and if necessary PSLSE). Make sure that the libcxl.a and libsnap.a libraries are built.
  ```
-  cmake .. \
-    -DSNAP_INCLUDE_DIR=~/snap/software/include \
-    -DSNAP_LIBRARY=~/snap/software/lib/libsnap.a \
-    -DCXL_INCLUDE_DIR=~/pslse/libcxl \
-    -DCXL_LIBRARY=~/pslse/libcxl/libcxl.a
-  ```
+export PSLSE_ROOT=/home/user/pslse
+export SNAP_ROOT=/home/user/snap
+ ```
+ - Run CMake. All dependencies should be resolved automatically: `cmake ..`
  - Run `make` to build all libraries and executables
 
 

@@ -8,12 +8,13 @@ FIND_PATH(CXL_INCLUDE_DIR libcxl.h
 
     PATHS
     $ENV{CXL_DIR}
+    $ENV{PSLSE_ROOT}/libcxl
     /usr
     /usr/local
     /sw
     /opt/local
 
-	PATH_SUFFIXES
+    PATH_SUFFIXES
     /include
 
     DOC "The directory where libcxl.h resides.")
@@ -21,6 +22,7 @@ FIND_PATH(CXL_INCLUDE_DIR libcxl.h
 FIND_LIBRARY(CXL_LIBRARY cxl
     PATHS
     $ENV{CXL_DIR}
+    $ENV{PSLSE_ROOT}/libcxl
     /usr
     /usr/local
     /sw
