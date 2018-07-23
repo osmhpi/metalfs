@@ -17,7 +17,8 @@ static const char help[] =
     "  -k, --key              encryption key\n"
     "\n";
 
-static unsigned char _key[16] = { 0 };
+static unsigned char _encryption_key[16] = { 0 };
+static bool _profile = false;
 
 extern int optind;
 
@@ -50,21 +51,27 @@ file_read(const char *fname, uint8_t *buff, size_t len)
 
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
+    _profile = false;
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             { "help", no_argument, NULL, 'h' },
-            { "key", required_argument, NULL, 'k' }
+            { "key", required_argument, NULL, 'k' },
+            { "profile", no_argument, NULL, 'p' }
         };
 
-        int ch = getopt_long(args->argc, args->argv, "kh", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "khp", long_options, &option_index);
         if (ch == -1)
             break;
 
         switch (ch) {
         case 'k': {
-            file_read(optarg, _key, 16);
+            file_read(optarg, _encryption_key, 16);
+            break;
+        }
+        case 'p': {
+            _profile = 1;
             break;
         }
         case 'h':
@@ -81,8 +88,8 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
 }
 
 static int apply_config(struct snap_action *action) {
-    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(_key));
-    memcpy(job_struct, _key, sizeof(_key)); // No endianness conversions here
+    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(_encryption_key));
+    memcpy(job_struct, _encryption_key, sizeof(_encryption_key)); // No endianness conversions here
 
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY;
@@ -107,6 +114,10 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
+static bool get_profile_enabled() {
+    return _profile;
+}
+
 mtl_operator_specification op_blowfish_encrypt_specification = {
     { OP_BLOWFISH_ENCRYPT_ENABLE_ID, OP_BLOWFISH_ENCRYPT_STREAM_ID },
     "blowfish_encrypt",
@@ -115,5 +126,6 @@ mtl_operator_specification op_blowfish_encrypt_specification = {
     &handle_opts,
     &apply_config,
     NULL,
-    NULL
+    NULL,
+    &get_profile_enabled
 };
