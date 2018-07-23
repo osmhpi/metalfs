@@ -469,22 +469,9 @@ uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offse
 
     mdb_txn_abort(txn);
 
-    // Workaround: Storage backend is currently only able to write in aligned 4K bursts,
-    // filling up remaining space with zeroes
-
-    char* read_buffer = buffer;
-    if (size % 4096 || (uint64_t)buffer % 4096) {
-        read_buffer = memalign(4096, (((size - 1) / 4096) + 1) * 4096);
-    }
-
     if (read_len > 0)
         // Copy the actual data from storage
-        mtl_storage_read(offset, read_buffer, read_len);
-
-    if (read_buffer != buffer) {
-        memcpy(buffer, read_buffer, read_len);
-        free(read_buffer);
-    }
+        mtl_storage_read(offset, buffer, read_len);
 
     return read_len;
 }

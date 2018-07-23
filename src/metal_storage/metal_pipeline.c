@@ -51,57 +51,49 @@ int mtl_storage_set_active_write_extent_list(const mtl_file_extent *extents, uin
 
 int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
 
-void *aligned_buffer = snap_malloc(length);
-memset(aligned_buffer, 0, length);
+    void *aligned_buffer = snap_malloc(SNAP_ROUND_UP(length, 4096));
 
     // Build and run a pipeline
     operator_id operator_list[] = { op_read_file_specification.id, op_write_mem_specification.id };
 
-    // printf("Configuring pipeline\n");
     mtl_operator_execution_plan execution_plan = { operator_list, 2 };
     mtl_configure_pipeline(execution_plan);
 
-    // printf("Set file buffer\n");
     op_read_file_set_buffer(offset, length);
     mtl_configure_operator(&op_read_file_specification);
 
-    // printf("Set memory buffer\n");
     op_write_mem_set_buffer(aligned_buffer, length);
     mtl_configure_operator(&op_write_mem_specification);
 
-    // printf("Running pipeline\n");
     mtl_run_pipeline();
 
-memcpy(buffer, aligned_buffer, length);
-free(aligned_buffer);
+    memcpy(buffer, aligned_buffer, length);
+    free(aligned_buffer);
+
     return MTL_SUCCESS;
 }
 
 int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
 
-void *aligned_buffer = snap_malloc(length);
-memcpy(aligned_buffer, buffer, length);
+    void *aligned_buffer = snap_malloc(length);
+    memcpy(aligned_buffer, buffer, length);
 
     // Build and run a pipeline
     operator_id operator_list[] = { op_read_mem_specification.id, op_write_file_specification.id };
 
-    // printf("Configuring pipeline\n");
     mtl_operator_execution_plan execution_plan = { operator_list, 2 };
     mtl_configure_pipeline(execution_plan);
 
-    // printf("Set memory buffer\n");
     op_read_mem_set_buffer(aligned_buffer, length);
     mtl_configure_operator(&op_read_mem_specification);
 
-    // printf("Set file buffer\n");
     op_write_file_set_buffer(offset, length);
     mtl_configure_operator(&op_write_file_specification);
 
-    // printf("Running pipeline\n");
     mtl_run_pipeline();
 
     mtl_finalize_operator(&op_write_file_specification);
 
-free(aligned_buffer);
+    free(aligned_buffer);
     return MTL_SUCCESS;
 }

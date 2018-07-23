@@ -68,16 +68,16 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
             return -res;
           }
 
-          stbuf->st_dev; // device ID? can we put something meaningful here?
-          stbuf->st_ino; // TODO: inode-ID
-          stbuf->st_mode; // set according to filetype below
-          stbuf->st_nlink; // number of hard links to file. since we don't support hardlinks as of now, this will always be 0.
+          (void)stbuf->st_dev; // device ID? can we put something meaningful here?
+          (void)stbuf->st_ino; // TODO: inode-ID
+          (void)stbuf->st_mode; // set according to filetype below
+          (void)stbuf->st_nlink; // number of hard links to file. since we don't support hardlinks as of now, this will always be 0.
           stbuf->st_uid = inode.user; // user-ID of owner
           stbuf->st_gid = inode.group; // group-ID of owner
-          stbuf->st_rdev; // unused, since this field is meant for special files which we do not have in our FS
+          (void)stbuf->st_rdev; // unused, since this field is meant for special files which we do not have in our FS
           stbuf->st_size = inode.length; // length of referenced file in byte
-          stbuf->st_blksize; // our blocksize. 4k?
-          stbuf->st_blocks; // number of 512B blocks belonging to file. TODO: needs to be set in inode whenever we write an extent
+          (void)stbuf->st_blksize; // our blocksize. 4k?
+          (void)stbuf->st_blocks; // number of 512B blocks belonging to file. TODO: needs to be set in inode whenever we write an extent
           stbuf->st_atime = inode.accessed; // time of last read or write
           stbuf->st_mtime = inode.modified; // time of last write
           stbuf->st_ctime = inode.created; // time of last change to either content or inode-data
@@ -370,6 +370,10 @@ static int rmdir_callback(const char *path)
     return -ENOSYS;
 }
 
+static int flush_callback(const char *path, struct fuse_file_info *fi) {
+    return 0;
+}
+
 static struct fuse_operations fuse_example_operations = {
     .chown = chown_callback,
     .getattr = getattr_callback,
@@ -383,7 +387,8 @@ static struct fuse_operations fuse_example_operations = {
     .create = create_callback,
     .unlink = unlink_callback,
     .mkdir = mkdir_callback,
-    .rmdir = rmdir_callback
+    .rmdir = rmdir_callback,
+    .flush = flush_callback
 };
 
 int main(int argc, char *argv[])
