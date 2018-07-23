@@ -21,22 +21,23 @@ struct snap_action *_action = NULL;
 struct snap_card *_card = NULL;
 
 int mtl_pipeline_initialize() {
+    int card_no = 0;
     char device[128];
-    snprintf(device, sizeof(device)-1, "/dev/cxl/afu%d.0s", 0);
+    snprintf(device, sizeof(device)-1, "/dev/cxl/afu%d.0s", card_no);
 
     if (_card == NULL) {
         _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
         if (_card == NULL) {
-            fprintf(stderr, "err: failed to open card %u: %s\n", 0, strerror(errno));
+            fprintf(stderr, "err: failed to open card %u: %s\n", card_no, strerror(errno));
             return MTL_ERROR_INVALID_ARGUMENT;
         }
     }
 
     if (_action == NULL) {
         snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
-        _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 1);
+        _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 30);
         if (_action == NULL) {
-            fprintf(stderr, "err: failed to attach action %u: %s\n", 0, strerror(errno));
+            fprintf(stderr, "err: failed to attach action %u: %s\n", card_no, strerror(errno));
             snap_card_free(_card);
             return MTL_ERROR_INVALID_ARGUMENT;
         }

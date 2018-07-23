@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../metal_operators/operators.h"
 #include "../metal_storage/storage.h"
 
@@ -16,3 +20,7 @@ uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size);
 
 void mtl_pipeline_set_file_read_extent_list(const mtl_file_extent *extents, uint64_t length);
 void mtl_pipeline_set_file_write_extent_list(const mtl_file_extent *extents, uint64_t length);
+
+#ifdef __cplusplus
+}
+#endif

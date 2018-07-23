@@ -14,5 +14,6 @@ find_package(snap REQUIRED)
 find_package(cxl REQUIRED)
 
 add_subdirectory(src)
+add_subdirectory(test)
 
 add_subdirectory(third_party/googletest)

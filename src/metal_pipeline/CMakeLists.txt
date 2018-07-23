@@ -1,12 +1,15 @@
 set(
     SOURCES
-    
+
     pipeline.c
     pipeline.h
 )
 
 set(
     METAL_PIPELINE_LIBRARIES
+
+    ${SNAP_LIBRARY}
+    ${CXL_LIBRARY}
 )
 
 include_directories(

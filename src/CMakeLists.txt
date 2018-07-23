@@ -4,13 +4,7 @@ include_directories(
 )
 
 add_subdirectory(metal)
-add_subdirectory(metal_test)
-
 add_subdirectory(metal_operators)
-
 add_subdirectory(metal_frontend)
-
 add_subdirectory(metal_pipeline)
-
 add_subdirectory(metal_storage)
-add_subdirectory(metal_storage_test)

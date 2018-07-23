@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -35,3 +39,7 @@ typedef struct mtl_operator_execution_plan {
     const operator_id* operators;
     uint64_t length;
 } mtl_operator_execution_plan;
+
+#ifdef __cplusplus
+}
+#endif

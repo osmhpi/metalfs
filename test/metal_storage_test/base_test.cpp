@@ -4,7 +4,7 @@
 #include <metal_storage/storage.h>
 
 void BaseTest::SetUp() {
-    mtl_storage_initialize();
+    ASSERT_EQ(MTL_SUCCESS, mtl_storage_initialize());
 }
 
 void BaseTest::TearDown() {
