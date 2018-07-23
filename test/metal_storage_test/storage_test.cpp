@@ -10,7 +10,7 @@ namespace {
 TEST_F(BaseTest, Storage_WriteData) {
 
     mtl_file_extent extents[] = {
-        { 0 /* offset */, 1 /* length */ } // in blocks
+        { .offset=0 , .length=1 } // in blocks
     };
     ASSERT_EQ(MTL_SUCCESS, mtl_storage_set_active_write_extent_list(extents, sizeof(extents) / sizeof(extents[0])));
 
@@ -25,7 +25,7 @@ TEST_F(BaseTest, Storage_WriteData) {
 TEST_F(BaseTest, Storage_WriteAndReadData) {
 
     mtl_file_extent extents[] = {
-        { 0 /* offset */, 1 /* length */ } // in blocks
+        { .offset=0 , .length=1 } // in blocks
     };
 
     uint64_t n_pages = 1;
@@ -46,19 +46,19 @@ TEST_F(BaseTest, Storage_WriteAndReadData) {
     free(dest);
 }
 
-static void print_memory_64(void * mem)
-{
-    for (int i = 0; i < 64; ++i) {
-        printf("%02x ", ((uint8_t*)mem)[i]);
-        if (i%8 == 7) printf("\n");
-    }
-}
+// static void print_memory_64(void * mem)
+// {
+//     for (int i = 0; i < 64; ++i) {
+//         printf("%02x ", ((uint8_t*)mem)[i]);
+//         if (i%8 == 7) printf("\n");
+//     }
+// }
 
 TEST_F(BaseTest, Storage_WriteAndReadDataUsingMultipleExtents) {
 
     mtl_file_extent extents[] = {
-        { 0 /* offset */, 1 /* length */ }, // in blocks
-        { 100 /* offset */, 1 /* length */ }
+        { .offset=0   , .length=1 }, // in blocks
+        { .offset=100 , .length=1 }
     };
 
     uint64_t n_pages = 2;
@@ -72,12 +72,6 @@ TEST_F(BaseTest, Storage_WriteAndReadDataUsingMultipleExtents) {
     
     ASSERT_EQ(MTL_SUCCESS, mtl_storage_set_active_read_extent_list(extents, sizeof(extents) / sizeof(extents[0])));
     EXPECT_EQ(MTL_SUCCESS, mtl_storage_read(0, dest, n_bytes));
-
-    printf("Src\n");
-    print_memory_64(src + 4096);
-
-    printf("Dest\n");
-    print_memory_64(dest + 4096);
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 

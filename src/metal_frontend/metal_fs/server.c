@@ -191,7 +191,7 @@ void send_agent_invalid(registered_agent_t *agent) {
 
     message_type_t message_type = SERVER_ACCEPT_AGENT;
     send(agent->socket, &message_type, sizeof(message_type), 0);
-    server_accept_agent_data_t accept_data = { sizeof(message), false };
+    server_accept_agent_data_t accept_data = { .response_length=sizeof(message), .valid=false };
     send(agent->socket, &accept_data, sizeof(accept_data), 0);
     send(agent->socket, message, sizeof(message), 0);
 }
@@ -312,10 +312,10 @@ void* start_socket(void* args) {
                 registered_agent_t *current_agent = CONTAINING_LIST_RECORD(current_link, registered_agent_t);
                 bool op_valid = true;
                 mtl_operator_invocation_args args = {
-                    current_agent->cwd,
-                    current_agent->metal_mountpoint,
-                    current_agent->argc,
-                    current_agent->argv
+                    .cwd = current_agent->cwd,
+                    .metal_mountpoint = current_agent->metal_mountpoint,
+                    .argc = current_agent->argc,
+                    .argv = current_agent->argv
                 };
                 responses[current_operator] = current_agent->op_specification->handle_opts(
                     &args, response_lengths + current_operator, &op_valid);
@@ -335,7 +335,7 @@ void* start_socket(void* args) {
 
                 message_type_t message_type = SERVER_ACCEPT_AGENT;
                 send(current_agent->socket, &message_type, sizeof(message_type), 0);
-                server_accept_agent_data_t accept_data = { response_lengths[current_operator], valid };
+                server_accept_agent_data_t accept_data = { .response_length=response_lengths[current_operator], .valid=valid };
                 send(current_agent->socket, &accept_data, sizeof(accept_data), 0);
                 if (response_lengths[current_operator]) {
                     send(current_agent->socket, responses[current_operator], response_lengths[current_operator], 0);
@@ -422,7 +422,7 @@ void* start_socket(void* args) {
                 }
             }
 
-            mtl_operator_execution_plan execution_plan = { operator_list, pipeline_length };
+            mtl_operator_execution_plan execution_plan = { .operators=operator_list, .length=pipeline_length };
             mtl_configure_pipeline(execution_plan);
 
             mtl_reset_perfmon();

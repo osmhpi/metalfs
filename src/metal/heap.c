@@ -24,7 +24,7 @@ int mtl_heap_insert(MDB_txn *txn, uint64_t key, uint64_t value, mtl_heap_node_id
 
     mtl_ensure_heap_db_open(txn);
 
-    mtl_heap_node_id id = { key, value };
+    mtl_heap_node_id id = { .k=key, .v=value };
 
     MDB_val k = { .mv_size = sizeof(*node_id), .mv_data = &id };
     MDB_val v = { .mv_size = sizeof(uint64_t), .mv_data = &value };

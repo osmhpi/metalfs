@@ -3,6 +3,7 @@ set(
 
     base_test.cpp
     base_test.hpp
+    blowfish_pipeline_test.cpp
     readwrite_pipeline_test.cpp
 
     gtest_main.cpp

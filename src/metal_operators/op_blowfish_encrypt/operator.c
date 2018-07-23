@@ -17,7 +17,7 @@ static const char help[] =
     "  -k, --key              encryption key\n"
     "\n";
 
-static unsigned char _encryption_key[16] = { 0 };
+static unsigned char _key[16] = { 0 };
 static bool _profile = false;
 
 extern int optind;
@@ -49,6 +49,10 @@ file_read(const char *fname, uint8_t *buff, size_t len)
     return rc;
 }
 
+void op_blowfish_encrypt_set_key(unsigned char key[16]) {
+    memcpy(_key, key, sizeof(_key));
+}
+
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
     _profile = false;
@@ -67,7 +71,7 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
 
         switch (ch) {
         case 'k': {
-            file_read(optarg, _encryption_key, 16);
+            file_read(optarg, _key, 16);
             break;
         }
         case 'p': {
@@ -88,8 +92,8 @@ static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *len
 }
 
 static int apply_config(struct snap_action *action) {
-    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(_encryption_key));
-    memcpy(job_struct, _encryption_key, sizeof(_encryption_key)); // No endianness conversions here
+    uint64_t *job_struct = (uint64_t*)snap_malloc(sizeof(_key));
+    memcpy(job_struct, _key, sizeof(_key)); // No endianness conversions here
 
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY;

@@ -379,7 +379,7 @@ int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
         ++write_end_blocks;
 
     uint64_t current_inode_length_blocks = 0;
-    mtl_file_extent last_extent = { 0, 0 };  // Used to append data if possible
+    mtl_file_extent last_extent = { .offset=0, .length=0 };  // Used to append data if possible
     {
         mtl_inode *inode;
         const mtl_file_extent *extents;

@@ -56,7 +56,7 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
     // Build and run a pipeline
     operator_id operator_list[] = { op_read_file_specification.id, op_write_mem_specification.id };
 
-    mtl_operator_execution_plan execution_plan = { operator_list, 2 };
+    mtl_operator_execution_plan execution_plan = { .operators=operator_list, .length=2 };
     mtl_configure_pipeline(execution_plan);
 
     op_read_file_set_buffer(offset, length);
@@ -81,7 +81,7 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
     // Build and run a pipeline
     operator_id operator_list[] = { op_read_mem_specification.id, op_write_file_specification.id };
 
-    mtl_operator_execution_plan execution_plan = { operator_list, 2 };
+    mtl_operator_execution_plan execution_plan = { .operators=operator_list, .length=2 };
     mtl_configure_pipeline(execution_plan);
 
     op_read_mem_set_buffer(aligned_buffer, length);
@@ -95,5 +95,6 @@ int mtl_storage_write(uint64_t offset, void *buffer, uint64_t length) {
     mtl_finalize_operator(&op_write_file_specification);
 
     free(aligned_buffer);
+    
     return MTL_SUCCESS;
 }

@@ -18,6 +18,7 @@ static const char help[] =
     "\n";
 
 static char _key[16] = { 0 };
+static bool _profile = false;
 
 extern int optind;
 
@@ -48,23 +49,33 @@ file_read(const char *fname, uint8_t *buff, size_t len)
     return rc;
 }
 
+void op_blowfish_decrypt_set_key(unsigned char key[16]) {
+    memcpy(_key, key, sizeof(_key));
+}
+
 static const void* handle_opts(mtl_operator_invocation_args *args, uint64_t *length, bool *valid) {
     optind = 1; // Reset getopt
+    _profile = false;
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             { "help", no_argument, NULL, 'h' },
-            { "key", required_argument, NULL, 'k' }
+            { "key", required_argument, NULL, 'k' },
+            { "profile", no_argument, NULL, 'p' }
         };
 
-        int ch = getopt_long(args->argc, args->argv, "k:h", long_options, &option_index);
+        int ch = getopt_long(args->argc, args->argv, "k:hp", long_options, &option_index);
         if (ch == -1)
             break;
 
         switch (ch) {
         case 'k': {
             file_read(optarg, _key, 16);
+            break;
+        }
+        case 'p': {
+            _profile = 1;
             break;
         }
         case 'h':
@@ -107,6 +118,10 @@ static int apply_config(struct snap_action *action) {
     return MTL_SUCCESS;
 }
 
+static bool get_profile_enabled() {
+    return _profile;
+}
+
 mtl_operator_specification op_blowfish_decrypt_specification = {
     { OP_BLOWFISH_DECRYPT_ENABLE_ID, OP_BLOWFISH_DECRYPT_STREAM_ID },
     "blowfish_decrypt",
@@ -115,5 +130,6 @@ mtl_operator_specification op_blowfish_decrypt_specification = {
     &handle_opts,
     &apply_config,
     NULL,
-    NULL
+    NULL,
+    &get_profile_enabled
 };
