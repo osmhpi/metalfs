@@ -4,12 +4,15 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../metal/metal.h"
 
 // 128 MiB
 #define NUM_BLOCKS 128 * 256
 #define BLOCK_SIZE 4096
+
+#define EMULATE_BROKEN_BYTE_ENABLE
 
 void *_storage = NULL;
 
@@ -95,6 +98,12 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
     if (!_storage) {
         _storage = malloc(NUM_BLOCKS * BLOCK_SIZE);
     }
+
+#ifdef EMULATE_BROKEN_BYTE_ENABLE
+    uint64_t start_page = (uint64_t)buffer / 4096;
+    uint64_t end_page = ((uint64_t)buffer + length) / 4096;
+    memset((void*)(start_page * 4096), 0, ((end_page - start_page) + 1) * 4096);
+#endif
 
     assert(offset + length < NUM_BLOCKS * BLOCK_SIZE);
 
