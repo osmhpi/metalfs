@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 typedef struct mtl_storage_metadata {
@@ -31,3 +35,7 @@ int mtl_storage_read(
     void *buffer,    // The target buffer
     uint64_t length  // Number of bytes
 );
+
+#ifdef __cplusplus
+}
+#endif

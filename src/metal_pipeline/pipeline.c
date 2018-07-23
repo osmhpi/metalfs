@@ -34,7 +34,7 @@ int mtl_pipeline_initialize() {
 
     if (_action == NULL) {
         snap_action_flag_t action_irq = (SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
-        _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 60);
+        _action = snap_attach_action(_card, METALFPGA_ACTION_TYPE, action_irq, 1);
         if (_action == NULL) {
             fprintf(stderr, "err: failed to attach action %u: %s\n", 0, strerror(errno));
             snap_card_free(_card);

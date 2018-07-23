@@ -408,7 +408,8 @@ int main(int argc, char *argv[])
         mkdir("metadata_store", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
 
-    mtl_initialize("metadata_store");
+    if (mtl_initialize("metadata_store") != MTL_SUCCESS)
+        return 1;
     // mtl_pipeline_initialize();
 
     int retc = fuse_main(argc, argv, &fuse_example_operations, NULL);

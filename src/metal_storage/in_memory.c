@@ -101,7 +101,7 @@ int mtl_storage_read(uint64_t offset, void *buffer, uint64_t length) {
 
 #ifdef EMULATE_BROKEN_BYTE_ENABLE
     uint64_t start_page = (uint64_t)buffer / 4096;
-    uint64_t end_page = ((uint64_t)buffer + length) / 4096;
+    uint64_t end_page = ((uint64_t)buffer + length - 1) / 4096;
     memset((void*)(start_page * 4096), 0, ((end_page - start_page) + 1) * 4096);
 #endif
 

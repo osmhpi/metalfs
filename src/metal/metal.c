@@ -641,8 +641,6 @@ int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
         return res;
     }
 
-    printf("writing to inode %lu\n", inode_id);
-
     mdb_txn_abort(txn);
 
     res = mtl_expand_inode(inode_id, size);

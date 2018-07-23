@@ -8,6 +8,7 @@ include_directories(
 set(
     SOURCES
 
+    # Choose one of the available backends
     # in_memory.c
     # metal_fpga.c
     metal_pipeline.c
