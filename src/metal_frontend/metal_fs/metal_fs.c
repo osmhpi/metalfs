@@ -183,6 +183,7 @@ static int create_callback(const char *path, mode_t mode, struct fuse_file_info 
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in create_callback(\"%s\", %o, %p)", path, mode, fi);
     return -ENOSYS;
 }
 
@@ -215,6 +216,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in open_callback(\"%s\", %p)", path, fi);
     return -ENOSYS;
 }
 
@@ -266,6 +268,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         return res;
     }
 
+    fprintf(stderr, "ENOSYS in read_callback(\"%s\", %p, %d, %d, %p)", path, buf, size, offset, fi);
     return -ENOSYS;
 }
 
@@ -296,6 +299,7 @@ static int truncate_callback(const char *path, off_t size)
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in truncate_callback(\"%s\", %d)", path, size);
     return -ENOSYS;
 }
 
@@ -309,6 +313,7 @@ static int write_callback(const char *path, const char *buf, size_t size,
         return size;
     }
 
+    fprintf(stderr, "ENOSYS in write_callback(\"%s\", %p, %d, %d, %p)", path, buf, size, offset, fi);
     return -ENOSYS;
 }
 
@@ -328,6 +333,7 @@ static int unlink_callback(const char *path) {
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in unlink_callback(\"%s\")", path);
     return -ENOSYS;
 }
 
@@ -347,6 +353,7 @@ static int mkdir_callback(const char *path, mode_t mode)
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in mkdir_callback(\"%s\", %o)", path, mode);
     return -ENOSYS;
 }
 
@@ -367,28 +374,89 @@ static int rmdir_callback(const char *path)
         return 0;
     }
 
+    fprintf(stderr, "ENOSYS in rmdir_callback(\"%s\")", path);
     return -ENOSYS;
 }
 
+static int rename_callback(const char * from_path, const char * to_path) {
+    int res;
+
+    char test_filename[FILENAME_MAX];
+    snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
+    if (strncmp(from_path, test_filename, strlen(test_filename)) == 0 &&
+        strncmp(to_path,   test_filename, strlen(test_filename)) == 0) {
+
+        res = mtl_rename(from_path + 6, to_path + 6);
+
+        if (res != MTL_SUCCESS)
+            return -res;
+
+        return 0;
+    }
+
+    fprintf(stderr, "ENOSYS in rename_callback(\"%s\", \"%s\")", from_path, to_path);
+    return -ENOSYS;
+}
+
+// debug!
 static int flush_callback(const char *path, struct fuse_file_info *fi) {
     return 0;
 }
 
+static int mknod_callback_d(const char * path, mode_t mode, dev_t dev) {
+    fprintf(stderr, "ENOSYS in mknod_callback(\"%s\", %o, %x)", path, mode, dev);
+    return -ENOSYS;
+}
+
+static int symlink_callback_d(const char * path0, const char * path1) {
+    fprintf(stderr, "ENOSYS in symlink_callback(\"%s\", \"%s\")", path0, path1);
+    return -ENOSYS;
+}
+
+
+static int link_callback_d(const char * path0, const char * path1) {
+    fprintf(stderr, "ENOSYS in link_callback(\"%s\", \"%s\")", path0, path1);
+    return -ENOSYS;
+}
+
+static int chmod_callback_d(const char * path, mode_t mode, struct fuse_file_info *fi) {
+    fprintf(stderr, "ENOSYS in chmod_callback(\"%s\", %o, %p)", path, mode, fi);
+    return -ENOSYS;
+}
+
+static int statfs_callback_d(const char * path, struct statvfs * svfs) {
+    fprintf(stderr, "ENOSYS in statfs_callback(\"%s\", %p)", path, svfs);
+    return -ENOSYS;
+}
+
+static int fsync_callback_d(const char * path, int arg, struct fuse_file_info * fi) {
+    fprintf(stderr, "ENOSYS in fsync_callback(\"%s\", %d, %p)", path, arg, fi);
+    return -ENOSYS;
+}
+
 static struct fuse_operations fuse_example_operations = {
-    .chown = chown_callback,
+    .create = create_callback, //?
+    .flush = flush_callback, //?
     .getattr = getattr_callback,
+    /* .access = xmp_access, */
+    .readlink = readlink_callback,
+    .readdir = readdir_callback,
+    .mknod = mknod_callback_d,
+    .mkdir = mkdir_callback,
+    .symlink = symlink_callback_d,
+    .unlink = unlink_callback,
+    .rmdir = rmdir_callback,
+    .rename = rename_callback,
+    .link = link_callback_d,
+    .chmod = chmod_callback_d,
+    .chown = chown_callback,
+    .truncate = truncate_callback,
     .open = open_callback,
     .read = read_callback,
-    .readdir = readdir_callback,
-    .readlink = readlink_callback,
-    .release = release_callback,
-    .truncate = truncate_callback,
     .write = write_callback,
-    .create = create_callback,
-    .unlink = unlink_callback,
-    .mkdir = mkdir_callback,
-    .rmdir = rmdir_callback,
-    .flush = flush_callback
+    .statfs = statfs_callback_d,
+    .release = release_callback,
+    .fsync = fsync_callback_d
 };
 
 int main(int argc, char *argv[])

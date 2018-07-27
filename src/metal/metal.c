@@ -332,6 +332,55 @@ int mtl_rmdir(const char *filename) {
     return MTL_SUCCESS;
 }
 
+int mtl_rename(const char *from_filename, const char *to_filename) {
+    int res;
+
+    MDB_txn *txn;
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    uint64_t from_parent_dir_inode_id;
+    res = mtl_resolve_parent_dir_inode(txn, from_filename, &from_parent_dir_inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    uint64_t to_parent_dir_inode_id;
+    res = mtl_resolve_parent_dir_inode(txn, to_filename, &to_parent_dir_inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    char *from_basec, *from_base, *to_basec, *to_base;
+    from_basec = strdup(from_filename);
+    from_base = basename(from_basec);
+    to_basec = strdup(to_filename);
+    to_base = basename(to_basec);
+
+    uint64_t inode_id;
+    res = mtl_remove_entry_from_directory(txn, from_parent_dir_inode_id, from_base, &inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        free(from_basec);
+        free(to_basec);
+        return res;
+    }
+    res = mtl_append_inode_id_to_directory(txn, to_parent_dir_inode_id, to_base, inode_id);
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        free(from_basec);
+        free(to_basec);
+        return res;
+    }
+
+    free(from_basec);
+    free(to_basec);
+
+    mdb_txn_commit(txn);
+    return MTL_SUCCESS;
+}
+
 int mtl_create(const char *filename, uint64_t *inode_id) {
 
     int res;
