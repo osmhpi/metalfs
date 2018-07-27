@@ -13,8 +13,10 @@
 
 #define HW_RELEASE_LEVEL       0x00000013
 
+#ifndef QUICK_BUILD
 #define DRAM_ENABLED
 #define NVME_ENABLED
+#endif
 
 static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 snap_membus_t * mem_out,

@@ -45,9 +45,12 @@ int mtl_heap_extract_max(MDB_txn *txn, uint64_t *max_value) {
 
     MDB_val key;
     MDB_val value;
-    mdb_cursor_get(cursor, &key, &value, MDB_LAST);
+    int res = mdb_cursor_get(cursor, &key, &value, MDB_LAST);
 
     mdb_cursor_close(cursor);
+
+    if (res == MDB_NOTFOUND)
+        return MTL_ERROR_NOENTRY;
 
     *max_value = *(uint64_t*)value.mv_data;
 

@@ -7,15 +7,22 @@ include_directories(
 
 set(
     SOURCES
-
-    # Choose one of the available backends
-    # in_memory.c
-    # metal_fpga.c
-    metal_pipeline.c
-    # hdl_example.c
-
     storage.h
 )
+
+option(METAL_USE_INMEMORY_STORAGE "Use in-memory storage backend" OFF)
+
+if (METAL_USE_INMEMORY_STORAGE)
+    set(SOURCES ${SOURCES} in_memory.c)
+else()
+    set(SOURCES ${SOURCES}
+    
+        # Choose one of the available backends
+        # metal_fpga.c
+        metal_pipeline.c
+        # hdl_example.c
+    )
+endif()
 
 set(
     METAL_STORAGE_LIBRARIES
