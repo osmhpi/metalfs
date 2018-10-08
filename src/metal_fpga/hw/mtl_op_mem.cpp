@@ -299,6 +299,11 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
             }
             ++total_blocks;
         }
+
+        while (!element.last) {
+            // Make sure we always empty the stream
+            element = padded_word_stream.read();
+        }
     }
 }
 
