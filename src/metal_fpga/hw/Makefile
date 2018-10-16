@@ -1,5 +1,5 @@
 #
-# Copyright 2017 International Business Machines
+# Copyright 2017, International Business Machines
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,30 +14,32 @@
 # limitations under the License.
 #
 
-#
-# Generate HDL version of the HLS sources
-#
-# The generated HDL depends on the chip which is used and
-# therefore must match what is being used to build the
-# toplevel SNAP bitstream.
-#
-# FIXME Pass part_number and other parameters from toplevel
-#      build-system as required.
-#
+#vhd_srcs=$(wildcard *.vhd_source)
+#vhd_files=$(vhd_srcs:.vhd_source=.vhd)
 
-# Finding $SNAP_ROOT
-ifndef SNAP_ROOT
-# check if we are in hw folder of an action (three directories below snap root)
-ifneq ("$(wildcard ../../../ActionTypes.md)","")
-SNAP_ROOT=$(abspath ../../../)
-else
-$(error $$SNAP_ROOT could not be determined. Please set manually.)
-endif
-endif
+ACTION_ROOT ?= $(PWD)/..
 
-# This is solution specific. Check if we can replace this by generics too.
-SOLUTION_NAME ?= metalfpga
-SOLUTION_DIR ?= hlsMetalFPGA
-srcs += mtl_extmap.cpp mtl_nvme.cpp mtl_file.cpp mtl_jobstruct.cpp mtl_op_mem.cpp mtl_op_file.cpp mtl_op_passthrough.cpp mtl_op_change_case.cpp mtl_op_blowfish.cpp hls_metalfpga.cpp
+.PHONY: all config clean vhdl
 
-include $(SNAP_ROOT)/actions/hls.mk
+all: config
+
+config:
+	$(info Call action_config.sh (creating action IPs))
+	./action_config.sh
+
+clean:
+	$(info Also clean up action ip project...)
+	@$(RM) $(ACTION_ROOT)/ip/*.log
+	@$(RM) $(ACTION_ROOT)/ip/*.jou
+	@$(RM) -fr $(ACTION_ROOT)/ip/action_ip_prj
+	@$(RM) -fr $(ACTION_ROOT)/ip/ip_user_files
+	@$(RM) $(vhd_files)
+
+vhdl:
+
+#
+# FIXME Consider moving the functionality from action_config.sh into
+#      this Makefile. This also allows to define a proper clean rule
+#      such that the directory gets properly cleaned up and git status
+#      shows not the generated files.
+#
