@@ -45,3 +45,5 @@ projs += snap_fs
 # If you have the host code outside of the default snap directory structure,
 # change to /path/to/snap/actions/software.mk
 include $(SNAP_ROOT)/actions/software.mk
+
+CFLAGS += -I../hw/hls/include
