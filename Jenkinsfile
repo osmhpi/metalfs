@@ -17,7 +17,7 @@ pipeline {
     stage('SNAP') {
       steps {
         dir(path: 'snap') {
-          git(url: 'https://github.com/metalfs/snap', branch: 'master')
+          git(url: 'https://github.com/rs22/snap', branch: 'bd_helloworld')
           writeFile(text: '''#
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
@@ -106,8 +106,7 @@ make clean_config N250S.hls_metalfpga.defconfig software'''
             dir(path: 'src/metal_fpga/hw') {
               sh '''#! /bin/bash
 source /opt/Xilinx/Vivado/2018.2/settings64.sh
-make run_hls_script.tcl
-sed -i 's/-cflags "/-cflags "-DQUICK_BUILD /g' run_hls_script.tcl
+HLS_CFLAGS=-DQUICK_BUILD make run_hls_script.tcl
 make
 '''
             }
