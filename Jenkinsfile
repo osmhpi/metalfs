@@ -99,17 +99,11 @@ make clean_config N250S.hls_metalfpga.defconfig software'''
     stage('Build') {
       parallel {
         stage('Hardware') {
-          environment {
-            SNAP_ROOT = '${WORKSPACE}/snap'
-          }
           steps {
-            dir(path: 'src/metal_fpga/hw') {
+            dir(path: 'snap') {
               sh '''#! /bin/bash
 source /opt/Xilinx/Vivado/2018.2/settings64.sh
-export SNAP_ROOT=${WORKSPACE}/snap
-echo SNAP Root is $SNAP_ROOT
-HLS_CFLAGS=-DQUICK_BUILD make run_hls_script.tcl
-make
+make hw_project
 '''
             }
 
