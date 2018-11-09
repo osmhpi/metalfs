@@ -16,6 +16,7 @@ puts "                        FPGACHIP = $fpga_part"
 puts "                        ACTION_ROOT = $action_root"
 puts "                        Creating IP in $src_dir"
 create_project action_ip_prj $aip_dir/action_ip_prj -force -part $fpga_part -ip >> $log_file
+set_property target_language VHDL [current_project]
 
 # Project IP Settings
 # General

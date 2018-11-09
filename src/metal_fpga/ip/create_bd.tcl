@@ -14,11 +14,6 @@ create_bd_cell -type ip -vlnv xilinx.com:hls:hls_action:1.0 hls_action_0
 set_property -dict [list \
     CONFIG.C_M_AXI_HOST_MEM_ENABLE_ID_PORTS {true} \
     CONFIG.C_M_AXI_HOST_MEM_ENABLE_USER_PORTS {true} \
-    CONFIG.C_M_AXI_CARD_MEM0_ENABLE_ID_PORTS {true} \
-    CONFIG.C_M_AXI_CARD_MEM0_ID_WIDTH {4} \
-    CONFIG.C_M_AXI_CARD_MEM0_ENABLE_USER_PORTS {true} \
-    CONFIG.C_M_AXI_NVME_ENABLE_ID_PORTS {true} \
-    CONFIG.C_M_AXI_NVME_ENABLE_USER_PORTS {true} \
 ] [get_bd_cells hls_action_0]
 
 make_bd_pins_external  \
@@ -31,19 +26,36 @@ set_property name ap_rst_n [get_bd_ports ap_rst_n_0]
 set_property name interrupt [get_bd_ports interrupt_0]
 
 make_bd_intf_pins_external  \
-    [get_bd_intf_pins hls_action_0/m_axi_card_mem0] \
     [get_bd_intf_pins hls_action_0/s_axi_ctrl_reg] \
-    [get_bd_intf_pins hls_action_0/m_axi_nvme] \
     [get_bd_intf_pins hls_action_0/m_axi_host_mem]
 
-set_property name m_axi_card_mem0 [get_bd_intf_ports m_axi_card_mem0_0]
 set_property name s_axi_ctrl_reg [get_bd_intf_ports s_axi_ctrl_reg_0]
-set_property name m_axi_nvme [get_bd_intf_ports m_axi_nvme_0]
 set_property name m_axi_host_mem [get_bd_intf_ports m_axi_host_mem_0]
 
-set_property -dict [list CONFIG.ADDR_WIDTH {32}] [get_bd_intf_ports m_axi_card_mem0]
-set_property -dict [list CONFIG.ADDR_WIDTH {32}] [get_bd_intf_ports s_axi_ctrl_reg]
-set_property -dict [list CONFIG.ADDR_WIDTH {32}] [get_bd_intf_ports m_axi_nvme]
+
+if { ( $::env(DDRI_USED) == "TRUE" ) } {
+    set_property -dict [list \
+        CONFIG.C_M_AXI_CARD_MEM0_ENABLE_ID_PORTS {true} \
+        CONFIG.C_M_AXI_CARD_MEM0_ENABLE_USER_PORTS {true} \
+    ] [get_bd_cells hls_action_0]
+
+    make_bd_intf_pins_external  \
+        [get_bd_intf_pins hls_action_0/m_axi_card_mem0]
+
+    set_property name m_axi_card_mem0 [get_bd_intf_ports m_axi_card_mem0_0]
+}
+
+if { ( $::env(NVME_USED) == "TRUE" ) } {
+    set_property -dict [list \
+        CONFIG.C_M_AXI_NVME_ENABLE_ID_PORTS {true} \
+        CONFIG.C_M_AXI_NVME_ENABLE_USER_PORTS {true} \
+    ] [get_bd_cells hls_action_0]
+
+    make_bd_intf_pins_external  \
+        [get_bd_intf_pins hls_action_0/m_axi_nvme]
+
+    set_property name m_axi_nvme [get_bd_intf_ports m_axi_nvme_0]
+}
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch_0
 set_property -dict [list CONFIG.NUM_SI {8} CONFIG.NUM_MI {8} CONFIG.ROUTING_MODE {1} CONFIG.DECODER_REG {1}] [get_bd_cells axis_switch_0]

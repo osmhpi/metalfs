@@ -8,7 +8,7 @@
 #include <libsnap.h>
 #include <snap_hls_if.h>
 
-#include "../../metal_fpga/include/action_metalfpga.h"
+#include "../../metal_fpga/hw/hls/include/action_metalfpga.h"
 
 #include "../../metal/metal.h"
 

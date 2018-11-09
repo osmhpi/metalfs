@@ -11,10 +11,18 @@ srcs += mtl_extmap.cpp \
 	mtl_op_blowfish.cpp \
 	hls_metalfpga.cpp
 
+HLS_CFLAGS ?= ""
+ifeq ($(DDRI_USED),TRUE)
+HLS_CFLAGS += -DDRAM_ENABLED
+endif
+ifeq ($(NVME_USED),TRUE)
+HLS_CFLAGS += -DNVME_ENABLED
+endif
+
 include $(SNAP_ROOT)/actions/hls.mk
 
 run_hls_ip_script.tcl: run_hls_script.tcl
-	sed "s/#export_design/export_design/g" $< > $@
+	@sed "s/#export_design/export_design/g" $< > $@
 
 ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
 

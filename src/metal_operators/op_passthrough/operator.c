@@ -5,7 +5,7 @@
 
 #include "../../metal/metal.h"
 
-#include "../../metal_fpga/include/action_metalfpga.h"
+#include "../../metal_fpga/hw/hls/include/action_metalfpga.h"
 
 static const char help[] =
     "Usage: passthrough [-h]\n"
