@@ -464,19 +464,30 @@ void* start_socket(void* args) {
 
                 if (size) {
                     if (output_agent->internal_output_file) {
-                        if (!internal_output_file_initialized) {
-                            if (internal_input_file_length) {
-                                // When reading from internal input file, we know upfront how big the output file will be
-                                mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_input_file_length);
+                        if (strcmp(output_agent->internal_output_file, "$NULL") == 0) {
+                            // Special handling for /dev/null
+                            if (!internal_output_file_initialized) {
+                                printf("/dev/null detected\n");
+                                op_write_file_set_buffer(0, 0);  // Means: use OP_MEM_MODE_NULL
+                                mtl_configure_operator(&op_write_file_specification);
                                 internal_output_file_initialized = true;
-                            } else {
-                                // Increment size otherwise
-                                mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_output_file_offset + size);
                             }
-                        }
+                        } else {
+                            if (!internal_output_file_initialized) {
+                                printf("something else detected\n");
+                                if (internal_input_file_length) {
+                                    // When reading from internal input file, we know upfront how big the output file will be
+                                    mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_input_file_length);
+                                    internal_output_file_initialized = true;
+                                } else {
+                                    // Increment size otherwise
+                                    mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_output_file_offset + size);
+                                }
+                            }
 
-                        op_write_file_set_buffer(internal_output_file_offset, size);
-                        mtl_configure_operator(&op_write_file_specification);
+                            op_write_file_set_buffer(internal_output_file_offset, size);
+                            mtl_configure_operator(&op_write_file_specification);
+                        }
                     } else if (!output_agent->output_buffer) {
                         // If we haven't yet established an output buffer for the output agent, do it now
                         message_type_t output_buffer_message_type = SERVER_INITIALIZE_OUTPUT_BUFFER;
@@ -510,7 +521,7 @@ void* start_socket(void* args) {
                     // output_size = op_write_mem_get_written_bytes();
                     output_size = size; // This is fine for now because we always get out the same amount of bytes
 
-                    if (output_agent->internal_output_file) {
+                    if (output_agent->internal_output_file && strcmp(output_agent->internal_output_file, "$NULL") != 0) {
                         // This transfers the data from card DRAM to NVMe
                         mtl_finalize_operator(&op_write_file_specification);
                     }

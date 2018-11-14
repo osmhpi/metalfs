@@ -26,7 +26,7 @@ run_hls_ip_script.tcl: run_hls_script.tcl
 
 ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
 
-$(ip_dir): run_hls_ip_script.tcl
+$(ip_dir): run_hls_ip_script.tcl $(srcs)
 	vivado_hls -f run_hls_ip_script.tcl
 
 # Create symlinks for simpler access

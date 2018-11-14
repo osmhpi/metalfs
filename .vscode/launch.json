@@ -73,6 +73,17 @@
             "environment": [],
             "miDebuggerServerAddress": "localhost:1234"
         },
+        { 
+            "name": "(gdb) Attach Metal FS",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/metal_fs",
+            "MIMode": "gdb",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "miDebuggerServerAddress": "localhost:1234"
+        },
         {
             "name": "(gdb) Launch test",
             "type": "cppdbg",

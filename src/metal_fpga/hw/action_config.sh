@@ -27,12 +27,23 @@ if [ -z $FPGACHIP ]; then
 	FPGACHIP=$(grep FPGACHIP $CONFIG_FILE | cut -d = -f 2 | tr -d '"')
 fi
 
+if [ -z $DDRI_USED ]; then
+	CONFIG_FILE=$SNAP_ROOT/.snap_config
+	export DDRI_USED=$(grep DDRI_USED $CONFIG_FILE | cut -d = -f 2 | tr -d '"')
+fi
+
+if [ -z $NVME_USED ]; then
+	CONFIG_FILE=$SNAP_ROOT/.snap_config
+	export NVME_USED=$(grep NVME_USED $CONFIG_FILE | cut -d = -f 2 | tr -d '"')
+fi
+
 LOGS_DIR=$PWD/../logs
 mkdir -p $LOGS_DIR
 
-for hls_dir in ./hls/hls_*/; do
+for hls_dir in $ACTION_ROOT/hw/hls/hls_*/; do
 	hls_dir=${hls_dir%*/}
 	component=${hls_dir##*/}
+	echo "                        Generating IP from HLS component ${component}"
 	echo "Calling make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip" > $LOGS_DIR/${component}_make.log
 	make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip >> $LOGS_DIR/${component}_make.log; hls_ret=$?
 	if [ $hls_ret -ne 0 ]; then \

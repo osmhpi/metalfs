@@ -25,6 +25,7 @@ static int apply_config(struct snap_action *action) {
     uint64_t *job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
     job_struct[0] = htobe64(_buffer_address);
     job_struct[1] = htobe64(_buffer_length);
+    job_struct[2] = htobe64(OP_MEM_MODE_HOST);
 
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_OP_MEM_SET_WRITE_BUFFER;

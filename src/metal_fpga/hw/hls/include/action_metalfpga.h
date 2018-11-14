@@ -101,21 +101,13 @@ extern "C" {
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
+//   word2: mode                | R
 
 #define MTL_JOB_OP_MEM_SET_WRITE_BUFFER 11
 // 64bit words at job_address:
 //   word0: buffer_address      | R
 //   word1: buffer_length       | R
-
-#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 12
-// 64bit words at job_address:
-//   word0: buffer_address      | R
-//   word1: buffer_length       | R
-
-#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 13
-// 64bit words at job_address:
-//   word0: buffer_address      | R
-//   word1: buffer_length       | R
+//   word2: mode                | R
 
 #define MTL_JOB_OP_CHANGE_CASE_SET_MODE 14
 // 64bit words at job_address:
@@ -138,19 +130,20 @@ typedef struct metalfpga_job {
 
 #define OP_READ_MEM_ENABLE_ID 0
 #define OP_WRITE_MEM_ENABLE_ID 1
-#define OP_READ_DRAM_ENABLE_ID 2
-#define OP_WRITE_DRAM_ENABLE_ID 3
 #define OP_PASSTHROUGH_ENABLE_ID 4
 #define OP_CHANGE_CASE_ENABLE_ID 5
 #define OP_BLOWFISH_ENCRYPT_ENABLE_ID 6
 #define OP_BLOWFISH_DECRYPT_ENABLE_ID 7
 
 #define OP_MEM_STREAM_ID 0
-#define OP_DRAM_STREAM_ID 1
 #define OP_PASSTHROUGH_STREAM_ID 2
 #define OP_CHANGE_CASE_STREAM_ID 3
 #define OP_BLOWFISH_ENCRYPT_STREAM_ID 4
 #define OP_BLOWFISH_DECRYPT_STREAM_ID 5
+
+#define OP_MEM_MODE_HOST 0
+#define OP_MEM_MODE_DRAM 1
+#define OP_MEM_MODE_NULL 2
 
 #ifdef __cplusplus
 }

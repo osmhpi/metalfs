@@ -105,6 +105,13 @@ int determine_process_or_file_connected_to_std_fd (
             return 0;
         }
 
+        if (strncmp("/dev/null", fd_file, 9) == 0) {
+            *is_metal_file = true;
+            *pid = 0;
+            strncpy(filename, "$NULL", filename_size);
+            return 0;
+        }
+
         strncpy(filename, fd_file, filename_size);
         *is_metal_file = false;
         *pid = 0;

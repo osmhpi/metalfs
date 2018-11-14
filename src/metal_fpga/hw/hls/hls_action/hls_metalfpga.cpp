@@ -350,22 +350,12 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     case MTL_JOB_OP_MEM_SET_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), read_mem_config);
     }
     case MTL_JOB_OP_MEM_SET_WRITE_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_mem_config);
-    }
-    case MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), read_ddr_mem_config);
-    }
-    case MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), write_ddr_mem_config);
+        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), write_mem_config);
     }
     case MTL_JOB_OP_CHANGE_CASE_SET_MODE:
     {
@@ -714,12 +704,15 @@ static mtl_retc_t action_run_operators(
         // The order should only matter when executing in the test bench
 
         // Input Operators
-        op_mem_read(mem_in, axis_m_0, read_mem_config, enable_0);
+        op_mem_read(
+            mem_in, 
 #ifdef DRAM_ENABLED
-        op_mem_read(mem_ddr_in, axis_m_1, read_ddr_mem_config, enable_2);
-#endif
+            mem_ddr_in,
+#endif        
+            axis_m_0, read_mem_config);
 
         // Processing Operators
+        op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
         op_passthrough(axis_s_2, axis_m_2, enable_4);
         op_change_case(axis_s_3, axis_m_3, enable_5);
         op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
@@ -730,15 +723,13 @@ static mtl_retc_t action_run_operators(
         op_passthrough(axis_s_7, axis_m_7, enable_9);
 
         // Output Operators
-        op_mem_write(axis_s_0, mem_out, write_mem_config, enable_1);
+        op_mem_write(
+            axis_s_0, 
+            mem_out,
 #ifdef DRAM_ENABLED
-        op_mem_write(axis_s_1, mem_ddr_out, write_ddr_mem_config, enable_3);
+            mem_ddr_out
 #endif
-
-        // If DRAM is disabled, we have to do something with axis_*_1 in order to set streaming direction
-#ifndef DRAM_ENABLED
-        op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
-#endif
+            write_mem_config);
     }
 
     return SNAP_RETC_SUCCESS;

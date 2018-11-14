@@ -1,16 +1,16 @@
 #include "mtl_op_mem.h"
 #include "mtl_endian.h"
+#include "action_metalfpga.h"
 
 #include <snap_types.h>
 
 mtl_mem_configuration read_mem_config;
 mtl_mem_configuration write_mem_config;
-mtl_mem_configuration read_ddr_mem_config;
-mtl_mem_configuration write_ddr_mem_config;
 
-mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, mtl_mem_configuration &config) {
+mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, mtl_mem_configuration &config) {
     config.offset = offset;
     config.size = size;
+    config.mode = mode;
     return SNAP_RETC_SUCCESS;
 }
 
@@ -138,10 +138,24 @@ void op_mem_read_impl(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configur
     }
 }
 
-void op_mem_read(snap_membus_t *din_gmem, mtl_stream &out, mtl_mem_configuration &config, snap_bool_t enable) {
-#pragma HLS dataflow
-    if (enable) {
-        op_mem_read_impl(din_gmem, out, config);
+void op_mem_read(
+    snap_membus_t *din_gmem, 
+#ifdef DRAM_ENABLED
+    snap_membus_t *din_ddrmem,
+#endif
+    mtl_stream &out, 
+    mtl_mem_configuration &config) {
+    switch (config.mode) {
+        case OP_MEM_MODE_HOST: {
+            op_mem_read_impl(din_gmem, out, config);  
+            break;
+        }
+#ifdef DRAM_ENABLED
+        case OP_MEM_MODE_DRAM: {
+            op_mem_read_impl(din_ddrmem, out, config);  
+            break;
+        }
+#endif
     }
 }
 
@@ -302,9 +316,36 @@ void op_mem_write_impl(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configu
     }
 }
 
-void op_mem_write(mtl_stream &in, snap_membus_t *dout_gmem, mtl_mem_configuration &config, snap_bool_t enable) {
-#pragma HLS dataflow
-    if (enable) {
-        op_mem_write_impl(in, dout_gmem, config);
+void op_mem_write_null(mtl_stream &in, mtl_mem_configuration &config) {
+
+    #pragma HLS dataflow
+    mtl_stream_element element;
+    do {
+        element = in.read();
+    } while (!element.last);
+}
+
+void op_mem_write(
+    mtl_stream &in, 
+    snap_membus_t *dout_gmem, 
+#ifdef DRAM_ENABLED
+    snap_membus_t *dout_ddrmem,
+#endif
+    mtl_mem_configuration &config) {
+    switch (config.mode) {
+        case OP_MEM_MODE_HOST: {
+            op_mem_write_impl(in, dout_gmem, config);
+            break;
+        }
+#ifdef DRAM_ENABLED
+        case OP_MEM_MODE_DRAM: {
+            op_mem_write_impl(in, dout_ddrmem, config);
+            break;
+        }
+#endif
+        case OP_MEM_MODE_NULL: {
+            op_mem_write_null(in, config);
+            break;
+        }
     }
 }

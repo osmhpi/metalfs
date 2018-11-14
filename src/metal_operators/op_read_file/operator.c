@@ -65,8 +65,9 @@ static int apply_config(struct snap_action *action) {
     job_struct = (uint64_t*)snap_malloc(2 * sizeof(uint64_t));
     job_struct[0] = htobe64(dram_baseaddr + (_offset % block_size));
     job_struct[1] = htobe64(_length);
+    job_struct[2] = htobe64(OP_MEM_MODE_DRAM);
 
-    mjob.job_type = MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER;
+    mjob.job_type = MTL_JOB_OP_MEM_SET_READ_BUFFER;
     mjob.job_address = (uint64_t)job_struct;
 
     snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
@@ -87,7 +88,7 @@ static int apply_config(struct snap_action *action) {
 }
 
 mtl_operator_specification op_read_file_specification = {
-    { OP_READ_DRAM_ENABLE_ID, OP_DRAM_STREAM_ID },
+    { OP_READ_MEM_ENABLE_ID, OP_MEM_STREAM_ID },
     "metal_cat",
     true,
 
