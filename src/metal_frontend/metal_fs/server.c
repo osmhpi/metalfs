@@ -467,14 +467,12 @@ void* start_socket(void* args) {
                         if (strcmp(output_agent->internal_output_file, "$NULL") == 0) {
                             // Special handling for /dev/null
                             if (!internal_output_file_initialized) {
-                                printf("/dev/null detected\n");
                                 op_write_file_set_buffer(0, 0);  // Means: use OP_MEM_MODE_NULL
                                 mtl_configure_operator(&op_write_file_specification);
                                 internal_output_file_initialized = true;
                             }
                         } else {
                             if (!internal_output_file_initialized) {
-                                printf("something else detected\n");
                                 if (internal_input_file_length) {
                                     // When reading from internal input file, we know upfront how big the output file will be
                                     mtl_prepare_storage_for_writing(output_agent->internal_output_file, internal_input_file_length);
