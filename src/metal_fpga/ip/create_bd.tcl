@@ -11,10 +11,10 @@ set bd_name     bd_action
 create_bd_design $bd_name >> $log_file
 
 create_bd_cell -type ip -vlnv xilinx.com:hls:hls_action:1.0 hls_action_0
-set_property -dict [list \
-    CONFIG.C_M_AXI_HOST_MEM_ENABLE_ID_PORTS {true} \
-    CONFIG.C_M_AXI_HOST_MEM_ENABLE_USER_PORTS {true} \
-] [get_bd_cells hls_action_0]
+# set_property -dict [list \
+#     CONFIG.C_M_AXI_HOST_MEM_ENABLE_ID_PORTS {true} \
+#     CONFIG.C_M_AXI_HOST_MEM_ENABLE_USER_PORTS {true} \
+# ] [get_bd_cells hls_action_0]
 
 make_bd_pins_external  \
     [get_bd_pins hls_action_0/ap_clk] \
@@ -26,12 +26,62 @@ set_property name ap_rst_n [get_bd_ports ap_rst_n_0]
 set_property name interrupt [get_bd_ports interrupt_0]
 
 make_bd_intf_pins_external  \
-    [get_bd_intf_pins hls_action_0/s_axi_ctrl_reg] \
-    [get_bd_intf_pins hls_action_0/m_axi_host_mem]
+    [get_bd_intf_pins hls_action_0/s_axi_ctrl_reg]
 
 set_property name s_axi_ctrl_reg [get_bd_intf_ports s_axi_ctrl_reg_0]
-set_property name m_axi_host_mem [get_bd_intf_ports m_axi_host_mem_0]
 
+# Host Mem Crossbar
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 axi_crossbar_0
+set_property name axi_host_mem_crossbar [get_bd_cells axi_crossbar_0]
+
+set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.ADDR_WIDTH.VALUE_SRC USER CONFIG.PROTOCOL.VALUE_SRC PROPAGATED CONFIG.DATA_WIDTH.VALUE_SRC USER CONFIG.ID_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list \
+    CONFIG.ADDR_WIDTH {64} \
+    CONFIG.DATA_WIDTH {512} \
+    CONFIG.ID_WIDTH {4} \
+] [get_bd_cells axi_host_mem_crossbar]
+
+# CONFIG.S00_THREAD_ID_WIDTH {3} \
+# CONFIG.S01_THREAD_ID_WIDTH {3} \
+# CONFIG.S02_THREAD_ID_WIDTH {3} \
+# CONFIG.S03_THREAD_ID_WIDTH {3} \
+# CONFIG.S04_THREAD_ID_WIDTH {3} \
+# CONFIG.S05_THREAD_ID_WIDTH {3} \
+# CONFIG.S06_THREAD_ID_WIDTH {3} \
+# CONFIG.S07_THREAD_ID_WIDTH {3} \
+# CONFIG.S08_THREAD_ID_WIDTH {3} \
+# CONFIG.S09_THREAD_ID_WIDTH {3} \
+# CONFIG.S10_THREAD_ID_WIDTH {3} \
+# CONFIG.S11_THREAD_ID_WIDTH {3} \
+# CONFIG.S12_THREAD_ID_WIDTH {3} \
+# CONFIG.S13_THREAD_ID_WIDTH {3} \
+# CONFIG.S14_THREAD_ID_WIDTH {3} \
+# CONFIG.S15_THREAD_ID_WIDTH {3} \
+# CONFIG.S01_BASE_ID {0x00000008} \
+# CONFIG.S02_BASE_ID {0x00000010} \
+# CONFIG.S03_BASE_ID {0x00000018} \
+# CONFIG.S04_BASE_ID {0x00000020} \
+# CONFIG.S05_BASE_ID {0x00000028} \
+# CONFIG.S06_BASE_ID {0x00000030} \
+# CONFIG.S07_BASE_ID {0x00000038} \
+# CONFIG.S08_BASE_ID {0x00000040} \
+# CONFIG.S09_BASE_ID {0x00000048} \
+# CONFIG.S10_BASE_ID {0x00000050} \
+# CONFIG.S11_BASE_ID {0x00000058} \
+# CONFIG.S12_BASE_ID {0x00000060} \
+# CONFIG.S13_BASE_ID {0x00000068} \
+# CONFIG.S14_BASE_ID {0x00000070} \
+# CONFIG.S15_BASE_ID {0x00000078} \
+
+connect_bd_intf_net [get_bd_intf_pins hls_action_0/m_axi_host_mem] [get_bd_intf_pins axi_host_mem_crossbar/S00_AXI]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_host_mem_crossbar/aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_host_mem_crossbar/aresetn]
+
+make_bd_intf_pins_external  [get_bd_intf_pins axi_host_mem_crossbar/M00_AXI]
+set_property name m_axi_host_mem [get_bd_intf_ports M00_AXI_0]
+
+# Optional Stuff
 
 if { ( $::env(DDRI_USED) == "TRUE" ) } {
     set_property -dict [list \
@@ -57,6 +107,8 @@ if { ( $::env(NVME_USED) == "TRUE" ) } {
     set_property name m_axi_nvme [get_bd_intf_ports m_axi_nvme_0]
 }
 
+# AXI Switch
+
 create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch_0
 set_property -dict [list CONFIG.NUM_SI {8} CONFIG.NUM_MI {8} CONFIG.ROUTING_MODE {1} CONFIG.DECODER_REG {1}] [get_bd_cells axis_switch_0]
 
@@ -69,7 +121,6 @@ connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_5] [get_bd_intf_pins a
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_6] [get_bd_intf_pins axis_switch_0/S06_AXIS]
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_7] [get_bd_intf_pins axis_switch_0/S07_AXIS]
 
-connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M00_AXIS] [get_bd_intf_pins hls_action_0/axis_s_0]
 connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M01_AXIS] [get_bd_intf_pins hls_action_0/axis_s_1]
 connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M02_AXIS] [get_bd_intf_pins hls_action_0/axis_s_2]
 connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M03_AXIS] [get_bd_intf_pins hls_action_0/axis_s_3]
@@ -88,6 +139,35 @@ connect_bd_intf_net [get_bd_intf_pins hls_action_0/m_axi_switch_ctrl_reg] [get_b
 connect_bd_intf_net [get_bd_intf_pins axi_protocol_convert_0/M_AXI] [get_bd_intf_pins axis_switch_0/S_AXI_CTRL]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_protocol_convert_0/aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_protocol_convert_0/aresetn]
+
+# Data Mover
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 axi_datamover_0
+set_property name axi_datamover [get_bd_cells axi_datamover_0]
+set_property -dict [list \
+    CONFIG.c_include_mm2s {Omit} \
+    CONFIG.c_include_mm2s_stsfifo {false} \
+    CONFIG.c_include_s2mm_dre {true} \
+    CONFIG.c_s2mm_burst_size {64} \
+    CONFIG.c_mm2s_include_sf {false} \
+    CONFIG.c_s2mm_include_sf {false} \
+    CONFIG.c_enable_mm2s {0} \
+    CONFIG.c_addr_width {64} \
+] [get_bd_cells axi_datamover]
+set_property -dict [list CONFIG.c_m_axi_s2mm_data_width.VALUE_SRC USER CONFIG.c_s_axis_s2mm_tdata_width.VALUE_SRC USER] [get_bd_cells axi_datamover]
+set_property -dict [list CONFIG.c_m_axi_s2mm_data_width {512} CONFIG.c_s_axis_s2mm_tdata_width {64} CONFIG.c_s2mm_include_sf {true}] [get_bd_cells axi_datamover]
+
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI_S2MM] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
+connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M00_AXIS] [get_bd_intf_pins axi_datamover/S_AXIS_S2MM]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_S2MM_STS] [get_bd_intf_pins hls_action_0/s2mm_sts]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/S_AXIS_S2MM_CMD] [get_bd_intf_pins hls_action_0/s2mm_cmd_V_V]
+
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_s2mm_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_s2mm_aresetn]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_awclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_aresetn]
+
+# AXI Perfmon
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_perf_mon:5.0 axi_perf_mon_0
 set_property -dict [list CONFIG.C_HAVE_SAMPLED_METRIC_CNT {0} CONFIG.C_SLOT_7_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_6_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_5_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_4_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_3_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_2_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_1_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_0_AXI_PROTOCOL {AXI4S} CONFIG.C_GLOBAL_COUNT_WIDTH {64} CONFIG.C_NUM_OF_COUNTERS {10} CONFIG.C_NUM_MONITOR_SLOTS {8}] [get_bd_cells axi_perf_mon_0]

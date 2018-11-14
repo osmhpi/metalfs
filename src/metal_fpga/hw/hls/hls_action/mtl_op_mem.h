@@ -4,6 +4,16 @@
 #include "mtl_definitions.h"
 #include "mtl_stream.h"
 
+typedef struct axi_datamover_status {
+    ap_uint<8> data;
+    ap_uint<1> keep;
+    ap_uint<1> last;
+} axi_datamover_status_t;
+typedef hls::stream<axi_datamover_status_t> axi_datamover_status_stream_t;
+
+typedef ap_uint<103> axi_datamover_command_t;
+typedef hls::stream<axi_datamover_command_t> axi_datamover_command_stream_t;
+
 typedef struct mtl_mem_configuration {
     uint64_t offset;
     uint64_t size;
@@ -13,19 +23,16 @@ typedef struct mtl_mem_configuration {
 mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, mtl_mem_configuration &config);
 
 void op_mem_read(
-    snap_membus_t *din_gmem, 
+    snap_membus_t *din_gmem,
 #ifdef DRAM_ENABLED
     snap_membus_t *din_ddrmem,
 #endif
-    mtl_stream &out, 
+    mtl_stream &out,
     mtl_mem_configuration &config);
 
 void op_mem_write(
-    mtl_stream &in, 
-    snap_membus_t *dout_gmem, 
-#ifdef DRAM_ENABLED
-    snap_membus_t *dout_ddrmem,
-#endif
+    axi_datamover_command_stream_t &s2mm_cmd,
+    axi_datamover_status_stream_t &s2mm_sts,
     mtl_mem_configuration &config);
 
 extern mtl_mem_configuration read_mem_config;

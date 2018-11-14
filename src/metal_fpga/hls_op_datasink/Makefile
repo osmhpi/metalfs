@@ -1,0 +1,27 @@
+SOLUTION_NAME ?= op_datasink
+SOLUTION_DIR ?= op_datasink
+srcs += op_datasink.cpp
+
+WRAPPER ?= op_datasink
+
+HLS_CFLAGS ?= ""
+ifeq ($(DDRI_USED),TRUE)
+HLS_CFLAGS += -DDRAM_ENABLED
+endif
+ifeq ($(NVME_USED),TRUE)
+HLS_CFLAGS += -DNVME_ENABLED
+endif
+
+include $(SNAP_ROOT)/actions/hls.mk
+
+run_hls_ip_script.tcl: run_hls_script.tcl
+	@sed "s/#export_design/export_design/g" $< > $@
+
+ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
+
+$(ip_dir): run_hls_ip_script.tcl $(srcs)
+	vivado_hls -f run_hls_ip_script.tcl
+
+# Create symlinks for simpler access
+ip: $(ip_dir)
+	@$(RM) hls_impl_ip && ln -s $(ip_dir) hls_impl_ip

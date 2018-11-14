@@ -22,7 +22,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mtl_stream &axis_s_0,
                                 mtl_stream &axis_s_1,
                                 mtl_stream &axis_s_2,
                                 mtl_stream &axis_s_3,
@@ -38,6 +37,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_5,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
+								axi_datamover_command_stream_t &s2mm_cmd,
+								axi_datamover_status_stream_t &s2mm_sts,
                                 snapu32_t *switch_ctrl,
                                 snapu32_t *perfmon_ctrl,
                                 action_reg * act_reg);
@@ -61,7 +62,6 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
     mtl_stream &axis_s_3,
@@ -76,7 +76,9 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_m_4,
     mtl_stream &axis_m_5,
     mtl_stream &axis_m_6,
-    mtl_stream &axis_m_7
+    mtl_stream &axis_m_7,
+	axi_datamover_command_stream_t &s2mm_cmd,
+	axi_datamover_status_stream_t &s2mm_sts
 );
 
 // static void action_file_write_block(snap_membus_t * mem_in,
@@ -105,7 +107,6 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
                 snapu32_t * nvme,
 #endif
-                mtl_stream &axis_s_0,
                 mtl_stream &axis_s_1,
                 mtl_stream &axis_s_2,
                 mtl_stream &axis_s_3,
@@ -121,6 +122,8 @@ void hls_action(snap_membus_t * din,
                 mtl_stream &axis_m_5,
                 mtl_stream &axis_m_6,
                 mtl_stream &axis_m_7,
+				axi_datamover_command_stream_t &s2mm_cmd,
+				axi_datamover_status_stream_t &s2mm_sts,
                 snapu32_t *switch_ctrl,
                 snapu32_t *perfmon_ctrl,
                 action_reg * action_reg,
@@ -160,7 +163,6 @@ void hls_action(snap_membus_t * din,
 #endif
 
     // Configure AXI4 Stream Interface
-#pragma HLS INTERFACE axis port=axis_s_0
 #pragma HLS INTERFACE axis port=axis_s_1
 #pragma HLS INTERFACE axis port=axis_s_2
 #pragma HLS INTERFACE axis port=axis_s_3
@@ -176,6 +178,8 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_m_5
 #pragma HLS INTERFACE axis port=axis_m_6
 #pragma HLS INTERFACE axis port=axis_m_7
+#pragma HLS INTERFACE axis port=s2mm_cmd
+#pragma HLS INTERFACE axis port=s2mm_sts
 #pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg offset=0x44A00000
 #pragma HLS INTERFACE m_axi port=perfmon_ctrl bundle=perfmon_ctrl_reg offset=0x44A00000
 
@@ -197,7 +201,6 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
             nvme,
 #endif
-            axis_s_0,
             axis_s_1,
             axis_s_2,
             axis_s_3,
@@ -213,6 +216,8 @@ void hls_action(snap_membus_t * din,
             axis_m_5,
             axis_m_6,
             axis_m_7,
+			s2mm_cmd,
+			s2mm_sts,
             switch_ctrl,
             perfmon_ctrl,
             action_reg);
@@ -239,7 +244,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mtl_stream &axis_s_0,
                                 mtl_stream &axis_s_1,
                                 mtl_stream &axis_s_2,
                                 mtl_stream &axis_s_3,
@@ -255,6 +259,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_5,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
+								axi_datamover_command_stream_t &s2mm_cmd,
+								axi_datamover_status_stream_t &s2mm_sts,
                                 snapu32_t *switch_ctrl,
                                 snapu32_t *perfmon_ctrl,
                                 action_reg * act_reg)
@@ -323,7 +329,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             mem_ddr_in,
             mem_ddr_out,
 #endif
-            axis_s_0,
             axis_s_1,
             axis_s_2,
             axis_s_3,
@@ -338,7 +343,9 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_4,
             axis_m_5,
             axis_m_6,
-            axis_m_7
+            axis_m_7,
+			s2mm_cmd,
+			s2mm_sts
         );
         // perfmon_disable(perfmon_ctrl);
     #ifndef NO_SYNTH
@@ -671,7 +678,6 @@ static mtl_retc_t action_run_operators(
     snap_membus_t * mem_ddr_in,
     snap_membus_t * mem_ddr_out,
 #endif
-    mtl_stream &axis_s_0,
     mtl_stream &axis_s_1,
     mtl_stream &axis_s_2,
     mtl_stream &axis_s_3,
@@ -686,7 +692,9 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_m_4,
     mtl_stream &axis_m_5,
     mtl_stream &axis_m_6,
-    mtl_stream &axis_m_7
+    mtl_stream &axis_m_7,
+	axi_datamover_command_stream_t &s2mm_cmd,
+	axi_datamover_status_stream_t &s2mm_sts
 ) {
     snap_bool_t enable_0 = _enable_mask[0];
     snap_bool_t enable_1 = _enable_mask[1];
@@ -705,18 +713,18 @@ static mtl_retc_t action_run_operators(
 
         // Input Operators
         op_mem_read(
-            mem_in, 
+            mem_in,
 #ifdef DRAM_ENABLED
             mem_ddr_in,
-#endif        
+#endif
             axis_m_0, read_mem_config);
 
         // Processing Operators
         op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
         op_passthrough(axis_s_2, axis_m_2, enable_4);
         op_change_case(axis_s_3, axis_m_3, enable_5);
-        op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
-        op_blowfish_decrypt(axis_s_5, axis_m_5, enable_7);
+        op_passthrough(axis_s_4, axis_m_4, enable_6);
+        op_passthrough(axis_s_5, axis_m_5, enable_7);
 
         // Placeholder Operators (to be assigned)
         op_passthrough(axis_s_6, axis_m_6, enable_8);
@@ -724,11 +732,8 @@ static mtl_retc_t action_run_operators(
 
         // Output Operators
         op_mem_write(
-            axis_s_0, 
-            mem_out,
-#ifdef DRAM_ENABLED
-            mem_ddr_out
-#endif
+            s2mm_cmd,
+            s2mm_sts,
             write_mem_config);
     }
 
