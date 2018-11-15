@@ -82,7 +82,6 @@ if { ( $::env(NVME_USED) == "TRUE" ) } {
 create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch_0
 set_property -dict [list CONFIG.NUM_SI {8} CONFIG.NUM_MI {8} CONFIG.ROUTING_MODE {1} CONFIG.DECODER_REG {1}] [get_bd_cells axis_switch_0]
 
-connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_0] [get_bd_intf_pins axis_switch_0/S00_AXIS]
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_1] [get_bd_intf_pins axis_switch_0/S01_AXIS]
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_2] [get_bd_intf_pins axis_switch_0/S02_AXIS]
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/axis_m_3] [get_bd_intf_pins axis_switch_0/S03_AXIS]
@@ -127,16 +126,35 @@ set_property -dict [list \
 ] [get_bd_cells axi_datamover]
 set_property -dict [list CONFIG.c_m_axi_s2mm_data_width.VALUE_SRC USER CONFIG.c_s_axis_s2mm_tdata_width.VALUE_SRC USER] [get_bd_cells axi_datamover]
 set_property -dict [list CONFIG.c_m_axi_s2mm_data_width {512} CONFIG.c_s_axis_s2mm_tdata_width {64} CONFIG.c_s2mm_include_sf {true}] [get_bd_cells axi_datamover]
+set_property -dict [list \
+    CONFIG.c_include_mm2s {Full} \
+    CONFIG.c_m_axi_mm2s_data_width {512} \
+    CONFIG.c_m_axis_mm2s_tdata_width {64} \
+    CONFIG.c_include_mm2s_dre {true} \
+    CONFIG.c_mm2s_burst_size {64} \
+    CONFIG.c_include_mm2s_stsfifo {true} \
+    CONFIG.c_mm2s_include_sf {true} \
+    CONFIG.c_m_axi_mm2s_id_width {0} \
+    CONFIG.c_enable_mm2s {1} \
+    CONFIG.c_single_interface {1} \
+] [get_bd_cells axi_datamover]
 
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI_S2MM] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
 connect_bd_intf_net [get_bd_intf_pins axis_switch_0/M00_AXIS] [get_bd_intf_pins axi_datamover/S_AXIS_S2MM]
 connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_S2MM_STS] [get_bd_intf_pins hls_action_0/s2mm_sts]
 connect_bd_intf_net [get_bd_intf_pins axi_datamover/S_AXIS_S2MM_CMD] [get_bd_intf_pins hls_action_0/s2mm_cmd_V_V]
+connect_bd_intf_net [get_bd_intf_pins hls_action_0/mm2s_cmd_V_V] [get_bd_intf_pins axi_datamover/S_AXIS_MM2S_CMD]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_MM2S_STS] [get_bd_intf_pins hls_action_0/mm2s_sts]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_MM2S] [get_bd_intf_pins axis_switch_0/S00_AXIS]
 
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_s2mm_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_s2mm_aresetn]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_awclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_aresetn]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_mm2s_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_mm2s_aresetn]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aresetn]
 
 # AXI Perfmon
 

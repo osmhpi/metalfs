@@ -23,11 +23,8 @@ typedef struct mtl_mem_configuration {
 mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, mtl_mem_configuration &config);
 
 void op_mem_read(
-    snap_membus_t *din_gmem,
-#ifdef DRAM_ENABLED
-    snap_membus_t *din_ddrmem,
-#endif
-    mtl_stream &out,
+    axi_datamover_command_stream_t &mm2s_cmd,
+    axi_datamover_status_stream_t &mm2s_sts,
     mtl_mem_configuration &config);
 
 void op_mem_write(

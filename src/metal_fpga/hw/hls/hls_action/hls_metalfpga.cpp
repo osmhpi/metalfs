@@ -29,7 +29,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_s_5,
                                 mtl_stream &axis_s_6,
                                 mtl_stream &axis_s_7,
-                                mtl_stream &axis_m_0,
                                 mtl_stream &axis_m_1,
                                 mtl_stream &axis_m_2,
                                 mtl_stream &axis_m_3,
@@ -37,6 +36,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_5,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
+								axi_datamover_command_stream_t &mm2s_cmd,
+								axi_datamover_status_stream_t &mm2s_sts,
 								axi_datamover_command_stream_t &s2mm_cmd,
 								axi_datamover_status_stream_t &s2mm_sts,
                                 snapu32_t *switch_ctrl,
@@ -69,7 +70,6 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_s_5,
     mtl_stream &axis_s_6,
     mtl_stream &axis_s_7,
-    mtl_stream &axis_m_0,
     mtl_stream &axis_m_1,
     mtl_stream &axis_m_2,
     mtl_stream &axis_m_3,
@@ -77,6 +77,8 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_m_5,
     mtl_stream &axis_m_6,
     mtl_stream &axis_m_7,
+    axi_datamover_command_stream_t &mm2s_cmd,
+    axi_datamover_status_stream_t &mm2s_sts,
 	axi_datamover_command_stream_t &s2mm_cmd,
 	axi_datamover_status_stream_t &s2mm_sts
 );
@@ -114,7 +116,6 @@ void hls_action(snap_membus_t * din,
                 mtl_stream &axis_s_5,
                 mtl_stream &axis_s_6,
                 mtl_stream &axis_s_7,
-                mtl_stream &axis_m_0,
                 mtl_stream &axis_m_1,
                 mtl_stream &axis_m_2,
                 mtl_stream &axis_m_3,
@@ -122,6 +123,8 @@ void hls_action(snap_membus_t * din,
                 mtl_stream &axis_m_5,
                 mtl_stream &axis_m_6,
                 mtl_stream &axis_m_7,
+				axi_datamover_command_stream_t &mm2s_cmd,
+				axi_datamover_status_stream_t &mm2s_sts,
 				axi_datamover_command_stream_t &s2mm_cmd,
 				axi_datamover_status_stream_t &s2mm_sts,
                 snapu32_t *switch_ctrl,
@@ -170,7 +173,6 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_s_5
 #pragma HLS INTERFACE axis port=axis_s_6
 #pragma HLS INTERFACE axis port=axis_s_7
-#pragma HLS INTERFACE axis port=axis_m_0
 #pragma HLS INTERFACE axis port=axis_m_1
 #pragma HLS INTERFACE axis port=axis_m_2
 #pragma HLS INTERFACE axis port=axis_m_3
@@ -178,6 +180,8 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=axis_m_5
 #pragma HLS INTERFACE axis port=axis_m_6
 #pragma HLS INTERFACE axis port=axis_m_7
+#pragma HLS INTERFACE axis port=mm2s_cmd
+#pragma HLS INTERFACE axis port=mm2s_sts
 #pragma HLS INTERFACE axis port=s2mm_cmd
 #pragma HLS INTERFACE axis port=s2mm_sts
 #pragma HLS INTERFACE m_axi port=switch_ctrl bundle=switch_ctrl_reg offset=0x44A00000
@@ -208,7 +212,6 @@ void hls_action(snap_membus_t * din,
             axis_s_5,
             axis_s_6,
             axis_s_7,
-            axis_m_0,
             axis_m_1,
             axis_m_2,
             axis_m_3,
@@ -216,6 +219,8 @@ void hls_action(snap_membus_t * din,
             axis_m_5,
             axis_m_6,
             axis_m_7,
+			mm2s_cmd,
+			mm2s_sts,
 			s2mm_cmd,
 			s2mm_sts,
             switch_ctrl,
@@ -251,7 +256,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_s_5,
                                 mtl_stream &axis_s_6,
                                 mtl_stream &axis_s_7,
-                                mtl_stream &axis_m_0,
                                 mtl_stream &axis_m_1,
                                 mtl_stream &axis_m_2,
                                 mtl_stream &axis_m_3,
@@ -259,6 +263,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 mtl_stream &axis_m_5,
                                 mtl_stream &axis_m_6,
                                 mtl_stream &axis_m_7,
+                                axi_datamover_command_stream_t &mm2s_cmd,
+                                axi_datamover_status_stream_t &mm2s_sts,
 								axi_datamover_command_stream_t &s2mm_cmd,
 								axi_datamover_status_stream_t &s2mm_sts,
                                 snapu32_t *switch_ctrl,
@@ -336,7 +342,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_s_5,
             axis_s_6,
             axis_s_7,
-            axis_m_0,
             axis_m_1,
             axis_m_2,
             axis_m_3,
@@ -344,6 +349,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             axis_m_5,
             axis_m_6,
             axis_m_7,
+            mm2s_cmd,
+            mm2s_sts,
 			s2mm_cmd,
 			s2mm_sts
         );
@@ -685,7 +692,6 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_s_5,
     mtl_stream &axis_s_6,
     mtl_stream &axis_s_7,
-    mtl_stream &axis_m_0,
     mtl_stream &axis_m_1,
     mtl_stream &axis_m_2,
     mtl_stream &axis_m_3,
@@ -693,6 +699,8 @@ static mtl_retc_t action_run_operators(
     mtl_stream &axis_m_5,
     mtl_stream &axis_m_6,
     mtl_stream &axis_m_7,
+    axi_datamover_command_stream_t &mm2s_cmd,
+    axi_datamover_status_stream_t &mm2s_sts,
 	axi_datamover_command_stream_t &s2mm_cmd,
 	axi_datamover_status_stream_t &s2mm_sts
 ) {
@@ -713,11 +721,9 @@ static mtl_retc_t action_run_operators(
 
         // Input Operators
         op_mem_read(
-            mem_in,
-#ifdef DRAM_ENABLED
-            mem_ddr_in,
-#endif
-            axis_m_0, read_mem_config);
+            mm2s_cmd,
+            mm2s_sts,
+            read_mem_config);
 
         // Processing Operators
         op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
