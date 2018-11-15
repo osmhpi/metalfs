@@ -35,12 +35,18 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 axi_crossbar_0
 set_property name axi_host_mem_crossbar [get_bd_cells axi_crossbar_0]
 
 set_property -dict [list CONFIG.NUM_SI {2} CONFIG.NUM_MI {1}] [get_bd_cells axi_host_mem_crossbar]
-set_property -dict [list CONFIG.ADDR_WIDTH.VALUE_SRC USER CONFIG.PROTOCOL.VALUE_SRC PROPAGATED CONFIG.DATA_WIDTH.VALUE_SRC USER CONFIG.ID_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
-set_property -dict [list \
-    CONFIG.ADDR_WIDTH {64} \
-    CONFIG.DATA_WIDTH {512} \
-    CONFIG.ID_WIDTH {4} \
-] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.DATA_WIDTH.VALUE_SRC USER CONFIG.ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.DATA_WIDTH {512}] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.BUSER_WIDTH.VALUE_SRC USER CONFIG.RUSER_WIDTH.VALUE_SRC USER CONFIG.WUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.WUSER_WIDTH {1} CONFIG.RUSER_WIDTH {1} CONFIG.BUSER_WIDTH {1}] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.ARUSER_WIDTH.VALUE_SRC USER CONFIG.AWUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.AWUSER_WIDTH {8} CONFIG.ARUSER_WIDTH {8}] [get_bd_cells axi_host_mem_crossbar]
+
+#set_property -dict [list CONFIG.ADDR_WIDTH.VALUE_SRC USER CONFIG.PROTOCOL.VALUE_SRC PROPAGATED CONFIG.DATA_WIDTH.VALUE_SRC USER CONFIG.ID_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+#set_property -dict [list \
+#    CONFIG.ADDR_WIDTH {64} \
+#    CONFIG.DATA_WIDTH {512} \
+#] [get_bd_cells axi_host_mem_crossbar]
 
 # CONFIG.S00_THREAD_ID_WIDTH {3} \
 # CONFIG.S01_THREAD_ID_WIDTH {3} \
@@ -153,6 +159,7 @@ set_property -dict [list \
     CONFIG.c_s2mm_include_sf {false} \
     CONFIG.c_enable_mm2s {0} \
     CONFIG.c_addr_width {64} \
+    CONFIG.c_m_axi_s2mm_id_width {0} \
 ] [get_bd_cells axi_datamover]
 set_property -dict [list CONFIG.c_m_axi_s2mm_data_width.VALUE_SRC USER CONFIG.c_s_axis_s2mm_tdata_width.VALUE_SRC USER] [get_bd_cells axi_datamover]
 set_property -dict [list CONFIG.c_m_axi_s2mm_data_width {512} CONFIG.c_s_axis_s2mm_tdata_width {64} CONFIG.c_s2mm_include_sf {true}] [get_bd_cells axi_datamover]
@@ -217,8 +224,3 @@ save_bd_design >> $log_file
 
 set_property synth_checkpoint_mode None [get_files  $src_dir/../bd/$bd_name/$bd_name.bd]
 generate_target all                     [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] >> $log_file
-# export_ip_user_files -of_objects        [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] -no_script -sync -force -quiet
-
-# generate_target all [get_files  /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd/action/action.bd]
-# export_ip_user_files -of_objects [get_files /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd/action/action.bd] -no_script -sync -force -quiet
-# export_simulation -of_objects [get_files /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd/action/action.bd] -directory /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/ip_user_files/sim_scripts -ip_user_files_dir /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/ip_user_files -ipstatic_source_dir /home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/ip_user_files/ipstatic -lib_map_path [list {modelsim=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/modelsim} {questa=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/questa} {ies=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/ies} {xcelium=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/xcelium} {vcs=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/vcs} {riviera=/home/robert/code/fssem/metal_fs/metal/src/metal_fpga/ip/action_ip_prj/action_ip_prj.cache/compile_simlib/riviera}] -use_ip_compiled_libs -force -quiet
