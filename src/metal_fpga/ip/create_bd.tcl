@@ -41,44 +41,8 @@ set_property -dict [list CONFIG.BUSER_WIDTH.VALUE_SRC USER CONFIG.RUSER_WIDTH.VA
 set_property -dict [list CONFIG.WUSER_WIDTH {1} CONFIG.RUSER_WIDTH {1} CONFIG.BUSER_WIDTH {1}] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.ARUSER_WIDTH.VALUE_SRC USER CONFIG.AWUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.AWUSER_WIDTH {8} CONFIG.ARUSER_WIDTH {8}] [get_bd_cells axi_host_mem_crossbar]
-
-#set_property -dict [list CONFIG.ADDR_WIDTH.VALUE_SRC USER CONFIG.PROTOCOL.VALUE_SRC PROPAGATED CONFIG.DATA_WIDTH.VALUE_SRC USER CONFIG.ID_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
-#set_property -dict [list \
-#    CONFIG.ADDR_WIDTH {64} \
-#    CONFIG.DATA_WIDTH {512} \
-#] [get_bd_cells axi_host_mem_crossbar]
-
-# CONFIG.S00_THREAD_ID_WIDTH {3} \
-# CONFIG.S01_THREAD_ID_WIDTH {3} \
-# CONFIG.S02_THREAD_ID_WIDTH {3} \
-# CONFIG.S03_THREAD_ID_WIDTH {3} \
-# CONFIG.S04_THREAD_ID_WIDTH {3} \
-# CONFIG.S05_THREAD_ID_WIDTH {3} \
-# CONFIG.S06_THREAD_ID_WIDTH {3} \
-# CONFIG.S07_THREAD_ID_WIDTH {3} \
-# CONFIG.S08_THREAD_ID_WIDTH {3} \
-# CONFIG.S09_THREAD_ID_WIDTH {3} \
-# CONFIG.S10_THREAD_ID_WIDTH {3} \
-# CONFIG.S11_THREAD_ID_WIDTH {3} \
-# CONFIG.S12_THREAD_ID_WIDTH {3} \
-# CONFIG.S13_THREAD_ID_WIDTH {3} \
-# CONFIG.S14_THREAD_ID_WIDTH {3} \
-# CONFIG.S15_THREAD_ID_WIDTH {3} \
-# CONFIG.S01_BASE_ID {0x00000008} \
-# CONFIG.S02_BASE_ID {0x00000010} \
-# CONFIG.S03_BASE_ID {0x00000018} \
-# CONFIG.S04_BASE_ID {0x00000020} \
-# CONFIG.S05_BASE_ID {0x00000028} \
-# CONFIG.S06_BASE_ID {0x00000030} \
-# CONFIG.S07_BASE_ID {0x00000038} \
-# CONFIG.S08_BASE_ID {0x00000040} \
-# CONFIG.S09_BASE_ID {0x00000048} \
-# CONFIG.S10_BASE_ID {0x00000050} \
-# CONFIG.S11_BASE_ID {0x00000058} \
-# CONFIG.S12_BASE_ID {0x00000060} \
-# CONFIG.S13_BASE_ID {0x00000068} \
-# CONFIG.S14_BASE_ID {0x00000070} \
-# CONFIG.S15_BASE_ID {0x00000078} \
+set_property -dict [list CONFIG.M00_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M00_A00_ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.M00_A00_BASE_ADDR {0x00000000000} CONFIG.M00_A00_ADDR_WIDTH {64}] [get_bd_cells axi_host_mem_crossbar]\
 
 connect_bd_intf_net [get_bd_intf_pins hls_action_0/m_axi_host_mem] [get_bd_intf_pins axi_host_mem_crossbar/S00_AXI]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_host_mem_crossbar/aclk]
