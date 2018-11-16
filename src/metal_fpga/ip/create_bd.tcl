@@ -242,4 +242,4 @@ assign_bd_address >> $log_file
 save_bd_design >> $log_file
 
 set_property synth_checkpoint_mode None [get_files  $src_dir/../bd/$bd_name/$bd_name.bd]
-# generate_target all                     [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] >> $log_file
+generate_target all                     [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] >> $log_file
