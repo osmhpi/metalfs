@@ -19,7 +19,7 @@ void op_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
                 {
 #pragma HLS unroll
                     snapu8_t tmp = element.data(i * 8 + 7, i * 8);
-                    if (tmp >= 'a' && tmp <= 'z' && element.strb[i])
+                    if (tmp >= 'a' && tmp <= 'z' && element.keep[i])
                         element.data(i * 8 + 7, i * 8) = tmp - ('a' - 'A');
                 }
             } else {
@@ -27,7 +27,7 @@ void op_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
                 {
 #pragma HLS unroll
                     snapu8_t tmp = element.data(i * 8 + 7, i * 8);
-                    if (tmp >= 'A' && tmp <= 'Z' && element.strb[i])
+                    if (tmp >= 'A' && tmp <= 'Z' && element.keep[i])
                         element.data(i * 8 + 7, i * 8) = tmp + ('a' - 'A');
                 }
             }

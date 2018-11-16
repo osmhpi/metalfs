@@ -15,7 +15,7 @@ typedef hls::stream<byte_stream_element> mtl_byte_stream;
 template<uint8_t NB>
 struct stream_element {
     ap_uint<8 * NB> data;
-    ap_uint<NB> strb;
+    ap_uint<NB> keep;
     snap_bool_t last;
 };
 
