@@ -2,7 +2,7 @@
 #define __MTL_OP_BLOWFISH_H__
 
 #include "mtl_definitions.h"
-#include "mtl_stream.h"
+#include <hls_common/mtl_stream.h>
 
 
 // BF_INSTANCES: # of parallel bf_encrypt/bf_decrypt instances to be synthesized

@@ -2,7 +2,7 @@
 #define __MTL_OP_FILE_H__
 
 #include "mtl_definitions.h"
-#include "mtl_stream.h"
+#include <hls_common/mtl_stream.h>
 #include "mtl_extmap.h"
 
 // mtl_retc_t op_file_set_read_buffer(uint64_t read_offset, uint64_t read_size);

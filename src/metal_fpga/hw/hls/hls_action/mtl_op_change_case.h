@@ -2,7 +2,7 @@
 #define __MTL_OP_CHANGE_CASE_H__
 
 #include "mtl_definitions.h"
-#include "mtl_stream.h"
+#include <hls_common/mtl_stream.h>
 
 mtl_retc_t op_change_case_set_mode(uint64_t mode);
 

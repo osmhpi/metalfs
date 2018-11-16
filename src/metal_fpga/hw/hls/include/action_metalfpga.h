@@ -144,6 +144,7 @@ typedef struct metalfpga_job {
 #define OP_MEM_MODE_HOST 0
 #define OP_MEM_MODE_DRAM 1
 #define OP_MEM_MODE_NULL 2
+#define OP_MEM_MODE_RANDOM 3
 
 #ifdef __cplusplus
 }

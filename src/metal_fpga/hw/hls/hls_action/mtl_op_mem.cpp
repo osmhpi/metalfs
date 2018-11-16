@@ -1,16 +1,52 @@
 #include "mtl_op_mem.h"
 #include "mtl_endian.h"
 #include "action_metalfpga.h"
+#include "axi_switch.h"
 
 #include <snap_types.h>
 
 mtl_mem_configuration read_mem_config;
 mtl_mem_configuration write_mem_config;
 
-mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, mtl_mem_configuration &config) {
+mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap_bool_t read, mtl_mem_configuration &config, snapu32_t *data_preselect_switch_ctrl) {
     config.offset = offset;
     config.size = size;
     config.mode = mode;
+
+    // Configure Data Preselector
+
+    if (read) {
+        switch (config.mode) {
+            case OP_MEM_MODE_HOST:
+            case OP_MEM_MODE_DRAM: {
+                switch_set_mapping(data_preselect_switch_ctrl, 0, 0); // DataMover -> Metal Switch
+                break;
+            }
+            case OP_MEM_MODE_RANDOM: {
+                switch_set_mapping(data_preselect_switch_ctrl, 1, 0); // Stream Gen -> Metal Switch
+                break;
+            }
+            default: break;
+        }
+    } else {
+        switch (config.mode) {
+            case OP_MEM_MODE_HOST:
+            case OP_MEM_MODE_DRAM: {
+                switch_set_mapping(data_preselect_switch_ctrl, 2, 1); // Metal Switch -> DataMover
+                switch_disable_output(data_preselect_switch_ctrl, 2); // X -> Stream Sink
+                break;
+            }
+            case OP_MEM_MODE_NULL: {
+                switch_disable_output(data_preselect_switch_ctrl, 1); // X -> DataMover
+                switch_set_mapping(data_preselect_switch_ctrl, 2, 2); // Metal Switch -> Stream Sink
+                break;
+            }
+            default: break;
+        }
+    }
+
+    switch_commit(data_preselect_switch_ctrl);
+
     return SNAP_RETC_SUCCESS;
 }
 
@@ -41,20 +77,7 @@ void op_mem_read(
             }
             break;
         }
-#ifdef DRAM_ENABLED
-        case OP_MEM_MODE_DRAM: {
-            op_mem_read_impl(din_ddrmem, out, config);
-            break;
-        }
-#endif
     }
-}
-
-void op_mem_write_null(mtl_stream &in, mtl_mem_configuration &config) {
-    mtl_stream_element element;
-    do {
-        element = in.read();
-    } while (!element.last);
 }
 
 void op_mem_write(
@@ -83,15 +106,5 @@ void op_mem_write(
             }
             break;
         }
-#ifdef DRAM_ENABLED
-        case OP_MEM_MODE_DRAM: {
-            op_mem_write_impl(in, dout_ddrmem, config);
-            break;
-        }
-#endif
-        // case OP_MEM_MODE_NULL: {
-        //     op_mem_write_null(in, config);
-        //     break;
-        // }
     }
 }

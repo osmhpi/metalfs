@@ -1,16 +1,8 @@
-SOLUTION_NAME ?= metal_hls_action
-SOLUTION_DIR ?= metal_hls_action
-srcs += axi_switch.cpp \
-	mtl_extmap.cpp \
-	mtl_nvme.cpp \
-	mtl_file.cpp \
-	mtl_jobstruct.cpp \
-	mtl_op_mem.cpp \
-	mtl_op_file.cpp \
-	mtl_op_passthrough.cpp \
-	mtl_op_change_case.cpp \
-	mtl_op_blowfish.cpp \
-	hls_metalfpga.cpp
+SOLUTION_NAME ?= metal_hls_streamgen
+SOLUTION_DIR ?= metal_hls_streamgen
+srcs += hls_streamgen.cpp
+
+WRAPPER ?= hls_streamgen
 
 HLS_CFLAGS ?= ""
 ifeq ($(DDRI_USED),TRUE)

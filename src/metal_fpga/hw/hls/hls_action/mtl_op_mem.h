@@ -2,7 +2,7 @@
 #define __MTL_OP_MEM_H__
 
 #include "mtl_definitions.h"
-#include "mtl_stream.h"
+#include <hls_common/mtl_stream.h>
 
 typedef struct axi_datamover_status {
     ap_uint<8> data;
@@ -20,7 +20,7 @@ typedef struct mtl_mem_configuration {
     ap_uint<2> mode;
 } mtl_mem_configuration;
 
-mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, mtl_mem_configuration &config);
+mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap_bool_t read, mtl_mem_configuration &config, snapu32_t *data_preselect_switch_ctrl);
 
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,

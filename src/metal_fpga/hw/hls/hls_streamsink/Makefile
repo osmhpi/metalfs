@@ -1,8 +1,8 @@
-SOLUTION_NAME ?= op_datasink
-SOLUTION_DIR ?= op_datasink
-srcs += op_datasink.cpp
+SOLUTION_NAME ?= metal_hls_streamsink
+SOLUTION_DIR ?= metal_hls_streamsink
+srcs += hls_streamsink.cpp
 
-WRAPPER ?= op_datasink
+WRAPPER ?= hls_streamsink
 
 HLS_CFLAGS ?= ""
 ifeq ($(DDRI_USED),TRUE)
