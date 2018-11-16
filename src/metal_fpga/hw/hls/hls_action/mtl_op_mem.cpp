@@ -55,6 +55,7 @@ typedef stream_element<sizeof(snap_membus_t)> word_stream_element;
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
+    snapu32_t *random_ctrl,
     mtl_mem_configuration &config) {
     switch (config.mode) {
         case OP_MEM_MODE_HOST: {
@@ -77,6 +78,11 @@ void op_mem_read(
             }
             break;
         }
+        case OP_MEM_MODE_RANDOM: {
+            random_ctrl[0x10 / sizeof(snapu32_t)] = config.size;
+            break;
+        }
+        default: break;
     }
 }
 
@@ -106,5 +112,6 @@ void op_mem_write(
             }
             break;
         }
+        default: break;
     }
 }

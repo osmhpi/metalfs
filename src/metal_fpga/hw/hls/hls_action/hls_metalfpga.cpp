@@ -72,7 +72,8 @@ static mtl_retc_t action_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts
+    axi_datamover_status_stream_t &s2mm_sts,
+    snapu32_t *random_ctrl
 );
 
 // static void action_file_write_block(snap_membus_t * mem_in,
@@ -239,7 +240,7 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 {
 
     snapu32_t *perfmon_ctrl = metal_ctrl + 0x44A00000;
-    snapu32_t *trafficgen_ctrl = metal_ctrl + 0x44A10000;
+    snapu32_t *random_ctrl = metal_ctrl + 0x44A10000;
     snapu32_t *switch_ctrl = metal_ctrl + 0x44A20000;
     snapu32_t *data_preselect_switch_ctrl = metal_ctrl + 0x44A30000;
 
@@ -320,7 +321,8 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
             mm2s_cmd,
             mm2s_sts,
             s2mm_cmd,
-            s2mm_sts
+            s2mm_sts,
+            random_ctrl
         );
         // perfmon_disable(perfmon_ctrl);
     #ifndef NO_SYNTH
@@ -648,7 +650,8 @@ static mtl_retc_t action_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts
+    axi_datamover_status_stream_t &s2mm_sts,
+    snapu32_t *random_ctrl
 ) {
     snap_bool_t enable_0 = _enable_mask[0];
     snap_bool_t enable_1 = _enable_mask[1];
@@ -669,6 +672,7 @@ static mtl_retc_t action_run_operators(
         op_mem_read(
             mm2s_cmd,
             mm2s_sts,
+            random_ctrl,
             read_mem_config);
 
         // Processing Operators

@@ -25,6 +25,7 @@ mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
+    snapu32_t *random_ctrl,
     mtl_mem_configuration &config);
 
 void op_mem_write(
