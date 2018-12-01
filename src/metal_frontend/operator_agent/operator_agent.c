@@ -275,7 +275,8 @@ int main(int argc, char *argv[]) {
     strncpy(request.metal_mountpoint, own_fs_mount_point, FILENAME_MAX);
 
     // If there's no agent connected to stdin, we have to create a memory-mapped file
-    if (stdin_pid == 0) {
+    if (memcmp(&operator, &known_operators[0]->id, sizeof(operator_id)) != 0 &&
+        stdin_pid == 0) {
         create_temp_file_for_shared_buffer(
             request.input_buffer_filename,
             sizeof(request.input_buffer_filename),

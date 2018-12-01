@@ -34,6 +34,12 @@ static const char* get_filename() {
 
 static int apply_config(struct snap_action *action) {
 
+    uint64_t *job_struct;
+    metalfpga_job_t mjob;
+    struct snap_job cjob;
+    const unsigned long timeout = 10;
+    int rc;
+
     if (!_use_random) {
         // Copy file contents to DRAM and point the DRAM read_mem operator to the right address
 
@@ -43,21 +49,18 @@ static int apply_config(struct snap_action *action) {
 
         // printf("Mounting %lu blocks starting from %lu to addr %lx\n", blocks_length, block_offset, dram_baseaddr);
 
-        uint64_t *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
+        job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
         job_struct[0] = htobe64(0); // Slot
         job_struct[1] = htobe64(block_offset); // File offset
         job_struct[2] = htobe64(dram_baseaddr); // DRAM target address
         job_struct[3] = htobe64(blocks_length); // number of blocks to load
 
-        metalfpga_job_t mjob;
         mjob.job_type = MTL_JOB_MOUNT;
         mjob.job_address = (uint64_t)job_struct;
 
-        struct snap_job cjob;
         snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
-        const unsigned long timeout = 10;
-        int rc = snap_action_sync_execute_job(action, &cjob, timeout);
+        rc = snap_action_sync_execute_job(action, &cjob, timeout);
 
         if (rc != 0)
             // Some error occurred
