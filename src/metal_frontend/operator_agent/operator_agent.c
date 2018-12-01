@@ -274,9 +274,10 @@ int main(int argc, char *argv[]) {
     getcwd(request.cwd, FILENAME_MAX);
     strncpy(request.metal_mountpoint, own_fs_mount_point, FILENAME_MAX);
 
+    if (memcmp(&operator, &known_operators[0]->id, sizeof(operator_id)) == 0) {
+        strcpy(request.internal_input_filename, "$INTERNAL");    
+    } else if (stdin_pid == 0) {
     // If there's no agent connected to stdin, we have to create a memory-mapped file
-    if (memcmp(&operator, &known_operators[0]->id, sizeof(operator_id)) != 0 &&
-        stdin_pid == 0) {
         create_temp_file_for_shared_buffer(
             request.input_buffer_filename,
             sizeof(request.input_buffer_filename),
