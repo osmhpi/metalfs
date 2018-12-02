@@ -80,6 +80,7 @@ void op_mem_read(
         }
         case OP_MEM_MODE_RANDOM: {
             random_ctrl[0x10 / sizeof(snapu32_t)] = config.size;
+            random_ctrl[0] = 1;  // ap_start = true (self-clearing)
             break;
         }
         default: break;

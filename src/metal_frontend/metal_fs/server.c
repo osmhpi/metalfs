@@ -435,7 +435,9 @@ void* start_socket(void* args) {
             uint64_t internal_input_file_length = 0;
             if (input_agent->op_specification->is_data_source) {
                 // TODO: Catch if file does not exist
-                mtl_prepare_storage_for_reading(input_agent->op_specification->get_filename(), &internal_input_file_length);
+                // TODO: Handle if we're generating random data
+                // mtl_prepare_storage_for_reading(input_agent->op_specification->get_filename(), &internal_input_file_length);
+                internal_input_file_length = 30;
             } else if (input_agent->internal_input_file) {
                 // TODO: Catch if file does not exist
                 mtl_prepare_storage_for_reading(input_agent->internal_input_file, &internal_input_file_length);

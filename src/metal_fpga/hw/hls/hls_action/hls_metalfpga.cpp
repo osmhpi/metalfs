@@ -162,7 +162,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=s2mm_cmd
 #pragma HLS INTERFACE axis port=s2mm_sts
 
-#pragma HLS INTERFACE m_axi port=metal_ctrl
+#pragma HLS INTERFACE m_axi port=metal_ctrl depth=32
 
     // Required Action Type Detection
     switch (action_reg->Control.flags) {
@@ -239,10 +239,14 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 action_reg * act_reg)
 {
 
-    snapu32_t *perfmon_ctrl = metal_ctrl + 0x44A00000;
-    snapu32_t *random_ctrl = metal_ctrl + 0x44A10000;
-    snapu32_t *switch_ctrl = metal_ctrl + 0x44A20000;
-    snapu32_t *data_preselect_switch_ctrl = metal_ctrl + 0x44A30000;
+    snapu32_t *perfmon_ctrl =
+        (metal_ctrl + (0x44A00000 / sizeof(uint32_t)));
+    snapu32_t *data_preselect_switch_ctrl =
+        (metal_ctrl + (0x44A10000 / sizeof(uint32_t)));
+    snapu32_t *random_ctrl =
+        (metal_ctrl + (0x44A20000 / sizeof(uint32_t)));
+    snapu32_t *switch_ctrl =
+        (metal_ctrl + (0x44A30000 / sizeof(uint32_t)));
 
     switch (act_reg->Data.job_type) {
     case MTL_JOB_MAP:
