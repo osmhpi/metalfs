@@ -121,7 +121,7 @@ void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan) {
     return;
 }
 
-void mtl_run_pipeline() {
+int mtl_run_pipeline() {
     metalfpga_job_t mjob;
     mjob.job_type = MTL_JOB_RUN_OPERATORS;
     mjob.job_address = 0;
@@ -136,13 +136,13 @@ void mtl_run_pipeline() {
 
     if (rc != 0)
         // Some error occurred
-        return;
+        return MTL_ERROR_INVALID_ARGUMENT;
 
     if (cjob.retc != SNAP_RETC_SUCCESS)
         // Some error occurred
-        return;
+        return MTL_ERROR_INVALID_ARGUMENT;
 
-    return;
+    return MTL_SUCCESS;
 }
 
 
@@ -218,12 +218,14 @@ uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size) {
 
     if (rc != 0) {
         // Some error occurred
+        printf("hae\n");
         free(job_struct);
         return 0;
     }
 
     if (cjob.retc != SNAP_RETC_SUCCESS) {
         // Some error occurred
+        printf("hae2\n");
         free(job_struct);
         return 0;
     }

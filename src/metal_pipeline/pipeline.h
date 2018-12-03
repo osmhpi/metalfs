@@ -13,7 +13,7 @@ int mtl_pipeline_deinitialize();
 void mtl_configure_operator(mtl_operator_specification *op_spec);
 void mtl_finalize_operator(mtl_operator_specification *op_spec);
 void mtl_configure_pipeline(mtl_operator_execution_plan execution_plan);
-void mtl_run_pipeline();
+int mtl_run_pipeline();
 void mtl_reset_perfmon();
 void mtl_configure_perfmon(uint64_t stream_id0, uint64_t stream_id1);
 uint64_t mtl_read_perfmon(char * buffer, uint64_t buffer_size);

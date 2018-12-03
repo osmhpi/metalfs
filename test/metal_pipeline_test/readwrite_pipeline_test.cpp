@@ -42,12 +42,83 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePage) {
     op_write_mem_set_buffer(dest, n_bytes);
     mtl_configure_operator(&op_write_mem_specification);
 
-    mtl_run_pipeline();
+    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
     free(src);
     free(dest);
+}
+
+TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
+
+    uint64_t n_pages = 1;
+    uint64_t n_bytes = n_pages * 4096;
+    uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
+    fill_payload(src, n_bytes);
+
+    operator_id operator_list[] = { op_read_mem_specification.id, op_write_file_specification.id };
+
+    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
+    mtl_configure_pipeline(execution_plan);
+
+    op_read_mem_set_buffer(src, n_bytes);
+    mtl_configure_operator(&op_read_mem_specification);
+
+    op_write_file_set_buffer(0, 0);  // Means: /dev/null
+    mtl_configure_operator(&op_write_file_specification);
+
+    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+
+    free(src);
+}
+
+TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGenerator) {
+
+    uint64_t n_pages = 1;
+    uint64_t n_bytes = n_pages * 4096;
+
+    uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
+
+    operator_id operator_list[] = { op_read_file_specification.id, op_write_mem_specification.id };
+
+    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
+    mtl_configure_pipeline(execution_plan);
+
+    op_read_file_set_random(n_bytes);
+    mtl_configure_operator(&op_read_file_specification);
+
+    op_write_mem_set_buffer(dest, n_bytes);
+    mtl_configure_operator(&op_write_mem_specification);
+
+    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+
+    free(dest);
+}
+
+TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
+
+    uint64_t n_pages = 1;
+    uint64_t n_bytes = n_pages * 4096;
+
+    operator_id operator_list[] = { op_read_file_specification.id, op_passthrough_specification.id, op_write_file_specification.id };
+
+    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
+    mtl_configure_pipeline(execution_plan);
+
+    op_read_file_set_random(n_bytes);
+    mtl_configure_operator(&op_read_file_specification);
+
+    op_write_file_set_buffer(0, 0);  // Means: /dev/null
+    mtl_configure_operator(&op_write_file_specification);
+
+    mtl_configure_perfmon(op_passthrough_specification.id.stream_id, op_passthrough_specification.id.stream_id);
+
+    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+
+    char perfmon_results[4096];
+    mtl_read_perfmon(perfmon_results, sizeof(perfmon_results) - 1);
+    printf("%s\n", perfmon_results);
 }
 
 TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) {
@@ -77,10 +148,10 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) 
     op_write_mem_set_buffer(dest + dest_offset, payload_bytes);
     mtl_configure_operator(&op_write_mem_specification);
 
-    mtl_run_pipeline();
+    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
 
-    // print_memory_64(src + src_offset);
-    // print_memory_64(dest + dest_offset);
+    print_memory_64(src + src_offset + 4672);
+    print_memory_64(dest + dest_offset + 4672);
 
     EXPECT_EQ(0, memcmp(src + src_offset, dest + dest_offset, payload_bytes));
 
