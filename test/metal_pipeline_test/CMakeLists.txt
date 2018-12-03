@@ -5,6 +5,7 @@ set(
     base_test.hpp
     blowfish_pipeline_test.cpp
     readwrite_pipeline_test.cpp
+    thesis_test.cpp
 
     gtest_main.cpp
 )
