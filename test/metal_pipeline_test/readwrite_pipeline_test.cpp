@@ -112,13 +112,7 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGeneratorT
     op_write_file_set_buffer(0, 0);  // Means: /dev/null
     mtl_configure_operator(&op_write_file_specification);
 
-    mtl_configure_perfmon(op_passthrough_specification.id.stream_id, op_passthrough_specification.id.stream_id);
-
     ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
-
-    char perfmon_results[4096];
-    mtl_read_perfmon(perfmon_results, sizeof(perfmon_results) - 1);
-    printf("%s\n", perfmon_results);
 }
 
 TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) {

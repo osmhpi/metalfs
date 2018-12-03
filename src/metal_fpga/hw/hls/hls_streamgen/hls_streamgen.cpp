@@ -12,6 +12,7 @@ void hls_streamgen(snapu32_t length, mtl_stream &out) {
 
     snapu32_t bytes_written = 0;
     do {
+    #pragma HLS pipeline
         bytes_written += 8;
         if (bytes_written >= length) {
             element.last = true;
