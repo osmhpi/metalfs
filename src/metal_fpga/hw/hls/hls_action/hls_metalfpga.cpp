@@ -683,8 +683,8 @@ static mtl_retc_t action_run_operators(
         op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
         op_passthrough(axis_s_2, axis_m_2, enable_4);
         op_change_case(axis_s_3, axis_m_3, enable_5);
-        op_passthrough(axis_s_4, axis_m_4, enable_6);
-        op_passthrough(axis_s_5, axis_m_5, enable_7);
+        op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
+        op_blowfish_decrypt(axis_s_5, axis_m_5, enable_7);
 
         // Placeholder Operators (to be assigned)
         op_passthrough(axis_s_6, axis_m_6, enable_8);

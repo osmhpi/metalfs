@@ -126,6 +126,8 @@ set_property -dict [list \
     CONFIG.c_m_axi_mm2s_id_width {0} \
     CONFIG.c_enable_mm2s {1} \
     CONFIG.c_single_interface {1} \
+    CONFIG.c_mm2s_btt_used {23} \
+    CONFIG.c_s2mm_btt_used {23}\
 ] [get_bd_cells axi_datamover]
 
 connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]

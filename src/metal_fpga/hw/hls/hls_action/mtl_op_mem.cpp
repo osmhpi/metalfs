@@ -62,12 +62,13 @@ void op_mem_read(
             const int N = 64; // Address width (host mem)
             uint64_t bytes_read = 0;
             while (bytes_read < config.size) {
+                // Stream data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_read;
-                snap_bool_t end_of_frame = bytes_remaining < (1<<16);
-                snapu16_t read_bytes = end_of_frame ? bytes_remaining : (1<<16 - 1);
+                snap_bool_t end_of_frame = bytes_remaining <= 1<<16;
+                ap_uint<23> read_bytes = end_of_frame ? bytes_remaining : 1<<16;
 
                 axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = config.offset;
+                cmd((N+31), 32) = config.offset + bytes_read;
                 cmd[30] = end_of_frame;
                 cmd(22, 0) = read_bytes;
                 mm2s_cmd.write(cmd);
@@ -97,12 +98,13 @@ void op_mem_write(
             const int N = 64; // Address width (host mem)
             uint64_t bytes_written = 0;
             while (bytes_written < config.size) {
+                // Write data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_written;
-                snap_bool_t end_of_frame = bytes_remaining < (1<<16);
-                snapu16_t write_bytes = end_of_frame ? bytes_remaining : (1<<16 - 1);
+                snap_bool_t end_of_frame = bytes_remaining <= 1<<16;
+                ap_uint<23> write_bytes = end_of_frame ? bytes_remaining : 1<<16;
 
                 axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = config.offset;
+                cmd((N+31), 32) = config.offset + bytes_written;
                 cmd[30] = end_of_frame;
                 cmd(22, 0) = write_bytes;
                 s2mm_cmd.write(cmd);

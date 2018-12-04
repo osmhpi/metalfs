@@ -26,7 +26,7 @@ TEST_F(BaseTest, Thesis_ProfileOperators) {
 
     uint64_t n_pages = 1;
 
-    uint64_t n_bytes = n_pages * 128;
+    uint64_t n_bytes = n_pages * 4096;
     uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);
 
@@ -36,8 +36,8 @@ TEST_F(BaseTest, Thesis_ProfileOperators) {
         op_read_mem_specification.id,
         op_blowfish_decrypt_specification.id,
         op_change_case_specification.id,
-        op_write_mem_specification.id,
-        op_blowfish_encrypt_specification.id
+        op_blowfish_encrypt_specification.id,
+        op_write_mem_specification.id
     };
 
     mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
