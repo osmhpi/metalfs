@@ -11,8 +11,10 @@ mtl_retc_t op_change_case_set_mode(uint64_t mode) {
 
 void op_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
     if (enable) {
-        for (;;) {
-            mtl_stream_element element = in.read();
+        mtl_stream_element element;
+        do {
+        #pragma HLS pipeline
+            element = in.read();
 
             if (_mode == 0) {
                 for (int i = 0; i < sizeof(element.data); ++i)
@@ -33,7 +35,6 @@ void op_change_case(mtl_stream &in, mtl_stream &out, snap_bool_t enable) {
             }
 
             out.write(element);
-            if (element.last) break;
-        }
+        } while (!element.last);
     }
 }

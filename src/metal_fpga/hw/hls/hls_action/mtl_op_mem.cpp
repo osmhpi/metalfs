@@ -73,7 +73,7 @@ void op_mem_read(
                 cmd(22, 0) = read_bytes;
                 mm2s_cmd.write(cmd);
 
-                bytes_read -= read_bytes;
+                bytes_read += read_bytes;
 
                 mm2s_sts.read();
             }
@@ -109,7 +109,7 @@ void op_mem_write(
                 cmd(22, 0) = write_bytes;
                 s2mm_cmd.write(cmd);
 
-                bytes_written -= write_bytes;
+                bytes_written += write_bytes;
 
                 s2mm_sts.read();
             }
