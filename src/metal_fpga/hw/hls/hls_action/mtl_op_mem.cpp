@@ -70,6 +70,7 @@ void op_mem_read(
                 axi_datamover_command_t cmd = 0;
                 cmd((N+31), 32) = config.offset + bytes_read;
                 cmd[30] = end_of_frame;
+                cmd[23] = 1; // AXI burst type: INCR
                 cmd(22, 0) = read_bytes;
                 mm2s_cmd.write(cmd);
 
@@ -106,6 +107,7 @@ void op_mem_write(
                 axi_datamover_command_t cmd = 0;
                 cmd((N+31), 32) = config.offset + bytes_written;
                 cmd[30] = end_of_frame;
+                cmd[23] = 1; // AXI burst type: INCR
                 cmd(22, 0) = write_bytes;
                 s2mm_cmd.write(cmd);
 
