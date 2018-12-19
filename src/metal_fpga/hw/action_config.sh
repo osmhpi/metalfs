@@ -44,8 +44,8 @@ for hls_dir in $ACTION_ROOT/hw/hls/hls_*/; do
 	hls_dir=${hls_dir%*/}
 	component=${hls_dir##*/}
 	echo "                        Generating IP from HLS component ${component}"
-	echo "Calling make HLS_CFLAGS="$HLS_CFLAGS" DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip" > $LOGS_DIR/${component}_make.log
-	make HLS_CFLAGS="$HLS_CFLAGS" DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip >> $LOGS_DIR/${component}_make.log; hls_ret=$?
+	echo "Calling make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip" > $LOGS_DIR/${component}_make.log
+	make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip >> $LOGS_DIR/${component}_make.log; hls_ret=$?
 	if [ $hls_ret -ne 0 ]; then \
 		echo -e "                        Error: please look into $LOGS_DIR/${component}_make.log"; exit -1; \
 	fi

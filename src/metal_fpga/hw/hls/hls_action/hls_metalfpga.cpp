@@ -248,58 +248,60 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     snapu32_t *switch_ctrl =
         (metal_ctrl + (0x44A30000 / sizeof(uint32_t)));
 
+    mtl_retc_t result = SNAP_RETC_SUCCESS;
+
     switch (act_reg->Data.job_type) {
     case MTL_JOB_MAP:
     {
         mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
-        return action_map(mem_in, map_job);
+        result = action_map(mem_in, map_job);
     }
     // case MTL_JOB_QUERY:
     // {
     //     mtl_job_query_t query_job = mtl_read_job_query(mem_in, act_reg->Data.job_address);
     //     mtl_retc_t retc = action_query(mem_out, act_reg->Data.job_address, query_job);
-    //     return retc;
+    //     result = retc;
     // }
     // case MTL_JOB_ACCESS:
     // {
     //     mtl_job_access_t access_job = mtl_read_job_access(mem_in, act_reg->Data.job_address);
-    //     return action_access(mem_in, mem_out, mem_ddr_in, access_job);
+    //     result = action_access(mem_in, mem_out, mem_ddr_in, access_job);
     // }
     case MTL_JOB_MOUNT:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t mount_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
-        return action_mount(nvme, mount_job);
+        result = action_mount(nvme, mount_job);
 #else
-        return SNAP_RETC_SUCCESS;
+        result = SNAP_RETC_SUCCESS;
 #endif
     }
     case MTL_JOB_WRITEBACK:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t writeback_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
-        return action_writeback(nvme, writeback_job);
+        result = action_writeback(nvme, writeback_job);
 #else
-        return SNAP_RETC_SUCCESS;
+        result = SNAP_RETC_SUCCESS;
 #endif
     }
     case MTL_JOB_CONFIGURE_STREAMS:
     {
-        return action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
+        result = action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
     }
     case MTL_JOB_RESET_PERFMON:
     {
         perfmon_reset(perfmon_ctrl);
-        return SNAP_RETC_SUCCESS;
+        result = SNAP_RETC_SUCCESS;
     }
     case MTL_JOB_CONFIGURE_PERFMON:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line), mtl_get64<8>(line));
+        result = action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line), mtl_get64<8>(line));
     }
     case MTL_JOB_READ_PERFMON_COUNTERS:
     {
-        return action_perfmon_read(mem_in + MFB_ADDRESS(act_reg->Data.job_address), perfmon_ctrl);
+        result = action_perfmon_read(mem_in + MFB_ADDRESS(act_reg->Data.job_address), perfmon_ctrl);
     }
     case MTL_JOB_RUN_OPERATORS:
     {
@@ -333,36 +335,38 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
     #endif
 
-        return SNAP_RETC_SUCCESS;
+        result = SNAP_RETC_SUCCESS;
     }
     case MTL_JOB_OP_MEM_SET_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), true, read_mem_config, data_preselect_switch_ctrl);
+        result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), true, read_mem_config, data_preselect_switch_ctrl);
     }
     case MTL_JOB_OP_MEM_SET_WRITE_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), false, write_mem_config, data_preselect_switch_ctrl);
+        result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), false, write_mem_config, data_preselect_switch_ctrl);
     }
     case MTL_JOB_OP_CHANGE_CASE_SET_MODE:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_change_case_set_mode(mtl_get64<0>(line));
+        result = op_change_case_set_mode(mtl_get64<0>(line));
     }
     case MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY:
     {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_blowfish_encrypt_set_key(line);
+       snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+       result = op_blowfish_encrypt_set_key(line);
     }
     case MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY:
     {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        return op_blowfish_decrypt_set_key(line);
+       snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+       result = op_blowfish_decrypt_set_key(line);
     }
     default:
-        return SNAP_RETC_FAILURE;
+        result = SNAP_RETC_FAILURE;
     }
+
+    return result;
 }
 
 // File Map / Unmap Operation:

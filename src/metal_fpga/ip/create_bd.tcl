@@ -46,20 +46,6 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_host_mem_crossbar/areset
 make_bd_intf_pins_external  [get_bd_intf_pins axi_host_mem_crossbar/M00_AXI]
 set_property name m_axi_host_mem [get_bd_intf_ports M00_AXI_0]
 
-# Optional Stuff
-
-if { ( $::env(DDRI_USED) == "TRUE" ) } {
-    set_property -dict [list \
-        CONFIG.C_M_AXI_CARD_MEM0_ENABLE_ID_PORTS {true} \
-        CONFIG.C_M_AXI_CARD_MEM0_ENABLE_USER_PORTS {true} \
-    ] [get_bd_cells snap_action]
-
-    make_bd_intf_pins_external  \
-        [get_bd_intf_pins snap_action/m_axi_card_mem0]
-
-    set_property name m_axi_card_mem0 [get_bd_intf_ports m_axi_card_mem0_0]
-}
-
 if { ( $::env(NVME_USED) == "TRUE" ) } {
     set_property -dict [list \
         CONFIG.C_M_AXI_NVME_ENABLE_ID_PORTS {true} \
@@ -130,7 +116,6 @@ set_property -dict [list \
     CONFIG.c_s2mm_btt_used {23}\
 ] [get_bd_cells axi_datamover]
 
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
 connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_S2MM_STS] [get_bd_intf_pins snap_action/s2mm_sts]
 connect_bd_intf_net [get_bd_intf_pins axi_datamover/S_AXIS_S2MM_CMD] [get_bd_intf_pins snap_action/s2mm_cmd_V_V]
 connect_bd_intf_net [get_bd_intf_pins snap_action/mm2s_cmd_V_V] [get_bd_intf_pins axi_datamover/S_AXIS_MM2S_CMD]
@@ -144,6 +129,27 @@ connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_mm2s_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_mm2s_aresetn]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aresetn]
+
+
+if { ( $::env(DDRI_USED) == "TRUE" ) } {
+    # AXI Crossbar
+    create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 axi_crossbar
+    connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_crossbar/S00_AXI]
+
+    connect_bd_intf_net [get_bd_intf_pins axi_crossbar/M00_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
+
+    make_bd_intf_pins_external  [get_bd_intf_pins axi_crossbar/M01_AXI]
+    set_property name m_axi_card_mem0 [get_bd_intf_ports M01_AXI_0]
+    set_property -dict [list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {512}] [get_bd_intf_ports m_axi_card_mem0]
+
+    set_property -dict [list CONFIG.M00_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M01_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M00_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.M01_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_crossbar]
+    set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.M00_A00_BASE_ADDR {0} CONFIG.M01_A00_BASE_ADDR {1000000000000000000000000000000000000000000000000000000000000000} CONFIG.M00_A00_ADDR_WIDTH {63} CONFIG.M01_A00_ADDR_WIDTH {32}] [get_bd_cells axi_crossbar]
+
+    connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_crossbar/aclk]
+    connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_crossbar/aresetn]
+} else {
+    connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
+}
 
 # Protocol converter
 
