@@ -44,13 +44,13 @@ for hls_dir in ./hls/hls_*/; do
 	hls_dir=${hls_dir%*/}
 	component=${hls_dir##*/}
 	echo "Calling make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip" > $LOGS_DIR/${component}_make.log
-	make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component run_hls_ip_script.tcl >> $LOGS_DIR/${component}_make.log; hls_ret=$?
+	make DDRI_USED=$DDRI_USED NVME_USED=$NVME_USED -C ./hls/$component ip >> $LOGS_DIR/${component}_make.log; hls_ret=$?
 	if [ $hls_ret -ne 0 ]; then \
 		echo -e "                        Error: please look into $LOGS_DIR/${component}_make.log"; exit -1; \
 	fi
 done
 
-# if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
-# 	echo "                        Call create_action_ip.tcl to generate IPs"
-# 	vivado -mode batch -source $ACTION_ROOT/ip/create_action_ip.tcl -notrace -nojournal -tclargs $ACTION_ROOT $FPGACHIP
-# fi
+if [ ! -d $ACTION_ROOT/ip/action_ip_dir ]; then
+	echo "                        Call create_action_ip.tcl to generate IPs"
+	vivado -mode batch -source $ACTION_ROOT/ip/create_action_ip.tcl -notrace -nojournal -tclargs $ACTION_ROOT $FPGACHIP
+fi
