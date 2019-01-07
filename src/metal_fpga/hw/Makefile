@@ -35,6 +35,8 @@ clean:
 	@$(RM) -fr $(ACTION_ROOT)/ip/ip_user_files
 	@$(RM) $(vhd_files)
 
+	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done
+
 vhdl:
 
 #

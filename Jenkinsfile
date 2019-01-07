@@ -165,10 +165,14 @@ echo "$WORKSPACE/build/metal_pipeline_test --gtest_filter=*ReadWrite*" >> ../tes
 chmod +x ../testlist.sh
 ../run_sim -explore -list testlist.sh -noaet'''
             }
-
           }
         }
       }
     }
+  }
+  post {
+      always {
+          cleanWs()
+      }
   }
 }
