@@ -33,3 +33,7 @@ $(ip_dir): run_hls_ip_script.tcl $(srcs)
 # Create symlinks for simpler access
 ip: $(ip_dir)
 	@$(RM) hls_impl_ip && ln -s $(ip_dir) hls_impl_ip
+
+clean: clean_run_hls_ip_script
+clean_run_hls_ip_script:
+	@$(RM) run_hls_ip_script.tcl

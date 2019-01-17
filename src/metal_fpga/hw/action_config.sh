@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if [ -z $DDRI_USED ]; then
+	CONFIG_FILE=$SNAP_ROOT/.snap_config
+	DDRI_USED=$(grep DDRI_USED $CONFIG_FILE | cut -d = -f 2 | tr -d '"')
+fi
+
+if [ -z $NVME_USED ]; then
+	CONFIG_FILE=$SNAP_ROOT/.snap_config
+	NVME_USED=$(grep NVME_USED $CONFIG_FILE | cut -d = -f 2 | tr -d '"')
+fi
+
 if [ "$DDRI_USED" == "TRUE" ]; then
   DDRI_FILTER="\-\- only for DDRI_USED!=TRUE"
 else

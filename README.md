@@ -3,8 +3,8 @@
 ## How to build
 
 ### Hardware
- - Set up a working CAPI SNAP build environment using the [metalfs/snap](https://github.com/metalfs/snap) master branch
- - Configure SNAP to use an external HLS action, rooted in `metal_fs/src/metal_fpga`, with SDRAM and NVMe enabled
+ - Set up a working CAPI SNAP build environment
+ - Configure SNAP to use an external HDL action, rooted in `metal_fs/src/metal_fpga`, with SDRAM and NVMe enabled
  - Run `make model` / `make image` as usual
 
 ### Software

@@ -84,8 +84,7 @@ FACTORY_IMAGE="FALSE"
 CLOUD_USER_FLOW="FALSE"
 CLOUD_BUILD_BITFILE="FALSE"
 ''', file: 'defconfig/N250S.hls_metalfpga.defconfig')
-          sh '''#! /bin/bash
-source /opt/Xilinx/Vivado/2018.2/settings64.sh
+          sh '''
 rm -f snap_env.sh
 echo "export TIMING_LABLIMIT=\\"-200\\"" >> snap_env.sh
 echo "export PSLVER=8" >> snap_env.sh
@@ -101,8 +100,7 @@ make clean_config N250S.hls_metalfpga.defconfig software'''
         stage('Hardware') {
           steps {
             dir(path: 'snap') {
-              sh '''#! /bin/bash
-source /opt/Xilinx/Vivado/2018.2/settings64.sh
+              sh '''
 make hw_project
 '''
             }
@@ -117,7 +115,7 @@ make hw_project
           steps {
             cmakeBuild(installation: 'InSearchPath', buildDir: 'build', buildType: 'Debug')
             dir(path: 'build') {
-              sh '''#! /bin/bash
+              sh '''
 make -j8'''
             }
 
@@ -131,7 +129,7 @@ make -j8'''
           steps {
             cmakeBuild(installation: 'InSearchPath', buildDir: 'build-inmemory', cmakeArgs: '-D METAL_USE_INMEMORY_STORAGE=ON', buildType: 'Debug')
             dir(path: 'build-inmemory') {
-              sh '''#! /bin/bash
+              sh '''
 make -j8'''
             }
 
@@ -144,7 +142,7 @@ make -j8'''
         stage('metal_test') {
           steps {
             dir(path: 'build-inmemory') {
-              sh '''#! /bin/bash
+              sh '''
 ./metal_test'''
             }
 
@@ -156,26 +154,25 @@ make -j8'''
           }
           steps {
             dir(path: 'snap') {
-              sh '''#! /bin/bash
-source /opt/Xilinx/Vivado/2018.2/settings64.sh
+              sh '''
 make model
 '''
             }
             dir(path: 'snap/hardware/sim/xsim') {
-              sh '''#! /bin/bash
-source /opt/Xilinx/Vivado/2018.2/settings64.sh
+              sh '''
 echo "snap_maint" > ../testlist.sh
 echo "$WORKSPACE/build/metal_pipeline_test --gtest_filter=*ReadWrite*" >> ../testlist.sh
 chmod +x ../testlist.sh
 ../run_sim -explore -list testlist.sh -noaet'''
             }
-
           }
         }
       }
     }
   }
-  environment {
-    XILINXD_LICENSE_FILE = '/var/jenkins-agent/Xilinx.lic'
+  post {
+      always {
+          cleanWs()
+      }
   }
 }
