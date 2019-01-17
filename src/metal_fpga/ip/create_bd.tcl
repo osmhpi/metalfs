@@ -145,6 +145,9 @@ if { ( $::env(DDRI_USED) == "TRUE" ) } {
     set_property -dict [list CONFIG.M00_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M01_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M00_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.M01_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_crossbar]
     set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.M00_A00_BASE_ADDR {0} CONFIG.M01_A00_BASE_ADDR {1000000000000000000000000000000000000000000000000000000000000000} CONFIG.M00_A00_ADDR_WIDTH {63} CONFIG.M01_A00_ADDR_WIDTH {32}] [get_bd_cells axi_crossbar]
 
+    set_property -dict [list CONFIG.AWUSER_WIDTH.VALUE_SRC USER CONFIG.ARUSER_WIDTH.VALUE_SRC USER CONFIG.WUSER_WIDTH.VALUE_SRC USER CONFIG.RUSER_WIDTH.VALUE_SRC USER CONFIG.BUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_crossbar]
+    set_property -dict [list CONFIG.AWUSER_WIDTH {1} CONFIG.ARUSER_WIDTH {1} CONFIG.WUSER_WIDTH {1} CONFIG.RUSER_WIDTH {1} CONFIG.BUSER_WIDTH {1}] [get_bd_cells axi_crossbar]
+
     connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_crossbar/aclk]
     connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_crossbar/aresetn]
 } else {
