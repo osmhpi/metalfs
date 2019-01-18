@@ -35,7 +35,7 @@ set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.DATA_WIDTH {512}] [get_bd
 set_property -dict [list CONFIG.BUSER_WIDTH.VALUE_SRC USER CONFIG.RUSER_WIDTH.VALUE_SRC USER CONFIG.WUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.WUSER_WIDTH {1} CONFIG.RUSER_WIDTH {1} CONFIG.BUSER_WIDTH {1}] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.ARUSER_WIDTH.VALUE_SRC USER CONFIG.AWUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
-set_property -dict [list CONFIG.AWUSER_WIDTH {8} CONFIG.ARUSER_WIDTH {8}] [get_bd_cells axi_host_mem_crossbar]
+set_property -dict [list CONFIG.AWUSER_WIDTH {1} CONFIG.ARUSER_WIDTH {1}] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.M00_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M00_A00_ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_host_mem_crossbar]
 set_property -dict [list CONFIG.M00_A00_BASE_ADDR {0x00000000000} CONFIG.M00_A00_ADDR_WIDTH {64}] [get_bd_cells axi_host_mem_crossbar]
 
