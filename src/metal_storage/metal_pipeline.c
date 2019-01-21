@@ -11,7 +11,7 @@
 
 #include "../metal/metal.h"
 
-#include "../metal_pipeline/pipeline.h"
+#include "../metal_pipeline/pipeline.hpp"
 
 #include "../metal_operators/op_read_file/operator.h"
 #include "../metal_operators/op_read_mem/operator.h"

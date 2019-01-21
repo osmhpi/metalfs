@@ -1,7 +1,9 @@
 #include <malloc.h>
 
+extern "C" {
 #include <metal/metal.h>
 #include <metal_storage/storage.h>
+}
 
 #include "base_test.hpp"
 
@@ -69,7 +71,7 @@ TEST_F(BaseTest, Storage_WriteAndReadDataUsingMultipleExtents) {
 
     ASSERT_EQ(MTL_SUCCESS, mtl_storage_set_active_write_extent_list(extents, sizeof(extents) / sizeof(extents[0])));
     EXPECT_EQ(MTL_SUCCESS, mtl_storage_write(0, src, n_bytes));
-    
+
     ASSERT_EQ(MTL_SUCCESS, mtl_storage_set_active_read_extent_list(extents, sizeof(extents) / sizeof(extents[0])));
     EXPECT_EQ(MTL_SUCCESS, mtl_storage_read(0, dest, n_bytes));
 

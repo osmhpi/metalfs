@@ -1,8 +1,10 @@
 #include <malloc.h>
 
+extern "C" {
 #include <metal/metal.h>
 #include <metal_pipeline/pipeline.h>
 #include <metal_operators/all_operators.h>
+}
 
 #include "base_test.hpp"
 

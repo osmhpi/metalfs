@@ -1,11 +1,13 @@
 set(
     METAL_PIPELINE_TEST_SOURCES
 
-    base_test.cpp
-    base_test.hpp
-    blowfish_pipeline_test.cpp
-    readwrite_pipeline_test.cpp
-    thesis_test.cpp
+#    base_test.cpp
+#    base_test.hpp
+#    blowfish_pipeline_test.cpp
+#    readwrite_pipeline_test.cpp
+#    thesis_test.cpp
+    operator_registry_test.cpp
+    user_operator_test.cpp
 
     gtest_main.cpp
 )
@@ -14,6 +16,7 @@ set(
     LIBRARIES
     gtest
 
+    ${JQ_LIBRARIES}
     ${SNAP_LIBRARY}
     ${CXL_LIBRARY}
 )
@@ -22,4 +25,9 @@ set(
 include_directories(../../third_party/googletest/googletest/)
 
 add_executable(metal_pipeline_test ${METAL_PIPELINE_TEST_SOURCES})
-target_link_libraries(metal_pipeline_test metal_pipeline metal_operators ${LIBRARIES})
+target_link_libraries(metal_pipeline_test metal_pipeline ${LIBRARIES})
+
+add_custom_command(
+        TARGET metal_pipeline_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/operators/*.json ${CMAKE_CURRENT_BINARY_DIR}/operators/
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/operators/*.json)

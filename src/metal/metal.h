@@ -1,9 +1,5 @@
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #define MTL_SUCCESS 0
@@ -38,7 +34,3 @@ int mtl_unlink(const char *filename);
 
 int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size);
 int mtl_prepare_storage_for_writing(const char *filename, uint64_t size);
-
-#ifdef __cplusplus
-}
-#endif

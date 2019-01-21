@@ -1,5 +1,7 @@
+extern "C" {
 #include <metal/metal.h>
 #include <metal/extent.h>
+}
 
 #include "base_test.hpp"
 

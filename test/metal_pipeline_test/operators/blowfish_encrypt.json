@@ -1,0 +1,14 @@
+{
+  "id": "blowfish_encrypt",
+  "options": {
+    "key": {
+      "short": "k",
+      "type": {
+        "type": "buffer",
+        "size": 128
+      },
+      "description": "The encryption key to use",
+      "parameter": "keyBytes"
+    }
+  }
+}

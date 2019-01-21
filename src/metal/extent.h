@@ -1,9 +1,5 @@
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -20,7 +16,3 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset);
 int mtl_dump_extents(MDB_txn *txn);
 
 int mtl_reset_extents_db();
-
-#ifdef __cplusplus
-}
-#endif

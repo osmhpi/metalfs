@@ -1,4 +1,4 @@
-#include "pipeline.h"
+#include "pipeline.hpp"
 
 #include <stdio.h>
 #include <string.h>

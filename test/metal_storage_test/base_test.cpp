@@ -1,7 +1,9 @@
 #include "base_test.hpp"
 
+extern "C" {
 #include <metal/metal.h>
 #include <metal_storage/storage.h>
+}
 
 void BaseTest::SetUp() {
     ASSERT_EQ(MTL_SUCCESS, mtl_storage_initialize());
