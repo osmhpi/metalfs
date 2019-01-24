@@ -1,14 +1,18 @@
 #include <malloc.h>
+#include <metal_pipeline/data_source.hpp>
+#include <memory>
+#include <metal_pipeline/data_sink.hpp>
+#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_pipeline/pipeline_definition.hpp>
+#include <include/gtest/gtest.h>
+#include <metal_pipeline/pipeline_runner.hpp>
 
 extern "C" {
 #include <metal/metal.h>
-#include <metal_pipeline/pipeline.h>
 #include <metal_operators/all_operators.h>
 }
 
-#include "base_test.hpp"
-
-namespace {
+namespace metal {
 
 static void fill_payload(uint8_t *buffer, uint64_t length) {
     for (uint64_t i = 0; i < length; ++i) {
@@ -24,7 +28,7 @@ static void print_memory_64(void * mem)
     }
 }
 
-TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePage) {
+TEST(ReadWritePipeline, TransfersEntirePage) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -33,18 +37,14 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePage) {
 
     uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
 
-    operator_id operator_list[] = { op_read_mem_specification.id, op_write_mem_specification.id };
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+//    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_read_mem_set_buffer(src, n_bytes);
-    mtl_configure_operator(&op_read_mem_specification);
-
-    op_write_mem_set_buffer(dest, n_bytes);
-    mtl_configure_operator(&op_write_mem_specification);
-
-    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+    auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
+    SnapPipelineRunner runner(pipeline);
+    ASSERT_NO_THROW(runner.run(false));
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
@@ -52,72 +52,57 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePage) {
     free(dest);
 }
 
-TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
+TEST(ReadWritePipeline, TransfersEntirePageToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
     uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);
 
-    operator_id operator_list[] = { op_read_mem_specification.id, op_write_file_specification.id };
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_read_mem_set_buffer(src, n_bytes);
-    mtl_configure_operator(&op_read_mem_specification);
-
-    op_write_file_set_buffer(0, 0);  // Means: /dev/null
-    mtl_configure_operator(&op_write_file_specification);
-
-    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
 
     free(src);
 }
 
-TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGenerator) {
+TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
 
     uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
 
-    operator_id operator_list[] = { op_read_file_specification.id, op_write_mem_specification.id };
+    auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_read_file_set_random(n_bytes);
-    mtl_configure_operator(&op_read_file_specification);
-
-    op_write_mem_set_buffer(dest, n_bytes);
-    mtl_configure_operator(&op_write_mem_specification);
-
-    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
 
     free(dest);
 }
 
-TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
+TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
 
-    operator_id operator_list[] = { op_read_file_specification.id, op_passthrough_specification.id, op_write_file_specification.id };
+    auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
+    auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_read_file_set_random(n_bytes);
-    mtl_configure_operator(&op_read_file_specification);
-
-    op_write_file_set_buffer(0, 0);  // Means: /dev/null
-    mtl_configure_operator(&op_write_file_specification);
-
-    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
 }
 
-TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) {
+TEST(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
 
     uint64_t src_pages = 3;
     uint64_t src_bytes = src_pages * 4096;
@@ -133,21 +118,13 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) 
     uint64_t dest_bytes = dest_pages * 4096;
     uint8_t *dest = (uint8_t*)memalign(4096, dest_bytes);
 
-    operator_id operator_list[] = { op_read_mem_specification.id, op_write_mem_specification.id };
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src + src_offset, payload_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest + dest_offset, payload_bytes);
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_read_mem_set_buffer(src + src_offset, payload_bytes);
-    mtl_configure_operator(&op_read_mem_specification);
-
-    op_write_mem_set_buffer(dest + dest_offset, payload_bytes);
-    mtl_configure_operator(&op_write_mem_specification);
-
-    ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
-
-    print_memory_64(src + src_offset + 4672);
-    print_memory_64(dest + dest_offset + 4672);
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
 
     EXPECT_EQ(0, memcmp(src + src_offset, dest + dest_offset, payload_bytes));
 

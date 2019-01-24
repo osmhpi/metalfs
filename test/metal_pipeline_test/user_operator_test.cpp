@@ -34,5 +34,16 @@ TEST(UserOperatorTest, RevokesInvalidOptionValues) {
     ASSERT_ANY_THROW(op.setOption("key", false));
 }
 
+TEST(UserOperatorTest, HandlesCommandLineOptions) {
+
+    UserOperator op("./test/metal_pipeline_test/operators/blowfish_encrypt.json");
+
+    std::vector<std::string> args = {
+            "-k",
+            "/home/user/key.bin"
+    };
+
+    ASSERT_NO_THROW(op.parseArguments(args));
+}
 
 } // namespace

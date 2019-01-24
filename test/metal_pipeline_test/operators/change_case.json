@@ -1,0 +1,15 @@
+{
+  "id": "change_case",
+  "description": "Transform ASCII strings to lower- or uppercase (default)",
+  "temp_config_job_id": 14,
+  "temp_stream_id": 3,
+  "temp_enable_id": 5,
+  "options": {
+    "key": {
+      "short": "l",
+      "type": "bool",
+      "description": "Transform to lowercase",
+      "offset": 0
+    }
+  }
+}

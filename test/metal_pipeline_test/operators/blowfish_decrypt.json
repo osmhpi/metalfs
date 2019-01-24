@@ -1,14 +1,18 @@
 {
   "id": "blowfish_decrypt",
+  "description": "Decrypt data encrypted with the blowfish cipher",
+  "temp_config_job_id": 16,
+  "temp_stream_id": 5,
+  "temp_enable_id": 7,
   "options": {
     "key": {
       "short": "k",
       "type": {
         "type": "buffer",
-        "size": 128
+        "size": 16
       },
       "description": "The decryption key to use",
-      "parameter": "keyBytes"
+      "offset": 0
     }
   }
 }

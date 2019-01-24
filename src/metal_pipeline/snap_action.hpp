@@ -6,8 +6,12 @@ namespace metal {
 
 class SnapAction {
 public:
-    SnapAction(snap_action_type_t action_type, int card_no = 0);
+    explicit SnapAction(snap_action_type_t action_type, int card_no = 0);
+    SnapAction(const SnapAction &other) = delete;
+    SnapAction(SnapAction &&other);
     virtual ~SnapAction();
+
+    void execute_job(uint64_t job_id, char *parameters);
 
 protected:
 

@@ -1,14 +1,19 @@
+#include <include/gtest/gtest.h>
 #include <malloc.h>
+#include <metal_pipeline/pipeline.hpp>
+#include <metal_pipeline/operator_registry.hpp>
+#include <metal_pipeline/pipeline_definition.hpp>
+#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_pipeline/data_sink.hpp>
+#include <metal_pipeline/data_source.hpp>
+#include "base_test.hpp"
 
 extern "C" {
 #include <metal/metal.h>
-#include <metal_pipeline/pipeline.h>
 #include <metal_operators/all_operators.h>
 }
 
-#include "base_test.hpp"
-
-namespace {
+namespace metal {
 
 void fill_payload(uint8_t *buffer, uint64_t length) {
     for (uint64_t i; i < length; ++i) {
@@ -25,26 +30,26 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 
     uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
 
-    operator_id operator_list[] = { op_read_mem_specification.id, op_blowfish_encrypt_specification.id, op_blowfish_decrypt_specification.id, op_write_mem_specification.id };
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    auto encrypt = _registry->operators().at("blowfish_encrypt");
+    auto decrypt = _registry->operators().at("blowfish_decrypt");
 
-    op_read_mem_set_buffer(src, n_bytes);
-    mtl_configure_operator(&op_read_mem_specification);
+    auto keyBuffer = std::make_shared<std::vector<char>>(16);
+    {
+        std::vector<char> key ({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF });
+        memcpy(keyBuffer->data(), key.data(), key.size());
+    }
 
-    unsigned char key[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
+    encrypt->setOption("key", keyBuffer);
+    decrypt->setOption("key", keyBuffer);
 
-    op_blowfish_encrypt_set_key(key);
-    mtl_configure_operator(&op_blowfish_encrypt_specification);
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    op_blowfish_decrypt_set_key(key);
-    mtl_configure_operator(&op_blowfish_decrypt_specification);
+    SnapAction action(METALFPGA_ACTION_TYPE);
 
-    op_write_mem_set_buffer(dest, n_bytes);
-    mtl_configure_operator(&op_write_mem_specification);
-
-    mtl_run_pipeline();
+    auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
+    pipeline.run(action);
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
@@ -62,26 +67,31 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) 
 
     uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
 
-    operator_id operator_list[] = { op_read_mem_specification.id, op_blowfish_encrypt_specification.id, op_blowfish_decrypt_specification.id, op_write_mem_specification.id };
+    OperatorRegistry registry("./test/metal_pipeline_test/operators");
 
-    mtl_operator_execution_plan execution_plan = { operator_list, sizeof(operator_list) / sizeof(operator_list[0]) };
-    mtl_configure_pipeline(execution_plan);
+    auto encrypt = registry.operators().at("blowfish_encrypt");
+    auto decrypt = registry.operators().at("blowfish_decrypt");
 
-    op_read_mem_set_buffer(src, n_bytes);
-    mtl_configure_operator(&op_read_mem_specification);
+    auto encryptKeyBuffer = std::make_shared<std::vector<char>>(16);
+    auto decryptKeyBuffer = std::make_shared<std::vector<char>>(16);
+    {
+        std::vector<char> encryptKey ({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF });
+        memcpy(encryptKeyBuffer->data(), encryptKey.data(), encryptKey.size());
 
-    unsigned char encrypt_key[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
-    op_blowfish_encrypt_set_key(encrypt_key);
-    mtl_configure_operator(&op_blowfish_encrypt_specification);
+        std::vector<char> decryptKey ({ 0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 });
+        memcpy(decryptKeyBuffer->data(), decryptKey.data(), decryptKey.size());
+    }
 
-	unsigned char decrypt_key[] = { 0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
-    op_blowfish_decrypt_set_key(decrypt_key);
-    mtl_configure_operator(&op_blowfish_decrypt_specification);
+    encrypt->setOption("key", encryptKeyBuffer);
+    decrypt->setOption("key", decryptKeyBuffer);
 
-    op_write_mem_set_buffer(dest, n_bytes);
-    mtl_configure_operator(&op_write_mem_specification);
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    mtl_run_pipeline();
+    SnapAction action(METALFPGA_ACTION_TYPE);
+
+    auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
+    pipeline.run(action);
 
     EXPECT_NE(0, memcmp(src, dest, n_bytes));
 
@@ -89,4 +99,4 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) 
     free(dest);
 }
 
-} // namespace
+} // namespace metal

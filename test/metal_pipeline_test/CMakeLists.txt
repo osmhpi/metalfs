@@ -1,11 +1,11 @@
 set(
     METAL_PIPELINE_TEST_SOURCES
 
-#    base_test.cpp
-#    base_test.hpp
-#    blowfish_pipeline_test.cpp
-#    readwrite_pipeline_test.cpp
-#    thesis_test.cpp
+    base_test.cpp
+    base_test.hpp
+    blowfish_pipeline_test.cpp
+    readwrite_pipeline_test.cpp
+    profiling_test.cpp
     operator_registry_test.cpp
     user_operator_test.cpp
 
@@ -22,7 +22,11 @@ set(
 )
 
 
-include_directories(../../third_party/googletest/googletest/)
+include_directories(
+    ../../third_party/googletest/googletest/
+
+    ${SNAP_INCLUDE_DIR}
+)
 
 add_executable(metal_pipeline_test ${METAL_PIPELINE_TEST_SOURCES})
 target_link_libraries(metal_pipeline_test metal_pipeline ${LIBRARIES})

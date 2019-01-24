@@ -8,8 +8,7 @@ TEST(OperatorRegistryTest, DetectsOperatorsInSearchPath) {
 
     OperatorRegistry registry("./test/metal_pipeline_test/operators");
 
-    ASSERT_EQ(registry.operators().size(), 2);
+    ASSERT_EQ(registry.operators().size(), 3);
 }
-
 
 } // namespace

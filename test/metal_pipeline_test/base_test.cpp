@@ -1,14 +1,26 @@
 #include "base_test.hpp"
 
-extern "C" {
-#include <metal/metal.h>
-#include <metal_pipeline/pipeline.h>
-}
-
+namespace metal {
 void BaseTest::SetUp() {
-    ASSERT_EQ(MTL_SUCCESS, mtl_pipeline_initialize());
+
+    char *testPath = std::getenv("TEST_PATH");
+    std::string testDataBasePath;
+    if (testPath != nullptr)
+        testDataBasePath = std::string(testPath);
+
+    std::string operatorsPath;
+    if (testDataBasePath.empty()) {
+        operatorsPath = "./test/metal_pipeline_test/operators";
+    } else {
+        operatorsPath = testDataBasePath;
+        operatorsPath.append("/test/metal_pipeline_test/operators");
+    }
+
+    _registry = std::make_unique<OperatorRegistry>(operatorsPath);
 }
 
 void BaseTest::TearDown() {
-    mtl_pipeline_deinitialize();
+
 }
+
+} // namespace metal

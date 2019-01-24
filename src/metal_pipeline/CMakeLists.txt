@@ -1,21 +1,23 @@
 set(
     SOURCES
 
+    abstract_operator.cpp
     abstract_operator.hpp
-    user_operator.hpp
-    user_operator.cpp
-    pipeline_builder.cpp
-    pipeline_builder.hpp
-    # pipeline.cpp
-    # pipeline.hpp
-    operator_template.hpp
-    operator_registry.hpp
+    data_sink.cpp
+    data_sink.hpp
+    data_source.cpp
+    data_source.hpp
+    operator_argument.hpp
     operator_registry.cpp
+    operator_registry.hpp
+    pipeline_definition.cpp
+    pipeline_definition.hpp
+    pipeline_runner.cpp
+    pipeline_runner.hpp
     snap_action.cpp
     snap_action.hpp
-    data_source.hpp
-    data_sink.hpp
-    operator_argument.hpp
+    user_operator.cpp
+    user_operator.hpp
 )
 
 set(
