@@ -5,6 +5,7 @@ extern "C" {
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <iostream>
 #include "pipeline_definition.hpp"
+#include "snap_action.hpp"
 
 namespace metal {
 

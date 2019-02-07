@@ -22,7 +22,6 @@ class HostMemoryDataSink : public DataSink {
 public:
     HostMemoryDataSink(void *dest, size_t size) : DataSink(size), _dest(dest) {}
 
-    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction &action) override;
 
 protected:
@@ -43,7 +42,6 @@ class NullDataSink : public DataSink {
 public:
     NullDataSink(size_t size) : DataSink(size) {}
 
-    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction &action) override;
 };
 

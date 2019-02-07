@@ -1,0 +1,37 @@
+package metal;
+
+message ClientHello {
+  optional uint64 pid = 1;
+  optional string cwd = 2;
+  optional string metal_mountpoint = 3;
+  optional string operator_type = 4;
+
+  optional uint64 input_pid = 5;
+  optional uint64 output_pid = 6;
+
+  repeated string args = 7;
+
+  optional string input_buffer_filename = 8;
+  optional string metal_input_filename = 9;
+  optional string metal_output_filename = 10;
+}
+
+message ClientPushBuffer {
+  optional uint64 size = 1;
+  optional bool eof = 2;
+}
+
+message ServerInitializeOutputBuffer {
+  optional string output_buffer_filename = 1;
+}
+
+message ServerAcceptAgent {
+  optional string error_msg = 1;
+  optional bool valid = 2;
+}
+
+message ServerProcessedBuffer {
+  optional uint64 size = 1;
+  optional bool eof = 2;
+  optional string message = 3;
+}

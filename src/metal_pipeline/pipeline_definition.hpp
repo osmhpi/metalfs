@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 #include "abstract_operator.hpp"
-#include "snap_action.hpp"
 
 namespace metal {
 

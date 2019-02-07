@@ -8,6 +8,7 @@ extern "C" {
 #include <cstring>
 #include <iostream>
 #include "pipeline_runner.hpp"
+#include "snap_action.hpp"
 
 namespace metal {
 

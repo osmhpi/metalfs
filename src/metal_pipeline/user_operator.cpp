@@ -48,49 +48,11 @@ UserOperator::UserOperator(std::string manifest_path) {
     _manifest = manifest;
 
     // Build options object
-    _opts = std::make_unique<cxxopts::Options>(id(), description());
     initializeOptions();
 }
 
 UserOperator::~UserOperator() {
     jv_free(_manifest);
-}
-
-void UserOperator::parseArguments(std::vector<std::string> args) {
-    // Contain some C++ / C interop ugliness inside here...
-
-    std::vector<char*> argsRaw;
-    for (const auto &arg : args)
-        argsRaw.emplace_back(const_cast<char*>(arg.c_str()));
-
-    int argc = (int)args.size();
-    char **argv = argsRaw.data();
-    auto parseResult = _opts->parse(argc, argv);
-
-    for (const auto &argument : parseResult.arguments()) {
-        auto optionType = _optionTypes.find(argument.key());
-        if (optionType == _optionTypes.end())
-            throw std::runtime_error("Option was not found");
-
-        switch (optionType->second) {
-            case OptionType::INT: {
-                setOption(argument.key(), argument.as<int>());
-                break;
-            }
-            case OptionType::BOOL: {
-                setOption(argument.key(), argument.as<bool>());
-                break;
-            }
-            case OptionType::BUFFER: {
-                auto fileOption = _fileOptions.find(argument.key());
-                if (fileOption == _fileOptions.end())
-                    throw std::runtime_error("File option metadata not found");
-
-                auto fake = std::make_unique<std::vector<char>>(fileOption->second);
-                setOption(argument.key(), std::move(fake));
-            }
-        }
-    }
 }
 
 void UserOperator::configure(SnapAction &action) {
@@ -104,26 +66,28 @@ void UserOperator::configure(SnapAction &action) {
     char *job_config = (char*)snap_malloc(4096);
 
     for (const auto& option : _options) {
-        if (!option.second.hasValue())
+        if (!option.second.has_value())
             continue;
+
+        const auto &definition = _optionDefinitions.at(option.first);
 
         switch ((OptionType)option.second.value().index()) {
             case OptionType::INT: {
                 int beValue = htobe64(std::get<int>(option.second.value()));
                 // Accessing un-validated, user-provided offset: dangerous!
-                memcpy(job_config + option.second.offset(), &beValue, sizeof(int));
+                memcpy(job_config + definition.offset(), &beValue, sizeof(int));
                 break;
             }
             case OptionType::BOOL: {
                 // Is htobe(bool) well-defined?
                 int beValue = htobe64(std::get<bool>(option.second.value()));
-                memcpy(job_config + option.second.offset(), &beValue, sizeof(int));
+                memcpy(job_config + definition.offset(), &beValue, sizeof(int));
                 break;
             }
             case OptionType::BUFFER: {
                 // *No* endianness conversions on buffers
                 auto& buffer = *std::get<std::shared_ptr<std::vector<char>>>(option.second.value());
-                memcpy(job_config + option.second.offset(), buffer.data(), buffer.size());
+                memcpy(job_config + definition.offset(), buffer.data(), buffer.size());
                 break;
             }
         }
@@ -170,7 +134,7 @@ std::string UserOperator::description() const {
     return result;
 }
 
-void UserOperator::setOption(std::string option, OperatorArgumentValue arg) {
+//void UserOperator::setOption(std::string option, OperatorArgumentValue arg) {
 
     // Get option handle
 //    auto options = jv_object_get(manifest(), jv_string("options"));
@@ -219,12 +183,12 @@ void UserOperator::setOption(std::string option, OperatorArgumentValue arg) {
 //
 //    jv_free(type);
 
-    if (_optionTypes.at(option) != (OptionType)arg.index()) {
-        throw std::runtime_error("Invalid option");
-    }
-
-    _options.at(option).setValue(std::move(arg));
-}
+//    if (_optionTypes.at(option) != (OptionType)arg.index()) {
+//        throw std::runtime_error("Invalid option");
+//    }
+//
+//    _options.at(option).setValue(std::move(arg));
+//}
 
 void UserOperator::initializeOptions() {
 
@@ -254,20 +218,22 @@ void UserOperator::initializeOptions() {
         auto type = jv_object_get(jv_copy(option), jv_string("type"));
         if (jv_get_kind(type) == JV_KIND_STRING) {
             if (std::string("bool") == jv_string_value(type)) {
-                _opts->add_option("", shortK, jv_string_value(key), description, cxxopts::value<bool>(), "");
-                _optionTypes[jv_string_value(key)] = OptionType::BOOL;
-                _options[jv_string_value(key)] = OperatorArgument(offset);
+                _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+                    offset, OptionType::BOOL, jv_string_value(key), shortK, description
+                );
             } else if (std::string("int") == jv_string_value(type)) {
-                _opts->add_option("", shortK, jv_string_value(key), description, cxxopts::value<int>(), "");
-                _optionTypes[jv_string_value(key)] = OptionType::INT;
-                _options[jv_string_value(key)] = OperatorArgument(offset);
+                _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+                    offset, OptionType::INT, jv_string_value(key), shortK, description
+                );
             }
         } else {
             // Buffer (path to file)
-            _opts->add_option("", shortK, jv_string_value(key), description, cxxopts::value<std::string>(), "");
-            _optionTypes[jv_string_value(key)] = OptionType::BUFFER;
-            _options[jv_string_value(key)] = OperatorArgument(offset);
+            _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+                offset, OptionType::BUFFER, jv_string_value(key), shortK, description
+            );
         }
+
+        _options[jv_string_value(key)] = std::nullopt;
 
         iter = jv_object_iter_next(options, iter);
     }

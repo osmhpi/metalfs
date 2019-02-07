@@ -6,12 +6,9 @@ extern "C" {
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <iostream>
 #include "data_sink.hpp"
+#include "snap_action.hpp"
 
 namespace metal {
-
-void HostMemoryDataSink::parseArguments(std::vector<std::string> args) {
-
-}
 
 void HostMemoryDataSink::configure(SnapAction &action) {
     AbstractOperator::configure(action);
@@ -53,10 +50,6 @@ void NullDataSink::configure(SnapAction &action) {
     }
 
     free(job_struct);
-}
-
-void NullDataSink::parseArguments(std::vector<std::string> args) {
-
 }
 
 } // namespace metal

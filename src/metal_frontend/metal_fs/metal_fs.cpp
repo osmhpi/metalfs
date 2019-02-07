@@ -12,13 +12,14 @@
 
 #include <pthread.h>
 
-#include <fuse.h>
-
+extern "C" {
 #include "../common/known_operators.h"
-#include "server.h"
+#include <fuse.h>
 #include "../../metal/metal.h"
 #include "../../metal/inode.h"
-#include "../../metal_pipeline/pipeline.h"
+};
+
+#include "server.hpp"
 
 static char agent_filepath[255];
 
@@ -29,7 +30,6 @@ static char socket_filename[255];
 
 
 static int chown_callback(const char *path, uid_t uid, gid_t gid) {
-    printf("path: %s\n", path);
     return mtl_chown(path + 6, uid, gid);
 }
 
@@ -419,8 +419,8 @@ static int link_callback_d(const char * path0, const char * path1) {
     return -ENOSYS;
 }
 
-static int chmod_callback_d(const char * path, mode_t mode, struct fuse_file_info *fi) {
-    fprintf(stderr, "ENOSYS in chmod_callback(\"%s\", %o, %p)", path, mode, fi);
+static int chmod_callback_d(const char * path, mode_t mode) {
+    fprintf(stderr, "ENOSYS in chmod_callback(\"%s\", %o)", path, mode);
     return -ENOSYS;
 }
 
@@ -434,30 +434,32 @@ static int fsync_callback_d(const char * path, int arg, struct fuse_file_info * 
     return -ENOSYS;
 }
 
-static struct fuse_operations fuse_example_operations = {
-    .create = create_callback, //?
-    .flush = flush_callback, //?
-    .getattr = getattr_callback,
-    /* .access = xmp_access, */
-    .readlink = readlink_callback,
-    .readdir = readdir_callback,
-    .mknod = mknod_callback_d,
-    .mkdir = mkdir_callback,
-    .symlink = symlink_callback_d,
-    .unlink = unlink_callback,
-    .rmdir = rmdir_callback,
-    .rename = rename_callback,
-    .link = link_callback_d,
-    .chmod = chmod_callback_d,
-    .chown = chown_callback,
-    .truncate = truncate_callback,
-    .open = open_callback,
-    .read = read_callback,
-    .write = write_callback,
-    .statfs = statfs_callback_d,
-    .release = release_callback,
-    .fsync = fsync_callback_d
-};
+constexpr struct fuse_operations fuse_example_operations = []{
+    struct fuse_operations ops{};
+    ops.create = create_callback; //?
+    ops.flush = flush_callback; //?
+    ops.getattr = getattr_callback;
+    /* ops.access = xmp_access; */
+    ops.readlink = readlink_callback;
+    ops.readdir = readdir_callback;
+    ops.mknod = mknod_callback_d;
+    ops.mkdir = mkdir_callback;
+    ops.symlink = symlink_callback_d;
+    ops.unlink = unlink_callback;
+    ops.rmdir = rmdir_callback;
+    ops.rename = rename_callback;
+    ops.link = link_callback_d;
+    ops.chmod = chmod_callback_d;
+    ops.chown = chown_callback;
+    ops.truncate = truncate_callback;
+    ops.open = open_callback;
+    ops.read = read_callback;
+    ops.write = write_callback;
+    ops.statfs = statfs_callback_d;
+    ops.release = release_callback;
+    ops.fsync = fsync_callback_d;
+    return ops;
+}();
 
 int main(int argc, char *argv[])
 {

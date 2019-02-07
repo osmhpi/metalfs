@@ -21,11 +21,9 @@ public:
     explicit UserOperator(std::string manifest_path);
     virtual ~UserOperator();
 
-    void parseArguments(std::vector<std::string> args) override;
+//    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction& action) override;
     void finalize(SnapAction& action) override;
-
-    void setOption(std::string option, OperatorArgumentValue arg);
 
     std::string id() const override;
     uint8_t temp_stream_id() const override;
@@ -38,8 +36,7 @@ protected:
     jv manifest() const { return jv_copy(_manifest); }
 
     jv _manifest;
-    std::unordered_map<std::string, OperatorArgument> _options;
-    std::unique_ptr<cxxopts::Options> _opts;
+//    std::unique_ptr<cxxopts::Options> _opts;
     std::unordered_map<std::string, OptionType> _optionTypes;
     std::unordered_map<std::string, size_t> _fileOptions;
 

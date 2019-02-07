@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "buffer.hpp"
 
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +7,7 @@
 
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <cstdio>
 
 int create_temp_file_for_shared_buffer(char* file_name, size_t file_name_size, int* file, void** buffer) {
     char output_file_name[] = "/tmp/accfs-mmap-XXXXXX";

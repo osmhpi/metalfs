@@ -12,6 +12,7 @@ public:
     std::string id() const override { return ""; };
     uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
     uint8_t temp_stream_id() const override { return 0; };
+    size_t size() const { return _size; }
 
 protected:
     size_t _size;
@@ -22,8 +23,6 @@ class HostMemoryDataSource : public DataSource {
 public:
     HostMemoryDataSource(void *dest, size_t size) : DataSource(size), _dest(dest) {}
 
-    // TODO: Default implementation should be supplied in AbstractOperator
-    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction &action) override;
 
 protected:
@@ -44,7 +43,6 @@ class RandomDataSource : public DataSource {
 public:
     RandomDataSource(size_t size) : DataSource(size) {}
 
-    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction &action) override;
 };
 

@@ -18,7 +18,7 @@
 #include <sys/mman.h>
 
 #include "../common/known_operators.h"
-#include "../common/buffer.h"
+#include "metal_frontend/common/buffer.hpp"
 #include "../common/message.h"
 
 int get_process_connected_to_std_fd(int fd_no, char * buffer, size_t bufsiz, int *pid) {

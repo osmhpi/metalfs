@@ -6,12 +6,10 @@ extern "C" {
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <iostream>
 #include "data_source.hpp"
+#include "snap_action.hpp"
 
 namespace metal {
 
-void HostMemoryDataSource::parseArguments(std::vector<std::string> args) {
-
-}
 
 void HostMemoryDataSource::configure(SnapAction &action) {
     AbstractOperator::configure(action);
@@ -34,10 +32,6 @@ void HostMemoryDataSource::configure(SnapAction &action) {
 void CardMemoryDataSource::configure(SnapAction &action) {
     AbstractOperator::configure(action);
     // TODO
-}
-
-void RandomDataSource::parseArguments(std::vector<std::string> args) {
-
 }
 
 void RandomDataSource::configure(SnapAction &action) {
