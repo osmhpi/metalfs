@@ -10,6 +10,6 @@ mtl_operator_specification* known_operators[] = {
     &op_read_file_specification,
     &op_passthrough_specification,
     &op_change_case_specification,
-    &op_blowfish_encrypt_specification,
-    &op_blowfish_decrypt_specification,
+    // &op_blowfish_encrypt_specification,
+    // &op_blowfish_decrypt_specification,
 };

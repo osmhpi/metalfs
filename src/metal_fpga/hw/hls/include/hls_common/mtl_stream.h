@@ -22,156 +22,63 @@ struct stream_element {
 typedef stream_element<8> mtl_stream_element;
 typedef hls::stream<mtl_stream_element> mtl_stream;
 
-// // Convert a stream of bytes (uint8_t) to a stream of arbitrary width
-// // (on byte boundaries) words
-// template<typename T, bool BS>
-// void stream_bytes2words(hls::stream<T> &words_out, mtl_byte_stream &bytes_in, snap_bool_t enable)
-// {
-//     if (enable) {
-//         T tmpword;
-//         byte_stream_element tmpbyte;
-//         snap_bool_t last_byte = false;
-//         BYTES2WORDS_LOOP:
-//         for (int i = 0; last_byte == false; i++) {
-//         //#pragma HLS loop_tripcount max=1488
-//             bytes_in.read(tmpbyte);
-//             last_byte = tmpbyte.last;
-//             if (!BS) { // Shift bytes in little endian order
-//                 tmpword.data = (tmpword.data >> 8) |
-//                     (ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data) << ((sizeof(tmpword.data) - 1) * 8));
-//                 tmpword.strb = (tmpword.strb >> 1) |
-//                     (ap_uint<sizeof(tmpword.data)>(1) << (sizeof(tmpword.data) - 1) * 8);
-//             } else { // Shift bytes in big endian order
-//                 tmpword.data = (tmpword.data << 8) | ap_uint<sizeof(tmpword.data) * 8>(tmpbyte.data);
-//                 tmpword.strb = (tmpword.strb << 1) | ap_uint<sizeof(tmpword.data)>(1);
-//             }
-//             if (i % sizeof(tmpword.data) == sizeof(tmpword.data) - 1 || last_byte) {
-//                 tmpword.last = last_byte;
-//                 words_out.write(tmpword);
-//             }
-//         }
-//     }
-// }
+template<int bytes>
+void insert_padding(mtl_stream &in, mtl_stream &out) {
+  mtl_stream_element element = { 0, 0, 0 };
+  mtl_stream_element current_element = { 0, 0, 0 };
+  mtl_stream_element next_element = { 0, 0, 0 };
 
-// // Convert an arbitrary width (on byte boundaries) words into a stream of
-// // bytes (uint8_t)
-// template<typename T, bool BS>
-// void stream_words2bytes(mtl_byte_stream &bytes_out, hls::stream<T> &words_in, snap_bool_t enable)
-// {
-//     //if (enable) {
-//         T inval;
-//         ap_uint<sizeof(inval.data) * 8> tmpword;
-//         ap_uint<sizeof(inval.data)> tmpstrb;
-//         byte_stream_element outval;
-//         WORDS2BYTES_LOOP:
-//         while (enable) {
-//             words_in.read(inval);
-//             tmpword = inval.data;
-//             tmpstrb = inval.strb;
-//             for (int i = 0; i < sizeof(tmpword); i++) {
-//                 if (!BS) { // shift bytes out in little endian order
-//                     outval.data = uint8_t(tmpword);
-//                     tmpword >>= 8;
-//                     tmpstrb >>= 1;
-//                     outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
-//                 } else { // shift bytes out in big endian order
-//                     outval.data = uint8_t(tmpword >> ((sizeof(tmpword) - 1) * 8));
-//                     tmpword <<= 8;
-//                     tmpstrb <<= 1;
-//                     outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
-//                 }
-//                 bytes_out.write(outval);
+  insert_padding:
+  do {
+#pragma HLS PIPELINE
+    element = in.read();
 
-//                 if (outval.last)
-//                     break;
-//             }
+    current_element.data |= element.data << (bytes * 8);
+    current_element.keep |= element.keep << (bytes);
 
-//             if (inval.last)
-//                 break;
-//         }
-//     //}
-// }
+    next_element.data = element.data >> ((8 - bytes) * 8);
+    next_element.keep = element.keep >> (8 - bytes);
 
-template<typename TOut, typename TIn>
-void stream_widen(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap_bool_t enable)
-{
-    if (enable) {
-        TIn inval;
-        TOut tmpword;
-        snap_bool_t last_word = false;
-        for (uint64_t i = 0; last_word == false; i++) {
-        //#pragma HLS loop_tripcount max=1488
-            words_in.read(inval);
-            last_word = inval.last;
+    current_element.last = element.last && next_element.keep == 0;
 
-            //tmpword = (tmpword >> 8) |
-            // (ap_uint<NB * 8>(tmpbyte) << ((NB - 1) * 8));
+    out.write(current_element);
 
-            // Shift words in "big endian" order
-            // tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-            // tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
+    current_element = next_element;
+  } while (!element.last);
 
-            // Shift words in "little endian" order
-            tmpword.data = (tmpword.data >> (sizeof(inval.data) * 8)) | (ap_uint<sizeof(tmpword.data) * 8>(inval.data) << ((sizeof(tmpword.data) / sizeof(inval.data) - 1) * sizeof(inval.data) * 8));
-            tmpword.strb = (tmpword.strb >> (sizeof(inval.strb))) | (ap_uint<sizeof(tmpword.strb)>(inval.strb) << ((sizeof(tmpword.data) / sizeof(inval.data) - 1) * sizeof(inval.data)));
-
-            // tmpword.data = (tmpword.data << (sizeof(inval.data) * 8)) | ap_uint<sizeof(tmpword.data) * 8>(inval.data);
-            // tmpword.strb = (tmpword.strb << sizeof(inval.data)) | ap_uint<sizeof(tmpword.data)>(inval.strb);
-
-            if (last_word) {
-                // If this was the last word, shift the rest and increase i so that the result is written afterwards
-                tmpword.data >>= 8 * sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
-                tmpword.strb >>= sizeof(inval.data) * ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
-                i += ((sizeof(tmpword.data) / sizeof(inval.data) - 1) - (i % (sizeof(tmpword.data) / sizeof(inval.data))));
-            }
-
-            if ((i + 1) % (sizeof(tmpword.data) / sizeof(inval.data)) == 0) {
-                tmpword.last = last_word;
-                words_out.write(tmpword);
-            }
-        }
-    }
+  if (next_element.keep != 0) {
+    next_element.last = true;
+    out.write(next_element);
+  }
 }
 
-template<typename TOut, typename TIn>
-void stream_narrow(hls::stream<TOut> &words_out, hls::stream<TIn> &words_in, snap_bool_t enable)
-{
-    if (enable) {
-        TIn inval;
-        ap_uint<sizeof(inval.data) * 8> tmpword;
-        ap_uint<sizeof(inval.data)> tmpstrb;
-        TOut outval;
-        for (;;) {
-            words_in.read(inval);
-            tmpword = inval.data;
-            tmpstrb = inval.strb;
+template<int bytes>
+void remove_padding(mtl_stream & in, mtl_stream &out) {
+  mtl_stream_element current_element, previous_element;
+  snap_bool_t previous_element_valid = false;
 
-            for (int i = 0; i < sizeof(tmpword) / sizeof(outval.data); i++) {
+  remove_padding:
+  do {
+#pragma HLS PIPELINE
+    current_element = in.read();
 
-                // shift words out in "big endian" order
-                // outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data) * 8));
-                // outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb >> ((sizeof(tmpword) / sizeof(outval.data) - 1) * sizeof(outval.data)));
-                // tmpword <<= sizeof(outval.data) * 8;
-                // tmpstrb <<= sizeof(outval.data);
+    previous_element.data |= current_element.data << (8 * (8 - bytes));
+    previous_element.keep |= current_element.keep << (8 - bytes);
 
-                // shift words out in "little endian" order
-                outval.data = ap_uint<sizeof(outval.data) * 8>(tmpword);
-                outval.strb = ap_uint<sizeof(outval.data)>(tmpstrb);
-                tmpword >>= sizeof(outval.data) * 8;
-                tmpstrb >>= sizeof(outval.data);
+    if (previous_element_valid)
+        out.write(previous_element);
 
-                outval.last = inval.last && tmpstrb == ap_uint<sizeof(tmpword)>(0);
+    previous_element.data = current_element.data >> (8 * bytes);
+    previous_element.keep = current_element.keep >> (bytes);
+    previous_element.last = false;
+    previous_element_valid = true;
 
-                words_out.write(outval);
-
-                if (outval.last)
-                    break;
-            }
-
-            if (inval.last)
-                break;
-        }
+    if (current_element.last && previous_element_valid) {
+        previous_element.last = true;
+        out.write(previous_element);
     }
+  } while(!current_element.last);
 }
+
 
 #endif // __MTL_STREAM_H__

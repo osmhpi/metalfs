@@ -8,7 +8,7 @@
 #include "../../metal_fpga/hw/hls/include/action_metalfpga.h"
 
 static const char help[] =
-    "Usage: passthrough [-h]\n"
+    "Usage: image [-h]\n"
     "\n";
 
 static bool _profile = false;
@@ -56,7 +56,7 @@ static bool get_profile_enabled() {
 
 mtl_operator_specification op_passthrough_specification = {
     { OP_PASSTHROUGH_ENABLE_ID, OP_PASSTHROUGH_STREAM_ID },
-    "passthrough",
+    "image",
     false,
 
     &handle_opts,

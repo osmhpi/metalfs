@@ -24,7 +24,7 @@ static void print_memory_64(void * mem)
 
 TEST_F(BaseTest, ReadWritePipeline_TransfersEntirePage) {
 
-    uint64_t n_pages = 1;
+    uint64_t n_pages = 10;
     uint64_t n_bytes = n_pages * 4096;
     uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);

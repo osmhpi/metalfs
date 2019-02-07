@@ -130,7 +130,7 @@ int mtl_run_pipeline() {
     snap_job_set(&cjob, &mjob, sizeof(mjob), NULL, 0);
 
     pthread_mutex_lock(&snap_mutex);
-    const unsigned long timeout = 10;
+    const unsigned long timeout = 300;
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
     pthread_mutex_unlock(&snap_mutex);
 

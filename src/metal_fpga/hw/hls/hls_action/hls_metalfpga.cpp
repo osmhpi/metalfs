@@ -9,8 +9,9 @@
 #include "mtl_op_mem.h"
 #include "mtl_op_file.h"
 #include "mtl_op_passthrough.h"
+#include "mtl_op_image.h"
 #include "mtl_op_change_case.h"
-#include "mtl_op_blowfish.h"
+// #include "mtl_op_blowfish.h"
 
 #define HW_RELEASE_LEVEL       0x00000013
 
@@ -251,12 +252,12 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     mtl_retc_t result = SNAP_RETC_SUCCESS;
 
     switch (act_reg->Data.job_type) {
-    case MTL_JOB_MAP:
-    {
-        mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
-        result = action_map(mem_in, map_job);
-        break;
-    }
+    // case MTL_JOB_MAP:
+    // {
+    //     mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
+    //     result = action_map(mem_in, map_job);
+    //     break;
+    // }
     // case MTL_JOB_QUERY:
     // {
     //     mtl_job_query_t query_job = mtl_read_job_query(mem_in, act_reg->Data.job_address);
@@ -363,18 +364,18 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         result = op_change_case_set_mode(mtl_get64<0>(line));
         break;
     }
-    case MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        result = op_blowfish_encrypt_set_key(line);
-        break;
-    }
-    case MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        result = op_blowfish_decrypt_set_key(line);
-        break;
-    }
+    // case MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY:
+    // {
+    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+    //     result = op_blowfish_encrypt_set_key(line);
+    //     break;
+    // }
+    // case MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY:
+    // {
+    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+    //     result = op_blowfish_decrypt_set_key(line);
+    //     break;
+    // }
     default:
         result = SNAP_RETC_FAILURE;
         break;
@@ -699,10 +700,13 @@ static mtl_retc_t action_run_operators(
 
         // Processing Operators
         op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
-        op_passthrough(axis_s_2, axis_m_2, enable_4);
+        op_image(axis_s_2, axis_m_2, enable_4);
         op_change_case(axis_s_3, axis_m_3, enable_5);
-        op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
-        op_blowfish_decrypt(axis_s_5, axis_m_5, enable_7);
+
+        // op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
+        op_passthrough(axis_s_4, axis_m_4, enable_6);
+        // op_blowfish_decrypt(axis_s_5, axis_m_5, enable_7);
+        op_passthrough(axis_s_5, axis_m_5, enable_7);
 
         // Placeholder Operators (to be assigned)
         op_passthrough(axis_s_6, axis_m_6, enable_8);
@@ -792,7 +796,8 @@ static mtl_retc_t action_run_operators(
 //--- TESTBENCH ---------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-#ifdef NO_SYNTH
+//#ifdef NO_SYNTH
+#ifdef FALSE
 
 #include <stdio.h>
 #include <endian.h>
