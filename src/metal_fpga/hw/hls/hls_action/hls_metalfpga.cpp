@@ -385,23 +385,23 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 }
 
 // File Map / Unmap Operation:
-static mtl_retc_t action_map(snap_membus_t * mem_in,
-                            const mtl_job_map_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
+// static mtl_retc_t action_map(snap_membus_t * mem_in,
+//                             const mtl_job_map_t & job)
+// {
+//     switch (job.slot) {
+//         case 0: {
+//             mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         case 1: {
+//             mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         default: {
+//             return SNAP_RETC_FAILURE;
+//         }
+//     }
+// }
 
 // static mtl_retc_t action_query(snap_membus_t * mem_out, const uint64_t job_address, mtl_job_query_t & job)
 // {
@@ -424,39 +424,39 @@ static mtl_retc_t action_map(snap_membus_t * mem_in,
 //     return SNAP_RETC_SUCCESS;
 // }
 
-static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
+// static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
+// {
+//     switch (job.slot) {
+//         case 0: {
+//             mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         case 1: {
+//             mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         default: {
+//             return SNAP_RETC_FAILURE;
+//         }
+//     }
+// }
 
-static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
+// static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
+// {
+//     switch (job.slot) {
+//         case 0: {
+//             mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         case 1: {
+//             mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+//             return SNAP_RETC_SUCCESS;
+//         }
+//         default: {
+//             return SNAP_RETC_FAILURE;
+//         }
+//     }
+// }
 
 // static mtl_retc_t action_access(snap_membus_t * mem_in,
 //                                snap_membus_t * mem_out,
