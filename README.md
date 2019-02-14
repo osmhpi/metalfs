@@ -25,7 +25,7 @@ Metal FS depends on IBM CAPI SNAP and thus works with POWER8 and POWER9 servers 
 Development and simulation requires Xilinx Vivado on an x86_64-based computer.
 
 ### Hardware (Development)
- - Set up a working [CAPI SNAP](https://github.com/open-power/capi) build environment
+ - Set up a working [CAPI SNAP](https://github.com/open-power/snap) build environment
  - Configure SNAP to use an external HDL action, rooted in `metal_fs/src/metal_fpga`
    - Enable SDRAM and NVMe if your FPGA supports it. Operator Pipelines can still be used if not.
  - Run `make model` or `make image` for building a simulation model or an FPGA bitstream, respectively
@@ -34,7 +34,7 @@ Development and simulation requires Xilinx Vivado on an x86_64-based computer.
 
  - CMake is required to build the software, as well as FUSE (`libfuse-dev` on Ubuntu), LMDB (`liblmdb-dev`) and libcxl ( `libcxl-dev` or part of [PSLSE](https://github.com/ibm-capi/pslse) when simulating)
  - Create a build directory: `mkdir build && cd build`
- - Specify environment variables pointing to SNAP (and if necessary PSLSE). Make sure that the libcxl.a and libsnap.a libraries are built.
+ - Specify environment variables pointing to SNAP (and if necessary PSLSE).
  ```
 export PSLSE_ROOT=/home/user/pslse
 export SNAP_ROOT=/home/user/snap
