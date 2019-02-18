@@ -4,6 +4,10 @@ Metal FS augments the Linux file system to expose FPGA-based near-storage accele
 
 Metal FS was presented at the OpenPOWER Summit Europe 2018: [[Recording]](https://www.youtube.com/watch?v=tkBXc47u8eE) [[Slides]](https://openpowerfoundation.org/wp-content/uploads/2018/10/Max-Plauth.OPSE_HPI_MetalFS-2.pdf)
 
+## Demo
+
+[![Metal FS Demo](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK.svg)](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK)
+
 ## Metal FS Operators
 
 Operators are the fundamental building blocks of any Metal FS application. They can be programmed in Vivado HLS C, without any knowledge about hardware description languages needed:
