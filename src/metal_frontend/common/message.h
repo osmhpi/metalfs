@@ -5,17 +5,6 @@
 
 #include "../../metal_operators/operators.h"
 
-enum class message_type : int {
-    AGENT_HELLO,
-    AGENT_PUSH_BUFFER,
-
-    SERVER_ACCEPT_AGENT,
-    SERVER_INITIALIZE_OUTPUT_BUFFER,
-    SERVER_PROCESSED_BUFFER,
-    SERVER_GOODBYE,
-
-    ERROR
-};
 
 //
 //typedef struct agent_hello_data {

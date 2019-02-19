@@ -12,9 +12,16 @@ include_directories(
 SET(METAL_FS_SOURCES
     ${METAL_FS_SHARED_SOURCES}
 
-    list/list.c
     metal_fs.cpp
     server.cpp
+    server.hpp
+    agent_pool.hpp
+    agent_pool.cpp
+    registered_agent.hpp
+    pipeline_builder.cpp
+    pipeline_builder.hpp
+    pipeline_loop.cpp
+    pipeline_loop.hpp
 )
 
 SET (METAL_FS_LIBRARIES
