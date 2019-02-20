@@ -86,55 +86,66 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins metal_switch/s_axi_ctrl_ares
 
 # Data Mover
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 axi_datamover_0
-set_property name axi_datamover [get_bd_cells axi_datamover_0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 axi_datamover_mm2s
+
 set_property -dict [list \
-    CONFIG.c_include_mm2s {Omit} \
-    CONFIG.c_include_mm2s_stsfifo {false} \
-    CONFIG.c_include_s2mm_dre {true} \
-    CONFIG.c_s2mm_burst_size {64} \
-    CONFIG.c_mm2s_include_sf {false} \
-    CONFIG.c_s2mm_include_sf {false} \
-    CONFIG.c_enable_mm2s {0} \
-    CONFIG.c_addr_width {64} \
-    CONFIG.c_m_axi_s2mm_id_width {0} \
-] [get_bd_cells axi_datamover]
-set_property -dict [list CONFIG.c_m_axi_s2mm_data_width.VALUE_SRC USER CONFIG.c_s_axis_s2mm_tdata_width.VALUE_SRC USER] [get_bd_cells axi_datamover]
-set_property -dict [list CONFIG.c_m_axi_s2mm_data_width {512} CONFIG.c_s_axis_s2mm_tdata_width {64} CONFIG.c_s2mm_include_sf {true}] [get_bd_cells axi_datamover]
-set_property -dict [list \
-    CONFIG.c_include_mm2s {Full} \
     CONFIG.c_m_axi_mm2s_data_width {512} \
     CONFIG.c_m_axis_mm2s_tdata_width {64} \
     CONFIG.c_include_mm2s_dre {true} \
     CONFIG.c_mm2s_burst_size {64} \
-    CONFIG.c_include_mm2s_stsfifo {true} \
-    CONFIG.c_mm2s_include_sf {true} \
-    CONFIG.c_m_axi_mm2s_id_width {0} \
-    CONFIG.c_enable_mm2s {1} \
-    CONFIG.c_single_interface {1} \
     CONFIG.c_mm2s_btt_used {23} \
-    CONFIG.c_s2mm_btt_used {23}\
-] [get_bd_cells axi_datamover]
+    CONFIG.c_include_s2mm {Omit} \
+    CONFIG.c_include_s2mm_stsfifo {false} \
+    CONFIG.c_s2mm_addr_pipe_depth {3} \
+    CONFIG.c_s2mm_include_sf {false} \
+    CONFIG.c_m_axi_mm2s_id_width {0} \
+    CONFIG.c_m_axi_s2mm_awid {1} \
+    CONFIG.c_enable_s2mm {0} \
+    CONFIG.c_enable_mm2s_adv_sig {0} \
+    CONFIG.c_addr_width {64} \
+] [get_bd_cells axi_datamover_mm2s]
 
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_S2MM_STS] [get_bd_intf_pins snap_action/s2mm_sts]
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/S_AXIS_S2MM_CMD] [get_bd_intf_pins snap_action/s2mm_cmd_V_V]
-connect_bd_intf_net [get_bd_intf_pins snap_action/mm2s_cmd_V_V] [get_bd_intf_pins axi_datamover/S_AXIS_MM2S_CMD]
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_MM2S_STS] [get_bd_intf_pins snap_action/mm2s_sts]
+connect_bd_intf_net [get_bd_intf_pins snap_action/mm2s_cmd_V_V] [get_bd_intf_pins axi_datamover_mm2s/S_AXIS_MM2S_CMD]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_mm2s/M_AXIS_MM2S_STS] [get_bd_intf_pins snap_action/mm2s_sts]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover_mm2s/m_axi_mm2s_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover_mm2s/m_axi_mm2s_aresetn]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover_mm2s/m_axis_mm2s_cmdsts_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover_mm2s/m_axis_mm2s_cmdsts_aresetn]
 
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_s2mm_aclk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_s2mm_aresetn]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_awclk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_s2mm_cmdsts_aresetn]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axi_mm2s_aclk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axi_mm2s_aresetn]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aclk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover/m_axis_mm2s_cmdsts_aresetn]
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 axi_datamover_s2mm
 
+set_property -dict [list \
+    CONFIG.c_include_mm2s {Omit} \
+    CONFIG.c_include_mm2s_stsfifo {false} \
+    CONFIG.c_m_axi_s2mm_data_width {512} \
+    CONFIG.c_s_axis_s2mm_tdata_width {64} \
+    CONFIG.c_include_s2mm_dre {true} \
+    CONFIG.c_s2mm_burst_size {64} \
+    CONFIG.c_s2mm_btt_used {23} \
+    CONFIG.c_mm2s_include_sf {false} \
+    CONFIG.c_m_axi_s2mm_id_width {0} \
+    CONFIG.c_enable_mm2s {0} \
+    CONFIG.c_addr_width {64} \
+] [get_bd_cells axi_datamover_s2mm]
+
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_s2mm/M_AXIS_S2MM_STS] [get_bd_intf_pins snap_action/s2mm_sts]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_s2mm/S_AXIS_S2MM_CMD] [get_bd_intf_pins snap_action/s2mm_cmd_V_V]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover_s2mm/m_axi_s2mm_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover_s2mm/m_axi_s2mm_aresetn]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_datamover_s2mm/m_axis_s2mm_cmdsts_awclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_datamover_s2mm/m_axis_s2mm_cmdsts_aresetn]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 dm_smartconnect
+
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_s2mm/M_AXI_S2MM] [get_bd_intf_pins dm_smartconnect/S00_AXI]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_mm2s/M_AXI_MM2S] [get_bd_intf_pins dm_smartconnect/S01_AXI]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins dm_smartconnect/aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins dm_smartconnect/aresetn]
 
 if { ( $::env(DDRI_USED) == "TRUE" ) } {
     # AXI Crossbar
     create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 axi_crossbar
-    connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_crossbar/S00_AXI]
+    connect_bd_intf_net [get_bd_intf_pins dm_smartconnect/M00_AXI] [get_bd_intf_pins axi_crossbar/S00_AXI]
 
     connect_bd_intf_net [get_bd_intf_pins axi_crossbar/M00_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
 
@@ -151,7 +162,7 @@ if { ( $::env(DDRI_USED) == "TRUE" ) } {
     connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_crossbar/aclk]
     connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_crossbar/aresetn]
 } else {
-    connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
+    connect_bd_intf_net [get_bd_intf_pins dm_smartconnect/M00_AXI] [get_bd_intf_pins axi_host_mem_crossbar/S01_AXI]
 }
 
 # Protocol converter
@@ -198,8 +209,8 @@ set_property -dict [list CONFIG.NUM_SI {3} CONFIG.NUM_MI {3} CONFIG.ROUTING_MODE
 connect_bd_intf_net [get_bd_intf_pins data_selector/M00_AXIS] [get_bd_intf_pins metal_switch/S00_AXIS]
 connect_bd_intf_net [get_bd_intf_pins metal_switch/M00_AXIS] [get_bd_intf_pins data_selector/S02_AXIS]
 connect_bd_intf_net [get_bd_intf_pins data_selector/M02_AXIS] [get_bd_intf_pins axi_streamsink/data]
-connect_bd_intf_net [get_bd_intf_pins data_selector/M01_AXIS] [get_bd_intf_pins axi_datamover/S_AXIS_S2MM]
-connect_bd_intf_net [get_bd_intf_pins axi_datamover/M_AXIS_MM2S] [get_bd_intf_pins data_selector/S00_AXIS]
+connect_bd_intf_net [get_bd_intf_pins data_selector/M01_AXIS] [get_bd_intf_pins axi_datamover_s2mm/S_AXIS_S2MM]
+connect_bd_intf_net [get_bd_intf_pins axi_datamover_mm2s/M_AXIS_MM2S] [get_bd_intf_pins data_selector/S00_AXIS]
 connect_bd_intf_net [get_bd_intf_pins hls_streamgen/out_r] [get_bd_intf_pins data_selector/S01_AXIS]
 connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M03_AXI] [get_bd_intf_pins data_selector/S_AXI_CTRL]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins data_selector/aclk]
@@ -254,6 +265,26 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
+
+set_property offset 0x0000000000000000 [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
+set_property range 16E [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
+
+if { ( $::env(DDRI_USED) == "TRUE" ) } {
+    set_property offset 0x8000000000000000 [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_card_mem0_Reg}]
+    set_property range 4G [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_card_mem0_Reg}]
+    set_property offset 0x0000000000000000 [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_host_mem_Reg}]
+    set_property range 8E [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_host_mem_Reg}]
+
+    set_property offset 0x8000000000000000 [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_card_mem0_Reg}]
+    set_property range 4G [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_card_mem0_Reg}]
+    set_property offset 0x0000000000000000 [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_host_mem_Reg}]
+    set_property range 8E [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_host_mem_Reg}]
+} else {
+    set_property offset 0x0000000000000000 [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_host_mem_Reg}]
+    set_property range 16E [get_bd_addr_segs {axi_datamover_mm2s/Data_MM2S/SEG_m_axi_host_mem_Reg}]
+    set_property offset 0x0000000000000000 [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_host_mem_Reg}]
+    set_property range 16E [get_bd_addr_segs {axi_datamover_s2mm/Data_S2MM/SEG_m_axi_host_mem_Reg}]
+}
 
 save_bd_design >> $log_file
 

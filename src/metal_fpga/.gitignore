@@ -1,7 +1,9 @@
 **/*.log
 **/run_hls_*script.tcl
-hw/hls/*/metal_*/
+hw/hls/*/hls_*/
 hw/hls/*/hls_impl_ip
 sw/snap_fs
 ip/ipshared
 action_wrapper.vhd
+.hls_cflags
+.hls_cflags.tmp

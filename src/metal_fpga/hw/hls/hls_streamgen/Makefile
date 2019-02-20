@@ -1,27 +1,9 @@
-SOLUTION_NAME ?= metal_hls_streamgen
-SOLUTION_DIR ?= metal_hls_streamgen
+SOLUTION_NAME ?= hls_streamgen
+SOLUTION_DIR ?= hls_streamgen
+
 srcs += hls_streamgen.cpp
 
 WRAPPER ?= hls_streamgen
 
-HLS_CFLAGS ?= ""
-ifeq ($(DDRI_USED),TRUE)
-HLS_CFLAGS += -DDRAM_ENABLED
-endif
-ifeq ($(NVME_USED),TRUE)
-HLS_CFLAGS += -DNVME_ENABLED
-endif
-
 include $(SNAP_ROOT)/actions/hls.mk
-
-run_hls_ip_script.tcl: run_hls_script.tcl
-	@sed "s/#export_design/export_design/g" $< > $@
-
-ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
-
-$(ip_dir): run_hls_ip_script.tcl $(srcs)
-	vivado_hls -f run_hls_ip_script.tcl
-
-# Create symlinks for simpler access
-ip: $(ip_dir)
-	@$(RM) hls_impl_ip && ln -s $(ip_dir) hls_impl_ip
+include ../hls.mk
