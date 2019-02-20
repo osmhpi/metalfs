@@ -1,12 +1,14 @@
 #pragma once
 
+#include <metal_frontend/common/socket.hpp>
+
 namespace metal {
 
 struct RegisteredAgent {
   uint pid;
   std::string operator_type;
 
-  int socket;
+  Socket socket;
 
   std::string cwd;
   std::string metal_mountpoint;

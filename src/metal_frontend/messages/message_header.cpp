@@ -1,3 +1,5 @@
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "message_header.hpp"
 
 namespace metal {

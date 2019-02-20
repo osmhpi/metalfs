@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <metal_frontend/common/message.h>
 #include <metal_frontend/messages/message_header.hpp>
+#include <algorithm>
+#include <metal_frontend/common/buffer.hpp>
 
 #include "agent_pool.hpp"
 #include "server.hpp"
@@ -8,11 +10,10 @@
 
 namespace metal {
 
-
 void AgentPool::register_agent(ClientHello &hello, int socket) {
   auto agent = std::make_shared<RegisteredAgent>();
 
-  agent->socket = socket;
+  agent->socket = Socket(socket);
   agent->pid = hello.pid();
   agent->operator_type = hello.operator_type();
   agent->input_agent_pid = hello.input_pid();
@@ -48,8 +49,6 @@ void AgentPool::register_agent(ClientHello &hello, int socket) {
 
   _registered_agents.emplace(agent);
 
-  update_agent_wiring();
-
   _contains_valid_pipeline_cached = false;
 }
 
@@ -57,37 +56,33 @@ bool AgentPool::contains_valid_pipeline() {
   if (_contains_valid_pipeline_cached)
     return true;
 
-  // Looks for agents at the beginning of a pipeline
-  // that have not been signaled yet
+  _contains_valid_pipeline_cached = false;
 
   auto pipelineStart = *std::find_if(_registered_agents.begin(), _registered_agents.end(), [](const std::shared_ptr<RegisteredAgent> & a) {
     return a->input_agent_pid == 0;
   });
 
-  // Walk the pipeline
+  if (!pipelineStart)
+    return false;
+
+  // Walk the pipeline until we find an agent with output_pid == 0
   std::shared_ptr<RegisteredAgent> pipeline_agent = pipelineStart;
-  uint64_t pipeline_length = 0;
+  std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents;
+
   while (pipeline_agent && pipeline_agent->output_agent_pid != 0) {
+    pipeline_agents.emplace_back(pipeline_agent);
     pipeline_agent = pipeline_agent->output_agent.lock();
-    ++pipeline_length;
   }
 
-  if (pipeline_agent) {
-    // We have found an agent with output_agent_pid == 0, meaning it's an external file or pipe
-    // So we have found a complete pipeline!
-    // Now, remove all agents that are part of the pipeline from registered_agents and instead
-    // insert them into pipeline_agents
-    pipeline_agent = pipelineStart;
-    while (pipeline_agent) {
-      _registered_agents.erase(pipeline_agent);
-      _pipeline_agents.insert(pipeline_agent);
-
-      if (pipeline_agent->output_agent_pid == 0)
-        break;
-
-      pipeline_agent = pipeline_agent->output_agent.lock();
+  if (pipeline_agents.back()->output_agent_pid == 0) {
+    _contains_valid_pipeline_cached = true;
+    _pipeline_agents = std::move(pipeline_agents);
+    for (const auto &agent : pipeline_agents) {
+      _registered_agents.erase(agent);
     }
   }
+
+  return _contains_valid_pipeline_cached;
 }
 
 void AgentPool::release_unused_agents() {
@@ -107,13 +102,16 @@ void AgentPool::send_agent_invalid(RegisteredAgent &agent) {
   accept_data.set_error_msg("An invalid operator chain was specified.\n");
   accept_data.set_valid(false);
 
-  MessageHeader header {message_type::SERVER_ACCEPT_AGENT, accept_data.ByteSize() };
-  header.sendHeader(agent.socket);
-  send(agent.socket, &accept_data, header.length(), 0);
+  agent.socket.send_message<message_type::SERVER_ACCEPT_AGENT>(accept_data);
 }
 
 void AgentPool::reset() {
-  send_all_agents_invalid(_pipeline_agents);
+  for (const auto &agent : _pipeline_agents) {
+    send_agent_invalid(*agent);
+  }
+
+  _pipeline_agents.clear();
+
   send_all_agents_invalid(_registered_agents);
 }
 

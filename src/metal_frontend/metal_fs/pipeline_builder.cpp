@@ -11,11 +11,12 @@
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_filesystem_pipeline/file_data_source.hpp>
 #include <metal_filesystem_pipeline/file_data_sink.hpp>
+#include <sys/stat.h>
 #include "../../../third_party/cxxopts/include/cxxopts.hpp"
 
 namespace metal {
 
-PipelineBuilder::PipelineBuilder(std::unordered_set<std::shared_ptr<RegisteredAgent>> pipeline_agents)
+PipelineBuilder::PipelineBuilder(std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
         : _pipeline_agents(std::move(pipeline_agents))
         , _registry(OperatorRegistry("./operators"))
 {
@@ -51,93 +52,70 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(std::shared_ptr<UserOpera
 }
 
 
-bool PipelineBuilder::validate() {
+std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>> PipelineBuilder::resolve_operators() {
+
   // Check if each requested operator is used only once and look up the
   // operator specification
-  bool valid = true;
-  uint64_t pipeline_length = 0;
+
+  std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>> operators_with_agents;
+
   for (const auto &agent : _pipeline_agents) {
-    auto agents_with_same_operator = std::count(_pipeline_agents.begin(), _pipeline_agents.end(), [&] (const std::shared_ptr<RegisteredAgent> & a) {
-      return a->operator_type == agent->operator_type;
-    });
-
-    if (agents_with_same_operator > 1) {
-      valid = false;
-      break;
-    }
-
     auto op = _registry.operators().find(agent->operator_type);
     if (op == _registry.operators().end()) {
-      valid = false;
-      break;
+      throw std::runtime_error("Unknown operator was requested");
     }
 
-    ++pipeline_length;
+    if (!operators_with_agents.emplace(std::make_pair(op, agent)).second)
+      throw std::runtime_error("Operator was used more than once");
   }
 
-  return valid;
+  return operators_with_agents;
 }
 
 std::shared_ptr<PipelineDefinition> PipelineBuilder::configure() {
 
-  std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> operators;
+  auto operators = resolve_operators();
 
   for (auto &operatorAgentPair : operators) {
     set_operator_options_from_agent_request(operatorAgentPair.first, operatorAgentPair.second);
   }
 
-  // TODO: catch...
-
-
+  // Tell agents that they're accepted
   for (auto &operatorAgentPair : operators) {
     ServerAcceptAgent response;
-    response.set_valid(valid);
-//            response.set_error_msg(responses[])
-
-    char buf[response.ByteSize()];
-    response.SerializeToArray(buf, response.ByteSize());
-
-    MessageHeader header(message_type::SERVER_ACCEPT_AGENT, response.ByteSize());
-    header.sendHeader(operatorAgentPair.second->socket);
-    send(operatorAgentPair.second->socket, buf, response.ByteSize(), 0);
+    response.set_valid(true);
+    operatorAgentPair.second->socket.send_message<message_type::SERVER_ACCEPT_AGENT>(response);
   }
 
-//        catch: if (!valid) {
-//             while (!IsListEmpty(&pipeline_agents)) {
-//                registered_agent_t *free_agent = CONTAINING_LIST_RECORD(pipeline_agents.Flink, registered_agent_t);
-//                RemoveEntryList(&free_agent->Link);
-//                free_registered_agent(free_agent);
-//            }
-//            continue;
-//        }
-
-
-  std::vector<std::shared_ptr<AbstractOperator>> operatorsOnly;
+  // Establish pipeline data source and sink
+  std::deque<std::shared_ptr<AbstractOperator>> operatorsOnly;
 
   for (const auto &operatorAgentPair : operators)
     operatorsOnly.emplace_back(operatorAgentPair.first);
 
-  auto dataSource = std::dynamic_pointer_cast<DataSource>(operators.front().first);
+  auto dataSource = std::dynamic_pointer_cast<DataSource>(operatorsOnly.front());
   if (dataSource == nullptr) {
-    if (!operators.front().second->internal_input_file.empty()) {
-      dataSource = std::make_shared<FileDataSource>(operators.front().second->internal_input_file);
+    auto dataSourceAgent = operators[operatorsOnly.front()];
+    if (!dataSourceAgent->internal_input_file.empty()) {
+      dataSource = std::make_shared<FileDataSource>(dataSourceAgent->internal_input_file);
     } else {
       dataSource = std::make_shared<HostMemoryDataSource>(0, 0);
     }
-    // TODO: Add to vector
+    operatorsOnly.emplace_front(dataSource);
   }
 
-  auto dataSink = std::dynamic_pointer_cast<DataSink>(operators.back().first);
+  auto dataSink = std::dynamic_pointer_cast<DataSink>(operatorsOnly.back());
   if (dataSink == nullptr) {  // To my knowledge, there are no user-accessible data sinks, so always true
-    if (!operators.back().second->internal_output_file.empty()) {
-      if (operators.back().second->internal_output_file == "$NULL")
+    auto dataSinkAgent = operators[operatorsOnly.back()];
+    if (!dataSinkAgent->internal_output_file.empty()) {
+      if (dataSinkAgent->internal_output_file == "$NULL")
         dataSink = std::make_shared<NullDataSink>(0 /* TODO */);
       else
-        dataSink = std::make_shared<FileDataSink>(operators.back().second->internal_output_file);
+        dataSink = std::make_shared<FileDataSink>(dataSinkAgent->internal_output_file);
     } else {
       dataSink = std::make_shared<HostMemoryDataSink>(0, 0);
     }
-    operators.emplace_back(dataSink);
+    operatorsOnly.emplace_back(dataSink);
   }
 
   auto pipeline = std::make_shared<PipelineDefinition>(operatorsOnly);

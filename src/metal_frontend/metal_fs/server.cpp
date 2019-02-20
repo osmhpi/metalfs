@@ -95,18 +95,16 @@ void Server::process_request(int connfd) {
         return;
     }
 
-    _agents.release_unused_agents();
     auto pipeline = _agents.cached_pipeline_agents();
+    _agents.release_unused_agents();
 
     try {
         PipelineBuilder builder(pipeline);
 
-        if (builder.validate()) {
-            auto pipeline_definition = builder.configure();
+        auto pipeline_definition = builder.configure();
 
-            PipelineLoop loop(pipeline_definition);
-            loop.run();
-        }
+        PipelineLoop loop(pipeline_definition);
+        loop.run();
     } catch (std::exception &ex) {
         // Something went wrong.
         // Maybe print the error message...

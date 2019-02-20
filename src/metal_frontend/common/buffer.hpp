@@ -5,5 +5,18 @@
 
 #define BUFFER_SIZE (1024 * 128)
 
-int create_temp_file_for_shared_buffer(std::string file_name, size_t file_name_size, int* file, void** buffer);
-int map_shared_buffer_for_reading(std::string file_name, int* file, void** buffer);
+namespace metal {
+class Buffer {
+ public:
+  static Buffer create_temp_file_for_shared_buffer();
+  static int map_shared_buffer_for_reading(std::string file_name, int *file, void **buffer);
+
+ protected:
+  explicit Buffer(std::string filename, int file, void* buffer) : _filename(filename), _file(file), _buffer(buffer) {}
+
+  void *_buffer;
+  int _file;
+  std::string _filename;
+};
+
+} // namespace metal
