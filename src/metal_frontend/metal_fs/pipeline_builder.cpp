@@ -21,7 +21,8 @@ PipelineBuilder::PipelineBuilder(std::vector<std::shared_ptr<RegisteredAgent>> p
         , _registry(OperatorRegistry("./operators"))
 {
   for (const auto &op : _registry.operators()) {
-    _operatorOptions[op.first] = buildOperatorOptions(op.second);
+    // TODO: Don't do this every time a pipeline starts
+    _operatorOptions.insert(std::make_pair(op.first, buildOperatorOptions(op.second)));
   }
 }
 
@@ -65,14 +66,14 @@ std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registered
       throw std::runtime_error("Unknown operator was requested");
     }
 
-    if (!operators_with_agents.emplace(std::make_pair(op, agent)).second)
+    if (!operators_with_agents.emplace(std::make_pair(op->second, agent)).second)
       throw std::runtime_error("Operator was used more than once");
   }
 
   return operators_with_agents;
 }
 
-std::shared_ptr<PipelineDefinition> PipelineBuilder::configure() {
+std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> PipelineBuilder::configure() {
 
   auto operators = resolve_operators();
 
@@ -88,37 +89,43 @@ std::shared_ptr<PipelineDefinition> PipelineBuilder::configure() {
   }
 
   // Establish pipeline data source and sink
-  std::deque<std::shared_ptr<AbstractOperator>> operatorsOnly;
+  std::deque<std::shared_ptr<AbstractOperator>> pipeline_operators;
 
   for (const auto &operatorAgentPair : operators)
-    operatorsOnly.emplace_back(operatorAgentPair.first);
+    pipeline_operators.emplace_back(operatorAgentPair.first);
 
-  auto dataSource = std::dynamic_pointer_cast<DataSource>(operatorsOnly.front());
+  auto dataSource = std::dynamic_pointer_cast<DataSource>(pipeline_operators.front());
   if (dataSource == nullptr) {
-    auto dataSourceAgent = operators[operatorsOnly.front()];
+    auto dataSourceAgent = operators[pipeline_operators.front()];
     if (!dataSourceAgent->internal_input_file.empty()) {
       dataSource = std::make_shared<FileDataSource>(dataSourceAgent->internal_input_file);
     } else {
-      dataSource = std::make_shared<HostMemoryDataSource>(0, 0);
+      dataSource = std::make_shared<HostMemoryDataSource>(nullptr, 0); // TODO
     }
-    operatorsOnly.emplace_front(dataSource);
+    pipeline_operators.emplace_front(dataSource);
   }
 
-  auto dataSink = std::dynamic_pointer_cast<DataSink>(operatorsOnly.back());
+  auto dataSink = std::dynamic_pointer_cast<DataSink>(pipeline_operators.back());
   if (dataSink == nullptr) {  // To my knowledge, there are no user-accessible data sinks, so always true
-    auto dataSinkAgent = operators[operatorsOnly.back()];
+    auto dataSinkAgent = operators[pipeline_operators.back()];
     if (!dataSinkAgent->internal_output_file.empty()) {
       if (dataSinkAgent->internal_output_file == "$NULL")
         dataSink = std::make_shared<NullDataSink>(0 /* TODO */);
       else
         dataSink = std::make_shared<FileDataSink>(dataSinkAgent->internal_output_file);
     } else {
-      dataSink = std::make_shared<HostMemoryDataSink>(0, 0);
+      dataSink = std::make_shared<HostMemoryDataSink>(nullptr, 0); // TODO
     }
-    operatorsOnly.emplace_back(dataSink);
+    pipeline_operators.emplace_back(dataSink);
   }
 
-  auto pipeline = std::make_shared<PipelineDefinition>(operatorsOnly);
+  std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> result;
+  result.reserve(pipeline_operators.size());
+
+  for (const auto &op : pipeline_operators)
+    result.emplace_back(std::make_pair(op, operators[op]));
+
+  return result;
 }
 
 void PipelineBuilder::set_operator_options_from_agent_request(
@@ -138,11 +145,11 @@ void PipelineBuilder::set_operator_options_from_agent_request(
   auto parseResult = options.parse(argc, argv);
 
   for (const auto &argument : parseResult.arguments()) {
-    auto optionType = op->optionDefinitions().find(argument.key())
+    auto optionType = op->optionDefinitions().find(argument.key());
     if (optionType == op->optionDefinitions().end())
       throw std::runtime_error("Option was not found");
 
-    switch (optionType->type()) {
+    switch (optionType->second.type()) {
       case OptionType::INT: {
         op->setOption(argument.key(), argument.as<int>());
         break;
@@ -152,16 +159,16 @@ void PipelineBuilder::set_operator_options_from_agent_request(
         break;
       }
       case OptionType::BUFFER: {
-        if (!optionType->bufferSize().hasValue())
+        if (!optionType->second.bufferSize().has_value())
           throw std::runtime_error("File option metadata not found");
 
         auto filePath = resolvePath(argument.value(), agent->cwd);
 
         // TODO: Detect if path points to FPGA file
 
-        auto buffer = std::make_unique<std::vector<char>>(optionType->bufferSize().value());
+        auto buffer = std::make_unique<std::vector<char>>(optionType->second.bufferSize().value());
 
-        auto fp = fopen(filePath, "r");
+        auto fp = fopen(filePath.c_str(), "r");
         if (fp == nullptr) {
           throw std::runtime_error("Could not open file");
         }
@@ -174,7 +181,7 @@ void PipelineBuilder::set_operator_options_from_agent_request(
 
         fclose(fp);
 
-        setOption(argument.key(), std::move(buffer));
+        op->setOption(argument.key(), std::move(buffer));
       }
     }
   }

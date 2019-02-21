@@ -1,3 +1,5 @@
+#pragma once
+
 #include <metal_pipeline/pipeline_runner.hpp>
 
 namespace metal {

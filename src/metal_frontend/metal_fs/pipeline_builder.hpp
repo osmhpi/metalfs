@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <metal_pipeline/operator_registry.hpp>
 #include "registered_agent.hpp"
+#include "../../../third_party/cxxopts/include/cxxopts.hpp"
 
 namespace metal {
 
@@ -13,7 +14,7 @@ class PipelineBuilder {
  public:
   explicit PipelineBuilder(std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents);
 
-  std::shared_ptr<PipelineDefinition> configure();
+  std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> configure();
 
  protected:
   cxxopts::Options buildOperatorOptions(std::shared_ptr<UserOperator> op);

@@ -40,6 +40,7 @@
 #include "agent_pool.hpp"
 #include "pipeline_builder.hpp"
 #include "pipeline_loop.hpp"
+#include "../common/socket.hpp"
 
 namespace metal {
 
@@ -80,12 +81,11 @@ void Server::startInternal() {
 }
 
 void Server::process_request(int connfd) {
-    auto incoming_message = MessageHeader::receive(connfd);
-
-    if (incoming_message.type() == message_type::AGENT_HELLO) {
-        auto request = receive_message<ClientHello>(connfd, incoming_message);
+    try {
+        Socket socket(connfd);
+        auto request = socket.receive_message<message_type::AGENT_HELLO, ClientHello>();
         _agents.register_agent(request, connfd);
-    } else {
+    } catch (std::exception& ex) {
         // Don't know this guy -- doesn't even say hello
         close(connfd);
         return;
@@ -101,9 +101,9 @@ void Server::process_request(int connfd) {
     try {
         PipelineBuilder builder(pipeline);
 
-        auto pipeline_definition = builder.configure();
+        auto operators_agents = builder.configure();
 
-        PipelineLoop loop(pipeline_definition);
+        PipelineLoop loop(std::move(operators_agents));
         loop.run();
     } catch (std::exception &ex) {
         // Something went wrong.
@@ -111,17 +111,6 @@ void Server::process_request(int connfd) {
     }
 
     _agents.reset();
-}
-
-
-template<typename T>
-T Server::receive_message(int connfd, MessageHeader &header) {
-    char buffer [header.length()];
-    recv(connfd, buffer, header.length(), 0);
-
-    T message;
-    message.ParseFromArray(buffer, header.length());
-    return message;
 }
 
 } // namespace metal

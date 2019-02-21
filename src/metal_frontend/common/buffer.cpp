@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <cstdio>
+#include <stdexcept>
 
 namespace metal {
 
@@ -27,21 +28,19 @@ Buffer Buffer::create_temp_file_for_shared_buffer() {
     return Buffer(std::string(output_file_name), file, buffer);
 }
 
-int Buffer::map_shared_buffer_for_reading(std::string file_name, int *file, void **buffer) {
-    *file = open(file_name, O_RDWR);
-    if (*file == -1) {
-        perror("open()");
-        return -1;
+Buffer Buffer::map_shared_buffer_for_reading(std::string file_name) {
+    int file = open(file_name.c_str(), O_RDWR);
+    if (file == -1) {
+      throw std::runtime_error("Failed to open file");
     }
 
-    *buffer = mmap(NULL, BUFFER_SIZE, PROT_READ, MAP_SHARED, *file, 0);
-    if (*buffer == MAP_FAILED) {
-        perror("mmap()");
-        close(*file);
-        return -1;
+    void *buffer = mmap(NULL, BUFFER_SIZE, PROT_READ, MAP_SHARED, file, 0);
+    if (buffer == MAP_FAILED) {
+      close(file);
+      throw std::runtime_error("Failed to memory-map file");
     }
 
-    return 0;
+    return Buffer(file_name, file, buffer);
 }
 
 }

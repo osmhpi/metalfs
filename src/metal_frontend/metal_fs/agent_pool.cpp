@@ -11,9 +11,8 @@
 namespace metal {
 
 void AgentPool::register_agent(ClientHello &hello, int socket) {
-  auto agent = std::make_shared<RegisteredAgent>();
+  auto agent = std::make_shared<RegisteredAgent>(Socket(socket));
 
-  agent->socket = Socket(socket);
   agent->pid = hello.pid();
   agent->operator_type = hello.operator_type();
   agent->input_agent_pid = hello.input_pid();
@@ -36,15 +35,11 @@ void AgentPool::register_agent(ClientHello &hello, int socket) {
   if (agent->input_agent_pid == 0 && agent->internal_input_file.empty()) {
     if (hello.input_buffer_filename().empty()) {
       // Should not happen
-      close(socket);
+//      close(socket);
       return;
     }
 
-    // TODO: Same procedure for output buffer
-    map_shared_buffer_for_reading(
-            hello.input_buffer_filename(),
-            &agent->input_file, &agent->input_buffer
-    );
+    agent->input_buffer = Buffer::map_shared_buffer_for_reading(hello.input_buffer_filename());
   }
 
   _registered_agents.emplace(agent);
