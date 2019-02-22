@@ -7,3 +7,4 @@ ip/ipshared
 action_wrapper.vhd
 .hls_cflags
 .hls_cflags.tmp
+.snap_config

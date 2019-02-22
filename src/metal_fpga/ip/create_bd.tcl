@@ -1,8 +1,4 @@
-# set action_root [lindex $argv 0]
-# set log_dir     $action_root
-# set log_file    $log_dir/create_bd.log
-# set src_dir 	$aip_dir/action_ip_prj/action_ip_prj.srcs/sources_1/ip
-
+set action_root [lindex $argv 0]
 
 set log_file    $log_dir/create_bd.log
 
@@ -288,5 +284,4 @@ if { ( $::env(DDRI_USED) == "TRUE" ) } {
 
 save_bd_design >> $log_file
 
-set_property synth_checkpoint_mode None [get_files  $src_dir/../bd/$bd_name/$bd_name.bd]
-generate_target all                     [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] >> $log_file
+ipx::package_project -root_dir $action_root/ip/ip_user_files -vendor user.org -library user -taxonomy /UserIP -module bd_action -import_files >> $log_file

@@ -1,5 +1,5 @@
-SOLUTION_NAME ?= hls_streamsink
-SOLUTION_DIR ?= hls_streamsink
+SOLUTION_NAME ?= hls_streamsink_sln
+SOLUTION_DIR ?= hls_streamsink_sln
 
 srcs += hls_streamsink.cpp
 

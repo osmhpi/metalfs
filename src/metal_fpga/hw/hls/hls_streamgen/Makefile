@@ -1,5 +1,5 @@
-SOLUTION_NAME ?= hls_streamgen
-SOLUTION_DIR ?= hls_streamgen
+SOLUTION_NAME ?= hls_streamgen_sln
+SOLUTION_DIR ?= hls_streamgen_sln
 
 srcs += hls_streamgen.cpp
 

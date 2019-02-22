@@ -144,9 +144,6 @@ TEST_F(BaseTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) 
 
     ASSERT_EQ(MTL_SUCCESS, mtl_run_pipeline());
 
-    print_memory_64(src + src_offset + 4672);
-    print_memory_64(dest + dest_offset + 4672);
-
     EXPECT_EQ(0, memcmp(src + src_offset, dest + dest_offset, payload_bytes));
 
     free(src);

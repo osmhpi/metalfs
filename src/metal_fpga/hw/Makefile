@@ -1,3 +1,8 @@
+ifndef SNAP_ROOT
+$(info You have specified a wrong $$SNAP_ROOT.)
+$(error Please make sure that $$SNAP_ROOT is set up correctly.)
+endif
+
 vhd_srcs=$(wildcard *.vhd_source)
 vhd_files=$(vhd_srcs:.vhd_source=.vhd)
 
@@ -51,7 +56,7 @@ $(hls_components):
 
 vhd_files: $(vhd_files)
 
-$(vhd_files): $(vhd_srcs)
+$(vhd_files): $(vhd_srcs) .snap_config
 	@echo "                        Generating $@"
 	@grep -v $(DDRI_FILTER) $< | grep -v $(NVME_FILTER) > $@
 
@@ -65,3 +70,9 @@ clean:
 	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done
 
 vhdl:
+
+.snap_config: FORCE
+	@if [ -n .snap_config ]; then touch .snap_config; fi
+	@if [ $$(echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) | comm -3 .snap_config - | wc -c) -gt 0 ]; then echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) > .snap_config; fi
+
+FORCE:

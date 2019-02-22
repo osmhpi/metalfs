@@ -1,5 +1,5 @@
-SOLUTION_NAME ?= hls_action
-SOLUTION_DIR ?= hls_action
+SOLUTION_NAME ?= hls_action_sln
+SOLUTION_DIR ?= hls_action_sln
 
 srcs += axi_switch.cpp \
 	mtl_extmap.cpp \
