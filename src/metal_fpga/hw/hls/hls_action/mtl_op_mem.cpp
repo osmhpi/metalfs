@@ -5,6 +5,8 @@
 
 #include <snap_types.h>
 
+#define DRAM_BASE_OFFSET 0x8000000000000000
+
 mtl_mem_configuration read_mem_config;
 mtl_mem_configuration write_mem_config;
 
@@ -57,9 +59,13 @@ void op_mem_read(
     axi_datamover_status_stream_t &mm2s_sts,
     snapu32_t *random_ctrl,
     mtl_mem_configuration &config) {
+
+    const uint64_t baseaddr = config.mode == OP_MEM_MODE_DRAM ? DRAM_BASE_OFFSET : 0;
+
     switch (config.mode) {
-        case OP_MEM_MODE_HOST: {
-            const int N = 64; // Address width (host mem)
+        case OP_MEM_MODE_HOST:
+        case OP_MEM_MODE_DRAM: {
+            const int N = 64; // Address width
             uint64_t bytes_read = 0;
             while (bytes_read < config.size) {
                 // Stream data in block-sized chunks (64K)
@@ -68,7 +74,7 @@ void op_mem_read(
                 ap_uint<23> read_bytes = end_of_frame ? bytes_remaining : 1<<16;
 
                 axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = config.offset + bytes_read;
+                cmd((N+31), 32) = baseaddr + config.offset + bytes_read;
                 cmd[30] = end_of_frame;
                 cmd[23] = 1; // AXI burst type: INCR
                 cmd(22, 0) = read_bytes;
@@ -94,9 +100,12 @@ void op_mem_write(
     axi_datamover_status_stream_t &s2mm_sts,
     mtl_mem_configuration &config) {
 
+    const uint64_t baseaddr = config.mode == OP_MEM_MODE_DRAM ? DRAM_BASE_OFFSET : 0;
+
     switch (config.mode) {
-        case OP_MEM_MODE_HOST: {
-            const int N = 64; // Address width (host mem)
+        case OP_MEM_MODE_HOST:
+        case OP_MEM_MODE_DRAM: {
+            const int N = 64; // Address width
             uint64_t bytes_written = 0;
             while (bytes_written < config.size) {
                 // Write data in block-sized chunks (64K)
@@ -105,7 +114,7 @@ void op_mem_write(
                 ap_uint<23> write_bytes = end_of_frame ? bytes_remaining : 1<<16;
 
                 axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = config.offset + bytes_written;
+                cmd((N+31), 32) = baseaddr + config.offset + bytes_written;
                 cmd[30] = end_of_frame;
                 cmd[23] = 1; // AXI burst type: INCR
                 cmd(22, 0) = write_bytes;

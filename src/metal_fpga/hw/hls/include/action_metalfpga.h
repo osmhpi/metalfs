@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define METALFPGA_ACTION_TYPE 0x00000216
+#define METALFPGA_ACTION_TYPE 0xFB060001
 
 #define MTL_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 

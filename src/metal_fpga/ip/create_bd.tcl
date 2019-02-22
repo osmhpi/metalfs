@@ -1,5 +1,3 @@
-set action_root [lindex $argv 0]
-
 set log_file    $log_dir/create_bd.log
 
 set bd_name     bd_action

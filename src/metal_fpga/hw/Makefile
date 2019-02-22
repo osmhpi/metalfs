@@ -13,6 +13,8 @@ ACTION_ROOT ?= $(PWD)/..
 LOGS_DIR ?= $(PWD)/../logs
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
 
+HLS_TESTBENCH_CFLAGS = -I ../../../../../third_party/googletest/googletest/include
+
 ifeq ($(DDRI_USED),)
 	DDRI_USED := $(shell grep DDRI_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
@@ -37,9 +39,9 @@ endif
 
 .PHONY: config clean vhdl $(hls_components)
 
-all: vhd_files hls $(ACTION_ROOT)/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd/bd_action/hdl/bd_action_wrapper.vhd
+all: vhd_files hls $(ACTION_ROOT)/ip/ip_user_files/component.xml
 
-$(ACTION_ROOT)/ip/action_ip_prj/action_ip_prj.srcs/sources_1/bd/bd_action/hdl/bd_action_wrapper.vhd: $(hls_ip)
+$(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip)
 	@echo "                        Generating Block Design"
 	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 
