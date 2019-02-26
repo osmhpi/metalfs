@@ -15,6 +15,7 @@ void process_stream(mtl_stream &in, mtl_stream &out) {
   mtl_stream_element element;
   do {
     element = in.read();
+    // element.data = 0xaarrggbb
     out.write(element);
   } while (!element.last);
 }
