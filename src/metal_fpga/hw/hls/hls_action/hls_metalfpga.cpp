@@ -254,8 +254,12 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     switch (act_reg->Data.job_type) {
     case MTL_JOB_MAP:
     {
+#ifdef NVME_ENABLED
         mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
         result = action_map(mem_in, map_job);
+#else
+        result = SNAP_RETC_SUCCESS;
+#endif
         break;
     }
     case MTL_JOB_MOUNT:
@@ -373,58 +377,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
     return result;
 }
 
-// File Map / Unmap Operation:
-static mtl_retc_t action_map(snap_membus_t * mem_in,
-                            const mtl_job_map_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
-
-static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
-
-static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
 
 static snapu64_t _enable_mask = 0;
 
