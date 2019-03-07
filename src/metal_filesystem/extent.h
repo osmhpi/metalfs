@@ -5,7 +5,7 @@
 
 #include <lmdb.h>
 
-#include "../metal_storage/storage.h"
+#include "storage.h"
 
 int mtl_initialize_extents(MDB_txn *txn, uint64_t blocks);
 

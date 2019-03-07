@@ -9,7 +9,6 @@
 #include <malloc.h>
 
 #include <lmdb.h>
-#include <metal_storage/storage.h>
 
 #include "heap.h"
 #include "extent.h"
@@ -27,9 +26,9 @@ typedef struct mtl_dir {
 MDB_env *env;
 mtl_storage_metadata metadata;
 
-int mtl_initialize(const char *metadata_store) {
+int mtl_initialize(const char *metadata_store, mtl_storage_backend *storage) {
 
-    int res = mtl_storage_initialize();
+    int res = storage->initialize();
     if (res != MTL_SUCCESS) {
         return MTL_ERROR_INVALID_ARGUMENT;
     }
@@ -48,7 +47,7 @@ int mtl_initialize(const char *metadata_store) {
     mtl_create_root_directory(txn);
 
     // Query storage metadata
-    mtl_storage_get_metadata(&metadata);
+    storage->get_metadata(&metadata);
 
     // Create a single extent spanning the entire storage (if necessary)
     mtl_initialize_extents(txn, metadata.num_blocks);
@@ -60,8 +59,8 @@ int mtl_initialize(const char *metadata_store) {
     return MTL_SUCCESS;
 }
 
-int mtl_deinitialize() {
-    mtl_storage_deinitialize();
+int mtl_deinitialize(mtl_storage_backend *storage) {
+    storage->deinitialize();
 
     mtl_reset_extents_db();
     mtl_reset_inodes_db();
@@ -416,10 +415,7 @@ int mtl_create(const char *filename, uint64_t *inode_id) {
     return MTL_SUCCESS;
 }
 
-int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
-
-    MDB_txn *txn;
-    mdb_txn_begin(env, NULL, 0, &txn);
+int mtl_expand_inode(MDB_txn *txn, uint64_t inode_id, const mtl_file_extent *extents, uint64_t extents_length, uint64_t size) {
 
     // Check how long we intend to write
     uint64_t write_end_bytes = size;
@@ -430,11 +426,6 @@ int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
     uint64_t current_inode_length_blocks = 0;
     mtl_file_extent last_extent = { .offset=0, .length=0 };  // Used to append data if possible
     {
-        mtl_inode *inode;
-        const mtl_file_extent *extents;
-        uint64_t extents_length;
-
-        mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
         for (uint64_t extent = 0; extent < extents_length; ++extent)
             current_inode_length_blocks += extents[extent].length;
 
@@ -471,31 +462,37 @@ int mtl_expand_inode(uint64_t inode_id, uint64_t size) {
         }
     }
 
-    mdb_txn_commit(txn);
-
     return MTL_SUCCESS;
 }
 
-int mtl_write(uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
+int mtl_write(mtl_storage_backend *storage, uint64_t inode_id, const char *buffer, uint64_t size, uint64_t offset) {
 
-    mtl_expand_inode(inode_id, offset + size);
-
-    // Prepare the storage
     MDB_txn *txn;
-    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    mdb_txn_begin(env, NULL, 0, &txn);
+
+    mtl_inode *inode;
     const mtl_file_extent *extents;
     uint64_t extents_length;
-    mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
-    mtl_storage_set_active_write_extent_list(extents, extents_length);
-    mdb_txn_abort(txn);
+    mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+
+    int res = mtl_expand_inode(txn, inode_id, extents, extents_length, offset + size);
+
+    if (res != MTL_SUCCESS) {
+        mdb_txn_abort(txn);
+        return res;
+    }
+
+    storage->set_active_write_extent_list(extents, extents_length);
+
+    mdb_txn_commit(txn);
 
     // Copy the actual data to storage
-    mtl_storage_write(offset, buffer, size);
+    storage->write(offset, buffer, size);
 
     return MTL_SUCCESS;
 }
 
-uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset) {
+uint64_t mtl_read(mtl_storage_backend *storage, uint64_t inode_id, char *buffer, uint64_t size, uint64_t offset) {
 
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
@@ -514,13 +511,13 @@ uint64_t mtl_read(uint64_t inode_id, char *buffer, uint64_t size, uint64_t offse
         read_len -= (offset + size) - inode->length;
     }
 
-    mtl_storage_set_active_read_extent_list(extents, extents_length);
+    storage->set_active_read_extent_list(extents, extents_length);
 
     mdb_txn_abort(txn);
 
     if (read_len > 0)
         // Copy the actual data from storage
-        mtl_storage_read(offset, buffer, read_len);
+        storage->read(offset, buffer, read_len);
 
     return read_len;
 }
@@ -536,43 +533,45 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
 
     if (offset >= inode->length) {
-        // That was easy
-        mdb_txn_abort(txn);
-        return MTL_SUCCESS;
-    }
-
-    // Figure out how many extents we can keep
-    uint64_t previous_extent_end = 0;
-    for (uint64_t i = 0; i < extents_length; ++i) {
-        uint64_t extent_end = previous_extent_end + (extents[i].length * metadata.block_size);
-
-        if (previous_extent_end > offset) {
-            // The current extent has to be freed
-
-            mtl_free_extent(txn, extents[i].offset);
-        } else if (extent_end > offset) {
-            // This is the first extent that has to be modified or dropped
-            // Update the inode in the process
-
-            uint64_t new_extent_length_bytes = offset - previous_extent_end;
-            uint64_t new_extent_length_blocks = new_extent_length_bytes / metadata.block_size;
-            if (new_extent_length_bytes % metadata.block_size)
-                ++new_extent_length_blocks;
-
-            if (new_extent_length_blocks) {
-                // We have to modify the extent
-                mtl_truncate_extent(txn, extents[i].offset, new_extent_length_blocks);
-                mtl_truncate_file_extents(txn, inode_id, offset, i + 1, &new_extent_length_blocks);
-            } else {
-                // We can drop the extent
-                mtl_free_extent(txn, extents[i].offset);
-                mtl_truncate_file_extents(txn, inode_id, offset, i, NULL);
-            }
-        } else {
-            // This extent is still valid -- keep unmodified
+        int res = mtl_expand_inode(txn, inode_id, extents, extents_length, offset);
+        if (res != MTL_SUCCESS) {
+            mdb_txn_abort(txn);
+            return res;
         }
+    } else {
+        // Figure out how many extents we can keep
+        uint64_t previous_extent_end = 0;
+        for (uint64_t i = 0; i < extents_length; ++i) {
+            uint64_t extent_end = previous_extent_end + (extents[i].length * metadata.block_size);
 
-        previous_extent_end = extent_end;
+            if (previous_extent_end > offset) {
+                // The current extent has to be freed
+
+                mtl_free_extent(txn, extents[i].offset);
+            } else if (extent_end > offset) {
+                // This is the first extent that has to be modified or dropped
+                // Update the inode in the process
+
+                uint64_t new_extent_length_bytes = offset - previous_extent_end;
+                uint64_t new_extent_length_blocks = new_extent_length_bytes / metadata.block_size;
+                if (new_extent_length_bytes % metadata.block_size)
+                    ++new_extent_length_blocks;
+
+                if (new_extent_length_blocks) {
+                    // We have to modify the extent
+                    mtl_truncate_extent(txn, extents[i].offset, new_extent_length_blocks);
+                    mtl_truncate_file_extents(txn, inode_id, offset, i + 1, &new_extent_length_blocks);
+                } else {
+                    // We can drop the extent
+                    mtl_free_extent(txn, extents[i].offset);
+                    mtl_truncate_file_extents(txn, inode_id, offset, i, NULL);
+                }
+            } else {
+                // This extent is still valid -- keep unmodified
+            }
+
+            previous_extent_end = extent_end;
+        }
     }
 
     mdb_txn_commit(txn);
@@ -622,12 +621,15 @@ int mtl_unlink(const char *filename) {
     return MTL_SUCCESS;
 }
 
-int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size) {
+int mtl_load_extent_list(const char *filename,
+                         mtl_file_extent *extents,
+                         uint64_t *extents_length,
+                         uint64_t *file_length) {
 
     int res;
 
     MDB_txn *txn;
-    mdb_txn_begin(env, NULL, 0, &txn);
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
 
     // Resolve inode
     uint64_t inode_id;
@@ -639,67 +641,29 @@ int mtl_prepare_storage_for_reading(const char *filename, uint64_t *size) {
 
     // Load extents
     mtl_inode *inode;
-    const mtl_file_extent *extents;
-    uint64_t extents_length;
-    res = mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+    const mtl_file_extent *tmp_extents;
+    uint64_t tmp_extents_length;
+    res = mtl_load_file(txn, inode_id, &inode, &tmp_extents, &tmp_extents_length);
     if (res != MTL_SUCCESS) {
         mdb_txn_abort(txn);
         return res;
     }
 
-    // Transfer extents to storage layer
-    res = mtl_storage_set_active_read_extent_list(extents, extents_length);
-    if (res != MTL_SUCCESS) {
+    if (tmp_extents_length > MTL_MAX_EXTENTS) {
         mdb_txn_abort(txn);
-        return res;
+        return MTL_ERROR_INVALID_ARGUMENT;
     }
 
-    if (size) {
-        *size = inode->length;
+    if (extents) {
+        memcpy(extents, tmp_extents, tmp_extents_length * sizeof(mtl_file_extent));
     }
 
-    mdb_txn_abort(txn);
-    return MTL_SUCCESS;
-}
-
-int mtl_prepare_storage_for_writing(const char *filename, uint64_t size) {
-
-    int res;
-
-    MDB_txn *txn;
-    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-
-    // Resolve inode
-    uint64_t inode_id;
-    res = mtl_resolve_inode(txn, filename, &inode_id);
-    if (res != MTL_SUCCESS) {
-        mdb_txn_abort(txn);
-        return res;
+    if (extents_length) {
+        *extents_length = tmp_extents_length;
     }
 
-    mdb_txn_abort(txn);
-
-    res = mtl_expand_inode(inode_id, size);
-    if (res != MTL_SUCCESS) {
-        return res;
-    }
-
-    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-
-    // Load extents
-    const mtl_file_extent *extents;
-    uint64_t extents_length;
-    res = mtl_load_file(txn, inode_id, NULL, &extents, &extents_length);
-    if (res != MTL_SUCCESS) {
-        mdb_txn_abort(txn);
-        return res;
-    }
-
-    // Transfer extents to storage layer
-    res = mtl_storage_set_active_write_extent_list(extents, extents_length);
-    if (res != MTL_SUCCESS) {
-        mdb_txn_abort(txn);
-        return res;
+    if (file_length) {
+        *file_length = inode->length;
     }
 
     mdb_txn_abort(txn);

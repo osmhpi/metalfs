@@ -1,7 +1,7 @@
 #pragma once
 
-#include <metal_frontend/common/socket.hpp>
-#include <metal_frontend/common/buffer.hpp>
+#include <metal_frontend/messages/socket.hpp>
+#include <metal_frontend/messages/buffer.hpp>
 
 namespace metal {
 
@@ -9,9 +9,9 @@ namespace metal {
 
 class RegisteredAgent {
  public:
-  explicit RegisteredAgent(Socket socket) : input_buffer(std::nullopt), output_buffer(std::nullopt), socket(socket) {}
+  explicit RegisteredAgent(Socket socket) : input_buffer(std::nullopt), output_buffer(std::nullopt), socket(std::move(socket)) {}
 
-  uint pid;
+  uint pid{};
   std::string operator_type;
 
   Socket socket;
@@ -21,16 +21,16 @@ class RegisteredAgent {
   std::vector<std::string> args;
 
   std::weak_ptr<RegisteredAgent> input_agent;
-  uint input_agent_pid;
-  int input_file;
+  uint input_agent_pid{};
+  int input_file{};
   std::optional<Buffer> input_buffer;
 
   std::string internal_input_file;
   std::string internal_output_file;
 
   std::weak_ptr<RegisteredAgent> output_agent;
-  int output_agent_pid;
-  int output_file;
+  int output_agent_pid{};
+  int output_file{};
   std::optional<Buffer> output_buffer;
 };
 

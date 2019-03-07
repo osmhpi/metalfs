@@ -20,7 +20,7 @@ public:
     explicit Server(std::string socketFileName);
     virtual ~Server();
 
-    static void start(void* args);
+    static void start(char *socket_file_name);
 
 protected:
     void startInternal();

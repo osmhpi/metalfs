@@ -18,7 +18,7 @@ class PipelineBuilder {
 
  protected:
   cxxopts::Options buildOperatorOptions(std::shared_ptr<UserOperator> op);
-  std::unordered_map<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>> resolve_operators();
+  std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> resolve_operators();
   void set_operator_options_from_agent_request(
           std::shared_ptr<AbstractOperator> op,
           std::shared_ptr<RegisteredAgent> agent);

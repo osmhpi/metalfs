@@ -1,9 +1,9 @@
-#include <metal_filesystem_pipeline/filesystem_pipeline_runner.hpp>
 #include <Messages.pb.h>
 #include <metal_frontend/messages/message_header.hpp>
+#include <metal_pipeline/data_source.hpp>
+#include <metal_pipeline/data_sink.hpp>
+#include <metal_pipeline/pipeline_runner.hpp>
 #include "pipeline_loop.hpp"
-#include "../../metal_filesystem_pipeline/filesystem_pipeline_runner.hpp"
-#include "../../../cmake-build-debug/src/metal_frontend/messages/Messages.pb.h"
 #include "registered_agent.hpp"
 
 namespace metal {
@@ -18,17 +18,27 @@ void PipelineLoop::run() {
   }
   auto pipeline_definition = std::make_shared<PipelineDefinition>(std::move(pipeline_operators));
 
-  FilesystemPipelineRunner runner(pipeline_definition);
+  ProfilingPipelineRunner runner(pipeline_definition);
+
+  auto dataSource = std::dynamic_pointer_cast<DataSource>(_pipeline.front().first);
+  auto dataSink = std::dynamic_pointer_cast<DataSink>(_pipeline.back().first);
+
+  // Some data sources (e.g. FileDataSource) are capable of providing the overall processing size in the beginning
+  // This might only be a temporary optimization since we will allow operators to provide arbitrary output data sizes
+  // in the future.
+  if (auto total_size = dataSource->reportTotalSize()) {
+    dataSink->prepareForTotalProcessingSize(total_size);
+  }
 
   auto firstAgent = _pipeline.front().second;
   auto lastAgent = _pipeline.back().second;
 
   // Receive ready signal from first client
-  auto inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER, ClientPushBuffer>();
+  auto inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
 
   // Wait until all other clients signal ready as well
   for (auto &operatorAgentPair : {std::next(_pipeline.begin(), 1), _pipeline.end()}) {
-    operatorAgentPair->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER, ClientPushBuffer>();
+    operatorAgentPair->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
   }
 
   for (;;) {
@@ -46,8 +56,11 @@ void PipelineLoop::run() {
     }
 
     if (size) {
+      dataSource->setSize(size);
+      dataSink->setSize(size);
+
       runner.run(eof);
-      output_size = size;
+      output_size = size; // Might differ in the future
     }
 
     // Send a processing response for the input agent (eof, perfmon)
@@ -86,15 +99,15 @@ void PipelineLoop::run() {
     if (lastAgent->output_buffer) {
       // Wait for output client push buffer message (i.e. 'ready')
       if (firstAgent == lastAgent) {
-        inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER, ClientPushBuffer>();
+        inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
       } else {
-        lastAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER, ClientPushBuffer>();
+        lastAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
       }
     }
 
     if (firstAgent != lastAgent && firstAgent->input_buffer) {
       // Wait for input client push buffer message (i.e. the next inputBufferMessage)
-      inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER, ClientPushBuffer>();
+      inputBufferMessage = firstAgent->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
     }
   }
 }

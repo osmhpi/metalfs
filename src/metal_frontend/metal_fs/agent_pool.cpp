@@ -1,8 +1,7 @@
 #include <unistd.h>
-#include <metal_frontend/common/message.h>
 #include <metal_frontend/messages/message_header.hpp>
 #include <algorithm>
-#include <metal_frontend/common/buffer.hpp>
+#include <metal_frontend/messages/buffer.hpp>
 
 #include "agent_pool.hpp"
 #include "server.hpp"
@@ -32,15 +31,15 @@ void AgentPool::register_agent(ClientHello &hello, int socket) {
   // If the agent's input is not connected to another agent, it should
   // have provided a file that will be used for memory-mapped data exchange
   // except when we're writing to an internal file
-  if (agent->input_agent_pid == 0 && agent->internal_input_file.empty()) {
-    if (hello.input_buffer_filename().empty()) {
-      // Should not happen
-//      close(socket);
-      return;
-    }
-
-    agent->input_buffer = Buffer::map_shared_buffer_for_reading(hello.input_buffer_filename());
-  }
+//  if (agent->input_agent_pid == 0 && agent->internal_input_file.empty()) {
+//    if (hello.input_buffer_filename().empty()) {
+//      // Should not happen
+////      close(socket);
+//      return;
+//    }
+//
+//    agent->input_buffer = Buffer::map_shared_buffer_for_reading(hello.input_buffer_filename());
+//  }
 
   _registered_agents.emplace(agent);
 

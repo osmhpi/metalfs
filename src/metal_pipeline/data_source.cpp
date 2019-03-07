@@ -52,4 +52,8 @@ void RandomDataSource::configure(SnapAction &action) {
     free(job_struct);
 }
 
+void DataSource::setSize(size_t size) {
+  _size = size;
+}
+
 } // namespace metal

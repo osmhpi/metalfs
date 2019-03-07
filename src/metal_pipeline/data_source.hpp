@@ -7,12 +7,15 @@ namespace metal {
 
 class DataSource : public AbstractOperator {
 public:
-    explicit DataSource(size_t size) : _size(size) {}
+    explicit DataSource(size_t size = 0) : _size(size) {}
 
     std::string id() const override { return ""; };
     uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
     uint8_t temp_stream_id() const override { return 0; };
     size_t size() const { return _size; }
+
+    virtual size_t reportTotalSize() { return 0; }
+    void setSize(size_t size);
 
 protected:
     size_t _size;
@@ -21,7 +24,7 @@ protected:
 
 class HostMemoryDataSource : public DataSource {
 public:
-    HostMemoryDataSource(void *dest, size_t size) : DataSource(size), _dest(dest) {}
+    explicit HostMemoryDataSource(void *dest, size_t size = 0) : DataSource(size), _dest(dest) {}
 
     void configure(SnapAction &action) override;
 
@@ -31,7 +34,7 @@ protected:
 
 class CardMemoryDataSource : public DataSource {
 public:
-    CardMemoryDataSource(uint64_t address, size_t size) : DataSource(size), _address(address) {}
+    explicit CardMemoryDataSource(uint64_t address, size_t size = 0) : DataSource(size), _address(address) {}
 
     void configure(SnapAction &action) override;
 
@@ -41,7 +44,7 @@ protected:
 
 class RandomDataSource : public DataSource {
 public:
-    RandomDataSource(size_t size) : DataSource(size) {}
+    explicit RandomDataSource(size_t size = 0) : DataSource(size) {}
 
     void configure(SnapAction &action) override;
 };

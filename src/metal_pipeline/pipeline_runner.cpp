@@ -116,8 +116,13 @@ void ProfilingPipelineRunner::printProfilingResults() {
 
     printf("STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s\n");
 
-    printf("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n", input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count, input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, _global_clock_counter, input_mbps);
-    printf("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n", output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count, output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, _global_clock_counter, output_mbps);
+    printf("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n",
+            input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count,
+            input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, _global_clock_counter, input_mbps);
+
+    printf("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n",
+            output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count,
+            output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, _global_clock_counter, output_mbps);
 }
 
 void MockPipelineRunner::run(bool finalize) {

@@ -11,14 +11,11 @@ set(
     LIBRARIES
     m  # C Math
     lmdb
-
-    metal_storage
 )
-
 
 include_directories(
     ${LMDB_INCLUDE_DIR}
 )
 
-add_library(metal STATIC ${SOURCES})
-target_link_libraries(metal ${LIBRARIES})
+add_library(metal_filesystem STATIC ${SOURCES})
+target_link_libraries(metal_filesystem ${LIBRARIES})

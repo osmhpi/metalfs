@@ -13,12 +13,13 @@
 #include <pthread.h>
 
 extern "C" {
-#include "../common/known_operators.h"
 #include <fuse.h>
-#include "../../metal/metal.h"
-#include "../../metal/inode.h"
+#include "../../metal_filesystem/metal.h"
+#include "../../metal_filesystem/inode.h"
 };
 
+#include <metal_filesystem_pipeline/metal_pipeline_storage.hpp>
+#include <thread>
 #include "server.hpp"
 
 static char agent_filepath[255];
@@ -28,6 +29,7 @@ static const char *files_dir = "files";
 static const char *socket_alias = ".hello";
 static char socket_filename[255];
 
+static mtl_storage_backend storage;
 
 static int chown_callback(const char *path, uid_t uid, gid_t gid) {
     return mtl_chown(path + 6, uid, gid);
@@ -98,18 +100,18 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         return 0;
     }
 
-    for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
-        if (strcmp(path, test_filename) != 0) {
-            continue;
-        }
-
-        res = lstat(agent_filepath, stbuf);
-        if (res == -1)
-            return -errno;
-
-        return 0;
-    }
+//    for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
+//        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
+//        if (strcmp(path, test_filename) != 0) {
+//            continue;
+//        }
+//
+//        res = lstat(agent_filepath, stbuf);
+//        if (res == -1)
+//            return -errno;
+//
+//        return 0;
+//    }
 
     return -ENOENT;
 }
@@ -130,15 +132,15 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         return 0;
     }
 
-    snprintf(test_filename, FILENAME_MAX, "/%s", operators_dir);
-    if (strcmp(path, test_filename) == 0) {
-        filler(buf, ".", NULL, 0);
-        filler(buf, "..", NULL, 0);
-        for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-            filler(buf, known_operators[i]->name, NULL, 0);
-        }
-        return 0;
-    }
+//    snprintf(test_filename, FILENAME_MAX, "/%s", operators_dir);
+//    if (strcmp(path, test_filename) == 0) {
+//        filler(buf, ".", NULL, 0);
+//        filler(buf, "..", NULL, 0);
+//        for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
+//            filler(buf, known_operators[i]->name, NULL, 0);
+//        }
+//        return 0;
+//    }
 
     snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
     if ((strlen(path) == 6 && strncmp(path, test_filename, 6) == 0) ||
@@ -183,7 +185,6 @@ static int create_callback(const char *path, mode_t mode, struct fuse_file_info 
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in create_callback(\"%s\", %o, %p)", path, mode, fi);
     return -ENOSYS;
 }
 
@@ -216,7 +217,6 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in open_callback(\"%s\", %p)", path, fi);
     return -ENOSYS;
 }
 
@@ -224,7 +224,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     struct fuse_file_info *fi) {
 
     if (fi->fh != 0) {
-        return mtl_read(fi->fh, buf, size, offset);
+        return mtl_read(&storage, fi->fh, buf, size, offset);
     }
 
     char test_filename[FILENAME_MAX];
@@ -239,36 +239,35 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         if (res != MTL_SUCCESS)
             return -res;
 
-        return mtl_read(inode_id, buf, size, offset);
+        return mtl_read(&storage, inode_id, buf, size, offset);
     }
 
-    for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
-        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
-        if (strcmp(path, test_filename) != 0) {
-            continue;
-        }
+//    for (size_t i = 0; i < sizeof(known_operators) / sizeof(known_operators[0]); ++i) {
+//        snprintf(test_filename, FILENAME_MAX, "/%s/%s", operators_dir, known_operators[i]->name);
+//        if (strcmp(path, test_filename) != 0) {
+//            continue;
+//        }
+//
+//        int fd;
+//        int res;
+//
+//        // if (fi == NULL || true)
+//        fd = open(agent_filepath, O_RDONLY);
+//        // else
+//        //     fd = fi->fh;
+//
+//        if (fd == -1)
+//            return -errno;
+//
+//        res = pread(fd, buf, size, offset);
+//        if (res == -1)
+//            res = -errno;
+//
+//        if(fi == NULL || true)
+//            close(fd);
+//        return res;
+//    }
 
-        int fd;
-        int res;
-
-        // if (fi == NULL || true)
-        fd = open(agent_filepath, O_RDONLY);
-        // else
-        //     fd = fi->fh;
-
-        if (fd == -1)
-            return -errno;
-
-        res = pread(fd, buf, size, offset);
-        if (res == -1)
-            res = -errno;
-
-        if(fi == NULL || true)
-            close(fd);
-        return res;
-    }
-
-    fprintf(stderr, "ENOSYS in read_callback(\"%s\", %p, %d, %d, %p)", path, buf, size, offset, fi);
     return -ENOSYS;
 }
 
@@ -299,7 +298,6 @@ static int truncate_callback(const char *path, off_t size)
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in truncate_callback(\"%s\", %d)", path, size);
     return -ENOSYS;
 }
 
@@ -307,13 +305,12 @@ static int write_callback(const char *path, const char *buf, size_t size,
         off_t offset, struct fuse_file_info *fi)
 {
     if (fi->fh != 0) {
-        mtl_write(fi->fh, buf, size, offset);
+        mtl_write(&storage, fi->fh, buf, size, offset);
 
         // TODO: Return the actual length that was written (to be returned from mtl_write)
         return size;
     }
 
-    fprintf(stderr, "ENOSYS in write_callback(\"%s\", %p, %d, %d, %p)", path, buf, size, offset, fi);
     return -ENOSYS;
 }
 
@@ -333,7 +330,6 @@ static int unlink_callback(const char *path) {
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in unlink_callback(\"%s\")", path);
     return -ENOSYS;
 }
 
@@ -353,7 +349,6 @@ static int mkdir_callback(const char *path, mode_t mode)
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in mkdir_callback(\"%s\", %o)", path, mode);
     return -ENOSYS;
 }
 
@@ -374,7 +369,6 @@ static int rmdir_callback(const char *path)
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in rmdir_callback(\"%s\")", path);
     return -ENOSYS;
 }
 
@@ -394,7 +388,6 @@ static int rename_callback(const char * from_path, const char * to_path) {
         return 0;
     }
 
-    fprintf(stderr, "ENOSYS in rename_callback(\"%s\", \"%s\")", from_path, to_path);
     return -ENOSYS;
 }
 
@@ -404,33 +397,27 @@ static int flush_callback(const char *path, struct fuse_file_info *fi) {
 }
 
 static int mknod_callback_d(const char * path, mode_t mode, dev_t dev) {
-    fprintf(stderr, "ENOSYS in mknod_callback(\"%s\", %o, %x)", path, mode, dev);
     return -ENOSYS;
 }
 
 static int symlink_callback_d(const char * path0, const char * path1) {
-    fprintf(stderr, "ENOSYS in symlink_callback(\"%s\", \"%s\")", path0, path1);
     return -ENOSYS;
 }
 
 
 static int link_callback_d(const char * path0, const char * path1) {
-    fprintf(stderr, "ENOSYS in link_callback(\"%s\", \"%s\")", path0, path1);
     return -ENOSYS;
 }
 
 static int chmod_callback_d(const char * path, mode_t mode) {
-    fprintf(stderr, "ENOSYS in chmod_callback(\"%s\", %o)", path, mode);
     return -ENOSYS;
 }
 
 static int statfs_callback_d(const char * path, struct statvfs * svfs) {
-    fprintf(stderr, "ENOSYS in statfs_callback(\"%s\", %p)", path, svfs);
     return -ENOSYS;
 }
 
 static int fsync_callback_d(const char * path, int arg, struct fuse_file_info * fi) {
-    fprintf(stderr, "ENOSYS in fsync_callback(\"%s\", %d, %p)", path, arg, fi);
     return -ENOSYS;
 }
 
@@ -473,8 +460,7 @@ int main(int argc, char *argv[])
     dirname(agent_filepath);
     strncat(agent_filepath, "/operator_agent", sizeof(agent_filepath));
 
-    pthread_t server_thread;
-    pthread_create(&server_thread, NULL, start_socket, (void*)socket_filename);
+    auto server = std::thread(metal::Server::start, socket_filename);
 
     DIR* dir = opendir("metadata_store");
     if (dir) {
@@ -483,15 +469,15 @@ int main(int argc, char *argv[])
         mkdir("metadata_store", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
 
-    if (mtl_initialize("metadata_store") != MTL_SUCCESS)
+    storage = metal::PipelineStorage::backend();
+
+    if (mtl_initialize("metadata_store", &storage) != MTL_SUCCESS)
         return 1;
-    // mtl_pipeline_initialize();
 
     int retc = fuse_main(argc, argv, &fuse_example_operations, NULL);
 
     // This de-allocates the action/card, so this must be called every time we exit
-    mtl_deinitialize();
-    // mtl_pipeline_deinitialize();
+    mtl_deinitialize(&storage);
 
     return retc;
 }

@@ -10,7 +10,6 @@ include_directories(
 )
 
 SET(METAL_FS_SOURCES
-    ${METAL_FS_SHARED_SOURCES}
 
     metal_fs.cpp
     server.cpp
@@ -27,7 +26,6 @@ SET(METAL_FS_SOURCES
 SET (METAL_FS_LIBRARIES
     ${FUSE_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-#    ${PROTOBUF_LIBRARIES}
 
     ${SNAP_LIBRARY}
     ${CXL_LIBRARY}
@@ -37,4 +35,4 @@ add_executable(metal_fs
     ${METAL_FS_SOURCES}
 )
 
-target_link_libraries(metal_fs metal metal_operators metal_pipeline metal_filesystem_pipeline messages ${METAL_FS_LIBRARIES})
+target_link_libraries(metal_fs metal_filesystem metal_pipeline metal_filesystem_pipeline messages ${METAL_FS_LIBRARIES})

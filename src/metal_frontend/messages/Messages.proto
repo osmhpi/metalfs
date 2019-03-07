@@ -11,9 +11,8 @@ message ClientHello {
 
   repeated string args = 7;
 
-  optional string input_buffer_filename = 8;
-  optional string metal_input_filename = 9;
-  optional string metal_output_filename = 10;
+  optional string metal_input_filename = 8;
+  optional string metal_output_filename = 9;
 }
 
 message ClientPushBuffer {
@@ -21,13 +20,12 @@ message ClientPushBuffer {
   optional bool eof = 2;
 }
 
-message ServerInitializeOutputBuffer {
-  optional string output_buffer_filename = 1;
-}
-
 message ServerAcceptAgent {
   optional string error_msg = 1;
   optional bool valid = 2;
+
+  optional string input_buffer_filename = 3;
+  optional string output_buffer_filename = 4;
 }
 
 message ServerProcessedBuffer {

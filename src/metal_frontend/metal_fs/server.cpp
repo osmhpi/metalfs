@@ -20,19 +20,8 @@
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_filesystem_pipeline/file_data_source.hpp>
 #include <metal_filesystem_pipeline/file_data_sink.hpp>
-#include <metal_filesystem_pipeline/filesystem_pipeline_runner.hpp>
 
-#include "../../metal/metal.h"
-
-#include "../../metal_operators/op_read_file/operator.h"
-#include "../../metal_operators/op_read_mem/operator.h"
-#include "../../metal_operators/op_write_file/operator.h"
-#include "../../metal_operators/op_write_mem/operator.h"
-#include "../../metal_operators/op_change_case/operator.h"
-
-#include "metal_frontend/common/buffer.hpp"
-#include "../common/message.h"
-#include "../common/known_operators.h"
+#include <metal_frontend/messages/buffer.hpp>
 #include "registered_agent.hpp"
 #include "server.hpp"
 #include "Messages.pb.h"
@@ -40,7 +29,7 @@
 #include "agent_pool.hpp"
 #include "pipeline_builder.hpp"
 #include "pipeline_loop.hpp"
-#include "../common/socket.hpp"
+#include "../messages/socket.hpp"
 
 namespace metal {
 
@@ -52,8 +41,8 @@ Server::~Server() {
     close(_listenfd);
 }
 
-void metal::Server::start(void *args) {
-    std::string socket_file_name = (char*)args;
+void Server::start(char *socket_file_name_cstr) {
+    std::string socket_file_name = socket_file_name_cstr;
 
     Server server(socket_file_name);
     server.startInternal();
@@ -83,7 +72,7 @@ void Server::startInternal() {
 void Server::process_request(int connfd) {
     try {
         Socket socket(connfd);
-        auto request = socket.receive_message<message_type::AGENT_HELLO, ClientHello>();
+        auto request = socket.receive_message<message_type::AGENT_HELLO>();
         _agents.register_agent(request, connfd);
     } catch (std::exception& ex) {
         // Don't know this guy -- doesn't even say hello

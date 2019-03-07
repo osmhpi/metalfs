@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include <lmdb.h>
-#include <metal_storage/storage.h>
 
 typedef enum MTL_inode_type {
     MTL_FILE = 'f',

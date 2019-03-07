@@ -7,11 +7,14 @@ namespace metal {
 
 class DataSink : public AbstractOperator {
 public:
-    explicit DataSink(size_t size) : _size(size) {}
+    explicit DataSink(size_t size = 0) : _size(size) {}
 
     std::string id() const override { return ""; };
     uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
     uint8_t temp_stream_id() const override { return 0; };
+
+    virtual void prepareForTotalProcessingSize(size_t size) {}
+    virtual void setSize(size_t size);
 
 protected:
     size_t _size;
@@ -20,7 +23,7 @@ protected:
 
 class HostMemoryDataSink : public DataSink {
 public:
-    HostMemoryDataSink(void *dest, size_t size) : DataSink(size), _dest(dest) {}
+    explicit HostMemoryDataSink(void *dest, size_t size = 0) : DataSink(size), _dest(dest) {}
 
     void configure(SnapAction &action) override;
 
@@ -30,9 +33,10 @@ protected:
 
 class CardMemoryDataSink : public DataSink {
 public:
-    CardMemoryDataSink(uint64_t address, size_t size) : DataSink(size), _address(address) {}
+    explicit CardMemoryDataSink(uint64_t address, size_t size = 0) : DataSink(size), _address(address) {}
 
     void configure(SnapAction &action) override;
+    void setAddress(uint64_t address) { _address = address; }
 
 protected:
     uint64_t _address;
@@ -40,7 +44,7 @@ protected:
 
 class NullDataSink : public DataSink {
 public:
-    NullDataSink(size_t size) : DataSink(size) {}
+    explicit NullDataSink(size_t size = 0) : DataSink(size) {}
 
     void configure(SnapAction &action) override;
 };

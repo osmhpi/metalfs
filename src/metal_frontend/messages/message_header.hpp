@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace metal {
 
 enum class message_type : int {
@@ -7,9 +9,7 @@ enum class message_type : int {
   AGENT_PUSH_BUFFER,
 
   SERVER_ACCEPT_AGENT,
-  SERVER_INITIALIZE_OUTPUT_BUFFER,
   SERVER_PROCESSED_BUFFER,
-  SERVER_GOODBYE,
 
   ERROR
 };

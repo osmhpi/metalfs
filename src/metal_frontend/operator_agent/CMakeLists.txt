@@ -8,10 +8,9 @@ set(
 
 
 SET(OPERATOR_AGENT_SOURCES
-    ${METAL_FS_SHARED_SOURCES}
 
-    operator_agent.c
+    operator_agent.cpp
 )
 
 add_executable(operator_agent ${OPERATOR_AGENT_SOURCES})
-target_link_libraries(operator_agent metal_operators ${OPERATOR_AGENT_LIBRARIES})
+target_link_libraries(operator_agent messages ${OPERATOR_AGENT_LIBRARIES})

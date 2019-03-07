@@ -52,4 +52,8 @@ void NullDataSink::configure(SnapAction &action) {
     free(job_struct);
 }
 
+void DataSink::setSize(size_t size) {
+  _size = size;
+}
+
 } // namespace metal
