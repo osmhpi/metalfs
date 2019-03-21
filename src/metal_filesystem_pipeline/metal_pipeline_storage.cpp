@@ -43,19 +43,19 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
   return MTL_SUCCESS;
 }
 
-int PipelineStorage::write(uint64_t offset, void *buffer, uint64_t length) {
+int PipelineStorage::write(uint64_t offset, const void *buffer, uint64_t length) {
 
   auto dataSource = std::make_shared<HostMemoryDataSource>(buffer, length);
   auto dataSink = std::make_shared<FileDataSink>(_write_extents, offset, length);
 
-  auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
+  auto pipeline = std::make_shared<PipelineDefinition>(
+          std::vector<std::shared_ptr<AbstractOperator>>({dataSource, dataSink}));
 
   SnapPipelineRunner runner(pipeline);
   runner.run(true);
 
   return MTL_SUCCESS;
 }
-
 
 mtl_storage_backend PipelineStorage::backend() {
   return mtl_storage_backend {
@@ -71,7 +71,7 @@ mtl_storage_backend PipelineStorage::backend() {
       return PipelineStorage::instance().set_active_write_extent_list(extents, length);
     },
 
-    [](uint64_t offset, void *buffer, uint64_t length) { return PipelineStorage::instance().write(offset, buffer, length); },
+    [](uint64_t offset, const void *buffer, uint64_t length) { return PipelineStorage::instance().write(offset, buffer, length); },
     [](uint64_t offset, void *buffer, uint64_t length) { return PipelineStorage::instance().read(offset, buffer, length); }
   };
 }

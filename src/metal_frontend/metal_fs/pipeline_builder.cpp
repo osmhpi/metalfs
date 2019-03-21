@@ -17,8 +17,8 @@
 namespace metal {
 
 PipelineBuilder::PipelineBuilder(std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
-        : _pipeline_agents(std::move(pipeline_agents))
-        , _registry(OperatorRegistry("./operators"))
+        :  _registry(OperatorRegistry("./operators"))
+        , _pipeline_agents(std::move(pipeline_agents))
 {
   for (const auto &op : _registry.operators()) {
     // TODO: Don't do this every time a pipeline starts

@@ -56,8 +56,6 @@ UserOperator::~UserOperator() {
 }
 
 void UserOperator::configure(SnapAction &action) {
-    AbstractOperator::configure(action);
-
     auto jv_config_job_id = jv_object_get(manifest(), jv_string("temp_config_job_id"));
     int config_job_id = (int)jv_number_value(jv_config_job_id);
     jv_free(jv_config_job_id);
@@ -103,7 +101,7 @@ void UserOperator::configure(SnapAction &action) {
 }
 
 void UserOperator::finalize(SnapAction &action) {
-    AbstractOperator::finalize(action);
+    (void)action;
 }
 
 std::string UserOperator::id() const {

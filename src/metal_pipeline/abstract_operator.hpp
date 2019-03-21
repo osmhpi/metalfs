@@ -11,8 +11,8 @@ class SnapAction;
 
 class AbstractOperator {
 public:
-    virtual void configure(SnapAction &action);
-    virtual void finalize(SnapAction &action);
+    virtual void configure(SnapAction &action) = 0;
+    virtual void finalize(SnapAction &action) = 0;
 
     virtual std::string id() const = 0;
     virtual uint8_t temp_enable_id() const = 0;

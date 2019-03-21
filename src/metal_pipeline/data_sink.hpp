@@ -13,7 +13,7 @@ public:
     uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
     uint8_t temp_stream_id() const override { return 0; };
 
-    virtual void prepareForTotalProcessingSize(size_t size) {}
+    virtual void prepareForTotalProcessingSize(size_t size) { (void)size; }
     virtual void setSize(size_t size);
 
 protected:
@@ -26,6 +26,7 @@ public:
     explicit HostMemoryDataSink(void *dest, size_t size = 0) : DataSink(size), _dest(dest) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction &action) override { (void) action; };
 
 protected:
     void *_dest;
@@ -36,6 +37,7 @@ public:
     explicit CardMemoryDataSink(uint64_t address, size_t size = 0) : DataSink(size), _address(address) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction &action) override { (void)action; }
     void setAddress(uint64_t address) { _address = address; }
 
 protected:
@@ -47,6 +49,7 @@ public:
     explicit NullDataSink(size_t size = 0) : DataSink(size) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction& action) override { (void)action; }
 };
 
 } // namespace metal

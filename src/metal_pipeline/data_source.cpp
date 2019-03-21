@@ -12,8 +12,6 @@ namespace metal {
 
 
 void HostMemoryDataSource::configure(SnapAction &action) {
-    AbstractOperator::configure(action);
-
     auto *job_struct = (uint64_t*)snap_malloc(3 * sizeof(uint64_t));
     job_struct[0] = htobe64(reinterpret_cast<uint64_t>(_dest));
     job_struct[1] = htobe64(_size);
@@ -30,13 +28,11 @@ void HostMemoryDataSource::configure(SnapAction &action) {
 }
 
 void CardMemoryDataSource::configure(SnapAction &action) {
-    AbstractOperator::configure(action);
+    (void)action;
     // TODO
 }
 
 void RandomDataSource::configure(SnapAction &action) {
-    AbstractOperator::configure(action);
-
     auto *job_struct = (uint64_t*)snap_malloc(3 * sizeof(uint64_t));
     job_struct[0] = htobe64(0);
     job_struct[1] = htobe64(_size);

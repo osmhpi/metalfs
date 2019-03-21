@@ -15,7 +15,7 @@
 namespace metal {
 
 Buffer Buffer::create_temp_file_for_shared_buffer(bool writable) {
-    char output_file_name[23] = "/tmp/accfs-mmap-XXXXXX";
+    char output_file_name[23] = "/tmp/metal-mmap-XXXXXX";
     int file = mkstemp(output_file_name);
 
     // Extend the file to BUFFER_SIZE by writing a null-byte at the end

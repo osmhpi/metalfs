@@ -5,7 +5,6 @@
 #define META_DB_NAME "meta"
 
 const char next_inode_id_key[] = "next_inode";
-const char next_heap_node_id_key[] = "next_heap_node";
 MDB_dbi meta_db = 0;
 
 int mtl_ensure_meta_db_open(MDB_txn *txn) {
@@ -39,13 +38,7 @@ uint64_t mtl_next_id(MDB_txn *txn, MDB_val *key) {
 
 uint64_t mtl_next_inode_id(MDB_txn *txn) {
 
-    MDB_val key = { .mv_size = sizeof(next_inode_id_key), .mv_data = &next_inode_id_key };
-    return mtl_next_id(txn, &key);
-}
-
-uint64_t mtl_next_heap_node_id(MDB_txn *txn) {
-
-    MDB_val key = { .mv_size = sizeof(next_heap_node_id_key), .mv_data = &next_heap_node_id_key };
+    MDB_val key = { .mv_size = sizeof(next_inode_id_key), .mv_data = (void*)&next_inode_id_key };
     return mtl_next_id(txn, &key);
 }
 

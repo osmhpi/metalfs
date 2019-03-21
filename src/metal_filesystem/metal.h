@@ -19,7 +19,6 @@ int mtl_deinitialize(mtl_storage_backend *storage);
 typedef struct mtl_inode mtl_inode;
 struct mtl_dir;
 typedef struct mtl_dir mtl_dir;
-typedef struct mtl_file_extent mtl_file_extent;
 
 int mtl_get_inode(const char *path, mtl_inode *inode);
 int mtl_open(const char *filename, uint64_t *inode_id);

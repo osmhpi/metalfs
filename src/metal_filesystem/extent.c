@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <assert.h>
+#include <memory.h>
 
 #include "metal.h"
 #include "heap.h"

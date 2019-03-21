@@ -1,3 +1,5 @@
+#include <utility>
+
 #pragma once
 
 #include <stddef.h>
@@ -17,11 +19,11 @@ class Buffer {
   uint64_t size() { return BUFFER_SIZE; }
 
  protected:
-  explicit Buffer(std::string filename, int file, void* buffer) : _filename(filename), _file(file), _buffer(buffer) {}
+  explicit Buffer(std::string filename, int file, void* buffer) : _filename(std::move(filename)), _file(file), _buffer(buffer) {}
 
-  void *_buffer;
-  int _file;
   std::string _filename;
+  int _file;
+  void *_buffer;
 };
 
 } // namespace metal

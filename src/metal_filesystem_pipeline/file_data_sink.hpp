@@ -5,7 +5,7 @@
 
 namespace metal {
 
-#define NVME_BLOCK_BYTES (64 * 1024)
+#define NVME_BLOCK_BYTES 512
 
 class FileDataSink : public CardMemoryDataSink {
 

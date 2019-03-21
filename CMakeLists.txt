@@ -5,8 +5,8 @@ project(metal_fs)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}) # Put binaries into root of build tree
 
-set(CMAKE_C_FLAGS "-Wall -Wextra -std=gnu11")
-set(CMAKE_CXX_FLAGS "-std=c++17")
+set(CMAKE_C_FLAGS "-Wall -Wextra -Werror -std=gnu11")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -std=c++17")
 
 find_package(FUSE REQUIRED)
 find_package(Threads REQUIRED)

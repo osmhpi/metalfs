@@ -14,7 +14,7 @@ extern "C" {
 namespace metal {
 
 FileDataSink::FileDataSink(std::string filename, uint64_t offset, uint64_t size)
-    : CardMemoryDataSink(0, size), _filename(std::move(filename)), _offset(offset) {
+    : CardMemoryDataSink(0, size), _offset(offset), _filename(std::move(filename)) {
   if (size > 0) {
     prepareForTotalProcessingSize(offset + size);
   } else {

@@ -172,7 +172,7 @@ int mtl_opendir(const char *filename, mtl_dir **dir) {
     uint64_t inode_id;
     int res = mtl_resolve_inode(txn, filename, &inode_id);
 
-    mtl_inode *dir_inode;
+    const mtl_inode *dir_inode;
     mtl_directory_entry_head *dir_entries;
     res = mtl_load_directory(txn, inode_id, &dir_inode, &dir_entries, NULL);
 
@@ -309,9 +309,9 @@ int mtl_chown(const char *path, int uid, int gid) {
         return -res;
     }
 
-    mtl_inode *old_inode;
+    const mtl_inode *old_inode;
     mtl_inode new_inode;
-    void *data;
+    const void *data;
     uint64_t data_length;
     res = mtl_load_inode(txn, inode_id, &old_inode, &data, &data_length);
     if (res != MTL_SUCCESS) {
@@ -470,7 +470,7 @@ int mtl_write(mtl_storage_backend *storage, uint64_t inode_id, const char *buffe
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, 0, &txn);
 
-    mtl_inode *inode;
+    const mtl_inode *inode;
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
@@ -500,7 +500,7 @@ uint64_t mtl_read(mtl_storage_backend *storage, uint64_t inode_id, char *buffer,
     uint64_t read_len = size;
 
     // Prepare the storage and check how much we can read
-    mtl_inode *inode;
+    const mtl_inode *inode;
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
@@ -527,7 +527,7 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
     MDB_txn *txn;
     mdb_txn_begin(env, NULL, 0, &txn);
 
-    mtl_inode *inode;
+    const mtl_inode *inode;
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
@@ -640,7 +640,7 @@ int mtl_load_extent_list(const char *filename,
     }
 
     // Load extents
-    mtl_inode *inode;
+    const mtl_inode *inode;
     const mtl_file_extent *tmp_extents;
     uint64_t tmp_extents_length;
     res = mtl_load_file(txn, inode_id, &inode, &tmp_extents, &tmp_extents_length);

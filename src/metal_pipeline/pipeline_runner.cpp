@@ -126,6 +126,7 @@ void ProfilingPipelineRunner::printProfilingResults() {
 }
 
 void MockPipelineRunner::run(bool finalize) {
+    (void)finalize;
 }
 
 } // namespace metal

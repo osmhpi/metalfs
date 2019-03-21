@@ -9,7 +9,7 @@ namespace metal {
 
 class RegisteredAgent {
  public:
-  explicit RegisteredAgent(Socket socket) : input_buffer(std::nullopt), output_buffer(std::nullopt), socket(std::move(socket)) {}
+  explicit RegisteredAgent(Socket socket) : socket(std::move(socket)), input_buffer(std::nullopt), output_buffer(std::nullopt) {}
 
   uint pid{};
   std::string operator_type;

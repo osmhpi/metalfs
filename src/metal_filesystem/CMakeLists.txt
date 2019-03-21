@@ -1,10 +1,17 @@
 set(
     SOURCES
     extent.c
+    extent.h
     inode.c
+    inode.h
     meta.c
+    meta.h
     metal.c
+    metal.h
     heap.c
+    heap.h
+    storage.h
+    storage_in_memory.c
 )
 
 set(

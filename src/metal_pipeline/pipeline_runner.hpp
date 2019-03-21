@@ -24,8 +24,8 @@ public:
     void run(bool finalize) override;
 
 protected:
-    virtual void initialize(SnapAction &action) {}
-    virtual void finalize(SnapAction &action) {}
+    virtual void initialize(SnapAction &action) { (void)action; }
+    virtual void finalize(SnapAction &action) { (void)action; }
     void requireReinitiailzation() { _initialized = false; }
 
     bool _initialized = false;
@@ -34,7 +34,7 @@ protected:
 class ProfilingPipelineRunner : public SnapPipelineRunner {
 public:
     explicit ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline)
-        : SnapPipelineRunner(std::move(pipeline)), _performance_counters(10), _global_clock_counter(0) {}
+        : SnapPipelineRunner(std::move(pipeline)), _global_clock_counter(0), _performance_counters(10) {}
     void selectOperatorForProfiling(std::shared_ptr<AbstractOperator> op);
     void printProfilingResults();
 

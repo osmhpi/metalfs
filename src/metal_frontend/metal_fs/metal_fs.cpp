@@ -21,6 +21,7 @@ extern "C" {
 #include <metal_filesystem_pipeline/metal_pipeline_storage.hpp>
 #include <thread>
 #include "server.hpp"
+#include "../../../third_party/cxxopts/include/cxxopts.hpp"
 
 static char agent_filepath[255];
 
@@ -171,6 +172,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
     int res;
+    (void)mode; // TODO
 
     char test_filename[FILENAME_MAX];
     snprintf(test_filename, FILENAME_MAX, "/%s", files_dir);
@@ -273,6 +275,8 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
 static int release_callback(const char *path, struct fuse_file_info *fi)
 {
+    (void)path;
+    (void)fi;
     return 0;
 }
 
@@ -304,6 +308,8 @@ static int truncate_callback(const char *path, off_t size)
 static int write_callback(const char *path, const char *buf, size_t size,
         off_t offset, struct fuse_file_info *fi)
 {
+    (void)path;
+
     if (fi->fh != 0) {
         mtl_write(&storage, fi->fh, buf, size, offset);
 
@@ -336,6 +342,7 @@ static int unlink_callback(const char *path) {
 static int mkdir_callback(const char *path, mode_t mode)
 {
     int res;
+    (void)mode; // TODO
 
     char test_filename[FILENAME_MAX];
     snprintf(test_filename, FILENAME_MAX, "/%s/", files_dir);
@@ -392,68 +399,94 @@ static int rename_callback(const char * from_path, const char * to_path) {
 }
 
 // debug!
-static int flush_callback(const char *path, struct fuse_file_info *fi) {
-    return 0;
-}
-
-static int mknod_callback_d(const char * path, mode_t mode, dev_t dev) {
-    return -ENOSYS;
-}
-
-static int symlink_callback_d(const char * path0, const char * path1) {
-    return -ENOSYS;
-}
-
-
-static int link_callback_d(const char * path0, const char * path1) {
-    return -ENOSYS;
-}
-
-static int chmod_callback_d(const char * path, mode_t mode) {
-    return -ENOSYS;
-}
-
-static int statfs_callback_d(const char * path, struct statvfs * svfs) {
-    return -ENOSYS;
-}
-
-static int fsync_callback_d(const char * path, int arg, struct fuse_file_info * fi) {
-    return -ENOSYS;
-}
+//static int flush_callback(const char *path, struct fuse_file_info *fi) {
+//    return 0;
+//}
+//
+//static int mknod_callback_d(const char * path, mode_t mode, dev_t dev) {
+//    return -ENOSYS;
+//}
+//
+//static int symlink_callback_d(const char * path0, const char * path1) {
+//    return -ENOSYS;
+//}
+//
+//
+//static int link_callback_d(const char * path0, const char * path1) {
+//    return -ENOSYS;
+//}
+//
+//static int chmod_callback_d(const char * path, mode_t mode) {
+//    return -ENOSYS;
+//}
+//
+//static int statfs_callback_d(const char * path, struct statvfs * svfs) {
+//    return -ENOSYS;
+//}
+//
+//static int fsync_callback_d(const char * path, int arg, struct fuse_file_info * fi) {
+//    return -ENOSYS;
+//}
 
 constexpr struct fuse_operations fuse_example_operations = []{
     struct fuse_operations ops{};
     ops.create = create_callback; //?
-    ops.flush = flush_callback; //?
+//    ops.flush = flush_callback; //?
     ops.getattr = getattr_callback;
     /* ops.access = xmp_access; */
     ops.readlink = readlink_callback;
     ops.readdir = readdir_callback;
-    ops.mknod = mknod_callback_d;
+//    ops.mknod = mknod_callback_d;
     ops.mkdir = mkdir_callback;
-    ops.symlink = symlink_callback_d;
+//    ops.symlink = symlink_callback_d;
     ops.unlink = unlink_callback;
     ops.rmdir = rmdir_callback;
     ops.rename = rename_callback;
-    ops.link = link_callback_d;
-    ops.chmod = chmod_callback_d;
+//    ops.link = link_callback_d;
+//    ops.chmod = chmod_callback_d;
     ops.chown = chown_callback;
     ops.truncate = truncate_callback;
     ops.open = open_callback;
     ops.read = read_callback;
     ops.write = write_callback;
-    ops.statfs = statfs_callback_d;
+//    ops.statfs = statfs_callback_d;
     ops.release = release_callback;
-    ops.fsync = fsync_callback_d;
+//    ops.fsync = fsync_callback_d;
     return ops;
 }();
 
 int main(int argc, char *argv[])
 {
+    cxxopts::Options options("metal_fs", "Metal FS FUSE Driver and Pipeline Orchestrator");
+
+    options
+        .positional_help("[optional args]")
+        .show_positional_help();
+
+    options.add_options()
+        ("in_memory", "Enable in-memory file system backend (for debugging)")
+        ("p,path", "Path to mount point", cxxopts::value<std::string>(), "PATH")
+        ("c,card", "FPGA card to use", cxxopts::value<int>()->default_value("0"), "CARD NO")
+        ("m,metadata", "Location of metadata storage", cxxopts::value<std::string>()->default_value("./metadata_store"), "PATH")
+        ("o,operators", "Location of operator metadata", cxxopts::value<std::string>()->default_value("./operators"), "PATH")
+        ("h,help", "Display help")
+        ;
+
+    options.parse_positional({"path"});
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help"))
+    {
+        std::cout << options.help() << std::endl;
+        return 0;
+    }
+
     // Set a file name for the server socket
-    char temp[L_tmpnam];
-    tmpnam(temp);
-    strncpy(socket_filename, temp, 255);
+    char socket_dir[] = "/tmp/metal-socket-XXXXXX";
+    mkdtemp(socket_dir);
+    auto socket_file = std::string(socket_dir) + "/metal.sock";
+    strncpy(socket_filename, socket_file.c_str(), 255);
 
     // Determine the path to the operator_agent executable
     strncpy(agent_filepath, argv[0], sizeof(agent_filepath));

@@ -21,4 +21,4 @@ include_directories(
 )
 
 add_library(metal_filesystem_pipeline STATIC ${SOURCES})
-target_link_libraries(metal_filesystem_pipeline metal_filesystem ${METAL_PIPELINE_LIBRARIES})
+target_link_libraries(metal_filesystem_pipeline metal_filesystem metal_pipeline ${METAL_FILESYSTEM_PIPELINE_LIBRARIES})

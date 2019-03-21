@@ -24,12 +24,13 @@ protected:
 
 class HostMemoryDataSource : public DataSource {
 public:
-    explicit HostMemoryDataSource(void *dest, size_t size = 0) : DataSource(size), _dest(dest) {}
+    explicit HostMemoryDataSource(const void *dest, size_t size = 0) : DataSource(size), _dest(dest) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction &action) override { (void) action; };
 
 protected:
-    void *_dest;
+    const void *_dest;
 };
 
 class CardMemoryDataSource : public DataSource {
@@ -37,6 +38,8 @@ public:
     explicit CardMemoryDataSource(uint64_t address, size_t size = 0) : DataSource(size), _address(address) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction &action) override { (void)action; }
+    void setAddress(uint64_t address) { _address = address; }
 
 protected:
     uint64_t _address;
@@ -47,6 +50,7 @@ public:
     explicit RandomDataSource(size_t size = 0) : DataSource(size) {}
 
     void configure(SnapAction &action) override;
+    void finalize(SnapAction& action) override { (void)action; }
 };
 
 } // namespace metal

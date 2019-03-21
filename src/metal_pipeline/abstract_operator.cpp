@@ -4,12 +4,12 @@
 
 namespace metal {
 
-void AbstractOperator::configure(SnapAction &action) {
-    // TODO: Delete?
-}
-
-void AbstractOperator::finalize(SnapAction &action) {
-}
+//void AbstractOperator::configure(SnapAction &action) {
+//    // TODO: Delete?
+//}
+//
+//void AbstractOperator::finalize(SnapAction &action) {
+//}
 
 void AbstractOperator::setOption(std::string option, OperatorArgumentValue arg) {
     auto o = _optionDefinitions.find(option);

@@ -41,7 +41,7 @@ protected:
 class OperatorArgument {
 public:
     explicit OperatorArgument(size_t offset = 0)
-        : _offset(offset), _value(std::nullopt) {};
+        : _value(std::nullopt), _offset(offset) {};
 
     size_t offset() const { return _offset; }
     bool hasValue() const { return _value.has_value(); }
