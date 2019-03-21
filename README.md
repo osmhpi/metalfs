@@ -6,7 +6,7 @@ Metal FS was presented at the OpenPOWER Summit Europe 2018: [[Recording]](https:
 
 ## Demo
 
-[![Metal FS Demo](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK.svg)](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK)
+[![Metal FS Demo](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK.svg)](https://asciinema.org/a/UGLGmi59v1mlkutQFCJGCzYKK?speed=2)
 
 ## Metal FS Operators
 
