@@ -3,7 +3,7 @@
 
 extern "C" {
 #include <fuse.h>
-};
+}
 
 namespace metal {
 
@@ -31,7 +31,6 @@ class Context {
   std::string operators_prefix() { return operators_dir() + "/"; }
 
   OperatorRegistry &registry() { return *_registry; };
-
 
  protected:
   int _card;
