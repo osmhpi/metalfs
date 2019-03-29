@@ -1,5 +1,5 @@
 set(
-    METAL_TEST_SOURCES
+    METAL_FILESYSTEM_TEST_SOURCES
 
     base_test.cpp
     base_test.hpp
@@ -18,5 +18,5 @@ set(
 
 include_directories(../../third_party/googletest/googletest/)
 
-add_executable(metal_test ${METAL_TEST_SOURCES})
-target_link_libraries(metal_test metal ${LIBRARIES})
+add_executable(metal_filesystem_test ${METAL_FILESYSTEM_TEST_SOURCES})
+target_link_libraries(metal_filesystem_test metal_filesystem ${LIBRARIES})

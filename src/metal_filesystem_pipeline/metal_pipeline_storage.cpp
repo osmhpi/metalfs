@@ -37,7 +37,7 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
 
   auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
 
-  SnapPipelineRunner runner(pipeline);
+  SnapPipelineRunner runner(pipeline, 0);
   runner.run(true);
 
   return MTL_SUCCESS;
@@ -51,7 +51,7 @@ int PipelineStorage::write(uint64_t offset, const void *buffer, uint64_t length)
   auto pipeline = std::make_shared<PipelineDefinition>(
           std::vector<std::shared_ptr<AbstractOperator>>({dataSource, dataSink}));
 
-  SnapPipelineRunner runner(pipeline);
+  SnapPipelineRunner runner(pipeline, 0);
   runner.run(true);
 
   return MTL_SUCCESS;

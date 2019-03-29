@@ -3,11 +3,14 @@
 #include <ftw.h>
 
 extern "C" {
-#include <metal/metal.h>
+#include <metal_filesystem/metal.h>
 }
 
 int rm(const char *path, const struct stat *s, int flag, struct FTW *f)
 {
+    (void)s;
+    (void)f;
+
     int status;
     int (*rm_func)( const char * );
 
@@ -33,13 +36,13 @@ void BaseTest::SetUp() {
 }
 
 void BaseTest::TearDown() {
-    mtl_deinitialize();
+    mtl_deinitialize(&in_memory_storage);
 }
 
 void BaseTest::test_initialize_env() {
     mdb_env_create(&env);
     mdb_env_set_maxdbs(env, 4); // inodes, extents, heap, meta
-    int res = mdb_env_open(env, "test_files/metadata_store", 0, 0644);
+    mdb_env_open(env, "test_files/metadata_store", 0, 0644);
 }
 
 MDB_txn *BaseTest::test_create_txn() {
@@ -55,5 +58,5 @@ void BaseTest::test_commit_txn(MDB_txn *txn) {
 void MetalTest::SetUp() {
     BaseTest::SetUp();
 
-    mtl_initialize("test_files/metadata_store");
+    mtl_initialize("test_files/metadata_store", &in_memory_storage);
 }

@@ -1,5 +1,5 @@
 extern "C" {
-#include <metal/metal.h>
+#include <metal_filesystem/metal.h>
 }
 
 #include "base_test.hpp"
@@ -69,27 +69,27 @@ TEST_F(MetalTest, ListsDirectoryContents) {
 TEST_F(MetalTest, WritesToAFile) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
-  char *test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+  std::string test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
 }
 
 TEST_F(MetalTest, ReadsWrittenBytes) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
-  char *test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+  std::string test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
 
   char output[256];
-  EXPECT_EQ(strlen(test) + 1, mtl_read(inode, output, sizeof(output), 0));
+  EXPECT_EQ(test.size() + 1, mtl_read(&in_memory_storage, inode, output, sizeof(output), 0));
 
-  EXPECT_EQ(0, strncmp(test, output, strlen(test) + 1));
+  EXPECT_EQ(0, strncmp(test.c_str(), output, test.size() + 1));
 }
 
 TEST_F(MetalTest, TruncatesAFile) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
-  char *test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(inode, test, strlen(test) + 1, 0));
+  std::string test = "hello world!";
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
 
   EXPECT_EQ(MTL_SUCCESS, mtl_truncate(inode, 0));
 }

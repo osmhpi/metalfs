@@ -1,17 +1,12 @@
 #include <include/gtest/gtest.h>
 #include <malloc.h>
-#include <metal_pipeline/pipeline.hpp>
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_pipeline/data_source.hpp>
+#include <metal_pipeline/snap_action.hpp>
 #include "base_test.hpp"
-
-extern "C" {
-#include <metal/metal.h>
-#include <metal_operators/all_operators.h>
-}
 
 namespace metal {
 
@@ -46,7 +41,7 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
     pipeline.run(action);
@@ -88,7 +83,7 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
     pipeline.run(action);

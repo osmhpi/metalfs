@@ -41,14 +41,12 @@ Server::~Server() {
     close(_listenfd);
 }
 
-void Server::start(char *socket_file_name_cstr) {
-    std::string socket_file_name = socket_file_name_cstr;
-
+void Server::start(std::string socket_file_name, int card) {
     Server server(socket_file_name);
-    server.startInternal();
+    server.startInternal(card);
 }
 
-void Server::startInternal() {
+void Server::startInternal(int card) {
 
     _listenfd = 0;
     int connfd = 0;
@@ -65,11 +63,11 @@ void Server::startInternal() {
     for (;;) {
         connfd = accept(_listenfd, NULL, NULL);
 
-        process_request(connfd);
+        process_request(connfd, card);
     }
 }
 
-void Server::process_request(int connfd) {
+void Server::process_request(int connfd, int card) {
     try {
         Socket socket(connfd);
         auto request = socket.receive_message<message_type::AGENT_HELLO>();
@@ -92,7 +90,7 @@ void Server::process_request(int connfd) {
 
         auto operators_agents = builder.configure();
 
-        PipelineLoop loop(std::move(operators_agents));
+        PipelineLoop loop(std::move(operators_agents), card);
         loop.run();
     } catch (std::exception &ex) {
         // Something went wrong.

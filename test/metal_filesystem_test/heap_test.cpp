@@ -1,6 +1,6 @@
 extern "C" {
-#include <metal/metal.h>
-#include <metal/heap.h>
+#include <metal_filesystem/metal.h>
+#include <metal_filesystem/heap.h>
 }
 
 #include "base_test.hpp"
@@ -32,7 +32,7 @@ TEST_F(BaseTest, Heap_Returns_Inserted_Element) {
         EXPECT_EQ(MTL_SUCCESS, mtl_heap_extract_max(txn, &max_value));
         test_commit_txn(txn);
 
-        EXPECT_EQ(4711, max_value);
+        EXPECT_EQ(4711u, max_value);
     }
     {
         MDB_txn *txn = test_create_txn();
@@ -63,7 +63,7 @@ TEST_F(BaseTest, Heap_Returns_Inserted_Elements_In_Priority_Order) {
         EXPECT_EQ(MTL_SUCCESS, mtl_heap_extract_max(txn, &max_value));
         test_commit_txn(txn);
 
-        EXPECT_EQ(4712, max_value);
+        EXPECT_EQ(4712u, max_value);
     }
     {
         MDB_txn *txn = test_create_txn();
@@ -71,7 +71,7 @@ TEST_F(BaseTest, Heap_Returns_Inserted_Elements_In_Priority_Order) {
         EXPECT_EQ(MTL_SUCCESS, mtl_heap_extract_max(txn, &max_value));
         test_commit_txn(txn);
 
-        EXPECT_EQ(4711, max_value);
+        EXPECT_EQ(4711u, max_value);
     }
 }
 

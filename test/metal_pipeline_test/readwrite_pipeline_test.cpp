@@ -6,11 +6,7 @@
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <include/gtest/gtest.h>
 #include <metal_pipeline/pipeline_runner.hpp>
-
-extern "C" {
-#include <metal/metal.h>
-#include <metal_operators/all_operators.h>
-}
+#include <metal_pipeline/snap_action.hpp>
 
 namespace metal {
 
@@ -20,13 +16,13 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-static void print_memory_64(void * mem)
-{
-    for (int i = 0; i < 64; ++i) {
-        printf("%02x ", ((uint8_t*)mem)[i]);
-        if (i%8 == 7) printf("\n");
-    }
-}
+//static void print_memory_64(void * mem)
+//{
+//    for (int i = 0; i < 64; ++i) {
+//        printf("%02x ", ((uint8_t*)mem)[i]);
+//        if (i%8 == 7) printf("\n");
+//    }
+//}
 
 TEST(ReadWritePipeline, TransfersEntirePage) {
 
@@ -43,7 +39,7 @@ TEST(ReadWritePipeline, TransfersEntirePage) {
 //    SnapAction action(METALFPGA_ACTION_TYPE);
 
     auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
-    SnapPipelineRunner runner(pipeline);
+    SnapPipelineRunner runner(pipeline, 0);
     ASSERT_NO_THROW(runner.run(false));
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -62,7 +58,7 @@ TEST(ReadWritePipeline, TransfersEntirePageToInternalSink) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -80,7 +76,7 @@ TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -96,7 +92,7 @@ TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGeneratorToInternalSi
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -121,7 +117,7 @@ TEST(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src + src_offset, payload_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest + dest_offset, payload_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE);
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));

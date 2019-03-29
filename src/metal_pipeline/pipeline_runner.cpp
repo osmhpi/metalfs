@@ -14,7 +14,7 @@ namespace metal {
 
 void SnapPipelineRunner::run(bool run_finalize) {
 
-    SnapAction action = SnapAction(METALFPGA_ACTION_TYPE);
+    SnapAction action = SnapAction(METALFPGA_ACTION_TYPE, _card);
 
     if (!_initialized) {
         initialize(action);

@@ -482,9 +482,12 @@ int mtl_write(mtl_storage_backend *storage, uint64_t inode_id, const char *buffe
         return res;
     }
 
-    storage->set_active_write_extent_list(extents, extents_length);
-
     mdb_txn_commit(txn);
+
+    mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+    mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
+    storage->set_active_write_extent_list(extents, extents_length);
+    mdb_txn_abort(txn);
 
     // Copy the actual data to storage
     storage->write(offset, buffer, size);

@@ -20,7 +20,8 @@ protected:
 
 class SnapPipelineRunner : public AbstractPipelineRunner {
 public:
-    explicit SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline) : AbstractPipelineRunner(std::move(pipeline)) {}
+    SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
+      : AbstractPipelineRunner(std::move(pipeline)), _initialized(false), _card(card) {}
     void run(bool finalize) override;
 
 protected:
@@ -28,13 +29,14 @@ protected:
     virtual void finalize(SnapAction &action) { (void)action; }
     void requireReinitiailzation() { _initialized = false; }
 
-    bool _initialized = false;
+    bool _initialized;
+    int _card;
 };
 
 class ProfilingPipelineRunner : public SnapPipelineRunner {
 public:
-    explicit ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline)
-        : SnapPipelineRunner(std::move(pipeline)), _global_clock_counter(0), _performance_counters(10) {}
+    ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
+        : SnapPipelineRunner(std::move(pipeline), card), _global_clock_counter(0), _performance_counters(10) {}
     void selectOperatorForProfiling(std::shared_ptr<AbstractOperator> op);
     void printProfilingResults();
 

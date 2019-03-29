@@ -12,6 +12,8 @@ include_directories(
 SET(METAL_FS_SOURCES
 
     metal_fs.cpp
+    metal_fuse_operations.cpp
+    metal_fuse_operations.hpp
     server.cpp
     server.hpp
     agent_pool.hpp
@@ -36,3 +38,5 @@ add_executable(metal_fs
 )
 
 target_link_libraries(metal_fs metal_filesystem metal_pipeline metal_filesystem_pipeline messages ${METAL_FS_LIBRARIES})
+
+add_dependencies(metal_fs metal_pipeline_test operator_agent)

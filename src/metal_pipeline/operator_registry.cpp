@@ -5,7 +5,7 @@
 
 namespace metal {
 
-OperatorRegistry::OperatorRegistry(const std::string search_path)
+OperatorRegistry::OperatorRegistry(const std::string &search_path)
     : _operators() {
 
     std::vector<std::string> files_in_search_path;
@@ -13,6 +13,11 @@ OperatorRegistry::OperatorRegistry(const std::string search_path)
     {
         struct dirent *dp = nullptr;
         auto dirp = opendir(search_path.c_str());
+
+        if (dirp == nullptr) {
+            throw std::runtime_error("Could not resolve operators path");
+        }
+
         while ((dp = readdir(dirp)) != nullptr) {
             if (dp->d_type == DT_REG)
                 files_in_search_path.emplace_back(std::string(dp->d_name));

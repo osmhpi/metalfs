@@ -33,5 +33,6 @@ target_link_libraries(metal_pipeline_test metal_pipeline ${LIBRARIES})
 
 add_custom_command(
         TARGET metal_pipeline_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/operators/
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/operators/*.json ${CMAKE_CURRENT_BINARY_DIR}/operators/
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/operators/*.json)

@@ -25,7 +25,7 @@ SnapAction::SnapAction(snap_action_type_t action_type, int card_no) {
     }
 }
 
-SnapAction::SnapAction(SnapAction &&other) : _action(other._action), _card(other._card) {
+SnapAction::SnapAction(SnapAction &&other) noexcept : _action(other._action), _card(other._card) {
     other._action = nullptr;
     other._card = nullptr;
 }

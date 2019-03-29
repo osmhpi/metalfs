@@ -8,7 +8,7 @@ namespace metal {
 
 class OperatorRegistry {
 public:
-    explicit OperatorRegistry(const std::string search_path);
+    explicit OperatorRegistry(const std::string &search_path);
 
     const std::unordered_map<std::string, std::shared_ptr<UserOperator>> & operators() const { return _operators; }
 

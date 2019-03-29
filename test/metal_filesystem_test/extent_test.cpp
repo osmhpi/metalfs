@@ -1,6 +1,6 @@
 extern "C" {
-#include <metal/metal.h>
-#include <metal/extent.h>
+#include <metal_filesystem/metal.h>
+#include <metal_filesystem/extent.h>
 }
 
 #include "base_test.hpp"
@@ -19,8 +19,8 @@ TEST_F(BaseTest, AllocatesAnExtent) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, NULL, &offset, true));
-        EXPECT_EQ(0, offset);
+        EXPECT_EQ(4u, mtl_reserve_extent(txn, length, NULL, &offset, true));
+        EXPECT_EQ(0u, offset);
         test_commit_txn(txn);
     }
 }
@@ -37,14 +37,14 @@ TEST_F(BaseTest, AllocatesTwoExtents) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, NULL, &offset, true));
-        EXPECT_EQ(0, offset);
+        EXPECT_EQ(4u, mtl_reserve_extent(txn, length, NULL, &offset, true));
+        EXPECT_EQ(0u, offset);
         test_commit_txn(txn);
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, NULL, &offset, true));
-        EXPECT_EQ(4, offset);
+        EXPECT_EQ(4u, mtl_reserve_extent(txn, length, NULL, &offset, true));
+        EXPECT_EQ(4u, offset);
         test_commit_txn(txn);
     }
 }
@@ -61,8 +61,8 @@ TEST_F(BaseTest, FreesAnExtent) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, NULL, &offset, true));
-        EXPECT_EQ(0, offset);
+        EXPECT_EQ(4u, mtl_reserve_extent(txn, length, NULL, &offset, true));
+        EXPECT_EQ(0u, offset);
         test_commit_txn(txn);
     }
     {
@@ -84,8 +84,8 @@ TEST_F(BaseTest, MakesFreedSpaceAvailableForReuse) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(4, mtl_reserve_extent(txn, length, NULL, &offset, true));
-        EXPECT_EQ(0, offset);
+        EXPECT_EQ(4u, mtl_reserve_extent(txn, length, NULL, &offset, true));
+        EXPECT_EQ(0u, offset);
         test_commit_txn(txn);
     }
     {
@@ -95,8 +95,8 @@ TEST_F(BaseTest, MakesFreedSpaceAvailableForReuse) {
     }
     {
         MDB_txn *txn = test_create_txn();
-        EXPECT_EQ(8, mtl_reserve_extent(txn, 8, NULL, &offset, true));
-        EXPECT_EQ(0, offset);
+        EXPECT_EQ(8u, mtl_reserve_extent(txn, 8, NULL, &offset, true));
+        EXPECT_EQ(0u, offset);
         test_commit_txn(txn);
     }
 }

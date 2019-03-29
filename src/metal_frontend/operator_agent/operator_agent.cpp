@@ -16,11 +16,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/mman.h>
-#include <metal_frontend/common/socket.hpp>
 
-#include "../common/known_operators.h"
-#include "metal_frontend/common/buffer.hpp"
-#include "../common/message.h"
+#include <metal_frontend/messages/socket.hpp>
+#include <metal_frontend/messages/buffer.hpp>
 #include "Messages.pb.h"
 
 namespace metal {
@@ -65,7 +63,7 @@ ConnectedFile get_process_connected_to_std_fd(int fd_no) {
             snprintf(stdout_filename, FILENAME_MAX, "/proc/%s/fd/%d", dir->d_name, 1 - fd_no);
 
             // Check if stdout of this process is the same as our stdin pipe
-            auto len = readlink(stdout_filename, stdout_pipename, FILENAME_MAX);
+            uint64_t len = readlink(stdout_filename, stdout_pipename, FILENAME_MAX);
             if (strncmp(stdout_pipename, "pipe:", 5 > len ? len : 5) == 0 && len > sizeof("pipe:[]")) {
                 int64_t inode = atoll(stdout_pipename + sizeof("pipe["));
                 if ((uint64_t) inode == stdin_stats.st_ino) {
@@ -142,7 +140,7 @@ ConnectedFile determine_process_or_file_connected_to_std_fd(
 
         // If this process is not another operator process, we reset the pid
 
-        int stdin_executable_len = strlen(connected_process.path.c_str());
+        auto stdin_executable_len = strlen(connected_process.path.c_str());
         if (strncmp(operators_prefix, connected_process.path.c_str(),
                     operators_prefix_len > stdin_executable_len ? stdin_executable_len : operators_prefix_len) != 0) {
             // Reset pid
@@ -242,7 +240,7 @@ int main(int argc, char *argv[]) {
     if (connect(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
         perror("connect() failed");
 
-    int input_file = -1, output_file = -1;
+//    int input_file = -1, output_file = -1;
     size_t bytes_read = 0;
     bool eof = false;
 
@@ -286,8 +284,7 @@ int main(int argc, char *argv[]) {
 
     socket.send_message<metal::message_type::AGENT_HELLO>(request);
 
-    auto response = socket.receive_message<metal::message_type::SERVER_ACCEPT_AGENT, metal::ServerAcceptAgent>();
-
+    auto response = socket.receive_message<metal::message_type::SERVER_ACCEPT_AGENT>();
 
     if (response.has_error_msg()) {
         fprintf(stderr, "%s", response.error_msg().c_str());
@@ -321,7 +318,7 @@ int main(int argc, char *argv[]) {
 
         socket.send_message<metal::message_type::AGENT_PUSH_BUFFER>(processing_request);
 
-        auto processing_response = socket.receive_message<metal::message_type::SERVER_PROCESSED_BUFFER, metal::ServerProcessedBuffer>();
+        auto processing_response = socket.receive_message<metal::message_type::SERVER_PROCESSED_BUFFER>();
 
         if (processing_response.size() && output_buffer != std::nullopt) {
             // Write to stdout

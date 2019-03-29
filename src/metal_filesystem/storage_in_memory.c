@@ -18,10 +18,15 @@ mtl_file_extent *_extents = NULL;
 uint64_t _extents_length;
 
 int mtl_storage_initialize() {
+    _storage = malloc(NUM_BLOCKS * BLOCK_SIZE);
     return MTL_SUCCESS;
 }
 
 int mtl_storage_deinitialize() {
+    if (_storage) {
+        free(_storage);
+        _storage = NULL;
+    }
     return MTL_SUCCESS;
 }
 

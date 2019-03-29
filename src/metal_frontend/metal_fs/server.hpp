@@ -20,14 +20,11 @@ public:
     explicit Server(std::string socketFileName);
     virtual ~Server();
 
-    static void start(char *socket_file_name);
+    static void start(std::string socket_file_name, int card);
 
 protected:
-    void startInternal();
-    void process_request(int connfd);
-
-    template<typename T>
-    T receive_message(int connfd, MessageHeader &header);
+    void startInternal(int card);
+    void process_request(int connfd, int card);
 
     AgentPool _agents;
     std::string _socketFileName;

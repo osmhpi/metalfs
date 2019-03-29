@@ -18,7 +18,7 @@ void PipelineLoop::run() {
   }
   auto pipeline_definition = std::make_shared<PipelineDefinition>(std::move(pipeline_operators));
 
-  ProfilingPipelineRunner runner(pipeline_definition);
+  ProfilingPipelineRunner runner(pipeline_definition, _card);
 
   auto dataSource = std::dynamic_pointer_cast<DataSource>(_pipeline.front().first);
   auto dataSink = std::dynamic_pointer_cast<DataSink>(_pipeline.back().first);
