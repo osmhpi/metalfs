@@ -1,34 +1,68 @@
-#
-# Copyright 2017, International Business Machines
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+ifndef SNAP_ROOT
+$(info You have specified a wrong $$SNAP_ROOT.)
+$(error Please make sure that $$SNAP_ROOT is set up correctly.)
+endif
 
 vhd_srcs=$(wildcard *.vhd_source)
 vhd_files=$(vhd_srcs:.vhd_source=.vhd)
 
+hls_components=$(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
+hls_ip=$(hls_components:=/hls_impl_ip)
+
 ACTION_ROOT ?= $(PWD)/..
+LOGS_DIR ?= $(PWD)/../logs
+CONFIG_FILE = $(SNAP_ROOT)/.snap_config
 
-.PHONY: all config clean vhdl
+HLS_TESTBENCH_CFLAGS = -I ../../../../../third_party/googletest/googletest/include
 
-all: config
+ifeq ($(DDRI_USED),)
+	DDRI_USED := $(shell grep DDRI_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+endif
+ifeq ($(NVME_USED),)
+	NVME_USED := $(shell grep NVME_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+endif
+ifeq ($(FPGACHIP),)
+	FPGACHIP := $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+endif
 
-config:
-	$(info Call action_config.sh (creating action IPs))
-	./action_config.sh
+ifeq ($(DDRI_USED),TRUE)
+	DDRI_FILTER = "\-\- only for DDRI_USED!=TRUE"
+else
+	DDRI_FILTER = "\-\- only for DDRI_USED=TRUE"
+endif
+
+ifeq ($(NVME_USED),TRUE)
+	NVME_FILTER = "\-\- only for NVME_USED!=TRUE"
+else
+	NVME_FILTER = "\-\- only for NVME_USED=TRUE"
+endif
+
+.PHONY: config clean vhdl $(hls_components)
+
+all: vhd_files hls $(ACTION_ROOT)/ip/ip_user_files/component.xml
+
+$(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip)
+	@echo "                        Generating Block Design"
+	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+
+hls: $(hls_components)
+
+$(hls_components):
+	@mkdir -p $(LOGS_DIR)
+	@echo "                        Generating IP from HLS component $(@F)"
+	@echo "Calling make DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
+	@make DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
+	if [ $${hls_ret} -ne 0 ]; then \
+		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
+	fi
+
+vhd_files: $(vhd_files)
+
+$(vhd_files): $(vhd_srcs) .snap_config
+	@echo "                        Generating $@"
+	@grep -v $(DDRI_FILTER) $< | grep -v $(NVME_FILTER) > $@
 
 clean:
-	$(info Also clean up action ip project...)
 	@$(RM) $(ACTION_ROOT)/ip/*.log
 	@$(RM) $(ACTION_ROOT)/ip/*.jou
 	@$(RM) -fr $(ACTION_ROOT)/ip/action_ip_prj
@@ -39,9 +73,8 @@ clean:
 
 vhdl:
 
-#
-# FIXME Consider moving the functionality from action_config.sh into
-#      this Makefile. This also allows to define a proper clean rule
-#      such that the directory gets properly cleaned up and git status
-#      shows not the generated files.
-#
+.snap_config: FORCE
+	@if [ -n .snap_config ]; then touch .snap_config; fi
+	@if [ $$(echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) | comm -3 .snap_config - | wc -c) -gt 0 ]; then echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) > .snap_config; fi
+
+FORCE:

@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#define METALFPGA_ACTION_TYPE 0x00000216
+#define METALFPGA_ACTION_TYPE 0xFB060001
 
 #define MTL_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
@@ -145,6 +145,9 @@ typedef struct metalfpga_job {
 #define OP_MEM_MODE_DRAM 1
 #define OP_MEM_MODE_NULL 2
 #define OP_MEM_MODE_RANDOM 3
+
+#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 4711
+#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 4711
 
 #ifdef __cplusplus
 }
