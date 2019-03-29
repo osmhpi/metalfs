@@ -8,10 +8,6 @@
 
 #include "mtl_op_mem.h"
 #include "mtl_op_file.h"
-#include "mtl_op_passthrough.h"
-#include "mtl_op_image.h"
-#include "mtl_op_change_case.h"
-// #include "mtl_op_blowfish.h"
 
 #define HW_RELEASE_LEVEL       0x00000013
 
@@ -20,20 +16,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mtl_stream &axis_s_1,
-                                mtl_stream &axis_s_2,
-                                mtl_stream &axis_s_3,
-                                mtl_stream &axis_s_4,
-                                mtl_stream &axis_s_5,
-                                mtl_stream &axis_s_6,
-                                mtl_stream &axis_s_7,
-                                mtl_stream &axis_m_1,
-                                mtl_stream &axis_m_2,
-                                mtl_stream &axis_m_3,
-                                mtl_stream &axis_m_4,
-                                mtl_stream &axis_m_5,
-                                mtl_stream &axis_m_6,
-                                mtl_stream &axis_m_7,
                                 axi_datamover_command_stream_t &mm2s_cmd,
                                 axi_datamover_status_stream_t &mm2s_sts,
                                 axi_datamover_command_stream_t &s2mm_cmd,
@@ -42,11 +24,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
                                 action_reg * act_reg);
 
 static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job);
-// static mtl_retc_t action_query(snap_membus_t * mem_out, uint64_t job_address, mtl_job_query_t & job);
-// static mtl_retc_t action_access(snap_membus_t * mem_in,
-//                                snap_membus_t * mem_out,
-//                                snap_membus_t * mem_ddr,
-//                                const mtl_job_access_t & job);
 static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job);
 static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job);
 
@@ -56,38 +33,12 @@ static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctr
 static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
-    mtl_stream &axis_s_1,
-    mtl_stream &axis_s_2,
-    mtl_stream &axis_s_3,
-    mtl_stream &axis_s_4,
-    mtl_stream &axis_s_5,
-    mtl_stream &axis_s_6,
-    mtl_stream &axis_s_7,
-    mtl_stream &axis_m_1,
-    mtl_stream &axis_m_2,
-    mtl_stream &axis_m_3,
-    mtl_stream &axis_m_4,
-    mtl_stream &axis_m_5,
-    mtl_stream &axis_m_6,
-    mtl_stream &axis_m_7,
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_stream_t &s2mm_sts,
     snapu32_t *random_ctrl
 );
-
-// static void action_file_write_block(snap_membus_t * mem_in,
-//                                    mtl_slot_offset_t slot,
-//                                    snapu64_t buffer_address,
-//                                    mtl_block_offset_t begin_offset,
-//                                    mtl_block_offset_t end_offset);
-// static void action_file_read_block(snap_membus_t * mem_in,
-//                                     snap_membus_t * mem_out,
-//                                     snapu64_t slot,
-//                                     snapu64_t buffer_address,
-//                                     mtl_block_offset_t begin_offset,
-//                                     mtl_block_offset_t end_offset);
 
 // ------------------------------------------------
 // -------------- ACTION ENTRY POINT --------------
@@ -99,20 +50,6 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
                 snapu32_t * nvme,
 #endif
-                mtl_stream &axis_s_1,
-                mtl_stream &axis_s_2,
-                mtl_stream &axis_s_3,
-                mtl_stream &axis_s_4,
-                mtl_stream &axis_s_5,
-                mtl_stream &axis_s_6,
-                mtl_stream &axis_s_7,
-                mtl_stream &axis_m_1,
-                mtl_stream &axis_m_2,
-                mtl_stream &axis_m_3,
-                mtl_stream &axis_m_4,
-                mtl_stream &axis_m_5,
-                mtl_stream &axis_m_6,
-                mtl_stream &axis_m_7,
                 axi_datamover_command_stream_t &mm2s_cmd,
                 axi_datamover_status_stream_t &mm2s_sts,
                 axi_datamover_command_stream_t &s2mm_cmd,
@@ -144,20 +81,6 @@ void hls_action(snap_membus_t * din,
 #endif
 
     // Configure AXI4 Stream Interface
-#pragma HLS INTERFACE axis port=axis_s_1
-#pragma HLS INTERFACE axis port=axis_s_2
-#pragma HLS INTERFACE axis port=axis_s_3
-#pragma HLS INTERFACE axis port=axis_s_4
-#pragma HLS INTERFACE axis port=axis_s_5
-#pragma HLS INTERFACE axis port=axis_s_6
-#pragma HLS INTERFACE axis port=axis_s_7
-#pragma HLS INTERFACE axis port=axis_m_1
-#pragma HLS INTERFACE axis port=axis_m_2
-#pragma HLS INTERFACE axis port=axis_m_3
-#pragma HLS INTERFACE axis port=axis_m_4
-#pragma HLS INTERFACE axis port=axis_m_5
-#pragma HLS INTERFACE axis port=axis_m_6
-#pragma HLS INTERFACE axis port=axis_m_7
 #pragma HLS INTERFACE axis port=mm2s_cmd
 #pragma HLS INTERFACE axis port=mm2s_sts
 #pragma HLS INTERFACE axis port=s2mm_cmd
@@ -179,20 +102,6 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
             nvme,
 #endif
-            axis_s_1,
-            axis_s_2,
-            axis_s_3,
-            axis_s_4,
-            axis_s_5,
-            axis_s_6,
-            axis_s_7,
-            axis_m_1,
-            axis_m_2,
-            axis_m_3,
-            axis_m_4,
-            axis_m_5,
-            axis_m_6,
-            axis_m_7,
             mm2s_cmd,
             mm2s_sts,
             s2mm_cmd,
@@ -218,20 +127,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
 #ifdef NVME_ENABLED
                                 snapu32_t * nvme,
 #endif
-                                mtl_stream &axis_s_1,
-                                mtl_stream &axis_s_2,
-                                mtl_stream &axis_s_3,
-                                mtl_stream &axis_s_4,
-                                mtl_stream &axis_s_5,
-                                mtl_stream &axis_s_6,
-                                mtl_stream &axis_s_7,
-                                mtl_stream &axis_m_1,
-                                mtl_stream &axis_m_2,
-                                mtl_stream &axis_m_3,
-                                mtl_stream &axis_m_4,
-                                mtl_stream &axis_m_5,
-                                mtl_stream &axis_m_6,
-                                mtl_stream &axis_m_7,
                                 axi_datamover_command_stream_t &mm2s_cmd,
                                 axi_datamover_status_stream_t &mm2s_sts,
                                 axi_datamover_command_stream_t &s2mm_cmd,
@@ -311,20 +206,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         action_run_operators(
             mem_in,
             mem_out,
-            axis_s_1,
-            axis_s_2,
-            axis_s_3,
-            axis_s_4,
-            axis_s_5,
-            axis_s_6,
-            axis_s_7,
-            axis_m_1,
-            axis_m_2,
-            axis_m_3,
-            axis_m_4,
-            axis_m_5,
-            axis_m_6,
-            axis_m_7,
             mm2s_cmd,
             mm2s_sts,
             s2mm_cmd,
@@ -351,24 +232,6 @@ static mtl_retc_t process_action(snap_membus_t * mem_in,
         result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), false, write_mem_config, data_preselect_switch_ctrl);
         break;
     }
-    case MTL_JOB_OP_CHANGE_CASE_SET_MODE:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        result = op_change_case_set_mode(mtl_get64<0>(line));
-        break;
-    }
-    // case MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY:
-    // {
-    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-    //     result = op_blowfish_encrypt_set_key(line);
-    //     break;
-    // }
-    // case MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY:
-    // {
-    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-    //     result = op_blowfish_decrypt_set_key(line);
-    //     break;
-    // }
     default:
         result = SNAP_RETC_FAILURE;
         break;
@@ -514,20 +377,6 @@ static mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctr
 static mtl_retc_t action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
-    mtl_stream &axis_s_1,
-    mtl_stream &axis_s_2,
-    mtl_stream &axis_s_3,
-    mtl_stream &axis_s_4,
-    mtl_stream &axis_s_5,
-    mtl_stream &axis_s_6,
-    mtl_stream &axis_s_7,
-    mtl_stream &axis_m_1,
-    mtl_stream &axis_m_2,
-    mtl_stream &axis_m_3,
-    mtl_stream &axis_m_4,
-    mtl_stream &axis_m_5,
-    mtl_stream &axis_m_6,
-    mtl_stream &axis_m_7,
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
@@ -556,20 +405,6 @@ static mtl_retc_t action_run_operators(
             random_ctrl,
             read_mem_config);
 
-        // Processing Operators
-        op_passthrough(axis_s_1, axis_m_1, enable_2 && enable_3);
-        op_image(axis_s_2, axis_m_2, enable_4);
-        op_change_case(axis_s_3, axis_m_3, enable_5);
-
-        // op_blowfish_encrypt(axis_s_4, axis_m_4, enable_6);
-        op_passthrough(axis_s_4, axis_m_4, enable_6);
-        // op_blowfish_decrypt(axis_s_5, axis_m_5, enable_7);
-        op_passthrough(axis_s_5, axis_m_5, enable_7);
-
-        // Placeholder Operators (to be assigned)
-        op_passthrough(axis_s_6, axis_m_6, enable_8);
-        op_passthrough(axis_s_7, axis_m_7, enable_9);
-
         // Output Operators
         op_mem_write(
             s2mm_cmd,
@@ -580,75 +415,6 @@ static mtl_retc_t action_run_operators(
     return SNAP_RETC_SUCCESS;
 }
 
-// static void action_file_write_block(snap_membus_t * mem_in,
-//                                     mtl_slot_offset_t slot,
-//                                     snapu64_t buffer_address,
-//                                     mtl_block_offset_t begin_offset,
-//                                     mtl_block_offset_t end_offset)
-// {
-//     snapu64_t end_address = buffer_address + end_offset - begin_offset;
-
-//     snapu64_t begin_line = MFB_ADDRESS(buffer_address);
-//     mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
-//     snapu64_t end_line = MFB_ADDRESS(end_address);
-//     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
-
-//     mtl_block_offset_t offset = begin_offset;
-//     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
-//     {
-//         snap_membus_t line = mem_in[i_line];
-//         mfb_bytecount_t begin_byte = 0;
-//         if (i_line == begin_line)
-//         {
-//             begin_byte = begin_line_offset;
-//         }
-//         mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
-//         if (i_line == end_line)
-//         {
-//             end_byte = end_line_offset;
-//         }
-//         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
-//         {
-//             mtl_file_buffers[slot][offset++] = mtl_get8(line, i_byte);
-//         }
-//     }
-// }
-
-// static void action_file_read_block(snap_membus_t * mem_in,
-//                                    snap_membus_t * mem_out,
-//                                    mtl_slot_offset_t slot,
-//                                    snapu64_t buffer_address,
-//                                    mtl_block_offset_t begin_offset,
-//                                    mtl_block_offset_t end_offset)
-// {
-//     snapu64_t end_address = buffer_address + end_offset - begin_offset;
-
-//     snapu64_t begin_line = MFB_ADDRESS(buffer_address);
-//     mfb_byteoffset_t begin_line_offset = MFB_LINE_OFFSET(buffer_address);
-//     snapu64_t end_line = MFB_ADDRESS(end_address);
-//     mfb_byteoffset_t end_line_offset = MFB_LINE_OFFSET(end_address);
-
-//     mtl_block_offset_t offset = begin_offset;
-//     for (snapu64_t i_line = begin_line; i_line <= end_line; ++i_line)
-//     {
-//         snap_membus_t line = mem_in[i_line];
-//         mfb_bytecount_t begin_byte = 0;
-//         if (i_line == begin_line)
-//         {
-//             begin_byte = begin_line_offset;
-//         }
-//         mfb_bytecount_t end_byte = MFB_INCREMENT - 1;
-//         if (i_line == end_line)
-//         {
-//             end_byte = end_line_offset;
-//         }
-//         for (mfb_bytecount_t i_byte = begin_byte; i_byte <= end_byte; ++i_byte)
-//         {
-//             mtl_set8(line, i_byte, mtl_file_buffers[slot][offset++]);
-//         }
-//         mem_out[i_line] = line;
-//     }
-// }
 
 //-----------------------------------------------------------------------------
 //--- TESTBENCH ---------------------------------------------------------------
