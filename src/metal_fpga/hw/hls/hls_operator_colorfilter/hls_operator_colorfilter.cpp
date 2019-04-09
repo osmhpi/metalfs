@@ -17,8 +17,9 @@ void process_stream(mtl_stream &in, mtl_stream &out) {
 
 void hls_operator_colorfilter(mtl_stream &in, mtl_stream &out) {
 
-    #pragma HLS INTERFACE axis port=in
-    #pragma HLS INTERFACE axis port=out
+    #pragma HLS INTERFACE axis port=in name=axis_input
+    #pragma HLS INTERFACE axis port=out name=axis_output
+    #pragma HLS INTERFACE s_axilite port=return bundle=control
 
     #pragma HLS DATAFLOW
     mtl_stream padded_stream;

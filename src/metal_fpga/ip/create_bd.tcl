@@ -57,22 +57,6 @@ if { ( $::env(NVME_USED) == "TRUE" ) } {
 create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 metal_switch
 set_property -dict [list CONFIG.NUM_SI {8} CONFIG.NUM_MI {8} CONFIG.ROUTING_MODE {1} CONFIG.DECODER_REG {1}] [get_bd_cells metal_switch]
 
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_1] [get_bd_intf_pins metal_switch/S01_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_2] [get_bd_intf_pins metal_switch/S02_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_3] [get_bd_intf_pins metal_switch/S03_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_4] [get_bd_intf_pins metal_switch/S04_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_5] [get_bd_intf_pins metal_switch/S05_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_6] [get_bd_intf_pins metal_switch/S06_AXIS]
-connect_bd_intf_net [get_bd_intf_pins snap_action/axis_m_7] [get_bd_intf_pins metal_switch/S07_AXIS]
-
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M01_AXIS] [get_bd_intf_pins snap_action/axis_s_1]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M02_AXIS] [get_bd_intf_pins snap_action/axis_s_2]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M03_AXIS] [get_bd_intf_pins snap_action/axis_s_3]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M04_AXIS] [get_bd_intf_pins snap_action/axis_s_4]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M05_AXIS] [get_bd_intf_pins snap_action/axis_s_5]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M06_AXIS] [get_bd_intf_pins snap_action/axis_s_6]
-connect_bd_intf_net [get_bd_intf_pins metal_switch/M07_AXIS] [get_bd_intf_pins snap_action/axis_s_7]
-
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins metal_switch/aclk]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins metal_switch/s_axi_ctrl_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins metal_switch/aresetn]
@@ -212,44 +196,7 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/aresetn]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins data_selector/s_axi_ctrl_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/s_axi_ctrl_aresetn]
 
-# AXI Perfmon
-
-create_bd_cell -type ip -vlnv xilinx.com:ip:axi_perf_mon:5.0 axi_perf_mon_0
-set_property -dict [list CONFIG.C_HAVE_SAMPLED_METRIC_CNT {0} CONFIG.C_SLOT_7_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_6_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_5_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_4_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_3_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_2_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_1_AXI_PROTOCOL {AXI4S} CONFIG.C_SLOT_0_AXI_PROTOCOL {AXI4S} CONFIG.C_GLOBAL_COUNT_WIDTH {64} CONFIG.C_NUM_OF_COUNTERS {10} CONFIG.C_NUM_MONITOR_SLOTS {8}] [get_bd_cells axi_perf_mon_0]
-
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_0_AXIS] [get_bd_intf_pins metal_switch/M00_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_1_AXIS] [get_bd_intf_pins metal_switch/M01_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_2_AXIS] [get_bd_intf_pins metal_switch/M02_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_3_AXIS] [get_bd_intf_pins metal_switch/M03_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_4_AXIS] [get_bd_intf_pins metal_switch/M04_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_5_AXIS] [get_bd_intf_pins metal_switch/M05_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_6_AXIS] [get_bd_intf_pins metal_switch/M06_AXIS]
-connect_bd_intf_net [get_bd_intf_pins axi_perf_mon_0/SLOT_7_AXIS] [get_bd_intf_pins metal_switch/M07_AXIS]
-
-connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M00_AXI] [get_bd_intf_pins axi_perf_mon_0/S_AXI]
-
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/s_axi_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_0_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_1_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_2_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_3_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_4_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_5_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_6_axis_aclk]
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/slot_7_axis_aclk]
-
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/s_axi_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_0_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_1_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_2_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_3_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_4_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_5_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_6_axis_aresetn]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/slot_7_axis_aresetn]
-
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/core_aclk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/core_aresetn]
+source $aip_dir/instantiate_operators.tcl
 
 # Finalization
 

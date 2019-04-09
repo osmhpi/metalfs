@@ -1,0 +1,10 @@
+{
+    "operators": {
+        "colorfilter": {
+            "source": "hls/hls_operator_colorfilter"
+        },
+        "better_colorfilter": {
+            "source": "hls/hls_operator_colorfilter"
+        }
+    }
+}
