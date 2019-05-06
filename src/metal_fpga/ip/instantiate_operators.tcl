@@ -24,6 +24,8 @@ dict for {id path} $operators {
     set interrupt_id [expr $i - 1]
     connect_bd_net [get_bd_pins op_$id/interrupt] [get_bd_pins interrupt_concat/In${interrupt_id}]
 
+    exec jq --arg id $id --arg stream_id $control_port --arg enable_id $interrupt_id ". + {id: \$id, temp_config_job_id: 0, temp_stream_id: \$stream_id | tonumber, temp_enable_id: \$enable_id | tonumber}" $action_root/hw/$path/operator.json > $action_root/hw/operators/${id}.json
+
     incr i
 }
 
