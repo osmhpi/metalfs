@@ -41,7 +41,7 @@ endif
 
 all: vhd_files hls $(ACTION_ROOT)/ip/ip_user_files/component.xml
 
-$(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip)
+$(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/create_action_ip.tcl $(ACTION_ROOT)/ip/create_bd.tcl $(ACTION_ROOT)/ip/instantiate_operators.tcl
 	@echo "                        Generating Block Design"
 	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 

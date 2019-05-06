@@ -4,6 +4,7 @@ set streams_count [expr [dict size $operators] + 1]
 
 set_property -dict [list CONFIG.NUM_SI $streams_count CONFIG.NUM_MI $streams_count] [get_bd_cells metal_switch]
 set_property -dict [list CONFIG.NUM_MI [expr [dict size $operators] + 4]] [get_bd_cells axi_metal_ctrl_crossbar]
+set_property -dict [list CONFIG.NUM_PORTS [dict size $operators]] [get_bd_cells interrupt_concat]
 
 set i 1
 
@@ -20,7 +21,8 @@ dict for {id path} $operators {
     connect_bd_net [get_bd_ports ap_clk] [get_bd_pins op_$id/ap_clk]
     connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins op_$id/ap_rst_n]
 
-    include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg]
+    set interrupt_id [expr $i - 1]
+    connect_bd_net [get_bd_pins op_$id/interrupt] [get_bd_pins interrupt_concat/In${interrupt_id}]
 
     incr i
 }

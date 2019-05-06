@@ -177,6 +177,19 @@ static inline snapu32_t mtl_get32le(const snap_membus_t & busline,
            ((snapu32_t)pattern(31, 24) << 24);
 }
 
+
+template<int lowest_byte>
+static inline snapu32_t mtl_get32be(const snap_membus_t & busline)
+{
+    mfb_bitoffset_t o_bit = MFB_TOBITOFFSET(lowest_byte);
+    snapu32_t pattern = busline(o_bit+31, o_bit);
+
+    return ((snapu32_t)pattern( 7,  0) << 24) +
+           ((snapu32_t)pattern(15,  8) << 16) +
+           ((snapu32_t)pattern(23, 16) <<  8) +
+           ((snapu32_t)pattern(31, 24) <<  0);
+}
+
 static inline snapu32_t mtl_get32be(const snap_membus_t & busline,
                                    mfb_byteoffset_t lowest_byte)
 {

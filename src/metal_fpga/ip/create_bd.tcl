@@ -196,6 +196,9 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/aresetn]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins data_selector/s_axi_ctrl_aclk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/s_axi_ctrl_aresetn]
 
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 interrupt_concat
+connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V]
+
 source $aip_dir/instantiate_operators.tcl
 
 # Finalization
@@ -206,6 +209,7 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
+include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
 
 set_property offset 0x0000000000000000 [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
 set_property range 16E [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
