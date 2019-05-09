@@ -1,9 +1,7 @@
 {
   "id": "blowfish_encrypt",
   "description": "Encrypt data with the blowfish cipher",
-  "temp_config_job_id": 15,
-  "temp_stream_id": 4,
-  "temp_enable_id": 6,
+  "internal_id": 4,
   "options": {
     "key": {
       "short": "k",

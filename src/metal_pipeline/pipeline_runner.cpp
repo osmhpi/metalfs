@@ -41,16 +41,16 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
         if (operatorPosition == _pipeline->operators().begin()) {
             // If the operator is the data source, we profile its output stream twice
             ++operatorPosition;
-            job_struct[0] = htobe64((*operatorPosition)->temp_stream_id());
-            job_struct[1] = htobe64((*operatorPosition)->temp_stream_id());
+            job_struct[0] = htobe64((*operatorPosition)->internal_id());
+            job_struct[1] = htobe64((*operatorPosition)->internal_id());
         } else {
-            job_struct[0] = htobe64(_op->temp_stream_id());
+            job_struct[0] = htobe64(_op->internal_id());
             // If the operator is the data sink, we profile its input stream twice
             ++operatorPosition;
             if (operatorPosition == _pipeline->operators().end()) {
-                job_struct[1] = htobe64(_op->temp_stream_id());
+                job_struct[1] = htobe64(_op->internal_id());
             } else {
-                job_struct[1] = htobe64((*operatorPosition)->temp_stream_id());
+                job_struct[1] = htobe64((*operatorPosition)->internal_id());
             }
         }
 

@@ -25,7 +25,7 @@ void PipelineDefinition::run(SnapAction &action) {
 void PipelineDefinition::configureSwitch(SnapAction &action) const {
     uint64_t enable_mask = 0;
     for (const auto &op : _operators)
-        enable_mask |= (1 << op->temp_enable_id());
+        enable_mask |= (1 << op->internal_id());
 
     auto *job_struct_enable = (uint64_t*)snap_malloc(sizeof(uint32_t) * 10);
     *job_struct_enable = htobe64(enable_mask);
@@ -35,13 +35,13 @@ void PipelineDefinition::configureSwitch(SnapAction &action) const {
     for (int i = 0; i < 8; ++i)
         job_struct[i] = htobe32(disable);
 
-    uint8_t previous_op_stream = _operators.size() ? _operators[0]->temp_stream_id() : 0;
+    uint8_t previous_op_stream = _operators.size() ? _operators[0]->internal_id() : 0;
     for (const auto &op : _operators) {
         // From the perspective of the Stream Switch:
         // Which Master port (output) should be
         // sourced from which Slave port (input)
-        job_struct[op->temp_stream_id()] = htobe32(previous_op_stream);
-        previous_op_stream = op->temp_stream_id();
+        job_struct[op->internal_id()] = htobe32(previous_op_stream);
+        previous_op_stream = op->internal_id();
     }
 
     try {

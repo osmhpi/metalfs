@@ -4,6 +4,7 @@ set(
     base_test.cpp
     base_test.hpp
     blowfish_pipeline_test.cpp
+    colorfilter_pipeline_test.cpp
     readwrite_pipeline_test.cpp
     profiling_test.cpp
     operator_registry_test.cpp
@@ -23,7 +24,8 @@ set(
 
 
 include_directories(
-    ../../third_party/googletest/googletest/
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/
+    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 
     ${SNAP_INCLUDE_DIR}
 )

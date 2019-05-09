@@ -4,7 +4,7 @@
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <metal_pipeline/pipeline_definition.hpp>
-#include <include/gtest/gtest.h>
+#include <gtest/gtest.h>
 #include <metal_pipeline/pipeline_runner.hpp>
 #include <metal_pipeline/snap_action.hpp>
 
@@ -28,15 +28,13 @@ TEST(ReadWritePipeline, TransfersEntirePage) {
 
     uint64_t n_pages = 10;
     uint64_t n_bytes = n_pages * 4096;
-    uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);
 
-    uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = (uint8_t*)memalign(4096, n_bytes);
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
-
-//    SnapAction action(METALFPGA_ACTION_TYPE);
 
     auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
     SnapPipelineRunner runner(pipeline, 0);
@@ -52,7 +50,7 @@ TEST(ReadWritePipeline, TransfersEntirePageToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
-    uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
@@ -71,7 +69,7 @@ TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
 
-    uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = (uint8_t*)memalign(4096, n_bytes);
 
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
@@ -102,7 +100,7 @@ TEST(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
 
     uint64_t src_pages = 3;
     uint64_t src_bytes = src_pages * 4096;
-    uint8_t *src = (uint8_t*)memalign(4096, src_bytes);
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, src_bytes));
 
     uint64_t src_offset = 1815;
     uint64_t dest_offset = 2;
@@ -112,7 +110,7 @@ TEST(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
 
     uint64_t dest_pages = 2;
     uint64_t dest_bytes = dest_pages * 4096;
-    uint8_t *dest = (uint8_t*)memalign(4096, dest_bytes);
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, dest_bytes));
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src + src_offset, payload_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest + dest_offset, payload_bytes);

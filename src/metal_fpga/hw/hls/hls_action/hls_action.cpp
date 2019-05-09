@@ -47,7 +47,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE s_axilite port=action_reg bundle=ctrl_reg offset=0x100
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
 
-#pragma HLS INTERFACE ap_none register port=interrupt_reg
+#pragma HLS INTERFACE ap_none port=interrupt_reg
 
 #ifdef NVME_ENABLED
     //NVME Config Interface

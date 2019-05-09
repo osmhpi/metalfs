@@ -10,6 +10,7 @@ extern "C" {
 
 #include <stdexcept>
 #include <iostream>
+#include <metal_fpga/hw/hls/include/action_metalfpga.h>
 
 #include "snap_action.hpp"
 
@@ -44,7 +45,6 @@ UserOperator::UserOperator(std::string manifest_path) {
         throw std::runtime_error("Unexpected input");
     }
 
-//    jv_show(manifest, -1);
     _manifest = manifest;
 
     // Build options object
@@ -56,12 +56,11 @@ UserOperator::~UserOperator() {
 }
 
 void UserOperator::configure(SnapAction &action) {
-    auto jv_config_job_id = jv_object_get(manifest(), jv_string("temp_config_job_id"));
-    int config_job_id = (int)jv_number_value(jv_config_job_id);
-    jv_free(jv_config_job_id);
+    int config_job_id = MTL_JOB_OP_CONFIGURE;
+    const int configuration_data_offset = 4 * sizeof(uint32_t); // bytes
 
     // Allocate job struct memory aligned on a page boundary, hopefully 4KB is sufficient
-    char *job_config = (char*)snap_malloc(4096);
+    auto job_config = reinterpret_cast<char*>(snap_malloc(4096));
 
     for (const auto& option : _options) {
         if (!option.second.has_value())
@@ -69,33 +68,40 @@ void UserOperator::configure(SnapAction &action) {
 
         const auto &definition = _optionDefinitions.at(option.first);
 
+        auto *metadata = reinterpret_cast<uint32_t*>(job_config);
+        metadata[0] = htobe32(definition.offset() / sizeof(uint32_t)); // offset
+        metadata[2] = htobe32(internal_id());
+
         switch ((OptionType)option.second.value().index()) {
             case OptionType::INT: {
                 int beValue = htobe64(std::get<int>(option.second.value()));
                 // Accessing un-validated, user-provided offset: dangerous!
-                memcpy(job_config + definition.offset(), &beValue, sizeof(int));
+                memcpy(job_config + configuration_data_offset, &beValue, sizeof(int));
+                metadata[1] = htobe32(sizeof(int)/ sizeof(uint32_t)); // length
                 break;
             }
             case OptionType::BOOL: {
                 // Is htobe(bool) well-defined?
                 int beValue = htobe64(std::get<bool>(option.second.value()));
-                memcpy(job_config + definition.offset(), &beValue, sizeof(int));
+                memcpy(job_config + configuration_data_offset, &beValue, sizeof(int));
+                metadata[1] = htobe32(sizeof(int)/ sizeof(uint32_t)); // length
                 break;
             }
             case OptionType::BUFFER: {
                 // *No* endianness conversions on buffers
                 auto& buffer = *std::get<std::shared_ptr<std::vector<char>>>(option.second.value());
-                memcpy(job_config + definition.offset(), buffer.data(), buffer.size());
+                memcpy(job_config + configuration_data_offset, buffer.data(), buffer.size());
+                metadata[1] = htobe32(buffer.size() / sizeof(uint32_t)); // length
                 break;
             }
         }
-    }
 
-    try {
-        action.execute_job(static_cast<uint64_t>(config_job_id), job_config);
-    } catch (std::exception &ex) {
-        // Something went wrong...
-    };
+        try {
+            action.execute_job(static_cast<uint64_t>(config_job_id), job_config);
+        } catch (std::exception &ex) {
+            // Something went wrong...
+        }
+    }
 
     free(job_config);
 }
@@ -111,18 +117,11 @@ std::string UserOperator::id() const {
     return result;
 }
 
-uint8_t UserOperator::temp_stream_id() const {
-    auto jv_stream_id = jv_object_get(manifest(), jv_string("temp_stream_id"));
-    int stream_id = (int)jv_number_value(jv_stream_id);
-    jv_free(jv_stream_id);
-    return stream_id;
-}
-
-uint8_t UserOperator::temp_enable_id() const {
-    auto jv_enable_id = jv_object_get(manifest(), jv_string("temp_enable_id"));
-    int enable_id = (int)jv_number_value(jv_enable_id);
-    jv_free(jv_enable_id);
-    return enable_id;
+uint8_t UserOperator::internal_id() const {
+    auto jv_internal_id = jv_object_get(manifest(), jv_string("internal_id"));
+    int internal_id = (int)jv_number_value(jv_internal_id);
+    jv_free(jv_internal_id);
+    return internal_id;
 }
 
 std::string UserOperator::description() const {

@@ -109,17 +109,13 @@ extern "C" {
 //   word1: buffer_length       | R
 //   word2: mode                | R
 
-#define MTL_JOB_OP_CHANGE_CASE_SET_MODE 14
-// 64bit words at job_address:
-//   word0: mode                | R
-
-#define MTL_JOB_OP_BLOWFISH_ENCRYPT_SET_KEY 15
+#define MTL_JOB_OP_CONFIGURE 12
 // 32bit words at job_address:
-//   word0..3: key              | R
-
-#define MTL_JOB_OP_BLOWFISH_DECRYPT_SET_KEY 16
-// 32bit words at job_address:
-//   word0..3: key              | R
+//   word0: offset in sizeof(snapu32_t) | R
+//   word1: length in sizeof(snapu32_t) | R
+//   word2: operator id         | R
+//   word4: reserved            | R
+// <...> configuration data
 
 typedef struct metalfpga_job {
     uint64_t job_address;

@@ -10,8 +10,7 @@ public:
     explicit DataSink(size_t size = 0) : _size(size) {}
 
     std::string id() const override { return ""; };
-    uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
-    uint8_t temp_stream_id() const override { return 0; };
+    uint8_t internal_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
 
     virtual void prepareForTotalProcessingSize(size_t size) { (void)size; }
     virtual void setSize(size_t size);

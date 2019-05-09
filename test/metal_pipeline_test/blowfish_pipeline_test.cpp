@@ -10,8 +10,8 @@
 
 namespace metal {
 
-void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i; i < length; ++i) {
+static void fill_payload(uint8_t *buffer, uint64_t length) {
+    for (uint64_t i = 0; i < length; ++i) {
         buffer[i] = i % 256;
     }
 }

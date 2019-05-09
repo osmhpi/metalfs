@@ -1,9 +1,12 @@
 #include "snap_action.hpp"
 
-#include <libsnap.h>
 #include <stdexcept>
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <iostream>
+
+#include <spdlog/spdlog.h>
+#include <libsnap.h>
+
+#include <metal_fpga/hw/hls/include/action_metalfpga.h>
 
 namespace metal {
 
@@ -44,6 +47,8 @@ SnapAction::~SnapAction() {
 
 void SnapAction::execute_job(uint64_t job_id, char *parameters) {
 
+    spdlog::debug("Starting job {}...", job_id);
+
     metalfpga_job_t mjob;
     mjob.job_type = job_id;
     mjob.job_address = reinterpret_cast<uint64_t>(parameters);
@@ -55,7 +60,7 @@ void SnapAction::execute_job(uint64_t job_id, char *parameters) {
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
     if (rc != 0)
-        throw std::runtime_error("Error starting job" + std::to_string(rc));
+        throw std::runtime_error("Error starting job " + std::to_string(rc));
 
     if (cjob.retc != SNAP_RETC_SUCCESS)
         throw std::runtime_error("Job was unsuccessful");

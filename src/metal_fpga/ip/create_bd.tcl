@@ -199,6 +199,23 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/s_axi_ctrl_are
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 interrupt_concat
 connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V]
 
+# AXI Perfmon
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_perf_mon:5.0 axi_perf_mon_0
+
+set_property -dict [list \
+    CONFIG.C_HAVE_SAMPLED_METRIC_CNT {0} \
+    CONFIG.C_GLOBAL_COUNT_WIDTH {64} \
+    CONFIG.C_NUM_OF_COUNTERS {10}] [get_bd_cells axi_perf_mon_0]
+
+connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M00_AXI] [get_bd_intf_pins axi_perf_mon_0/S_AXI]
+
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/s_axi_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/s_axi_aresetn]
+
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_perf_mon_0/core_aclk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_perf_mon_0/core_aresetn]
+
 source $aip_dir/instantiate_operators.tcl
 
 # Finalization
@@ -209,7 +226,7 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
-include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
+# include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
 
 set_property offset 0x0000000000000000 [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
 set_property range 16E [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]

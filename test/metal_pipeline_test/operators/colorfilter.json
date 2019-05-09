@@ -1,0 +1,6 @@
+{
+  "description": "Convert bitmap to grayscale",
+  "options": {},
+  "id": "colorfilter",
+  "internal_id": 1
+}

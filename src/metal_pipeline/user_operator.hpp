@@ -26,8 +26,7 @@ public:
     void finalize(SnapAction& action) override;
 
     std::string id() const override;
-    uint8_t temp_stream_id() const override;
-    uint8_t temp_enable_id() const override;
+    uint8_t internal_id() const override;
     std::string description() const;
 
 protected:

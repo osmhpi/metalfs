@@ -1,4 +1,4 @@
 {
-    "description": "Transform ASCII strings to lower- or uppercase (default)",
+    "description": "Convert bitmap to grayscale",
     "options": {}
   }

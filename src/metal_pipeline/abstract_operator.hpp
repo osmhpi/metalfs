@@ -15,8 +15,7 @@ public:
     virtual void finalize(SnapAction &action) = 0;
 
     virtual std::string id() const = 0;
-    virtual uint8_t temp_enable_id() const = 0;
-    virtual uint8_t temp_stream_id() const = 0;
+    virtual uint8_t internal_id() const = 0;
 
     std::unordered_map<std::string, OperatorOptionDefinition> &optionDefinitions() { return _optionDefinitions; }
 

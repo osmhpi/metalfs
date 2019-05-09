@@ -32,6 +32,7 @@ include_directories(
     ${JQ_INCLUDE_DIR}
     ${SNAP_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 )
 
 add_library(metal_pipeline STATIC ${SOURCES})

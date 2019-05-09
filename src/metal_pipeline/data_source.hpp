@@ -10,8 +10,7 @@ public:
     explicit DataSource(size_t size = 0) : _size(size) {}
 
     std::string id() const override { return ""; };
-    uint8_t temp_enable_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
-    uint8_t temp_stream_id() const override { return 0; };
+    uint8_t internal_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
     size_t size() const { return _size; }
 
     virtual size_t reportTotalSize() { return 0; }

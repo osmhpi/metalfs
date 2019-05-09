@@ -25,10 +25,10 @@ enum {
 #define METAL_OPT(t, p, v) { t, offsetof(struct metal_config, p), v }
 
 static struct fuse_opt metal_opts[] = {
-        METAL_OPT("card=%i",           card, 0),
+        METAL_OPT("--card=%i",         card, 0),
         METAL_OPT("-c %i",             card, 0),
-        METAL_OPT("--operators=%s",    operators, 0),
-        METAL_OPT("--metadata=%s",     metadata_dir, 0),
+        METAL_OPT("--operators %s",    operators, 0),
+        METAL_OPT("--metadata %s",     metadata_dir, 0),
         METAL_OPT("--in_memory",       in_memory, 1),
 //        METAL_OPT("nomybool",          in_memory, 0),
         METAL_OPT("--in_memory=true",  in_memory, 1),
@@ -57,7 +57,7 @@ static int metal_opt_proc(void *data, const char *arg, int key, struct fuse_args
                     "    -V   --version   print version\n"
                     "\n"
                     "Myfs options:\n"
-                    "    -o mynum=NUM\n"
+                    "    -o card=CARD (0)\n"
                     "    -o mystring=STRING\n"
                     "    -o mybool\n"
                     "    -o nomybool\n"
@@ -83,7 +83,9 @@ int main(int argc, char *argv[])
     struct metal_config conf;
     memset(&conf, 0, sizeof(conf));
 
-    fuse_opt_parse(&args, &conf, metal_opts, metal_opt_proc);
+    if (fuse_opt_parse(&args, &conf, metal_opts, metal_opt_proc)) {
+        return 1;
+    }
 
     auto & c = metal::Context::instance();
 
