@@ -5,6 +5,9 @@
         },
         "better_colorfilter": {
             "source": "hls/hls_operator_colorfilter"
+        },
+        "changecase": {
+            "source": "hls/hls_operator_changecase"
         }
     }
 }

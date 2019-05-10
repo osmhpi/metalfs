@@ -1,13 +1,13 @@
 {
-  "id": "change_case",
   "description": "Transform ASCII strings to lower- or uppercase (default)",
-  "internal_id": 3,
   "options": {
-    "key": {
+    "lowercase": {
       "short": "l",
       "type": "bool",
       "description": "Transform to lowercase",
-      "offset": 0
+      "offset": 256
     }
-  }
+  },
+  "id": "changecase",
+  "internal_id": 3
 }

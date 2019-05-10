@@ -4,6 +4,7 @@ set(
     base_test.cpp
     base_test.hpp
     blowfish_pipeline_test.cpp
+    changecase_pipeline_test.cpp
     colorfilter_pipeline_test.cpp
     readwrite_pipeline_test.cpp
     profiling_test.cpp

@@ -26,6 +26,27 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     return SNAP_RETC_SUCCESS;
 }
 
+static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
+    const snapu32_t operator_offset = 0x10000 / sizeof(uint32_t);
+
+    snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
+    snapu32_t offset = mtl_get32<0>(line);
+    snapu32_t length = mtl_get32<4>(line);
+    snapu32_t op     = mtl_get32<8>(line) - 1; // Host user operator ids start at 1
+
+    snapu8_t membus_line_offset = 4;
+    line >>= membus_line_offset * sizeof(snapu32_t) * 8;
+
+    for (snapu8_t i = 0; i < length; ++i, ++offset, membus_line_offset += sizeof(snapu32_t)) {
+        #pragma HLS pipeline
+        if (membus_line_offset % sizeof(snap_membus_t) == 0) {
+            line = mem_in[MFB_ADDRESS(job_address) + membus_line_offset / sizeof(snap_membus_t)];
+        }
+        operator_ctrl[op * operator_offset + offset] = mtl_get32<0>(line);
+        line >>= sizeof(snapu32_t) * 8;
+    }
+}
+
 // Decode job_type and call appropriate action
 mtl_retc_t process_action(snap_membus_t * mem_in,
                           snap_membus_t * mem_out,
@@ -51,8 +72,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         (metal_ctrl + (0x44A30000 / sizeof(uint32_t)));
     snapu32_t *operator_ctrl =
         (metal_ctrl + (0x44A40000 / sizeof(uint32_t)));
-
-    const snapu32_t operator_offset = 0x10000 / sizeof(uint32_t);
 
     mtl_retc_t result = SNAP_RETC_SUCCESS;
 
@@ -154,21 +173,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case MTL_JOB_OP_CONFIGURE:
     {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        snapu32_t offset = mtl_get32<0>(line);
-        snapu32_t length = mtl_get32<4>(line);
-        snapu32_t op = mtl_get32<8>(line);
-
-        snapu8_t membus_line_offset = 4;
-        line >>= membus_line_offset * sizeof(snapu32_t);
-        for (snapu8_t i = 0; i < length; ++i, ++offset, ++membus_line_offset) {
-            #pragma HLS pipeline
-            if (membus_line_offset % (sizeof(snap_membus_t) / sizeof(snapu32_t)) == 0) {
-                line = mem_in[MFB_ADDRESS(act_reg->Data.job_address) + membus_line_offset / (sizeof(snap_membus_t) / sizeof(snapu32_t))];
-            }
-            operator_ctrl[op * operator_offset + offset] = mtl_get32<0>(line);
-            line >>= sizeof(snapu32_t) * 8;
-        }
+        configure_operators(operator_ctrl, mem_in, act_reg->Data.job_address);
         break;
     }
     default:

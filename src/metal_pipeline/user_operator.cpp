@@ -56,9 +56,6 @@ UserOperator::~UserOperator() {
 }
 
 void UserOperator::configure(SnapAction &action) {
-    int config_job_id = MTL_JOB_OP_CONFIGURE;
-    const int configuration_data_offset = 4 * sizeof(uint32_t); // bytes
-
     // Allocate job struct memory aligned on a page boundary, hopefully 4KB is sufficient
     auto job_config = reinterpret_cast<char*>(snap_malloc(4096));
 
@@ -71,20 +68,20 @@ void UserOperator::configure(SnapAction &action) {
         auto *metadata = reinterpret_cast<uint32_t*>(job_config);
         metadata[0] = htobe32(definition.offset() / sizeof(uint32_t)); // offset
         metadata[2] = htobe32(internal_id());
+        const int configuration_data_offset = 4 * sizeof(uint32_t); // bytes
 
         switch ((OptionType)option.second.value().index()) {
             case OptionType::INT: {
                 int beValue = htobe64(std::get<int>(option.second.value()));
                 // Accessing un-validated, user-provided offset: dangerous!
                 memcpy(job_config + configuration_data_offset, &beValue, sizeof(int));
-                metadata[1] = htobe32(sizeof(int)/ sizeof(uint32_t)); // length
+                metadata[1] = htobe32(sizeof(int) / sizeof(uint32_t)); // length
                 break;
             }
             case OptionType::BOOL: {
-                // Is htobe(bool) well-defined?
-                int beValue = htobe64(std::get<bool>(option.second.value()));
-                memcpy(job_config + configuration_data_offset, &beValue, sizeof(int));
-                metadata[1] = htobe32(sizeof(int)/ sizeof(uint32_t)); // length
+                uint32_t beValue = htobe32(std::get<bool>(option.second.value()) ? 1 : 0);
+                memcpy(job_config + configuration_data_offset, &beValue, sizeof(uint32_t));
+                metadata[1] = htobe32(1); // length
                 break;
             }
             case OptionType::BUFFER: {
@@ -97,7 +94,7 @@ void UserOperator::configure(SnapAction &action) {
         }
 
         try {
-            action.execute_job(static_cast<uint64_t>(config_job_id), job_config);
+            action.execute_job(MTL_JOB_OP_CONFIGURE, job_config);
         } catch (std::exception &ex) {
             // Something went wrong...
         }

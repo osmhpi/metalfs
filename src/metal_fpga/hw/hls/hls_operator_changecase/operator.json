@@ -1,0 +1,11 @@
+{
+    "description": "Transform ASCII strings to lower- or uppercase (default)",
+    "options": {
+      "lowercase": {
+        "short": "l",
+        "type": "bool",
+        "description": "Transform to lowercase",
+        "offset": 256
+      }
+    }
+  }
