@@ -17,10 +17,10 @@ class MessageHeader;
 class Server {
 public:
 
-    explicit Server(std::string socketFileName);
+    explicit Server(std::string socketFileName, std::shared_ptr<OperatorRegistry> registry);
     virtual ~Server();
 
-    static void start(std::string socket_file_name, int card);
+    static void start(const std::string &socket_file_name, std::shared_ptr<OperatorRegistry> registry, int card);
 
 protected:
     void startInternal(int card);
@@ -28,6 +28,7 @@ protected:
 
     AgentPool _agents;
     std::string _socketFileName;
+    std::shared_ptr<metal::OperatorRegistry> _registry;
     int _listenfd;
 };
 } // namespace metal

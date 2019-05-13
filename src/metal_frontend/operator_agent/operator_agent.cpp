@@ -7,7 +7,6 @@
 #include <dirent.h>
 #include <mntent.h>
 #include <libgen.h>
-#include <fcntl.h>
 #include <ctype.h>
 
 #include <sys/types.h>
@@ -19,6 +18,7 @@
 
 #include <metal_frontend/messages/socket.hpp>
 #include <metal_frontend/messages/buffer.hpp>
+#include <iostream>
 #include "Messages.pb.h"
 
 namespace metal {
@@ -296,10 +296,12 @@ int main(int argc, char *argv[]) {
     std::optional<metal::Buffer> input_buffer;
     std::optional<metal::Buffer> output_buffer;
 
-    if (response.has_input_buffer_filename())
+    if (response.has_input_buffer_filename()) {
         input_buffer = metal::Buffer::map_shared_buffer(response.input_buffer_filename(), true);
-    if (response.has_output_buffer_filename())
+    }
+    if (response.has_output_buffer_filename()) {
         output_buffer = metal::Buffer::map_shared_buffer(response.output_buffer_filename(), false);
+    }
 
     // Process input
     while (true) {

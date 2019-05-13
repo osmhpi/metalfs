@@ -30,7 +30,7 @@ class Context {
   std::string operators_dir() { return "/" + operators_dirname(); }
   std::string operators_prefix() { return operators_dir() + "/"; }
 
-  OperatorRegistry &registry() { return *_registry; };
+  std::shared_ptr<OperatorRegistry> registry() { return _registry; };
 
  protected:
   int _card;

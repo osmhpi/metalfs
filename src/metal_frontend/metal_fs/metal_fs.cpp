@@ -7,6 +7,8 @@ extern "C" {
 #include <thread>
 #include <libgen.h>
 #include <dirent.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/common.h>
 #include "server.hpp"
 #include "../../../third_party/cxxopts/include/cxxopts.hpp"
 #include "metal_fuse_operations.hpp"
@@ -87,6 +89,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    spdlog::set_level(spdlog::level::debug);
+
     auto & c = metal::Context::instance();
 
     c.initialize(
@@ -97,7 +101,7 @@ int main(int argc, char *argv[])
             conf.card
     );
 
-    auto server = std::thread(metal::Server::start, c.socket_filename(), c.card());
+    auto server = std::thread(metal::Server::start, c.socket_filename(), c.registry(), c.card());
 
     auto retc = fuse_main(args.argc, args.argv, &metal::metal_fuse_operations, nullptr);
 

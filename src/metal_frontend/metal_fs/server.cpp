@@ -1,3 +1,5 @@
+#include <utility>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -5,17 +7,20 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/mman.h>
 #include <pthread.h>
+
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <metal_pipeline/abstract_operator.hpp>
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/pipeline_runner.hpp>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <metal_pipeline/data_source.hpp>
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_filesystem_pipeline/file_data_source.hpp>
@@ -34,15 +39,15 @@
 namespace metal {
 
 
-Server::Server(std::string socketFileName) : _socketFileName(std::move(socketFileName)), _listenfd(0) {}
+Server::Server(std::string socketFileName, std::shared_ptr<OperatorRegistry> registry) : _socketFileName(std::move(socketFileName)), _registry(std::move(registry)), _listenfd(0) {}
 
 
 Server::~Server() {
     close(_listenfd);
 }
 
-void Server::start(std::string socket_file_name, int card) {
-    Server server(socket_file_name);
+void Server::start(const std::string& socket_file_name, std::shared_ptr<OperatorRegistry> registry, int card) {
+    Server server(socket_file_name, std::move(registry));
     server.startInternal(card);
 }
 
@@ -86,7 +91,7 @@ void Server::process_request(int connfd, int card) {
     _agents.release_unused_agents();
 
     try {
-        PipelineBuilder builder(pipeline);
+        PipelineBuilder builder(_registry, pipeline);
 
         auto operators_agents = builder.configure();
 
@@ -94,7 +99,7 @@ void Server::process_request(int connfd, int card) {
         loop.run();
     } catch (std::exception &ex) {
         // Something went wrong.
-        // Maybe print the error message...
+        spdlog::debug("An error occurred during pipeline execution. {}", ex.what());
     }
 
     _agents.reset();

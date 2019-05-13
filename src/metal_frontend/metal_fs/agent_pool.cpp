@@ -62,6 +62,7 @@ bool AgentPool::contains_valid_pipeline() {
   // Walk the pipeline until we find an agent with output_pid == 0
   std::shared_ptr<RegisteredAgent> pipeline_agent = pipelineStart;
   std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents;
+  pipeline_agents.emplace_back(pipeline_agent);
 
   while (pipeline_agent && pipeline_agent->output_agent_pid != 0) {
     pipeline_agents.emplace_back(pipeline_agent);
@@ -71,7 +72,7 @@ bool AgentPool::contains_valid_pipeline() {
   if (pipeline_agents.back()->output_agent_pid == 0) {
     _contains_valid_pipeline_cached = true;
     _pipeline_agents = std::move(pipeline_agents);
-    for (const auto &agent : pipeline_agents) {
+    for (const auto &agent : _pipeline_agents) {
       _registered_agents.erase(agent);
     }
   }

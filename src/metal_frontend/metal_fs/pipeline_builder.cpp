@@ -16,18 +16,18 @@
 
 namespace metal {
 
-PipelineBuilder::PipelineBuilder(std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
-        :  _registry(OperatorRegistry("./operators"))
+PipelineBuilder::PipelineBuilder(std::shared_ptr<metal::OperatorRegistry> registry, std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
+        :  _registry(registry)
         , _pipeline_agents(std::move(pipeline_agents))
 {
-  for (const auto &op : _registry.operators()) {
+  for (const auto &op : _registry->operators()) {
     // TODO: Don't do this every time a pipeline starts
     _operatorOptions.insert(std::make_pair(op.first, buildOperatorOptions(op.second)));
   }
 }
 
 
-cxxopts::Options PipelineBuilder::buildOperatorOptions(std::shared_ptr<UserOperator> op) {
+cxxopts::Options PipelineBuilder::buildOperatorOptions(const std::shared_ptr<UserOperator>& op) {
 
   auto options = cxxopts::Options(op->id(), op->description());
 
@@ -35,7 +35,7 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(std::shared_ptr<UserOpera
     const auto &option = keyOptionPair.second;
     switch (option.type()) {
       case OptionType::BOOL: {
-        options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<bool>(), "");
+        options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<bool>()->default_value("false"), "");
         break;
       }
       case OptionType::INT: {
@@ -63,8 +63,8 @@ std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registe
   std::unordered_set<std::shared_ptr<AbstractOperator>> operators_with_agents;
 
   for (const auto &agent : _pipeline_agents) {
-    auto op = _registry.operators().find(agent->operator_type);
-    if (op == _registry.operators().end()) {
+    auto op = _registry->operators().find(agent->operator_type);
+    if (op == _registry->operators().end()) {
       throw std::runtime_error("Unknown operator was requested");
     }
 
@@ -157,29 +157,27 @@ void PipelineBuilder::set_operator_options_from_agent_request(
   char **argv = argsRaw.data();
   auto parseResult = options.parse(argc, argv);
 
-  for (const auto &argument : parseResult.arguments()) {
-    auto optionType = op->optionDefinitions().find(argument.key());
-    if (optionType == op->optionDefinitions().end())
-      throw std::runtime_error("Option was not found");
+  for (const auto &optionType : op->optionDefinitions()) {
+    auto result = parseResult[optionType.first];
 
-    switch (optionType->second.type()) {
+    switch (optionType.second.type()) {
       case OptionType::INT: {
-        op->setOption(argument.key(), argument.as<int>());
+        op->setOption(optionType.first, result.as<int>());
         break;
       }
       case OptionType::BOOL: {
-        op->setOption(argument.key(), argument.as<bool>());
+        op->setOption(optionType.first, result.as<bool>());
         break;
       }
       case OptionType::BUFFER: {
-        if (!optionType->second.bufferSize().has_value())
+        if (!optionType.second.bufferSize().has_value())
           throw std::runtime_error("File option metadata not found");
 
-        auto filePath = resolvePath(argument.value(), agent->cwd);
+        auto filePath = resolvePath(result.as<std::string>(), agent->cwd);
 
         // TODO: Detect if path points to FPGA file
 
-        auto buffer = std::make_unique<std::vector<char>>(optionType->second.bufferSize().value());
+        auto buffer = std::make_unique<std::vector<char>>(optionType.second.bufferSize().value());
 
         auto fp = fopen(filePath.c_str(), "r");
         if (fp == nullptr) {
@@ -194,7 +192,7 @@ void PipelineBuilder::set_operator_options_from_agent_request(
 
         fclose(fp);
 
-        op->setOption(argument.key(), std::move(buffer));
+        op->setOption(optionType.first, std::move(buffer));
       }
     }
   }
