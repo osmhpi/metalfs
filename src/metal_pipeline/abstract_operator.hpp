@@ -16,6 +16,8 @@ public:
 
     virtual std::string id() const = 0;
     virtual uint8_t internal_id() const = 0;
+    virtual bool needs_preparation() const { return false; }
+    virtual void set_is_prepared() {}
 
     std::unordered_map<std::string, OperatorOptionDefinition> &optionDefinitions() { return _optionDefinitions; }
 

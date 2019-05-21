@@ -1,7 +1,7 @@
 {
   "id": "blowfish_encrypt",
   "description": "Encrypt data with the blowfish cipher",
-  "internal_id": 4,
+  "prepare_required": true,
   "options": {
     "key": {
       "short": "k",
@@ -10,7 +10,8 @@
         "size": 16
       },
       "description": "The encryption key to use",
-      "offset": 0
+      "offset": 256
     }
-  }
+  },
+  "internal_id": 4
 }

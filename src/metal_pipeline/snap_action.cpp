@@ -45,13 +45,14 @@ SnapAction::~SnapAction() {
     }
 }
 
-void SnapAction::execute_job(uint64_t job_id, char *parameters) {
+void SnapAction::execute_job(uint64_t job_id, char *parameters, uint64_t direct_data) {
 
     spdlog::debug("Starting job {}...", job_id);
 
     metalfpga_job_t mjob;
     mjob.job_type = job_id;
     mjob.job_address = reinterpret_cast<uint64_t>(parameters);
+    mjob.direct_data = direct_data;
 
     struct snap_job cjob{};
     snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);

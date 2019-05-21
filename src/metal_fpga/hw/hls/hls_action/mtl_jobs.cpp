@@ -5,22 +5,18 @@
 #include "mtl_endian.h"
 #include "operators.h"
 
-static snapu64_t _enable_mask = 0;
-
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
     // Everything fits into one memory line
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
 
-    _enable_mask = mtl_get64(line, 0);
-
-    switch_set_mapping(switch_ctrl, mtl_get32< 8>(line), 0);
-    switch_set_mapping(switch_ctrl, mtl_get32<12>(line), 1);
-    switch_set_mapping(switch_ctrl, mtl_get32<16>(line), 2);
-    switch_set_mapping(switch_ctrl, mtl_get32<20>(line), 3);
-    switch_set_mapping(switch_ctrl, mtl_get32<24>(line), 4);
-    switch_set_mapping(switch_ctrl, mtl_get32<28>(line), 5);
-    switch_set_mapping(switch_ctrl, mtl_get32<32>(line), 6);
-    switch_set_mapping(switch_ctrl, mtl_get32<36>(line), 7);
+    switch_set_mapping(switch_ctrl, mtl_get32< 0>(line), 0);
+    switch_set_mapping(switch_ctrl, mtl_get32< 8>(line), 1);
+    switch_set_mapping(switch_ctrl, mtl_get32<12>(line), 2);
+    switch_set_mapping(switch_ctrl, mtl_get32<16>(line), 3);
+    switch_set_mapping(switch_ctrl, mtl_get32<20>(line), 4);
+    switch_set_mapping(switch_ctrl, mtl_get32<24>(line), 5);
+    switch_set_mapping(switch_ctrl, mtl_get32<28>(line), 6);
+    switch_set_mapping(switch_ctrl, mtl_get32<32>(line), 7);
     switch_commit(switch_ctrl);
 
     return SNAP_RETC_SUCCESS;
@@ -30,9 +26,10 @@ static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in
     const snapu32_t operator_offset = 0x10000 / sizeof(uint32_t);
 
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
-    snapu32_t offset = mtl_get32<0>(line);
-    snapu32_t length = mtl_get32<4>(line);
-    snapu32_t op     = mtl_get32<8>(line) - 1; // Host user operator ids start at 1
+    snapu32_t offset  = mtl_get32< 0>(line);
+    snapu32_t length  = mtl_get32< 4>(line);
+    snapu32_t op      = mtl_get32< 8>(line) - 1; // Host user operator ids start at 1
+    snapu32_t prepare = mtl_get32<12>(line);
 
     snapu8_t membus_line_offset = 4;
     line >>= membus_line_offset * sizeof(snapu32_t) * 8;
@@ -45,6 +42,8 @@ static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in
         operator_ctrl[op * operator_offset + offset] = mtl_get32<0>(line);
         line >>= sizeof(snapu32_t) * 8;
     }
+
+    operator_ctrl[op * operator_offset + 0x10 / sizeof(snapu32_t)] = prepare;
 }
 
 // Decode job_type and call appropriate action
@@ -132,13 +131,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     {
         perfmon_enable(perfmon_ctrl);
 
-        // We have to adapt the operator ids here:
-        // The bits in the mask are set by the host according to the internal operator ids.
-        // However, those start at 1 for "real" operators to leave space for the data source / sink at id 0.
-        // Because we don't observe the data mover interrupts, operator interrupts start at bit 0.
-        // Therefore, perform a shift here:
-        snapu64_t shifted_mask = _enable_mask >> 1;
-
         clear_operator_interrupts(interrupt_reg, metal_ctrl);
         action_run_operators(
             mem_in,
@@ -149,7 +141,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
             s2mm_sts,
             metal_ctrl,
             interrupt_reg,
-            shifted_mask
+            act_reg->Data.direct_data // enable_mask
         );
         // perfmon_disable(perfmon_ctrl);
     #ifndef NO_SYNTH
@@ -159,6 +151,13 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         result = SNAP_RETC_SUCCESS;
         break;
     }
+    // case MTL_JOB_OP_PREPARE:
+    // {
+    //     clear_operator_interrupts(interrupt_reg, metal_ctrl);
+    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
+    //     prepare_operator(mtl_get32<0>(line), interrupt_reg, metal_ctrl);
+    //     break;
+    // }
     case MTL_JOB_OP_MEM_SET_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];

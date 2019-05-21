@@ -63,12 +63,11 @@ extern "C" {
 
 #define MTL_JOB_CONFIGURE_STREAMS 5
 // 64bit words at job_address:
-//   word0: enable_mask         | R
-//   word1:                     | R
+//   word0:                     | R
 //     halfword0: stream 0 dest | R
 //     halfword1: stream 1 dest | R
 //   ...
-//   word4:                     | R
+//   word3:                     | R
 //     halfword0: stream 6 dest | R
 //     halfword1: stream 7 dest | R
 
@@ -95,7 +94,8 @@ extern "C" {
 //   word9: counter9            | W
 
 #define MTL_JOB_RUN_OPERATORS 9
-// no payload data
+// no indirect payload data
+// direct data: enable mask (64bit word)
 
 #define MTL_JOB_OP_MEM_SET_READ_BUFFER 10
 // 64bit words at job_address:
@@ -114,12 +114,17 @@ extern "C" {
 //   word0: offset in sizeof(snapu32_t) | R
 //   word1: length in sizeof(snapu32_t) | R
 //   word2: operator id         | R
-//   word4: reserved            | R
+//   word3: prepare             | R
 // <...> configuration data
+
+// #define MTL_JOB_OP_PREPARE 13
+// // 32bit words at job_address:
+// //   word0: operator id         | R
 
 typedef struct metalfpga_job {
     uint64_t job_address;
     uint64_t job_type;
+    uint64_t direct_data;
 } metalfpga_job_t;
 
 // Pipeline operator identifiers

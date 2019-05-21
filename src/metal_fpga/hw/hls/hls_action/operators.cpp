@@ -4,12 +4,12 @@
 
 #include "mtl_endian.h"
 
-
+const snapu32_t OperatorBaseAddr = 0x44A40000 / sizeof(uint32_t);
 const snapu32_t OperatorOffset = 0x10000 / sizeof(uint32_t);
 
 void clear_operator_interrupts(snapu8_t *interrupt_reg, snapu32_t *metal_ctrl) {
     snapu32_t *operator_ctrl =
-        (metal_ctrl + (0x44A40000 / sizeof(uint32_t)));
+        (metal_ctrl + OperatorBaseAddr);
 
     snapu8_t set_interrupts = *interrupt_reg;
     for (int i = 0; i < 8; ++i) {
@@ -26,7 +26,31 @@ static void poll_interrupts(snapu8_t mask, snapu8_t* interrupt_reg) {
     while (*interrupt_reg != mask);
 }
 
-mtl_retc_t do_run_operators(
+// static void invoke_operator(snapu32_t real_operator_id, snapu8_t *interrupt_reg, snapu32_t *operator_ctrl) {
+//     operator_ctrl[real_operator_id * OperatorOffset + 0] = 1;
+//     operator_ctrl[real_operator_id * OperatorOffset + 1] = 1;
+//     operator_ctrl[real_operator_id * OperatorOffset + 2] = 1;
+// }
+
+// static void do_prepare_operator(snapu8_t interrupt_mask, snapu32_t real_operator_id, snapu8_t *interrupt_reg, snapu32_t *operator_ctrl) {
+//     #pragma HLS DATAFLOW
+//     poll_interrupts(interrupt_mask, interrupt_reg);
+//     invoke_operator(real_operator_id, interrupt_reg, operator_ctrl);
+// }
+
+// void prepare_operator(snapu32_t operator_id, snapu8_t *interrupt_reg, snapu32_t *metal_ctrl) {
+//     snapu32_t *operator_ctrl = (metal_ctrl + OperatorBaseAddr);
+
+//     snapu32_t real_operator_id = operator_id - 1;
+
+//     // prepare = 1
+//     operator_ctrl[real_operator_id * OperatorOffset + 0x10 / sizeof(snapu32_t)] = 1;
+//     snapu8_t interrupt_mask = 1 << real_operator_id;
+
+//     do_prepare_operator(interrupt_mask, real_operator_id, interrupt_reg, operator_ctrl);
+// }
+
+void do_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
     axi_datamover_command_stream_t &mm2s_cmd,
@@ -53,11 +77,9 @@ mtl_retc_t do_run_operators(
             s2mm_sts,
             write_mem_config);
     }
-
-    return SNAP_RETC_SUCCESS;
 }
 
-mtl_retc_t do_configure_and_run_operators(
+void do_configure_and_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
     axi_datamover_command_stream_t &mm2s_cmd,
@@ -71,7 +93,7 @@ mtl_retc_t do_configure_and_run_operators(
         (metal_ctrl + (0x44A20000 / sizeof(uint32_t)));
 
     snapu32_t *operator_ctrl =
-        (metal_ctrl + (0x44A40000 / sizeof(uint32_t)));
+        (metal_ctrl + OperatorBaseAddr);
 
     // From the Vivado HLS User Guide:
     // 0x00 : Control signals
@@ -92,17 +114,27 @@ mtl_retc_t do_configure_and_run_operators(
     //        others - reserved
 
     for (int i = 0; i < 8; ++i) {
-        if (enable_mask & 1 << i) {
-            operator_ctrl[i * OperatorOffset] = 1;
+        if (enable_mask & 1 << (i + 1)) {
+            operator_ctrl[i * OperatorOffset + 0] = 1;
             operator_ctrl[i * OperatorOffset + 1] = 1;
             operator_ctrl[i * OperatorOffset + 2] = 1;
         }
     }
 
-    return do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl, enable_mask);
+    if (enable_mask[0]) {
+        // This triggers the data source and sink (not enabled in preparation mode)
+        do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl, enable_mask);
+    }
+
+    for (int i = 0; i < 8; ++i) {
+        if (enable_mask & 1 << (i + 1)) {
+            // Disable prepare (if applicable to operator)
+            operator_ctrl[i * OperatorOffset + 0x10 / sizeof(snapu32_t)] = 0;
+        }
+    }
 }
 
-mtl_retc_t action_run_operators(
+void action_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,
     axi_datamover_command_stream_t &mm2s_cmd,
@@ -111,9 +143,9 @@ mtl_retc_t action_run_operators(
     axi_datamover_status_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
     snapu8_t *interrupt_reg,
-    snapu64_t &enable_mask
+    snapu64_t enable_mask
 ) {
     #pragma HLS DATAFLOW
-    poll_interrupts(enable_mask, interrupt_reg);
-    return do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask);
+    poll_interrupts(enable_mask >> 1, interrupt_reg);
+    do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask);
 }

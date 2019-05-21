@@ -11,12 +11,13 @@ extern "C" {
 #include <stdexcept>
 #include <iostream>
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <spdlog/spdlog.h>
 
 #include "snap_action.hpp"
 
 namespace metal {
 
-UserOperator::UserOperator(std::string manifest_path) {
+UserOperator::UserOperator(std::string manifest_path) : _is_prepared(false) {
 
     // Memory management with jq is a little cumbersome.
     // jv.h says:
@@ -58,6 +59,7 @@ UserOperator::~UserOperator() {
 void UserOperator::configure(SnapAction &action) {
     // Allocate job struct memory aligned on a page boundary, hopefully 4KB is sufficient
     auto job_config = reinterpret_cast<char*>(snap_malloc(4096));
+    auto *metadata = reinterpret_cast<uint32_t*>(job_config);
 
     for (const auto& option : _options) {
         if (!option.second.has_value())
@@ -65,9 +67,9 @@ void UserOperator::configure(SnapAction &action) {
 
         const auto &definition = _optionDefinitions.at(option.first);
 
-        auto *metadata = reinterpret_cast<uint32_t*>(job_config);
         metadata[0] = htobe32(definition.offset() / sizeof(uint32_t)); // offset
         metadata[2] = htobe32(internal_id());
+        metadata[3] = htobe32(prepare_required()); // enables preparation mode for the operator, implying that we need a preparation run of the operator(s)
         const int configuration_data_offset = 4 * sizeof(uint32_t); // bytes
 
         switch ((OptionType)option.second.value().index()) {
@@ -93,10 +95,13 @@ void UserOperator::configure(SnapAction &action) {
             }
         }
 
+        _is_prepared = false;
+
         try {
             action.execute_job(MTL_JOB_OP_CONFIGURE, job_config);
         } catch (std::exception &ex) {
             // Something went wrong...
+            spdlog::warn("Could not configure operator: {}", ex.what());
         }
     }
 
@@ -128,61 +133,15 @@ std::string UserOperator::description() const {
     return result;
 }
 
-//void UserOperator::setOption(std::string option, OperatorArgumentValue arg) {
+bool UserOperator::prepare_required() const {
+    auto prepare = jv_object_get(manifest(), jv_string("prepare_required"));
+    if (!jv_is_valid(prepare))
+        return false;
 
-    // Get option handle
-//    auto options = jv_object_get(manifest(), jv_string("options"));
-//    auto o = jv_object_get(options, jv_string(option.c_str()));
-//
-//    if (jv_get_kind(jv_copy(o)) == JV_KIND_INVALID) {
-//        jv_free(o);
-//        throw std::runtime_error("Invalid option key");
-//    }
-//
-//    auto type = jv_object_get(o, jv_string("type"));
-
-//    bool valid = true;
-//
-//    switch ((OptionType)arg.index()) {
-//        case OptionType::INT: {
-//            if (_optionTypes.at(option) != O)
-//                valid = false;
-//            break;
-//        }
-//        case OptionType::BOOL: {
-//            if (jv_get_kind(type) != JV_KIND_STRING || std::string("bool") != jv_string_value(type))
-//                valid = false;
-//            break;
-//        }
-//        case OptionType::BUFFER: {
-//            auto internalType = jv_object_get(jv_copy(type), jv_string("type"));
-//            if (jv_get_kind(type) != JV_KIND_OBJECT || std::string("buffer") != jv_string_value(internalType))
-//                valid = false;
-//            jv_free(internalType);
-//
-//            if (!valid)
-//                break;
-//
-//            auto &buffer = std::get<std::unique_ptr<std::vector<char>>>(arg);
-//            auto size = jv_object_get(jv_copy(type), jv_string("size"));
-//            if ((int)jv_number_value(size) != buffer->size())
-//                valid = false;
-//            jv_free(size);
-//
-//            break;
-//        }
-//        default:
-//            throw std::runtime_error("Not implemented");
-//    }
-//
-//    jv_free(type);
-
-//    if (_optionTypes.at(option) != (OptionType)arg.index()) {
-//        throw std::runtime_error("Invalid option");
-//    }
-//
-//    _options.at(option).setValue(std::move(arg));
-//}
+    auto result = jv_equal(prepare, jv_true());
+    jv_free(prepare);
+    return result;
+}
 
 void UserOperator::initializeOptions() {
 
@@ -232,6 +191,10 @@ void UserOperator::initializeOptions() {
         iter = jv_object_iter_next(options, iter);
     }
 
+}
+
+bool UserOperator::needs_preparation() const {
+    return !_is_prepared && prepare_required();
 }
 
 } // namespace metal

@@ -11,8 +11,6 @@ extern "C" {
 #include "abstract_operator.hpp"
 #include "operator_argument.hpp"
 
-namespace cxxopts { class Options; }
-
 namespace metal {
 
 class UserOperator : public AbstractOperator {
@@ -21,23 +19,23 @@ public:
     explicit UserOperator(std::string manifest_path);
     virtual ~UserOperator();
 
-//    void parseArguments(std::vector<std::string> args) override;
     void configure(SnapAction& action) override;
     void finalize(SnapAction& action) override;
 
     std::string id() const override;
     uint8_t internal_id() const override;
+    bool needs_preparation() const override;
+    virtual void set_is_prepared() override { _is_prepared = true; }
     std::string description() const;
+    bool prepare_required() const;
 
 protected:
     void initializeOptions();
 
     jv manifest() const { return jv_copy(_manifest); }
-
     jv _manifest;
-//    std::unique_ptr<cxxopts::Options> _opts;
-    std::unordered_map<std::string, OptionType> _optionTypes;
-    std::unordered_map<std::string, size_t> _fileOptions;
+
+    bool _is_prepared;
 
 };
 

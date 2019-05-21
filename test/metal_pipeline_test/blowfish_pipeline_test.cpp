@@ -62,10 +62,8 @@ TEST_F(BaseTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) 
 
     uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
 
-    OperatorRegistry registry("./test/metal_pipeline_test/operators");
-
-    auto encrypt = registry.operators().at("blowfish_encrypt");
-    auto decrypt = registry.operators().at("blowfish_decrypt");
+    auto encrypt = _registry->operators().at("blowfish_encrypt");
+    auto decrypt = _registry->operators().at("blowfish_decrypt");
 
     auto encryptKeyBuffer = std::make_shared<std::vector<char>>(16);
     auto decryptKeyBuffer = std::make_shared<std::vector<char>>(16);

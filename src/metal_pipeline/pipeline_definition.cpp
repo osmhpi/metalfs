@@ -4,38 +4,47 @@ extern "C" {
 }
 #include <metal_fpga/hw/hls/include/action_metalfpga.h>
 #include <iostream>
+#include <algorithm>
 #include "pipeline_definition.hpp"
 #include "snap_action.hpp"
 
 namespace metal {
 
 void PipelineDefinition::run(SnapAction &action) {
-
-    configureSwitch(action);
-
     for (const auto &op : _operators)
         op->configure(action);
 
-    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr);
+    uint64_t enable_mask = 0;
+
+    for (const auto &op : _operators)
+        if (op->needs_preparation()) enable_mask |= (1u << op->internal_id());
+
+    if (enable_mask) {
+        // At least one operator needs preparation.
+        action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask);
+    }
+
+    configureSwitch(action);
+
+    enable_mask = 0;
+    for (const auto &op : _operators) {
+        op->set_is_prepared();
+        enable_mask |= (1u << op->internal_id());
+    }
+
+    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask);
 
     for (const auto &op : _operators)
         op->finalize(action);
 }
 
 void PipelineDefinition::configureSwitch(SnapAction &action) const {
-    uint64_t enable_mask = 0;
-    for (const auto &op : _operators)
-        enable_mask |= (1 << op->internal_id());
-
-    auto *job_struct_enable = (uint64_t*)snap_malloc(sizeof(uint32_t) * 10);
-    *job_struct_enable = htobe64(enable_mask);
-
-    auto *job_struct = (uint32_t*)(job_struct_enable + 1);
+    auto *job_struct = (uint32_t*)snap_malloc(sizeof(uint32_t) * 8);
     const uint32_t disable = 0x80000000;
     for (int i = 0; i < 8; ++i)
         job_struct[i] = htobe32(disable);
 
-    uint8_t previous_op_stream = _operators.size() ? _operators[0]->internal_id() : 0;
+    uint8_t previous_op_stream = !_operators.empty() ? _operators[0]->internal_id() : 0;
     for (const auto &op : _operators) {
         // From the perspective of the Stream Switch:
         // Which Master port (output) should be
@@ -44,14 +53,15 @@ void PipelineDefinition::configureSwitch(SnapAction &action) const {
         previous_op_stream = op->internal_id();
     }
 
+
     try {
-        action.execute_job(MTL_JOB_CONFIGURE_STREAMS, reinterpret_cast<char *>(job_struct_enable));
+        action.execute_job(MTL_JOB_CONFIGURE_STREAMS, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
-        free(job_struct_enable);
+        free(job_struct);
         throw ex;
     }
 
-    free(job_struct_enable);
+    free(job_struct);
 }
 
 } // namespace metal

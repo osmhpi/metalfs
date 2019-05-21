@@ -8,6 +8,12 @@
         },
         "changecase": {
             "source": "hls/hls_operator_changecase"
+        },
+        "blowfish_encrypt": {
+            "source": "hls/hls_operator_blowfish_encrypt"
+        },
+        "blowfish_decrypt": {
+            "source": "hls/hls_operator_blowfish_decrypt"
         }
     }
 }
