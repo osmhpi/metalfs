@@ -250,4 +250,5 @@ if { ( $::env(DDRI_USED) == "TRUE" ) } {
 
 save_bd_design >> $log_file
 
-ipx::package_project -root_dir $action_root/ip/ip_user_files -vendor user.org -library user -taxonomy /UserIP -module bd_action -import_files >> $log_file
+set_property synth_checkpoint_mode None [get_files  $src_dir/../bd/$bd_name/$bd_name.bd]
+generate_target all                     [get_files  $src_dir/../bd/$bd_name/$bd_name.bd] >> $log_file
