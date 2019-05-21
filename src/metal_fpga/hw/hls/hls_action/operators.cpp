@@ -26,30 +26,6 @@ static void poll_interrupts(snapu8_t mask, snapu8_t* interrupt_reg) {
     while (*interrupt_reg != mask);
 }
 
-// static void invoke_operator(snapu32_t real_operator_id, snapu8_t *interrupt_reg, snapu32_t *operator_ctrl) {
-//     operator_ctrl[real_operator_id * OperatorOffset + 0] = 1;
-//     operator_ctrl[real_operator_id * OperatorOffset + 1] = 1;
-//     operator_ctrl[real_operator_id * OperatorOffset + 2] = 1;
-// }
-
-// static void do_prepare_operator(snapu8_t interrupt_mask, snapu32_t real_operator_id, snapu8_t *interrupt_reg, snapu32_t *operator_ctrl) {
-//     #pragma HLS DATAFLOW
-//     poll_interrupts(interrupt_mask, interrupt_reg);
-//     invoke_operator(real_operator_id, interrupt_reg, operator_ctrl);
-// }
-
-// void prepare_operator(snapu32_t operator_id, snapu8_t *interrupt_reg, snapu32_t *metal_ctrl) {
-//     snapu32_t *operator_ctrl = (metal_ctrl + OperatorBaseAddr);
-
-//     snapu32_t real_operator_id = operator_id - 1;
-
-//     // prepare = 1
-//     operator_ctrl[real_operator_id * OperatorOffset + 0x10 / sizeof(snapu32_t)] = 1;
-//     snapu8_t interrupt_mask = 1 << real_operator_id;
-
-//     do_prepare_operator(interrupt_mask, real_operator_id, interrupt_reg, operator_ctrl);
-// }
-
 void do_run_operators(
     snap_membus_t * mem_in,
     snap_membus_t * mem_out,

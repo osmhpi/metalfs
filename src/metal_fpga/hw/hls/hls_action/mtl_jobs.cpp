@@ -9,14 +9,14 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     // Everything fits into one memory line
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
 
-    switch_set_mapping(switch_ctrl, mtl_get32< 0>(line), 0);
-    switch_set_mapping(switch_ctrl, mtl_get32< 8>(line), 1);
-    switch_set_mapping(switch_ctrl, mtl_get32<12>(line), 2);
-    switch_set_mapping(switch_ctrl, mtl_get32<16>(line), 3);
-    switch_set_mapping(switch_ctrl, mtl_get32<20>(line), 4);
-    switch_set_mapping(switch_ctrl, mtl_get32<24>(line), 5);
-    switch_set_mapping(switch_ctrl, mtl_get32<28>(line), 6);
-    switch_set_mapping(switch_ctrl, mtl_get32<32>(line), 7);
+    switch_set_mapping(switch_ctrl, mtl_get32<0 * sizeof(uint32_t)>(line), 0);
+    switch_set_mapping(switch_ctrl, mtl_get32<1 * sizeof(uint32_t)>(line), 1);
+    switch_set_mapping(switch_ctrl, mtl_get32<2 * sizeof(uint32_t)>(line), 2);
+    switch_set_mapping(switch_ctrl, mtl_get32<3 * sizeof(uint32_t)>(line), 3);
+    switch_set_mapping(switch_ctrl, mtl_get32<4 * sizeof(uint32_t)>(line), 4);
+    switch_set_mapping(switch_ctrl, mtl_get32<5 * sizeof(uint32_t)>(line), 5);
+    switch_set_mapping(switch_ctrl, mtl_get32<6 * sizeof(uint32_t)>(line), 6);
+    switch_set_mapping(switch_ctrl, mtl_get32<7 * sizeof(uint32_t)>(line), 7);
     switch_commit(switch_ctrl);
 
     return SNAP_RETC_SUCCESS;
@@ -151,13 +151,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         result = SNAP_RETC_SUCCESS;
         break;
     }
-    // case MTL_JOB_OP_PREPARE:
-    // {
-    //     clear_operator_interrupts(interrupt_reg, metal_ctrl);
-    //     snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-    //     prepare_operator(mtl_get32<0>(line), interrupt_reg, metal_ctrl);
-    //     break;
-    // }
     case MTL_JOB_OP_MEM_SET_READ_BUFFER:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];

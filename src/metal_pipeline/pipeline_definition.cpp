@@ -39,7 +39,7 @@ void PipelineDefinition::run(SnapAction &action) {
 }
 
 void PipelineDefinition::configureSwitch(SnapAction &action) const {
-    auto *job_struct = (uint32_t*)snap_malloc(sizeof(uint32_t) * 8);
+    auto *job_struct = reinterpret_cast<uint32_t*>(snap_malloc(sizeof(uint32_t) * 8));
     const uint32_t disable = 0x80000000;
     for (int i = 0; i < 8; ++i)
         job_struct[i] = htobe32(disable);
@@ -52,7 +52,6 @@ void PipelineDefinition::configureSwitch(SnapAction &action) const {
         job_struct[op->internal_id()] = htobe32(previous_op_stream);
         previous_op_stream = op->internal_id();
     }
-
 
     try {
         action.execute_job(MTL_JOB_CONFIGURE_STREAMS, reinterpret_cast<char *>(job_struct));
