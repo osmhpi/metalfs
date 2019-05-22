@@ -7,11 +7,11 @@
 const snapu32_t OperatorBaseAddr = 0x44A40000 / sizeof(uint32_t);
 const snapu32_t OperatorOffset = 0x10000 / sizeof(uint32_t);
 
-void clear_operator_interrupts(snapu8_t *interrupt_reg, snapu32_t *metal_ctrl) {
+void clear_operator_interrupts(hls::stream<snapu8_t> &interrupt_reg, snapu32_t *metal_ctrl) {
     snapu32_t *operator_ctrl =
         (metal_ctrl + OperatorBaseAddr);
 
-    snapu8_t set_interrupts = *interrupt_reg;
+    snapu8_t set_interrupts = interrupt_reg.read();
     for (int i = 0; i < 8; ++i) {
         if (set_interrupts & 1 << i) {
             // 0x0c : IP Interrupt Status Register (Read/TOW)
@@ -22,8 +22,9 @@ void clear_operator_interrupts(snapu8_t *interrupt_reg, snapu32_t *metal_ctrl) {
     }
 }
 
-static void poll_interrupts(snapu8_t mask, snapu8_t* interrupt_reg) {
-    while (*interrupt_reg != mask);
+static void poll_interrupts(snapu8_t mask, hls::stream<snapu8_t> &interrupt_reg) {
+
+    while (interrupt_reg.read() != (ap_uint<1>(0), mask(7, 1)));
 }
 
 void do_run_operators(
@@ -118,10 +119,10 @@ void action_run_operators(
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
-    snapu8_t *interrupt_reg,
+    hls::stream<snapu8_t> &interrupt_reg,
     snapu64_t enable_mask
 ) {
     #pragma HLS DATAFLOW
-    poll_interrupts(enable_mask >> 1, interrupt_reg);
+    poll_interrupts(enable_mask, interrupt_reg);
     do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask);
 }

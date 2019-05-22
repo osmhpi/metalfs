@@ -4,7 +4,6 @@ set streams_count [expr [dict size $operators] + 1]
 
 set_property -dict [list CONFIG.NUM_SI $streams_count CONFIG.NUM_MI $streams_count] [get_bd_cells metal_switch]
 set_property -dict [list CONFIG.NUM_MI [expr [dict size $operators] + 4]] [get_bd_cells axi_metal_ctrl_crossbar]
-set_property -dict [list CONFIG.NUM_PORTS [dict size $operators]] [get_bd_cells interrupt_concat]
 
 set i 1
 
@@ -30,6 +29,19 @@ dict for {id path} $operators {
 
     exec jq --arg id $id --arg internal_id $i ". + {id: \$id, internal_id: \$internal_id | tonumber}" $action_root/hw/$path/operator.json > $action_root/hw/operators/${id}.json
 
+    incr i
+}
+
+# Initialize remaining interrupt ports with constant 0
+
+if { $i <= 8 } {
+    create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 interrupt_zero
+    set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells interrupt_zero]
+}
+
+while {$i <= 8} {
+    set interrupt_id [expr $i - 1]
+    connect_bd_net [get_bd_pins interrupt_zero/dout] [get_bd_pins interrupt_concat/In${interrupt_id}]
     incr i
 }
 

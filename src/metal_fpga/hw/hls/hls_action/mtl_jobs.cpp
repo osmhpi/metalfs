@@ -57,10 +57,9 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
                           axi_datamover_command_stream_t &s2mm_cmd,
                           axi_datamover_status_stream_t &s2mm_sts,
                           snapu32_t *metal_ctrl,
-                          snapu8_t *interrupt_reg,
+                          hls::stream<snapu8_t> &interrupt_reg,
                           action_reg * act_reg)
 {
-
     snapu32_t *perfmon_ctrl =
         (metal_ctrl + (0x44A00000 / sizeof(uint32_t)));
     snapu32_t *data_preselect_switch_ctrl =

@@ -27,7 +27,7 @@ void hls_action(snap_membus_t * din,
                 axi_datamover_command_stream_t &s2mm_cmd,
                 axi_datamover_status_stream_t &s2mm_sts,
                 snapu32_t *metal_ctrl,
-                snapu8_t *interrupt_reg,
+                hls::stream<snapu8_t> &interrupt_reg,
                 action_reg * action_reg,
                 action_RO_config_reg * action_config)
 {
@@ -47,7 +47,7 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE s_axilite port=action_reg bundle=ctrl_reg offset=0x100
 #pragma HLS INTERFACE s_axilite port=return bundle=ctrl_reg
 
-#pragma HLS INTERFACE ap_none port=interrupt_reg
+#pragma HLS INTERFACE axis port=interrupt_reg
 
 #ifdef NVME_ENABLED
     //NVME Config Interface
