@@ -26,7 +26,7 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
 
 TEST(ReadWritePipeline, TransfersEntirePage) {
 
-    uint64_t n_pages = 10;
+    uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
     auto *src = (uint8_t*)memalign(4096, n_bytes);
     fill_payload(src, n_bytes);

@@ -9,8 +9,8 @@ class DataSink : public AbstractOperator {
 public:
     explicit DataSink(size_t size = 0) : _size(size) {}
 
-    std::string id() const override { return ""; };
-    uint8_t internal_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
+    std::string id() const override { return ""; }
+    uint8_t internal_id() const override { return 0; }
 
     virtual void prepareForTotalProcessingSize(size_t size) { (void)size; }
     virtual void setSize(size_t size);

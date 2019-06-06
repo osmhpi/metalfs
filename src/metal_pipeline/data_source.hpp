@@ -9,8 +9,8 @@ class DataSource : public AbstractOperator {
 public:
     explicit DataSource(size_t size = 0) : _size(size) {}
 
-    std::string id() const override { return ""; };
-    uint8_t internal_id() const override { return 0; /* Value is ignored: data sources and sinks are always enabled */ };
+    std::string id() const override { return ""; }
+    uint8_t internal_id() const override { return 0; }
     size_t size() const { return _size; }
 
     virtual size_t reportTotalSize() { return 0; }

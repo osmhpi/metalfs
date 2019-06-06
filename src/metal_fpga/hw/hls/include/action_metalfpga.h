@@ -127,28 +127,10 @@ typedef struct metalfpga_job {
     uint64_t direct_data;
 } metalfpga_job_t;
 
-// Pipeline operator identifiers
-
-#define OP_READ_MEM_ENABLE_ID 0
-#define OP_WRITE_MEM_ENABLE_ID 1
-#define OP_PASSTHROUGH_ENABLE_ID 4
-#define OP_CHANGE_CASE_ENABLE_ID 5
-#define OP_BLOWFISH_ENCRYPT_ENABLE_ID 6
-#define OP_BLOWFISH_DECRYPT_ENABLE_ID 7
-
-#define OP_MEM_STREAM_ID 0
-#define OP_PASSTHROUGH_STREAM_ID 2
-#define OP_CHANGE_CASE_STREAM_ID 3
-#define OP_BLOWFISH_ENCRYPT_STREAM_ID 4
-#define OP_BLOWFISH_DECRYPT_STREAM_ID 5
-
 #define OP_MEM_MODE_HOST 0
 #define OP_MEM_MODE_DRAM 1
 #define OP_MEM_MODE_NULL 2
 #define OP_MEM_MODE_RANDOM 3
-
-#define MTL_JOB_OP_MEM_SET_DRAM_READ_BUFFER 4711
-#define MTL_JOB_OP_MEM_SET_DRAM_WRITE_BUFFER 4711
 
 #ifdef __cplusplus
 }
