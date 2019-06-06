@@ -199,8 +199,8 @@ connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins data_selector/s_axi_ctrl_are
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 interrupt_concat
 set_property -dict [list CONFIG.NUM_PORTS 8] [get_bd_cells interrupt_concat]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 one
-connect_bd_net [get_bd_pins one/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TVALID]
-connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TDATA]
+connect_bd_net [get_bd_pins one/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TVALID] >> $log_file
+connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TDATA] >> $log_file
 
 # AXI Perfmon
 
