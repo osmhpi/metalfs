@@ -16,7 +16,7 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-TEST_F(BaseTest, NOSIM_BlowfishPipeline_EncryptsAndDecryptsPayload) {
+TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -52,7 +52,7 @@ TEST_F(BaseTest, NOSIM_BlowfishPipeline_EncryptsAndDecryptsPayload) {
 }
 
 
-TEST_F(BaseTest, NOSIM_BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) {
+TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;

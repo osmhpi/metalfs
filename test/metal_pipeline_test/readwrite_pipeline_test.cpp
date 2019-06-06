@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <metal_pipeline/pipeline_runner.hpp>
 #include <metal_pipeline/snap_action.hpp>
+#include "base_test.hpp"
 
 namespace metal {
 
@@ -24,21 +25,22 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
 //    }
 //}
 
-TEST(ReadWritePipeline, TransfersEntirePage) {
+TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePage) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
-    auto *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
-    auto *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
-    SnapPipelineRunner runner(pipeline, 0);
-    ASSERT_NO_THROW(runner.run(false));
+    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
 
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
@@ -46,7 +48,7 @@ TEST(ReadWritePipeline, TransfersEntirePage) {
     free(dest);
 }
 
-TEST(ReadWritePipeline, TransfersEntirePageToInternalSink) {
+TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -64,7 +66,7 @@ TEST(ReadWritePipeline, TransfersEntirePageToInternalSink) {
     free(src);
 }
 
-TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
+TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGenerator) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -82,7 +84,7 @@ TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
     free(dest);
 }
 
-TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
+TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -96,7 +98,7 @@ TEST(ReadWritePipeline, TransfersEntirePageFromInternalDataGeneratorToInternalSi
     ASSERT_NO_THROW(pipeline.run(action));
 }
 
-TEST(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
+TEST_F(SimulationTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) {
 
     uint64_t src_pages = 3;
     uint64_t src_bytes = src_pages * 4096;

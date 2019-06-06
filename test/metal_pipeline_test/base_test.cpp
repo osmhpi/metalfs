@@ -1,7 +1,8 @@
 #include "base_test.hpp"
 
 namespace metal {
-void BaseTest::SetUp() {
+
+void PipelineTest::SetUp() {
 
     char *testPath = std::getenv("TEST_PATH");
     std::string testDataBasePath;
@@ -17,10 +18,6 @@ void BaseTest::SetUp() {
     }
 
     _registry = std::make_unique<OperatorRegistry>(operatorsPath);
-}
-
-void BaseTest::TearDown() {
-
 }
 
 } // namespace metal

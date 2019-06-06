@@ -65,19 +65,25 @@ void remove_padding(mtl_stream & in, mtl_stream &out) {
     previous_element.data |= current_element.data << (8 * (8 - bytes));
     previous_element.keep |= current_element.keep << (8 - bytes);
 
-    if (previous_element_valid)
-        out.write(previous_element);
+    current_element.data >>= (8 * bytes);
+    current_element.keep >>= bytes;
 
-    previous_element.data = current_element.data >> (8 * bytes);
-    previous_element.keep = current_element.keep >> (bytes);
-    previous_element.last = false;
-    previous_element_valid = true;
+    previous_element.last = current_element.last && current_element.keep == 0;
 
-    if (current_element.last && previous_element_valid) {
-        previous_element.last = true;
+    if (previous_element_valid || previous_element.last) {
         out.write(previous_element);
     }
-  } while(!current_element.last);
+
+    if (current_element.last && !previous_element.last) {
+        // Flush remaining bytes
+        out.write(current_element);
+    }
+
+    previous_element.data = current_element.data;
+    previous_element.keep = current_element.keep;
+    previous_element_valid = true;
+
+    } while(!current_element.last);
 }
 
 

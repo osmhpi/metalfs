@@ -25,7 +25,7 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
 //    }
 //}
 
-TEST_F(BaseTest, ProfilingPipeline_ProfileOperators) {
+TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
 
     uint64_t n_pages = 1;
 
@@ -70,7 +70,7 @@ TEST_F(BaseTest, ProfilingPipeline_ProfileOperators) {
     runner.printProfilingResults();
 }
 
-TEST_F(BaseTest, ProfilingPipeline_BenchmarkChangecase) {
+TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 128;

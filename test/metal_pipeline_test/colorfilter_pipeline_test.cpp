@@ -19,7 +19,7 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-TEST_F(BaseTest, ColorfilterPipeline_Runs) {
+TEST_F(SimulationPipelineTest, ColorfilterPipeline_Runs) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
