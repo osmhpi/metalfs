@@ -18,13 +18,17 @@ void clear_operator_interrupts(hls::stream<snapu8_t> &interrupt_reg, snapu32_t *
             //        bit 0  - Channel 0 (ap_done)
             //        others - reserved
             operator_ctrl[i * OperatorOffset + 3] = 1;
+
+            // Wait until operator has taken back the interrupt
+            while (interrupt_reg.read() & 1 << i);
         }
     }
 }
 
 static void poll_interrupts(snapu8_t mask, hls::stream<snapu8_t> &interrupt_reg) {
-
-    while (interrupt_reg.read() != (ap_uint<1>(0), mask(7, 1)));
+    if (mask != 1 && mask != 0) {
+        while (interrupt_reg.read() != (ap_uint<1>(0), mask(7, 1)));
+    }
 }
 
 void do_run_operators(
