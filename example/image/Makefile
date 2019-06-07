@@ -7,9 +7,14 @@ IMAGE_JSON = $(PWD)/image.json
 HLS_OPERATOR_PATH = $(PWD)/src
 IMAGE_TARGET = $(PWD)/operators
 
-snap_targets = hw_project model sim sim_screen image help
+snap_targets = clean hw_project model sim sim_screen image help
 
 all: help
+
+clean: clean_operators
+
+clean_operators:
+	@for dir in ./src/hls_*/; do make -C $$dir -s clean; done
 
 $(snap_targets):
 	@ \

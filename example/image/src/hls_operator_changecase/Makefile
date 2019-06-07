@@ -1,6 +1,8 @@
 SOLUTION_NAME ?= hls_operator_changecase_sln
 SOLUTION_DIR ?= hls_operator_changecase_sln
 
+HLS_CFLAGS=-I../../../../src/metal_fpga/hw/hls/include
+
 srcs += hls_operator_changecase.cpp
 
 WRAPPER ?= hls_operator_changecase
