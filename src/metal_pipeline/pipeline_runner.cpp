@@ -36,7 +36,7 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
         if (operatorPosition == _pipeline->operators().cend())
             throw std::runtime_error("Operator to be profiled must be part of pipeline");
 
-        auto *job_struct = (uint64_t*)snap_malloc(sizeof(uint64_t) * 2);
+        auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 2));
 
         if (operatorPosition == _pipeline->operators().begin()) {
             // If the operator is the data source, we profile its output stream twice
@@ -54,8 +54,8 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
             }
         }
 
-        std::cout << "Input stream " << job_struct[0] << std::endl;
-        std::cout << "Output stream " << job_struct[1] << std::endl;
+        std::cout << "Input stream " << be64toh(job_struct[0]) << std::endl;
+        std::cout << "Output stream " << be64toh(job_struct[1]) << std::endl;
 
         try {
             action.execute_job(MTL_JOB_CONFIGURE_PERFMON, reinterpret_cast<char *>(job_struct));
@@ -65,6 +65,8 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
         }
 
         free(job_struct);
+
+        action.execute_job(MTL_JOB_RESET_PERFMON);
     }
 }
 
@@ -89,7 +91,7 @@ void ProfilingPipelineRunner::finalize(SnapAction &action) {
 
 void ProfilingPipelineRunner::selectOperatorForProfiling(std::shared_ptr<AbstractOperator> op) {
     _op = std::move(op);
-    requireReinitiailzation();
+    requireReinitialization();
 }
 
 void ProfilingPipelineRunner::printProfilingResults() {

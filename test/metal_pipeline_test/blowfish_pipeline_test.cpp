@@ -20,10 +20,10 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
-    uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
-    uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
     auto encrypt = _registry->operators().at("blowfish_encrypt");
     auto decrypt = _registry->operators().at("blowfish_decrypt");
@@ -56,10 +56,10 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKe
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
-    uint8_t *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
-    uint8_t *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
     auto encrypt = _registry->operators().at("blowfish_encrypt");
     auto decrypt = _registry->operators().at("blowfish_decrypt");

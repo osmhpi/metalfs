@@ -27,7 +27,7 @@ public:
 protected:
     virtual void initialize(SnapAction &action) { (void)action; }
     virtual void finalize(SnapAction &action) { (void)action; }
-    void requireReinitiailzation() { _initialized = false; }
+    void requireReinitialization() { _initialized = false; }
 
     bool _initialized;
     int _card;

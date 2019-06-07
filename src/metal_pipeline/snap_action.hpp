@@ -11,7 +11,7 @@ public:
     SnapAction(SnapAction &&other) noexcept;
     virtual ~SnapAction();
 
-    void execute_job(uint64_t job_id, char *parameters, uint64_t direct_data = 0);
+    void execute_job(uint64_t job_id, const char *parameters = nullptr, uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0);
 
 protected:
 

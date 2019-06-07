@@ -30,13 +30,13 @@ TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
     uint64_t n_pages = 1;
 
     uint64_t n_bytes = n_pages * 4096;
-    auto *src = (uint8_t*)memalign(4096, n_bytes);
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
-    auto *dest = (uint8_t*)memalign(4096, n_bytes);
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
     auto decrypt = _registry->operators().at("blowfish_decrypt");
-    auto change_case = _registry->operators().at("change_case");
+    auto change_case = _registry->operators().at("changecase");
     auto encrypt = _registry->operators().at("blowfish_encrypt");
 
     auto keyBuffer = std::make_shared<std::vector<char>>(16);
@@ -75,11 +75,11 @@ TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 128;
 
-    auto change_case = _registry->operators().at("change_case");
+    auto change_case = _registry->operators().at("changecase");
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    change_case->setOption("key", false);
+    change_case->setOption("lowercase", false);
 
     auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>> ({ dataSource, change_case, dataSink }));
 

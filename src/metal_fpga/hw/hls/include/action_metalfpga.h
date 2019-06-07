@@ -95,7 +95,9 @@ extern "C" {
 
 #define MTL_JOB_RUN_OPERATORS 9
 // no indirect payload data
-// direct data: enable mask (64bit word)
+// 64bit words direct data:
+//   word0: enable mask         | R
+//   word1: perfmon_enable      | R
 
 #define MTL_JOB_OP_MEM_SET_READ_BUFFER 10
 // 64bit words at job_address:
@@ -124,7 +126,7 @@ extern "C" {
 typedef struct metalfpga_job {
     uint64_t job_address;
     uint64_t job_type;
-    uint64_t direct_data;
+    uint64_t direct_data[2];
 } metalfpga_job_t;
 
 #define OP_MEM_MODE_HOST 0

@@ -32,7 +32,7 @@ void PipelineDefinition::run(SnapAction &action) {
         enable_mask |= (1u << op->internal_id());
     }
 
-    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask);
+    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask, /* perfmon_enable = */ 1);
 
     for (const auto &op : _operators)
         op->finalize(action);

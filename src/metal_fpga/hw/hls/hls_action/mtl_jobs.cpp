@@ -128,7 +128,12 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case MTL_JOB_RUN_OPERATORS:
     {
-        perfmon_enable(perfmon_ctrl);
+        snapu64_t enable_mask = act_reg->Data.direct_data[0];
+        snapu64_t perfmon_en = act_reg->Data.direct_data[1];
+
+        if (perfmon_en == 1) {
+            perfmon_enable(perfmon_ctrl);
+        }
 
         clear_operator_interrupts(interrupt_reg, metal_ctrl);
         action_run_operators(
@@ -140,11 +145,14 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
             s2mm_sts,
             metal_ctrl,
             interrupt_reg,
-            act_reg->Data.direct_data // enable_mask
+            enable_mask
         );
-        // perfmon_disable(perfmon_ctrl);
+
     #ifndef NO_SYNTH
-        perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
+        if (perfmon_en == 1) {
+        // perfmon_disable(perfmon_ctrl);
+            perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
+        }
     #endif
 
         result = SNAP_RETC_SUCCESS;
