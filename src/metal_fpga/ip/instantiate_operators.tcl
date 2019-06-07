@@ -1,4 +1,8 @@
-set operators [eval dict create [split [exec jq -r ".operators | to_entries | map(.key, .value.source) | join(\" \")" $action_root/hw/image.json]]]
+set image_json $::env(IMAGE_JSON)
+set image_target $::env(IMAGE_TARGET)
+set operators  [eval dict create [split [exec jq -r ".operators | to_entries | map(.key, .value.source) | join(\" \")" $image_json]]]
+
+exec mkdir -p "$image_target"
 
 set streams_count [expr [dict size $operators] + 1]
 
@@ -27,7 +31,7 @@ dict for {id path} $operators {
     assign_bd_address [get_bd_addr_segs {op_${id}/s_axi_control/Reg }]  >> $log_file
     include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg]  >> $log_file
 
-    exec jq --arg id $id --arg internal_id $i ". + {id: \$id, internal_id: \$internal_id | tonumber}" $action_root/hw/$path/operator.json > $action_root/hw/operators/${id}.json
+    exec jq --arg id $id --arg internal_id $i ". + {id: \$id, internal_id: \$internal_id | tonumber}" $hls_operator_path/$path/operator.json > $image_target/${id}.json
 
     incr i
 }

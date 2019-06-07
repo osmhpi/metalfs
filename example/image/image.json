@@ -1,0 +1,19 @@
+{
+    "operators": {
+        "colorfilter": {
+            "source": "hls_operator_colorfilter"
+        },
+        "better_colorfilter": {
+            "source": "hls_operator_colorfilter"
+        },
+        "changecase": {
+            "source": "hls_operator_changecase"
+        },
+        "blowfish_encrypt": {
+            "source": "hls_operator_blowfish_encrypt"
+        },
+        "blowfish_decrypt": {
+            "source": "hls_operator_blowfish_decrypt"
+        }
+    }
+}

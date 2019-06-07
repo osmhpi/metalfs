@@ -3,10 +3,22 @@ $(info You have specified a wrong $$SNAP_ROOT.)
 $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 
+ifndef HLS_OPERATOR_PATH
+$(info There is no HLS operator search path defined.)
+$(error Please make sure that $$HLS_OPERATOR_PATH is set up correctly.)
+endif
+
+ifndef IMAGE_JSON
+$(info There is no image manifest path defined.)
+$(error Please make sure that $$IMAGE_JSON is set up correctly.)
+endif
+
 vhd_srcs=$(wildcard *.vhd_source)
 vhd_files=$(vhd_srcs:.vhd_source=.vhd)
 
 hls_components=$(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
+hls_components+=$(shell find $(HLS_OPERATOR_PATH) -maxdepth 1 -type d -name 'hls_*')
+
 hls_ip=$(hls_components:=/hls_impl_ip)
 
 ACTION_ROOT ?= $(PWD)/..

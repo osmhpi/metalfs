@@ -1,0 +1,7 @@
+**/*.log
+**/run_hls_*script.tcl
+src/*/hls_*/
+src/*/hls_impl_ip
+.hls_cflags
+.hls_cflags.tmp
+operators

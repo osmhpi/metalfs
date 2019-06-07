@@ -8,4 +8,4 @@ srcs += \
 WRAPPER ?= hls_operator_blowfish_encrypt
 
 include $(SNAP_ROOT)/actions/hls.mk
-include ../hls.mk
+include ../../../../src/metal_fpga/hw/hls/hls.mk

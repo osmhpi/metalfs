@@ -18,6 +18,7 @@ find_package(cxl REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(example)
 
 add_subdirectory(third_party/googletest)
 add_subdirectory(third_party/cxxopts)
