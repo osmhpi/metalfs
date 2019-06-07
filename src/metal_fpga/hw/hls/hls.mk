@@ -15,6 +15,9 @@ run_hls_script: .hls_cflags
 run_hls_ip_script.tcl: run_hls_script.tcl
 	@sed "s/#export_design/export_design/g" $< > $@
 
+run_hls_csim_script.tcl: run_hls_script.tcl
+	@sed "s/csynth_design/csim_design/g" $< > $@
+
 ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
 
 $(ip_dir): run_hls_ip_script.tcl $(srcs)
@@ -23,6 +26,9 @@ $(ip_dir): run_hls_ip_script.tcl $(srcs)
 # Create symlinks for simpler access
 ip: $(ip_dir)
 	@$(RM) hls_impl_ip && ln -s $(ip_dir) hls_impl_ip
+
+test: run_hls_csim_script.tcl $(srcs)
+	vivado_hls -f run_hls_csim_script.tcl
 
 clean: clean_run_hls_ip_script clean_hls_cflags
 clean_run_hls_ip_script:
