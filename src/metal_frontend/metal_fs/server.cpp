@@ -97,6 +97,8 @@ void Server::process_request(int connfd, int card) {
 
         PipelineLoop loop(std::move(operators_agents), card);
         loop.run();
+    } catch (ClientError &error) {
+        error.agent()->error = error.what();
     } catch (std::exception &ex) {
         // Something went wrong.
         spdlog::debug("An error occurred during pipeline execution. {}", ex.what());

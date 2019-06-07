@@ -6,4 +6,4 @@ include_directories(
 
 add_subdirectory(metal_filesystem_test)
 add_subdirectory(metal_pipeline_test)
-add_subdirectory(metal_storage_test)
+# add_subdirectory(metal_storage_test)

@@ -28,19 +28,6 @@ void AgentPool::register_agent(ClientHello &hello, int socket) {
   if (hello.has_metal_output_filename())
     agent->internal_output_file = hello.metal_output_filename();
 
-  // If the agent's input is not connected to another agent, it should
-  // have provided a file that will be used for memory-mapped data exchange
-  // except when we're writing to an internal file
-//  if (agent->input_agent_pid == 0 && agent->internal_input_file.empty()) {
-//    if (hello.input_buffer_filename().empty()) {
-//      // Should not happen
-////      close(socket);
-//      return;
-//    }
-//
-//    agent->input_buffer = Buffer::map_shared_buffer_for_reading(hello.input_buffer_filename());
-//  }
-
   _registered_agents.emplace(agent);
 
   _contains_valid_pipeline_cached = false;
@@ -94,7 +81,13 @@ void AgentPool::send_all_agents_invalid(std::unordered_set<std::shared_ptr<Regis
 
 void AgentPool::send_agent_invalid(RegisteredAgent &agent) {
   metal::ServerAcceptAgent accept_data;
-  accept_data.set_error_msg("An invalid operator chain was specified.\n");
+
+  if (!agent.error.empty()) {
+      accept_data.set_error_msg(agent.error);
+  } else {
+      accept_data.set_error_msg("An invalid operator chain was specified.\n");
+  }
+
   accept_data.set_valid(false);
 
   agent.socket.send_message<message_type::SERVER_ACCEPT_AGENT>(accept_data);

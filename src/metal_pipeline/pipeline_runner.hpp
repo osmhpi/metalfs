@@ -38,13 +38,15 @@ public:
     ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
         : SnapPipelineRunner(std::move(pipeline), card), _global_clock_counter(0), _performance_counters(10) {}
     void selectOperatorForProfiling(std::shared_ptr<AbstractOperator> op);
-    void printProfilingResults();
+    std::string formatProfilingResults();
 
 protected:
     void initialize(SnapAction &action) override;
     void finalize(SnapAction &action) override;
+    template<typename ... Args>
+    static std::string string_format( const std::string& format, Args ... args);
 
-protected:
+
     std::shared_ptr<AbstractOperator> _op;
     uint64_t _global_clock_counter{};
     std::vector<uint32_t> _performance_counters;

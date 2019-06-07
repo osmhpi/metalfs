@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "pipeline_builder.hpp"
 
 #include <dirent.h>
@@ -17,7 +19,7 @@
 namespace metal {
 
 PipelineBuilder::PipelineBuilder(std::shared_ptr<metal::OperatorRegistry> registry, std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
-        :  _registry(registry)
+        :  _registry(std::move(registry))
         , _pipeline_agents(std::move(pipeline_agents))
 {
   for (const auto &op : _registry->operators()) {
@@ -30,6 +32,9 @@ PipelineBuilder::PipelineBuilder(std::shared_ptr<metal::OperatorRegistry> regist
 cxxopts::Options PipelineBuilder::buildOperatorOptions(const std::shared_ptr<UserOperator>& op) {
 
   auto options = cxxopts::Options(op->id(), op->description());
+
+  options.add_option("", "h", "help", "Print help", cxxopts::value<bool>()->default_value("false"), "");
+  options.add_option("", "p", "profile", "Enable profiling", cxxopts::value<bool>()->default_value("false"), "");
 
   for (const auto &keyOptionPair : op->optionDefinitions()) {
     const auto &option = keyOptionPair.second;
@@ -157,6 +162,13 @@ void PipelineBuilder::set_operator_options_from_agent_request(
   char **argv = argsRaw.data();
   auto parseResult = options.parse(argc, argv);
 
+  if (parseResult["help"].as<bool>()) {
+      // Not really an exception, but the fastest way how we can exit the processing flow
+      throw ClientError(agent, options.help());
+  }
+
+  op->set_profiling_enabled(parseResult["profile"].as<bool>());
+
   for (const auto &optionType : op->optionDefinitions()) {
     auto result = parseResult[optionType.first];
 
@@ -198,7 +210,7 @@ void PipelineBuilder::set_operator_options_from_agent_request(
   }
 }
 
-std::string PipelineBuilder::resolvePath(std::string relative_or_absolue_path, std::string working_dir) {
+std::string PipelineBuilder::resolvePath(std::string relative_or_absolute_path, std::string working_dir) {
   auto dir = opendir(working_dir.c_str());
   if (dir == nullptr) {
     throw std::runtime_error("Could not open working directory of symbolic executable process");
@@ -215,7 +227,7 @@ std::string PipelineBuilder::resolvePath(std::string relative_or_absolue_path, s
   char *buf;
   ssize_t nbytes, bufsiz;
 
-  if (lstat(relative_or_absolue_path.c_str(), &sb) == -1) {
+  if (lstat(relative_or_absolute_path.c_str(), &sb) == -1) {
     closedir(dir);
     throw std::runtime_error("Could not obtain file status");
   }
@@ -230,7 +242,7 @@ std::string PipelineBuilder::resolvePath(std::string relative_or_absolue_path, s
     throw std::runtime_error("Allocation failure");
   }
 
-  nbytes = readlinkat(dirf, relative_or_absolue_path.c_str(), buf, static_cast<size_t>(bufsiz));
+  nbytes = readlinkat(dirf, relative_or_absolute_path.c_str(), buf, static_cast<size_t>(bufsiz));
   if (nbytes == -1) {
     closedir(dir);
     free(buf);

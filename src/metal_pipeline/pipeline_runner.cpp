@@ -7,6 +7,7 @@ extern "C" {
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include "pipeline_runner.hpp"
 #include "snap_action.hpp"
 
@@ -54,9 +55,6 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
             }
         }
 
-        std::cout << "Input stream " << be64toh(job_struct[0]) << std::endl;
-        std::cout << "Output stream " << be64toh(job_struct[1]) << std::endl;
-
         try {
             action.execute_job(MTL_JOB_CONFIGURE_PERFMON, reinterpret_cast<char *>(job_struct));
         } catch (std::exception &ex) {
@@ -94,7 +92,7 @@ void ProfilingPipelineRunner::selectOperatorForProfiling(std::shared_ptr<Abstrac
     requireReinitialization();
 }
 
-void ProfilingPipelineRunner::printProfilingResults() {
+std::string ProfilingPipelineRunner::formatProfilingResults() {
     const double freq = 250;
     const double onehundred = 100;
 
@@ -116,15 +114,29 @@ void ProfilingPipelineRunner::printProfilingResults() {
     double output_master_idle_percent = output_master_idle_count * onehundred / _global_clock_counter;
     double output_mbps = (output_data_byte_count * freq) / (double)_global_clock_counter;
 
-    printf("STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s\n");
+    std::stringstream result;
 
-    printf("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n",
+    result << "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s" << std::endl;
+
+    result << string_format("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
             input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count,
-            input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, _global_clock_counter, input_mbps);
+            input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, _global_clock_counter, input_mbps) << std::endl;
 
-    printf("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f\n",
+    result << string_format("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
             output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count,
-            output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, _global_clock_counter, output_mbps);
+            output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, _global_clock_counter, output_mbps) << std::endl;
+
+    return result.str();
+}
+
+template<typename... Args>
+std::string ProfilingPipelineRunner::string_format(const std::string &format, Args... args) {
+    // From: https://stackoverflow.com/a/26221725
+
+    size_t size = snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    std::unique_ptr<char[]> buf( new char[ size ] );
+    snprintf( buf.get(), size, format.c_str(), args ... );
+    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 
 void MockPipelineRunner::run(bool finalize) {

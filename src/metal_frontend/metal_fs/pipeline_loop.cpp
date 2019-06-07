@@ -52,9 +52,18 @@ void PipelineLoop::run() {
     operatorAgentPair->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
   }
 
-  for (;;) {
-    ServerProcessedBuffer processing_response;
+  auto profilingOperator = _pipeline.cend();
+  for (auto operatorAgentPairIt = _pipeline.cbegin(); operatorAgentPairIt != _pipeline.cend(); ++operatorAgentPairIt) {
+      if (operatorAgentPairIt->first->profiling_enabled()) {
+          if (profilingOperator == _pipeline.cend()) {
+              profilingOperator = operatorAgentPairIt;
+          } else {
+              throw std::runtime_error("Can only select one operator at a time for profiling");
+          }
+      }
+  }
 
+  for (;;) {
     size_t size = 0;
     bool eof = false;
 
@@ -78,7 +87,10 @@ void PipelineLoop::run() {
     if (firstAgentIt->second->input_buffer) {
       ServerProcessedBuffer msg;
       msg.set_eof(eof);
-//      msg.set_message(); // Profiling Results
+
+      if (firstAgentIt == profilingOperator) {
+          msg.set_message(runner.formatProfilingResults());
+      }
 
       // If there's only one agent in total, make sure to tell him the output size if necessary
       if (firstAgentIt == lastAgentIt && lastAgentIt->second->output_buffer)
@@ -91,7 +103,9 @@ void PipelineLoop::run() {
     if (firstAgentIt != lastAgentIt && lastAgentIt->second->output_buffer) {
       ServerProcessedBuffer msg;
       msg.set_eof(eof);
-//      msg.set_message(); // Profiling Results
+      if (lastAgentIt == profilingOperator) {
+        msg.set_message(runner.formatProfilingResults());
+      }
       msg.set_size(output_size);
       lastAgentIt->second->socket.send_message<message_type::SERVER_PROCESSED_BUFFER>(msg);
     }
@@ -101,7 +115,9 @@ void PipelineLoop::run() {
     for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
         ServerProcessedBuffer msg;
         msg.set_eof(true);
-//      msg.set_message(); // Profiling Results
+        if (operatorAgentPair == profilingOperator) {
+            msg.set_message(runner.formatProfilingResults());
+        }
         operatorAgentPair->second->socket.send_message<message_type::SERVER_PROCESSED_BUFFER>(msg);
       }
       return;

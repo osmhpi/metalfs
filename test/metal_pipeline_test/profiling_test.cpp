@@ -51,23 +51,21 @@ TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-//    SnapAction action(METALFPGA_ACTION_TYPE, 0);
-
     auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>> ({ dataSource, decrypt, change_case, encrypt, dataSink }));
 
     ProfilingPipelineRunner runner(pipeline, 0);
 
     runner.selectOperatorForProfiling(decrypt);
     ASSERT_NO_THROW(runner.run(true));
-    runner.printProfilingResults();
+//    std::cout << runner.formatProfilingResults();
 
     runner.selectOperatorForProfiling(change_case);
     ASSERT_NO_THROW(runner.run(true));
-    runner.printProfilingResults();
+//    std::cout << runner.formatProfilingResults();
 
     runner.selectOperatorForProfiling(encrypt);
     ASSERT_NO_THROW(runner.run(true));
-    runner.printProfilingResults();
+//    std::cout << runner.formatProfilingResults();
 }
 
 TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
@@ -86,7 +84,7 @@ TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
     ProfilingPipelineRunner runner(pipeline, 0);
     runner.selectOperatorForProfiling(change_case);
     ASSERT_NO_THROW(runner.run(true));
-    runner.printProfilingResults();
+//    std::cout << runner.formatProfilingResults();
 }
 
 } // namespace metal

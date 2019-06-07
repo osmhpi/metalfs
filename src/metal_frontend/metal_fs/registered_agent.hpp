@@ -20,9 +20,7 @@ class RegisteredAgent {
   std::string metal_mountpoint;
   std::vector<std::string> args;
 
-  std::weak_ptr<RegisteredAgent> input_agent;
   uint input_agent_pid{};
-  int input_file{};
   std::optional<Buffer> input_buffer;
 
   std::string internal_input_file;
@@ -30,8 +28,9 @@ class RegisteredAgent {
 
   std::weak_ptr<RegisteredAgent> output_agent;
   int output_agent_pid{};
-  int output_file{};
   std::optional<Buffer> output_buffer;
+
+  std::string error;
 };
 
 }  // namespace metal

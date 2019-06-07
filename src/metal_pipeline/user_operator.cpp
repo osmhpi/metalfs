@@ -145,6 +145,9 @@ bool UserOperator::prepare_required() const {
 
 void UserOperator::initializeOptions() {
 
+    _optionDefinitions.clear();
+    _options.clear();
+
     auto options = jv_object_get(manifest(), jv_string("options"));
 
     auto iter = jv_object_iter(options);
@@ -171,22 +174,22 @@ void UserOperator::initializeOptions() {
         auto type = jv_object_get(jv_copy(option), jv_string("type"));
         if (jv_get_kind(type) == JV_KIND_STRING) {
             if (std::string("bool") == jv_string_value(type)) {
-                _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+                _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
                     offset, OptionType::BOOL, jv_string_value(key), shortK, description
-                );
+                )));
             } else if (std::string("int") == jv_string_value(type)) {
-                _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+                _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
                     offset, OptionType::INT, jv_string_value(key), shortK, description
-                );
+                )));
             }
         } else {
             // Buffer (path to file)
-            _optionDefinitions[jv_string_value(key)] = OperatorOptionDefinition(
+            _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
                 offset, OptionType::BUFFER, jv_string_value(key), shortK, description
-            );
+            )));
         }
 
-        _options[jv_string_value(key)] = std::nullopt;
+        _options.insert(std::make_pair(jv_string_value(key), std::nullopt));
 
         iter = jv_object_iter_next(options, iter);
     }
