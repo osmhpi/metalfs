@@ -1,9 +1,12 @@
 #include "mtl_jobs.h"
 
+#include "mtl_jobstruct.h"
 #include "axi_perfmon.h"
 #include "axi_switch.h"
 #include "mtl_endian.h"
 #include "operators.h"
+#include "mtl_op_file.h"
+#include "mtl_file.h"
 
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
     // Everything fits into one memory line
@@ -20,6 +23,59 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
     switch_commit(switch_ctrl);
 
     return SNAP_RETC_SUCCESS;
+}
+
+
+// File Map / Unmap Operation:
+static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job)
+{
+    switch (job.slot) {
+        case 0: {
+            mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+        case 1: {
+            mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+        default: {
+            return SNAP_RETC_FAILURE;
+        }
+    }
+}
+
+static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
+{
+    switch (job.slot) {
+        case 0: {
+            mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        case 1: {
+            mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        default: {
+            return SNAP_RETC_FAILURE;
+        }
+    }
+}
+
+static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
+{
+    switch (job.slot) {
+        case 0: {
+            mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        case 1: {
+            mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            return SNAP_RETC_SUCCESS;
+        }
+        default: {
+            return SNAP_RETC_FAILURE;
+        }
+    }
 }
 
 static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {

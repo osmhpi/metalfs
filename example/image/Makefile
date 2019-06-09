@@ -3,11 +3,11 @@ $(info You have specified a wrong $$SNAP_ROOT.)
 $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 
-IMAGE_JSON = $(PWD)/image.json
+IMAGE_JSON        = $(PWD)/image.json
 HLS_OPERATOR_PATH = $(PWD)/src
-IMAGE_TARGET = $(PWD)/operators
+IMAGE_TARGET      = $(PWD)/operators
 
-snap_targets = clean hw_project model sim sim_screen image help
+snap_targets = snap_config clean hw_project model sim sim_screen image help
 
 all: help
 

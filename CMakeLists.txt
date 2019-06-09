@@ -21,4 +21,3 @@ add_subdirectory(test)
 add_subdirectory(example)
 
 add_subdirectory(third_party/googletest)
-add_subdirectory(third_party/cxxopts)
