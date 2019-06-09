@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 namespace metal {
 
@@ -41,6 +42,7 @@ OperatorRegistry::OperatorRegistry(const std::string &search_path)
             _operators.emplace(std::make_pair(op->id(), std::move(op)));
         } catch (std::exception &ex) {
             // Could not load operator
+            spdlog::warn("Could not load operator file: {} ({})", filename, ex.what());
         }
     }
 }

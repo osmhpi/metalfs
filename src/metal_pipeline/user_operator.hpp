@@ -23,10 +23,10 @@ public:
     void finalize(SnapAction& action) override;
 
     std::string id() const override;
+    std::string description() const override;
     uint8_t internal_id() const override;
     bool needs_preparation() const override;
     virtual void set_is_prepared() override { _is_prepared = true; }
-    std::string description() const;
     bool prepare_required() const;
 
 protected:

@@ -52,6 +52,7 @@ void PipelineLoop::run() {
     operatorAgentPair->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
   }
 
+  // Determine if any operator is selected for profiling
   auto profilingOperator = _pipeline.cend();
   for (auto operatorAgentPairIt = _pipeline.cbegin(); operatorAgentPairIt != _pipeline.cend(); ++operatorAgentPairIt) {
       if (operatorAgentPairIt->first->profiling_enabled()) {
@@ -61,6 +62,10 @@ void PipelineLoop::run() {
               throw std::runtime_error("Can only select one operator at a time for profiling");
           }
       }
+  }
+
+  if (profilingOperator != _pipeline.cend()) {
+    runner.selectOperatorForProfiling(profilingOperator->first);
   }
 
   for (;;) {

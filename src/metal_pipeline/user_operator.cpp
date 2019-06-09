@@ -145,9 +145,6 @@ bool UserOperator::prepare_required() const {
 
 void UserOperator::initializeOptions() {
 
-    _optionDefinitions.clear();
-    _options.clear();
-
     auto options = jv_object_get(manifest(), jv_string("options"));
 
     auto iter = jv_object_iter(options);

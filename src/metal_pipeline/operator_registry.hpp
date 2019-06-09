@@ -10,10 +10,11 @@ class OperatorRegistry {
 public:
     explicit OperatorRegistry(const std::string &search_path);
 
-    const std::unordered_map<std::string, std::shared_ptr<UserOperator>> & operators() const { return _operators; }
+    void add_operator(std::string id, std::shared_ptr<AbstractOperator> op) { _operators.emplace(std::make_pair(std::move(id), std::move(op))); }
+    const std::unordered_map<std::string, std::shared_ptr<AbstractOperator>> & operators() const { return _operators; }
 
 protected:
-    std::unordered_map<std::string, std::shared_ptr<UserOperator>> _operators;
+    std::unordered_map<std::string, std::shared_ptr<AbstractOperator>> _operators;
 };
 
 } // namespace metal

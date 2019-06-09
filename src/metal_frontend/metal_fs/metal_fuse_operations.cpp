@@ -1,3 +1,5 @@
+#include "metal_fuse_operations.hpp"
+
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
@@ -9,15 +11,15 @@
 #include <pthread.h>
 
 extern "C" {
-#include "../../metal_filesystem/metal.h"
-#include "../../metal_filesystem/inode.h"
+#include <metal_filesystem/metal.h>
+#include <metal_filesystem/inode.h>
 };
 
-#include <metal_filesystem_pipeline/metal_pipeline_storage.hpp>
 #include <thread>
+#include <cxxopts.hpp>
+
+#include <metal_pipeline/data_source.hpp>
 #include "server.hpp"
-#include "../../../third_party/cxxopts/include/cxxopts.hpp"
-#include "metal_fuse_operations.hpp"
 
 namespace metal {
 
@@ -390,10 +392,13 @@ Context &Context::instance() {
     return _instance;
 }
 
-void
-Context::initialize(std::string operators, bool in_memory, std::string bin_path, std::string metadata_dir, int card) {
+void Context::initialize(std::string operators, bool in_memory, std::string bin_path, std::string metadata_dir, int card) {
     _card = card;
     _registry = std::make_shared<metal::OperatorRegistry>(operators);
+
+    // Add the random data source operator
+    auto datagen = std::make_shared<RandomDataSource>();
+    _registry->add_operator(datagen->id(), datagen);
 
     _files_dirname = "files";
     _operators_dirname = "operators";

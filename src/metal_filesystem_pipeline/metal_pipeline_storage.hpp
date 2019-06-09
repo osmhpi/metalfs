@@ -2,7 +2,9 @@
 
 #include <vector>
 
+extern "C" {
 #include <metal_filesystem/metal.h>
+}
 
 namespace metal {
 

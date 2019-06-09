@@ -29,7 +29,7 @@ PipelineBuilder::PipelineBuilder(std::shared_ptr<metal::OperatorRegistry> regist
 }
 
 
-cxxopts::Options PipelineBuilder::buildOperatorOptions(const std::shared_ptr<UserOperator>& op) {
+cxxopts::Options PipelineBuilder::buildOperatorOptions(const std::shared_ptr<AbstractOperator>& op) {
 
   auto options = cxxopts::Options(op->id(), op->description());
 

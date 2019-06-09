@@ -8,6 +8,7 @@ include_directories(
     # ${CXL_INCLUDE_DIR}
     ${PROTOBUF_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
+    ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
 )
 
 SET(METAL_FS_SOURCES

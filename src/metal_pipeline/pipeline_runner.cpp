@@ -70,7 +70,7 @@ void ProfilingPipelineRunner::initialize(SnapAction &action) {
 
 void ProfilingPipelineRunner::finalize(SnapAction &action) {
     if (_op != nullptr) {
-        auto *job_struct = (uint64_t*)snap_malloc(sizeof(uint64_t) * 6);
+        auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 6));
 
         try {
             action.execute_job(MTL_JOB_READ_PERFMON_COUNTERS, reinterpret_cast<char *>(job_struct));

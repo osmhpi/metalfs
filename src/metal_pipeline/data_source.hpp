@@ -46,7 +46,10 @@ protected:
 
 class RandomDataSource : public DataSource {
 public:
-    explicit RandomDataSource(size_t size = 0) : DataSource(size) {}
+    explicit RandomDataSource(size_t size = 0);
+
+    std::string id() const override { return "datagen"; }
+    std::string description() const override { return "Generate data on the FPGA for benchmarking operators."; }
 
     void configure(SnapAction &action) override;
     void finalize(SnapAction& action) override { (void)action; }

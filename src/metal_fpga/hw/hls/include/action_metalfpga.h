@@ -119,10 +119,6 @@ extern "C" {
 //   word3: prepare             | R
 // <...> configuration data
 
-// #define MTL_JOB_OP_PREPARE 13
-// // 32bit words at job_address:
-// //   word0: operator id         | R
-
 typedef struct metalfpga_job {
     uint64_t job_address;
     uint64_t job_type;

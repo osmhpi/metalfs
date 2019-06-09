@@ -26,7 +26,7 @@ class PipelineBuilder {
   std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> configure();
 
  protected:
-  static cxxopts::Options buildOperatorOptions(const std::shared_ptr<UserOperator>& op);
+  static cxxopts::Options buildOperatorOptions(const std::shared_ptr<AbstractOperator>& op);
   std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> resolve_operators();
   void set_operator_options_from_agent_request(
           std::shared_ptr<AbstractOperator> op,

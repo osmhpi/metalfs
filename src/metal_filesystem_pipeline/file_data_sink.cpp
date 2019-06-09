@@ -59,11 +59,11 @@ void FileDataSink::configure(SnapAction &action) {
 
   // Transfer extent list
   {
-    auto *job_struct = (uint64_t*)snap_malloc(
+    auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
             sizeof(uint64_t) * (
                     8 // words for the prefix
                     + (2 * _extents.size()) // two words for each extent
-            )
+            ))
     );
     job_struct[0] = htobe64(1);  // slot number
     job_struct[1] = htobe64(1);  // map (vs unmap)
@@ -88,7 +88,7 @@ void FileDataSink::configure(SnapAction &action) {
 
   // If we only overwrite half of the first touched block load it to DRAM first
   if (_offset % NVME_BLOCK_BYTES) {
-    auto *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
+    auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
     job_struct[0] = htobe64(1); // Slot
     job_struct[1] = htobe64(_offset % NVME_BLOCK_BYTES); // File offset
     job_struct[2] = htobe64(WRITE_FILE_DRAM_BASEADDR); // DRAM target address
@@ -106,7 +106,7 @@ void FileDataSink::configure(SnapAction &action) {
 
   // If we only overwrite half of the last touched block load it to DRAM first
   if ((_offset + _size) % NVME_BLOCK_BYTES) {
-    auto *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
+    auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
     job_struct[0] = htobe64(1); // Slot
     job_struct[1] = htobe64(((_offset + _size) / NVME_BLOCK_BYTES) * NVME_BLOCK_BYTES); // File offset
     job_struct[2] = htobe64(((file_contents_in_dram_offset + _size) / NVME_BLOCK_BYTES) * NVME_BLOCK_BYTES); // DRAM target address

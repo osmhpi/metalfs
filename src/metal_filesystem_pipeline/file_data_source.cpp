@@ -59,11 +59,11 @@ void FileDataSource::configure(SnapAction &action) {
 
   // Transfer extent list
   {
-    auto *job_struct = (uint64_t*)snap_malloc(
+    auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
             sizeof(uint64_t) * (
                     8 // words for the prefix
                     + (2 * _extents.size()) // two words for each extent
-            )
+            ))
     );
     job_struct[0] = htobe64(0);  // slot number
     job_struct[1] = htobe64(1);  // map (vs unmap)
@@ -90,7 +90,7 @@ void FileDataSource::configure(SnapAction &action) {
   uint64_t end_block_offset = (_offset + _size) / NVME_BLOCK_BYTES;
   uint64_t blocks_length = end_block_offset - block_offset + 1;
 
-  auto *job_struct = (uint64_t*)snap_malloc(4 * sizeof(uint64_t));
+  auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
   job_struct[0] = htobe64(0); // Slot
   job_struct[1] = htobe64(_offset % NVME_BLOCK_BYTES); // File offset
   job_struct[2] = htobe64(READ_FILE_DRAM_BASEADDR); // DRAM target address

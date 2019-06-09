@@ -5,7 +5,13 @@ extern "C" {
 #include <fuse.h>
 }
 
+#include <string>
+#include <memory>
+#include <metal_filesystem_pipeline/metal_pipeline_storage.hpp>
+
 namespace metal {
+
+class OperatorRegistry;
 
 class Context {
  public:

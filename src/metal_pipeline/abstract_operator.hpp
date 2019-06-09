@@ -15,6 +15,7 @@ public:
     virtual void finalize(SnapAction &action) = 0;
 
     virtual std::string id() const = 0;
+    virtual std::string description() const { return ""; }
     virtual uint8_t internal_id() const = 0;
     virtual bool needs_preparation() const { return false; }
     virtual void set_is_prepared() {}
