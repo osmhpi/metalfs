@@ -1,0 +1,13 @@
+{
+	"name": "Metal FS",
+	"dockerFile": "Dockerfile",
+	"extensions": [
+		"ms-vscode.cpptools"
+	],
+	"runArgs": [
+		"-e",
+		"DISPLAY=${env:DISPLAY}",
+		"-v",
+		"/tmp/.X11-unix:/tmp/.X11-unix"
+	]
+}

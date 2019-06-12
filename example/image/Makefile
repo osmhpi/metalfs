@@ -6,6 +6,8 @@ endif
 IMAGE_JSON        = $(PWD)/image.json
 HLS_OPERATOR_PATH = $(PWD)/src
 IMAGE_TARGET      = $(PWD)/operators
+METAL_ROOT        = $(PWD)/../..
+METAL_TARGET      = $(shell jq -r .target $(IMAGE_JSON))
 
 snap_targets = snap_config clean hw_project model sim sim_screen image help
 
@@ -16,7 +18,15 @@ clean: clean_operators
 clean_operators:
 	@for dir in ./src/hls_*/; do make -C $$dir -s clean; done
 
-$(snap_targets):
+$(SNAP_ROOT)/snap_env.sh:
+	@ \
+	IMAGE_JSON=$(IMAGE_JSON) \
+	HLS_OPERATOR_PATH=$(HLS_OPERATOR_PATH) \
+	IMAGE_TARGET=$(IMAGE_TARGET) \
+	METAL_ROOT=$(METAL_ROOT) \
+	$(METAL_ROOT)/targets/$(METAL_TARGET)/configure
+
+$(snap_targets): $(SNAP_ROOT)/snap_env.sh
 	@ \
 	IMAGE_JSON=$(IMAGE_JSON) \
 	HLS_OPERATOR_PATH=$(HLS_OPERATOR_PATH) \
