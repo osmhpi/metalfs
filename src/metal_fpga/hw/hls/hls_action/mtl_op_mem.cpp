@@ -52,8 +52,6 @@ mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap
     return SNAP_RETC_SUCCESS;
 }
 
-typedef stream_element<sizeof(snap_membus_t)> word_stream_element;
-
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,

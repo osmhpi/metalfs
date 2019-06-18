@@ -25,6 +25,8 @@ ACTION_ROOT ?= $(PWD)/..
 LOGS_DIR ?= $(PWD)/../logs
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
 
+HLS_CFLAGS += -DSTREAM_BYTES=$(shell jq -r .stream_bytes $(IMAGE_JSON))
+
 HLS_TESTBENCH_CFLAGS = -I ../../../../../third_party/googletest/googletest/include
 
 ifeq ($(DDRI_USED),)
@@ -62,8 +64,8 @@ hls: $(hls_components)
 $(hls_components):
 	@mkdir -p $(LOGS_DIR)
 	@echo "                        Generating IP from HLS component $(@F)"
-	@echo "Calling make DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
-	@make DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
+	@echo "Calling make HLS_CFLAGS='$(HLS_CFLAGS)' DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
+	@make HLS_CFLAGS='$(HLS_CFLAGS)' DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
 	if [ $${hls_ret} -ne 0 ]; then \
 		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
 	fi

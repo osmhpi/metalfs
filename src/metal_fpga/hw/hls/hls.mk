@@ -1,7 +1,3 @@
-ifeq ($(HLS_CFLAGS),"")
-	HLS_CFLAGS :=
-endif
-
 ifeq ($(DDRI_USED),TRUE)
 	HLS_CFLAGS += -DDRAM_ENABLED
 endif
@@ -10,7 +6,7 @@ ifeq ($(NVME_USED),TRUE)
 	HLS_CFLAGS += -DNVME_ENABLED
 endif
 
-run_hls_script: .hls_cflags
+run_hls_script.tcl: .hls_cflags
 
 run_hls_ip_script.tcl: run_hls_script.tcl
 	@sed "s/#export_design/export_design/g" $< > $@

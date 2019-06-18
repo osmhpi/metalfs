@@ -2,6 +2,11 @@ set log_file    $log_dir/create_bd.log
 
 set bd_name     bd_action
 
+set image_json $::env(IMAGE_JSON)
+set stream_bytes [exec jq -r ".stream_bytes" $image_json]
+set stream_width [expr $stream_bytes * 8] 
+
+
 create_bd_design $bd_name >> $log_file
 
 create_bd_cell -type ip -vlnv xilinx.com:hls:hls_action:1.0 snap_action
@@ -68,7 +73,7 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_datamover:5.1 axi_datamover_mm2s
 
 set_property -dict [list \
     CONFIG.c_m_axi_mm2s_data_width {512} \
-    CONFIG.c_m_axis_mm2s_tdata_width {64} \
+    CONFIG.c_m_axis_mm2s_tdata_width {$stream_width} \
     CONFIG.c_include_mm2s_dre {true} \
     CONFIG.c_mm2s_burst_size {64} \
     CONFIG.c_mm2s_btt_used {23} \
@@ -96,7 +101,7 @@ set_property -dict [list \
     CONFIG.c_include_mm2s {Omit} \
     CONFIG.c_include_mm2s_stsfifo {false} \
     CONFIG.c_m_axi_s2mm_data_width {512} \
-    CONFIG.c_s_axis_s2mm_tdata_width {64} \
+    CONFIG.c_s_axis_s2mm_tdata_width {$stream_width} \
     CONFIG.c_include_s2mm_dre {true} \
     CONFIG.c_s2mm_burst_size {64} \
     CONFIG.c_s2mm_btt_used {23} \

@@ -12,14 +12,13 @@ struct byte_stream_element {
 };
 typedef hls::stream<byte_stream_element> mtl_byte_stream;
 
-template<uint8_t NB>
-struct stream_element {
-    ap_uint<8 * NB> data;
-    ap_uint<NB> keep;
+typedef ap_uint<8 * STREAM_BYTES> mtl_stream_data;
+typedef ap_uint<STREAM_BYTES> mtl_stream_keep;
+typedef struct {
+    mtl_stream_data data;
+    mtl_stream_keep keep;
     snap_bool_t last;
-};
-
-typedef stream_element<8> mtl_stream_element;
+} mtl_stream_element;
 typedef hls::stream<mtl_stream_element> mtl_stream;
 
 template<int bytes>
