@@ -58,7 +58,7 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
     struct snap_job cjob{};
     snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
 
-    const unsigned long timeout = 10;
+    const unsigned long timeout = 30;
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
     if (rc != 0)
