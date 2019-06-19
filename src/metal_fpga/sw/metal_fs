@@ -1,0 +1,3 @@
+#! /bin/bash
+
+$METAL_ROOT/build/metal_fs --metadata ./metadata --operators $IMAGE_TARGET -s -f $1

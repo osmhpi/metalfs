@@ -14,7 +14,7 @@ int main() {
     in.write(element);
   } while (!element.last);
 
-  op_image(in, out, true);
+  hls_operator_colorfilter(in, out);
 
   FILE * outfile = fopen("../../../../apples.out.bmp", "w");
   do {
