@@ -16,7 +16,7 @@ run_hls_ip_script.tcl: run_hls_script.tcl
 	@sed "s/#export_design/export_design/g" $< > $@
 
 run_hls_csim_script.tcl: run_hls_script.tcl
-	@sed "s/csynth_design/csim_design/g" $< > $@
+	@sed "s/csynth_design/csim_design -compiler clang/g" $< > $@
 
 ip_dir=$(SOLUTION_DIR)_$(PART_NUMBER)/$(SOLUTION_NAME)/impl/ip
 
