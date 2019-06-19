@@ -1,2 +1,0 @@
-#! /bin/bash
-$SNAP_ROOT/software/tools/snap_maint && $ACTION_ROOT/../../build/metal_fs -s -f $1
