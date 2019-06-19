@@ -3,5 +3,6 @@
 src/*/hls_*/
 src/*/hls_impl_ip
 .hls_cflags
-.hls_cflags.tmp
+.force
+.sig
 operators

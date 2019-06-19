@@ -31,4 +31,5 @@ $(snap_targets): $(SNAP_ROOT)/snap_env.sh
 	IMAGE_JSON=$(IMAGE_JSON) \
 	HLS_OPERATOR_PATH=$(HLS_OPERATOR_PATH) \
 	IMAGE_TARGET=$(IMAGE_TARGET) \
+	METAL_ROOT=$(METAL_ROOT) \
 	make -C $(SNAP_ROOT) -s $@

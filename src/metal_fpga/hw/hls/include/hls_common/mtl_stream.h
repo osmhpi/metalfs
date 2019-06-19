@@ -6,6 +6,10 @@
 #include <hls_stream.h>
 #include <hls_snap.H>
 
+#ifndef STREAM_BYTES
+#define STREAM_BYTES 8
+#endif
+
 struct byte_stream_element {
     snapu8_t data;
     snap_bool_t last;

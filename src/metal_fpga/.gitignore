@@ -6,5 +6,6 @@ sw/snap_fs
 ip/ipshared
 action_wrapper.vhd
 .hls_cflags
-.hls_cflags.tmp
+.force
+.sig
 .snap_config

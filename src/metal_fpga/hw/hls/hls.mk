@@ -1,3 +1,5 @@
+HLS_CFLAGS += $(ADDITIONAL_HLS_CFLAGS)
+
 ifeq ($(DDRI_USED),TRUE)
 	HLS_CFLAGS += -DDRAM_ENABLED
 endif
@@ -32,11 +34,12 @@ clean_run_hls_ip_script:
 clean_hls_cflags:
 	@$(RM) .hls_cflags
 
-# Make srcs dependent on the currently set HLS CFLAGS
 $(srcs): .hls_cflags
 
-.hls_cflags: FORCE
-	@if [ -n .hls_cflags ]; then touch .hls_cflags; fi
-	@if [ $$(echo "$(HLS_CFLAGS)" | comm -3 .hls_cflags - | wc -c) -gt 0 ]; then echo "$(HLS_CFLAGS)" > .hls_cflags; fi
+# Special sauce: we want to re-make certain targets whenever $HLS_CFLAGS changes
+include $(METAL_ROOT)/third_party/make-utils/signature
 
-FORCE:
+.hls_cflags:
+	$(call do,echo $$(HLS_CFLAGS) > .hls_cflags)
+
+-include .sig
