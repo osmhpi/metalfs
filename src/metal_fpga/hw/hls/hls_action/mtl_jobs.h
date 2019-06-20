@@ -15,7 +15,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
                           axi_datamover_command_stream_t &mm2s_cmd,
                           axi_datamover_status_stream_t &mm2s_sts,
                           axi_datamover_command_stream_t &s2mm_cmd,
-                          axi_datamover_status_stream_t &s2mm_sts,
+                          axi_datamover_status_ibtt_stream_t &s2mm_sts,
                           snapu32_t *metal_ctrl,
                           hls::stream<snapu8_t> &interrupt_reg,
                           action_reg * act_reg);

@@ -13,7 +13,7 @@ extern "C" {
 
 namespace metal {
 
-void SnapPipelineRunner::run(bool run_finalize) {
+uint64_t SnapPipelineRunner::run(bool run_finalize) {
 
     SnapAction action = SnapAction(METALFPGA_ACTION_TYPE, _card);
 
@@ -22,11 +22,13 @@ void SnapPipelineRunner::run(bool run_finalize) {
         _initialized = true;
     }
 
-    _pipeline->run(action);
+    uint64_t output_size = _pipeline->run(action);
 
     if (run_finalize) {
         finalize(action);
     }
+    
+    return output_size;
 }
 
 void ProfilingPipelineRunner::initialize(SnapAction &action) {
@@ -139,8 +141,9 @@ std::string ProfilingPipelineRunner::string_format(const std::string &format, Ar
     return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 
-void MockPipelineRunner::run(bool finalize) {
+uint64_t MockPipelineRunner::run(bool finalize) {
     (void)finalize;
+    return 0;
 }
 
 } // namespace metal

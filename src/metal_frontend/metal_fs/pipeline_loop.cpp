@@ -84,8 +84,7 @@ void PipelineLoop::run() {
       dataSource->setSize(size);
       dataSink->setSize(size);
 
-      runner.run(eof);
-      output_size = size; // Might differ in the future
+      output_size = runner.run(eof);
     }
 
     // Send a processing response for the input agent (eof, perfmon)
@@ -117,7 +116,7 @@ void PipelineLoop::run() {
 
     if (eof) {
       // Send a processing response to all other agents (eof, perfmon)
-    for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
+      for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
         ServerProcessedBuffer msg;
         msg.set_eof(true);
         if (operatorAgentPair == profilingOperator) {

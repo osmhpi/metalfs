@@ -12,7 +12,7 @@ namespace metal {
 class AbstractPipelineRunner {
 public:
     explicit AbstractPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline) : _pipeline(pipeline) {}
-    virtual void run(bool finalize) = 0;
+    virtual uint64_t run(bool finalize) = 0;
 
 protected:
     std::shared_ptr<PipelineDefinition> _pipeline;
@@ -22,7 +22,7 @@ class SnapPipelineRunner : public AbstractPipelineRunner {
 public:
     SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
       : AbstractPipelineRunner(std::move(pipeline)), _initialized(false), _card(card) {}
-    void run(bool finalize) override;
+    uint64_t run(bool finalize) override;
 
 protected:
     virtual void initialize(SnapAction &action) { (void)action; }
@@ -55,7 +55,7 @@ protected:
 
 class MockPipelineRunner : public AbstractPipelineRunner {
 public:
-    void run(bool finalize) override;
+    uint64_t run(bool finalize) override;
 
 };
 

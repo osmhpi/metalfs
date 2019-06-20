@@ -14,10 +14,11 @@ void action_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
     hls::stream<snapu8_t> &interrupt_reg,
-    snapu64_t enable_mask
+    snapu64_t enable_mask,
+    snapu64_t *bytes_written
 );
 
 #endif // __MTL_OPERATORS_H__

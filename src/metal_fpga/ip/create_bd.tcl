@@ -109,6 +109,8 @@ set_property -dict [list \
     CONFIG.c_m_axi_s2mm_id_width {0} \
     CONFIG.c_enable_mm2s {0} \
     CONFIG.c_addr_width {64} \
+    CONFIG.c_s2mm_support_indet_btt {true} \
+    CONFIG.c_s2mm_include_sf {false} \
 ] [get_bd_cells axi_datamover_s2mm]
 
 connect_bd_intf_net [get_bd_intf_pins axi_datamover_s2mm/M_AXIS_S2MM_STS] [get_bd_intf_pins snap_action/s2mm_sts]

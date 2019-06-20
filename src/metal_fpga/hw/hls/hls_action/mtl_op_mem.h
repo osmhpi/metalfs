@@ -11,6 +11,13 @@ typedef struct axi_datamover_status {
 } axi_datamover_status_t;
 typedef hls::stream<axi_datamover_status_t> axi_datamover_status_stream_t;
 
+typedef struct axi_datamover_ibtt_status {
+    ap_uint<32> data;
+    ap_uint<1> keep;
+    ap_uint<1> last;
+} axi_datamover_ibtt_status_t;
+typedef hls::stream<axi_datamover_ibtt_status_t> axi_datamover_status_ibtt_stream_t;
+
 typedef ap_uint<103> axi_datamover_command_t;
 typedef hls::stream<axi_datamover_command_t> axi_datamover_command_stream_t;
 
@@ -28,9 +35,9 @@ void op_mem_read(
     snapu32_t *random_ctrl,
     mtl_mem_configuration &config);
 
-void op_mem_write(
+uint64_t op_mem_write(
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     mtl_mem_configuration &config);
 
 extern mtl_mem_configuration read_mem_config;

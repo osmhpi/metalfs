@@ -10,7 +10,7 @@ extern "C" {
 
 namespace metal {
 
-void PipelineDefinition::run(SnapAction &action) {
+uint64_t PipelineDefinition::run(SnapAction &action) {
     for (const auto &op : _operators)
         op->configure(action);
 
@@ -32,10 +32,13 @@ void PipelineDefinition::run(SnapAction &action) {
         enable_mask |= (1u << op->internal_id());
     }
 
-    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask, /* perfmon_enable = */ 1);
+    uint64_t output_size;
+    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask, /* perfmon_enable = */ 1, &output_size);
 
     for (const auto &op : _operators)
         op->finalize(action);
+
+    return output_size;
 }
 
 void PipelineDefinition::configureSwitch(SnapAction &action) const {

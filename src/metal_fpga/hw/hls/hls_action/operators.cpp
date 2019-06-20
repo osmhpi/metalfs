@@ -37,9 +37,10 @@ void do_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *random_ctrl,
-    snapu64_t &enable_mask
+    snapu64_t &enable_mask,
+    snapu64_t *bytes_written
 ) {
     {
 #pragma HLS DATAFLOW
@@ -53,7 +54,7 @@ void do_run_operators(
             read_mem_config);
 
         // Output Operators
-        op_mem_write(
+        *bytes_written = op_mem_write(
             s2mm_cmd,
             s2mm_sts,
             write_mem_config);
@@ -66,9 +67,10 @@ void do_configure_and_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
-    snapu64_t &enable_mask
+    snapu64_t &enable_mask,
+    snapu64_t *bytes_written
 ) {
     snapu32_t *random_ctrl =
         (metal_ctrl + (0x44A20000 / sizeof(uint32_t)));
@@ -104,7 +106,7 @@ void do_configure_and_run_operators(
 
     if (enable_mask[0]) {
         // This triggers the data source and sink (not enabled in preparation mode)
-        do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl, enable_mask);
+        do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl, enable_mask, bytes_written);
     }
 
     for (int i = 0; i < 8; ++i) {
@@ -121,12 +123,13 @@ void action_run_operators(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
     hls::stream<snapu8_t> &interrupt_reg,
-    snapu64_t enable_mask
+    snapu64_t enable_mask,
+    snapu64_t *bytes_written
 ) {
     #pragma HLS DATAFLOW
     poll_interrupts(enable_mask, interrupt_reg);
-    do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask);
+    do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask, bytes_written);
 }

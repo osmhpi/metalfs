@@ -18,7 +18,7 @@ public:
 
     const std::vector<std::shared_ptr<AbstractOperator>> & operators() const { return _operators; }
 
-    void run(SnapAction &action);
+    uint64_t run(SnapAction &action);
 
 protected:
     std::vector<std::shared_ptr<AbstractOperator>> _operators;

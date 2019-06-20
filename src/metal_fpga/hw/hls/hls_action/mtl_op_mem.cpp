@@ -93,9 +93,29 @@ void op_mem_read(
     }
 }
 
-void op_mem_write(
+snap_bool_t issue_command(uint64_t bytes_remaining, uint64_t bytes_written, uint64_t addr, axi_datamover_command_stream_t &s2mm_cmd) {
+    const int N = 64; // Address width
+    snap_bool_t end_of_frame = bytes_remaining <= 1<<16;
+    ap_uint<23> write_bytes = end_of_frame ? bytes_remaining : 1<<16;
+
+    axi_datamover_command_t cmd = 0;
+    cmd((N+31), 32) = addr + bytes_written;
+    cmd[30] = end_of_frame;
+    cmd[23] = 1; // AXI burst type: INCR
+    cmd(22, 0) = write_bytes;
+    s2mm_cmd.write(cmd);
+
+    return end_of_frame;
+}
+
+ap_uint<32> read_status(axi_datamover_status_ibtt_stream_t &s2mm_sts) {
+    axi_datamover_ibtt_status_t status = s2mm_sts.read();
+    return status.data;
+}
+
+uint64_t op_mem_write(
     axi_datamover_command_stream_t &s2mm_cmd,
-    axi_datamover_status_stream_t &s2mm_sts,
+    axi_datamover_status_ibtt_stream_t &s2mm_sts,
     mtl_mem_configuration &config) {
 
     const uint64_t baseaddr = config.mode == OP_MEM_MODE_DRAM ? DRAM_BASE_OFFSET : 0;
@@ -103,27 +123,25 @@ void op_mem_write(
     switch (config.mode) {
         case OP_MEM_MODE_HOST:
         case OP_MEM_MODE_DRAM: {
-            const int N = 64; // Address width
             uint64_t bytes_written = 0;
-            while (bytes_written < config.size) {
+
+            for (;;) {
                 // Write data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_written;
-                snap_bool_t end_of_frame = bytes_remaining <= 1<<16;
-                ap_uint<23> write_bytes = end_of_frame ? bytes_remaining : 1<<16;
+                
+                snap_bool_t end_of_frame = issue_command(bytes_remaining, bytes_written, baseaddr + config.offset, s2mm_cmd);
 
-                axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = baseaddr + config.offset + bytes_written;
-                cmd[30] = end_of_frame;
-                cmd[23] = 1; // AXI burst type: INCR
-                cmd(22, 0) = write_bytes;
-                s2mm_cmd.write(cmd);
+                ap_uint<32> status = read_status(s2mm_sts);
+                bytes_written += status(30, 8);
 
-                bytes_written += write_bytes;
-
-                s2mm_sts.read();
+                if (status[31] /* = end of packet */ || end_of_frame) {
+                    return bytes_written;
+                }
             }
             break;
         }
         default: break;
     }
+
+    return 0;
 }

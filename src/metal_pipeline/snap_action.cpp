@@ -45,7 +45,7 @@ SnapAction::~SnapAction() {
     }
 }
 
-void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t direct_data_0, uint64_t direct_data_1) {
+void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
 
     spdlog::debug("Starting job {}...", job_id);
 
@@ -66,6 +66,11 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
 
     if (cjob.retc != SNAP_RETC_SUCCESS)
         throw std::runtime_error("Job was unsuccessful");
+
+    if (direct_data_out_0)
+        *direct_data_out_0 = mjob.direct_data[2];
+    if (direct_data_out_1)
+        *direct_data_out_1 = mjob.direct_data[3];
 }
 
 } // namespace metal
