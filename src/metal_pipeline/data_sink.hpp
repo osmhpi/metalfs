@@ -26,6 +26,7 @@ public:
 
     void configure(SnapAction &action) override;
     void finalize(SnapAction &action) override { (void) action; };
+    void setDest(void *dest) { _dest = dest; }
 
 protected:
     void *_dest;

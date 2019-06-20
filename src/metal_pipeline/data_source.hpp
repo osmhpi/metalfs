@@ -27,6 +27,7 @@ public:
 
     void configure(SnapAction &action) override;
     void finalize(SnapAction &action) override { (void) action; };
+    void setSource(const void *src) { _dest = src; }
 
 protected:
     const void *_dest;

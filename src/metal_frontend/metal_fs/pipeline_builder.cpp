@@ -196,7 +196,7 @@ void PipelineBuilder::set_operator_options_from_agent_request(
           throw std::runtime_error("Could not open file");
         }
 
-        auto nread = fread(buffer.get(), 1, buffer->size(), fp);
+        auto nread = fread(buffer->data(), 1, buffer->size(), fp);
         if (nread <= 0) {
           fclose(fp);
           throw std::runtime_error("Could not read from file");
