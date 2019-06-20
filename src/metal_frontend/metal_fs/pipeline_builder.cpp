@@ -211,48 +211,12 @@ void PipelineBuilder::set_operator_options_from_agent_request(
 }
 
 std::string PipelineBuilder::resolvePath(std::string relative_or_absolute_path, std::string working_dir) {
-  auto dir = opendir(working_dir.c_str());
-  if (dir == nullptr) {
-    throw std::runtime_error("Could not open working directory of symbolic executable process");
+  if (relative_or_absolute_path.size() && relative_or_absolute_path[0] == '/') {
+    // is absolute
+    return relative_or_absolute_path;
   }
 
-  auto dirf = dirfd(dir);
-  if (dirf == -1) {
-    closedir(dir);
-    throw std::runtime_error("Could not obtain dirfd");
-  }
-
-  // Determine the size of the buffer (inspired from man readlink(2) example)
-  struct stat sb{};
-  char *buf;
-  ssize_t nbytes, bufsiz;
-
-  if (lstat(relative_or_absolute_path.c_str(), &sb) == -1) {
-    closedir(dir);
-    throw std::runtime_error("Could not obtain file status");
-  }
-
-  bufsiz = sb.st_size + 1;
-  if (sb.st_size == 0)
-    bufsiz = PATH_MAX;
-
-  buf = static_cast<char *>(malloc(static_cast<size_t>(bufsiz)));
-  if (buf == nullptr) {
-    closedir(dir);
-    throw std::runtime_error("Allocation failure");
-  }
-
-  nbytes = readlinkat(dirf, relative_or_absolute_path.c_str(), buf, static_cast<size_t>(bufsiz));
-  if (nbytes == -1) {
-    closedir(dir);
-    free(buf);
-    throw std::runtime_error("Could not resolve path");
-  }
-
-  closedir(dir);
-  std::string result = buf;
-  free(buf);
-  return result;
+  return working_dir + "/" + relative_or_absolute_path;
 }
 
 

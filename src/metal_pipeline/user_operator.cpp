@@ -179,11 +179,15 @@ void UserOperator::initializeOptions() {
                     offset, OptionType::INT, jv_string_value(key), shortK, description
                 )));
             }
-        } else {
-            // Buffer (path to file)
-            _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
-                offset, OptionType::BUFFER, jv_string_value(key), shortK, description
-            )));
+        } else if (jv_get_kind(type) == JV_KIND_OBJECT) {
+            std::string type_str = jv_string_value(jv_object_get(jv_copy(type), jv_string("type")));
+
+            if (type_str == "buffer") {
+                size_t size = jv_number_value(jv_object_get(jv_copy(type), jv_string("size")));
+                _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
+                    offset, OptionType::BUFFER, jv_string_value(key), shortK, description, size
+                )));
+            }
         }
 
         _options.insert(std::make_pair(jv_string_value(key), std::nullopt));
