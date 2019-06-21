@@ -95,7 +95,7 @@ static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in
         if (membus_line_offset % sizeof(snap_membus_t) == 0) {
             line = mem_in[MFB_ADDRESS(job_address) + membus_line_offset / sizeof(snap_membus_t)];
         }
-        operator_ctrl[op * operator_offset + offset] = mtl_get32<0>(line);
+        operator_ctrl[op * operator_offset + offset] = line(31, 0);
         line >>= sizeof(snapu32_t) * 8;
     }
 
