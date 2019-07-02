@@ -62,7 +62,7 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
     if (rc != 0)
-        throw std::runtime_error("Error starting job " + std::to_string(rc));
+        throw std::runtime_error("Error starting job: " + snap_return_code_to_string(rc));
 
     if (cjob.retc != SNAP_RETC_SUCCESS)
         throw std::runtime_error("Job was unsuccessful");
@@ -71,6 +71,33 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
         *direct_data_out_0 = mjob.direct_data[2];
     if (direct_data_out_1)
         *direct_data_out_1 = mjob.direct_data[3];
+}
+
+std::string SnapAction::snap_return_code_to_string(int rc) {
+    switch (rc) {
+    case SNAP_OK:
+        return "";
+    case SNAP_EBUSY:
+        return "Resource is busy";
+    case SNAP_ENODEV:
+        return "No such device";
+    case SNAP_EIO:
+        return "Problem accessing the card";
+    case SNAP_ENOENT:
+        return "Entry not found";
+    case SNAP_EFAULT:
+        return "Illegal address";
+    case SNAP_ETIMEDOUT:
+        return "Timeout error";
+    case SNAP_EINVAL:
+        return "Invalid parameters";
+    case SNAP_EATTACH:
+        return "Attach error";
+    case SNAP_EDETACH:
+        return "Detach error";
+    default:
+        return "Unknown error";
+    }
 }
 
 } // namespace metal
