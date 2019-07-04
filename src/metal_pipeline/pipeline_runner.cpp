@@ -13,79 +13,89 @@ extern "C" {
 
 namespace metal {
 
-uint64_t SnapPipelineRunner::run(bool run_finalize) {
+uint64_t SnapPipelineRunner::run(bool last) {
 
     SnapAction action = SnapAction(METALFPGA_ACTION_TYPE, _card);
 
-    if (!_initialized) {
-        initialize(action);
-        _initialized = true;
-    }
+    pre_run(action, !_initialized);
+    _initialized = true;
 
     uint64_t output_size = _pipeline->run(action);
 
-    if (run_finalize) {
-        finalize(action);
-    }
-    
+    post_run(action, last);
+
     return output_size;
 }
 
-void ProfilingPipelineRunner::initialize(SnapAction &action) {
+void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
 
     if (_op != nullptr) {
-        auto operatorPosition = std::find(_pipeline->operators().begin(), _pipeline->operators().end(), _op);
+        if (initialize) {
+            auto operatorPosition = std::find(_pipeline->operators().begin(), _pipeline->operators().end(), _op);
 
-        if (operatorPosition == _pipeline->operators().cend())
-            throw std::runtime_error("Operator to be profiled must be part of pipeline");
+            if (operatorPosition == _pipeline->operators().cend())
+                throw std::runtime_error("Operator to be profiled must be part of pipeline");
 
-        auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 2));
+            auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 2));
 
-        if (operatorPosition == _pipeline->operators().begin()) {
-            // If the operator is the data source, we profile its output stream twice
-            ++operatorPosition;
-            job_struct[0] = htobe64((*operatorPosition)->internal_id());
-            job_struct[1] = htobe64((*operatorPosition)->internal_id());
-        } else {
-            job_struct[0] = htobe64(_op->internal_id());
-            // If the operator is the data sink, we profile its input stream twice
-            ++operatorPosition;
-            if (operatorPosition == _pipeline->operators().end()) {
-                job_struct[1] = htobe64(_op->internal_id());
-            } else {
+            if (operatorPosition == _pipeline->operators().begin()) {
+                // If the operator is the data source, we profile its output stream twice
+                ++operatorPosition;
+                job_struct[0] = htobe64((*operatorPosition)->internal_id());
                 job_struct[1] = htobe64((*operatorPosition)->internal_id());
+            } else {
+                job_struct[0] = htobe64(_op->internal_id());
+                // If the operator is the data sink, we profile its input stream twice
+                ++operatorPosition;
+                if (operatorPosition == _pipeline->operators().end()) {
+                    job_struct[1] = htobe64(_op->internal_id());
+                } else {
+                    job_struct[1] = htobe64((*operatorPosition)->internal_id());
+                }
             }
-        }
 
-        try {
-            action.execute_job(MTL_JOB_CONFIGURE_PERFMON, reinterpret_cast<char *>(job_struct));
-        } catch (std::exception &ex) {
+            try {
+                action.execute_job(MTL_JOB_CONFIGURE_PERFMON, reinterpret_cast<char *>(job_struct));
+            } catch (std::exception &ex) {
+                free(job_struct);
+                throw ex;
+            }
+
             free(job_struct);
-            throw ex;
         }
-
-        free(job_struct);
 
         action.execute_job(MTL_JOB_RESET_PERFMON);
     }
 }
 
-void ProfilingPipelineRunner::finalize(SnapAction &action) {
+void ProfilingPipelineRunner::post_run(SnapAction &action, bool finalize) {
+    // Ignore finalize, obtain partial profiling results after each pipeline invocation
+    (void)finalize;
+
     if (_op != nullptr) {
-        auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 6));
+        auto *results64 = reinterpret_cast<uint64_t*>(snap_malloc(sizeof(uint64_t) * 6));
+        auto *results32 = reinterpret_cast<uint32_t*>(results64 + 1);
 
         try {
-            action.execute_job(MTL_JOB_READ_PERFMON_COUNTERS, reinterpret_cast<char *>(job_struct));
+            action.execute_job(MTL_JOB_READ_PERFMON_COUNTERS, reinterpret_cast<char *>(results64));
         } catch (std::exception &ex) {
-            free(job_struct);
+            free(results64);
             throw ex;
         }
 
-        _global_clock_counter = htobe64(job_struct[0]);
+        _results.global_clock_counter        += be64toh(results64[0]);
 
-        memcpy(_performance_counters.data(), &job_struct[1], 10 * sizeof(uint32_t));
+        _results.input_transfer_cycle_count  += be32toh(results32[0]);
+        _results.input_data_byte_count       += be32toh(results32[2]);
+        _results.input_slave_idle_count      += be32toh(results32[3]);
+        _results.input_master_idle_count     += be32toh(results32[4]);
 
-        free(job_struct);
+        _results.output_transfer_cycle_count += be32toh(results32[5]);
+        _results.output_data_byte_count      += be32toh(results32[7]);
+        _results.output_slave_idle_count     += be32toh(results32[8]);
+        _results.output_master_idle_count    += be32toh(results32[9]);
+
+        free(results64);
     }
 }
 
@@ -98,35 +108,27 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
     const double freq = 250;
     const double onehundred = 100;
 
-    uint32_t input_data_byte_count = be32toh(_performance_counters[2]);
-    uint32_t input_transfer_cycle_count = be32toh(_performance_counters[0]);
-    double input_transfer_cycle_percent = input_transfer_cycle_count * onehundred / _global_clock_counter;
-    uint32_t input_slave_idle_count = be32toh(_performance_counters[3]);
-    double input_slave_idle_percent = input_slave_idle_count * onehundred / _global_clock_counter;
-    uint32_t input_master_idle_count = be32toh(_performance_counters[4]);
-    double input_master_idle_percent = input_master_idle_count * onehundred / _global_clock_counter;
-    double input_mbps = (input_data_byte_count * freq) / (double)_global_clock_counter;
+    double input_transfer_cycle_percent = _results.input_transfer_cycle_count * onehundred / _results.global_clock_counter;
+    double input_slave_idle_percent = _results.input_slave_idle_count * onehundred / _results.global_clock_counter;
+    double input_master_idle_percent = _results.input_master_idle_count * onehundred / _results.global_clock_counter;
+    double input_mbps = (_results.input_data_byte_count * freq) / (double)_results.global_clock_counter;
 
-    uint32_t output_data_byte_count = be32toh(_performance_counters[7]);
-    uint32_t output_transfer_cycle_count = be32toh(_performance_counters[5]);
-    double output_transfer_cycle_percent = output_transfer_cycle_count * onehundred / _global_clock_counter;
-    uint32_t output_slave_idle_count = be32toh(_performance_counters[8]);
-    double output_slave_idle_percent = output_slave_idle_count * onehundred / _global_clock_counter;
-    uint32_t output_master_idle_count = be32toh(_performance_counters[9]);
-    double output_master_idle_percent = output_master_idle_count * onehundred / _global_clock_counter;
-    double output_mbps = (output_data_byte_count * freq) / (double)_global_clock_counter;
+    double output_transfer_cycle_percent = _results.output_transfer_cycle_count * onehundred / _results.global_clock_counter;
+    double output_slave_idle_percent = _results.output_slave_idle_count * onehundred / _results.global_clock_counter;
+    double output_master_idle_percent = _results.output_master_idle_count * onehundred / _results.global_clock_counter;
+    double output_mbps = (_results.output_data_byte_count * freq) / (double)_results.global_clock_counter;
 
     std::stringstream result;
 
     result << "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s" << std::endl;
 
     result << string_format("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
-            input_data_byte_count, input_transfer_cycle_count, input_transfer_cycle_percent, input_master_idle_count,
-            input_master_idle_percent, input_slave_idle_count, input_slave_idle_percent, _global_clock_counter, input_mbps) << std::endl;
+            _results.input_data_byte_count, _results.input_transfer_cycle_count, input_transfer_cycle_percent, _results.input_master_idle_count,
+            input_master_idle_percent, _results.input_slave_idle_count, input_slave_idle_percent, _results.global_clock_counter, input_mbps) << std::endl;
 
     result << string_format("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
-            output_data_byte_count, output_transfer_cycle_count, output_transfer_cycle_percent, output_master_idle_count,
-            output_master_idle_percent, output_slave_idle_count, output_slave_idle_percent, _global_clock_counter, output_mbps) << std::endl;
+            _results.output_data_byte_count, _results.output_transfer_cycle_count, output_transfer_cycle_percent, _results.output_master_idle_count,
+            output_master_idle_percent, _results.output_slave_idle_count, output_slave_idle_percent, _results.global_clock_counter, output_mbps) << std::endl;
 
     return result.str();
 }
@@ -141,8 +143,8 @@ std::string ProfilingPipelineRunner::string_format(const std::string &format, Ar
     return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 
-uint64_t MockPipelineRunner::run(bool finalize) {
-    (void)finalize;
+uint64_t MockPipelineRunner::run(bool last) {
+    (void)last;
     return 0;
 }
 
