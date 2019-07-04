@@ -122,11 +122,11 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
 
     result << "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER WAIT  TOTAL CYCLES  MB/s" << std::endl;
 
-    result << string_format("input\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
+    result << string_format("input\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  %-12lu  %-4.2f",
             _results.input_data_byte_count, _results.input_transfer_cycle_count, input_transfer_cycle_percent, _results.input_master_idle_count,
             input_master_idle_percent, _results.input_slave_idle_count, input_slave_idle_percent, _results.global_clock_counter, input_mbps) << std::endl;
 
-    result << string_format("output\t%-17u  %-9u%3.0f%%  %-9u%3.0f%%  %-9u%3.0f%%  %-12lu  %-4.2f",
+    result << string_format("output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  %-12lu  %-4.2f",
             _results.output_data_byte_count, _results.output_transfer_cycle_count, output_transfer_cycle_percent, _results.output_master_idle_count,
             output_master_idle_percent, _results.output_slave_idle_count, output_slave_idle_percent, _results.global_clock_counter, output_mbps) << std::endl;
 
