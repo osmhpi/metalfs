@@ -28,6 +28,14 @@ void AgentPool::register_agent(ClientHello &hello, int socket) {
   if (hello.has_metal_output_filename())
     agent->internal_output_file = hello.metal_output_filename();
 
+  for (auto& other_agent : _registered_agents) {
+      if (other_agent->output_agent_pid == agent->pid) {
+          other_agent->output_agent = agent;
+      } else if (other_agent->pid == agent->output_agent_pid) {
+          agent->output_agent = other_agent;
+      }
+  }
+
   _registered_agents.emplace(agent);
 
   _contains_valid_pipeline_cached = false;
@@ -47,13 +55,16 @@ bool AgentPool::contains_valid_pipeline() {
     return false;
 
   // Walk the pipeline until we find an agent with output_pid == 0
-  std::shared_ptr<RegisteredAgent> pipeline_agent = pipelineStart;
   std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents;
-  pipeline_agents.emplace_back(pipeline_agent);
 
-  while (pipeline_agent && pipeline_agent->output_agent_pid != 0) {
+  auto pipeline_agent = pipelineStart;
+  while (pipeline_agent) {
     pipeline_agents.emplace_back(pipeline_agent);
-    pipeline_agent = pipeline_agent->output_agent.lock();
+
+    if (pipeline_agent->output_agent_pid == 0)
+        break;
+
+    pipeline_agent = pipeline_agent->output_agent;
   }
 
   if (pipeline_agents.back()->output_agent_pid == 0) {
@@ -90,7 +101,7 @@ void AgentPool::send_agent_invalid(RegisteredAgent &agent) {
 
   accept_data.set_valid(false);
 
-  agent.socket.send_message<message_type::SERVER_ACCEPT_AGENT>(accept_data);
+  agent.socket.send_message<message_type::ServerAcceptAgent>(accept_data);
 }
 
 void AgentPool::reset() {

@@ -52,6 +52,8 @@ public:
     std::string id() const override { return "datagen"; }
     std::string description() const override { return "Generate data on the FPGA for benchmarking operators."; }
 
+    size_t reportTotalSize() override;
+
     void configure(SnapAction &action) override;
     void finalize(SnapAction& action) override { (void)action; }
 };

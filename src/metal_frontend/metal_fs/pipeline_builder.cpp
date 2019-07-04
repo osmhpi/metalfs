@@ -134,7 +134,7 @@ std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registe
     if (operatorAgentPair.second->output_buffer != std::nullopt)
       response.set_output_buffer_filename(operatorAgentPair.second->output_buffer.value().filename());
 
-    operatorAgentPair.second->socket.send_message<message_type::SERVER_ACCEPT_AGENT>(response);
+    operatorAgentPair.second->socket.send_message<message_type::ServerAcceptAgent>(response);
   }
 
   std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<RegisteredAgent>>> result;

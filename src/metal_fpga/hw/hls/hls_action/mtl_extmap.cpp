@@ -2,6 +2,9 @@
 
 #include "mtl_endian.h"
 
+namespace metal {
+namespace fpga {
+
 static snapu64_t mtl_extmap_firstlblock(mtl_extmap_t & map, mtl_extent_offset_t extent) {
     if (extent == 0) {
         return 0;
@@ -151,70 +154,5 @@ snapu64_t mtl_extmap_remaining_blocks(mtl_extmap_t & map, snapu64_t lblock) {
     }
 }
 
-// snapu64_t mtl_file_map_pblock(mtl_fileslot_t & slot, snapu64_t logical_block_number)
-// {
-//     mtl_extent_count_t extent_count = slot.extent_count;
-//     uint64_t extent_begin = 0;
-//     uint64_t next_extent_begin = 0;
-//     for (mtl_extent_count_t i_extent = 0; i_extent < extent_count; ++i_extent)
-//     {
-// #pragma HLS UNROLL factor=16
-//         next_extent_begin = mtl_extents_lastblock[slot][i_extent];
-//         if (extent_begin <= logical_block_number &&
-//                logical_block_number < next_extent_begin)
-//         {
-//             snapu64_t offset = logical_block_number - extent_begin;
-//             snapu64_t base = mtl_extents_begin[slot][i_extent];
-//             return base + offset;
-//         }
-//         extent_begin = next_extent_begin;
-//     }
-//     return 0; //TODO-lw define INVALID_BLOCK_NUMBER
-// }
-
-
-// mtl_bool_t mtl_file_seek(mtl_fileslot_t & slot, mtl_filebuf_t & buffer, snap_membus_t * ddr, snapu64_t lblock, mtl_bool_t dirty)
-// {
-//     if (lblock < slot.block_count)
-//     {
-//         if (dirty)
-//         {
-//             mtl_file_flush(ddr, slot);
-//         }
-//         slot.current_lblock = lblock;
-//         slot.current_pblock = mtl_file_map_pblock(slot, lblock);
-//         //TODO-lw READ BLOCK current_pblock
-//         slot.is_active = true;
-//         return true;
-//     }
-//     return false;
-// }
-
-// mtl_bool_t mtl_file_next(mtl_fileslot_t & slot, mtl_filebuf_t & buffer, snap_membus_t * ddr, mtl_bool_t dirty)
-// {
-//     if (!mtl_file_at_end(slot))
-//     {
-//         //TODO-lw improve getting of consecutive pblocks (use current extent)
-//         if (dirty)
-//         {
-//             mtl_file_flush(ddr, slot);
-//         }
-//         slot.current_lblock = slot.current_lblock + 1;
-//         slot.current_pblock = mtl_file_map_pblock(slot, slot.current_lblock);
-//         //TODO-lw READ BLOCK current_pblock
-//         slot.is_active = true;
-//         return true;
-//     }
-//     return false;
-// }
-
-// mtl_bool_t mtl_file_flush(mtl_fileslot_t & slot, mtl_filebuf_t & buffer, snap_membus_t * ddr)
-// {
-//     if (slot.is_active)
-//     {
-//         //TODO-lw WRITE BLOCK current_pblock
-//         slot.is_active = false;
-//     }
-//     return true;
-// }
-
+}  // namespace fpga
+}  // namespace metal

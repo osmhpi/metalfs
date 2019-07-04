@@ -3,6 +3,8 @@
 #include "mtl_definitions.h"
 #include "mtl_endian.h"
 
+namespace metal {
+namespace fpga {
 
 mtl_job_map_t mtl_read_job_map(snap_membus_t * mem, snapu64_t address)
 {
@@ -74,3 +76,5 @@ mtl_job_fileop_t mtl_read_job_fileop(snap_membus_t * mem, snapu64_t address)
     return fileop_job;
 }
 
+}  // namespace fpga
+}  // namespace metal

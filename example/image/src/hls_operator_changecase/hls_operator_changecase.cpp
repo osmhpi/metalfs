@@ -1,6 +1,6 @@
 #include <snap_types.h>
 
-#include <hls_common/mtl_stream.h>
+#include <metal/stream.h>
 
 void hls_operator_changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
 

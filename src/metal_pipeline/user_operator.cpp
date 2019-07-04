@@ -10,7 +10,7 @@ extern "C" {
 
 #include <stdexcept>
 #include <iostream>
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <spdlog/spdlog.h>
 
 #include "snap_action.hpp"
@@ -98,7 +98,7 @@ void UserOperator::configure(SnapAction &action) {
         _is_prepared = false;
 
         try {
-            action.execute_job(MTL_JOB_OP_CONFIGURE, job_config);
+            action.execute_job(fpga::JobType::ConfigureOperator, job_config);
         } catch (std::exception &ex) {
             // Something went wrong...
             spdlog::warn("Could not configure operator: {}", ex.what());

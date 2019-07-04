@@ -2,7 +2,7 @@ extern "C" {
 #include <unistd.h>
 #include <snap_hls_if.h>
 }
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <iostream>
 #include <algorithm>
 #include "pipeline_definition.hpp"
@@ -21,7 +21,7 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
 
     if (enable_mask) {
         // At least one operator needs preparation.
-        action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask);
+        action.execute_job(fpga::JobType::RunOperators, nullptr, enable_mask);
     }
 
     configureSwitch(action);
@@ -33,7 +33,7 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
     }
 
     uint64_t output_size;
-    action.execute_job(MTL_JOB_RUN_OPERATORS, nullptr, enable_mask, /* perfmon_enable = */ 1, &output_size);
+    action.execute_job(fpga::JobType::RunOperators, nullptr, enable_mask, /* perfmon_enable = */ 1, &output_size);
 
     for (const auto &op : _operators)
         op->finalize(action);
@@ -57,7 +57,7 @@ void PipelineDefinition::configureSwitch(SnapAction &action) const {
     }
 
     try {
-        action.execute_job(MTL_JOB_CONFIGURE_STREAMS, reinterpret_cast<char *>(job_struct));
+        action.execute_job(fpga::JobType::ConfigureStreams, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
         free(job_struct);
         throw ex;

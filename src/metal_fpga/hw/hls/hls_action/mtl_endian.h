@@ -1,8 +1,9 @@
-#ifndef __MTL_ENDIAN_H__
-#define __MTL_ENDIAN_H__
+#pragma once
 
 #include "mtl_definitions.h"
 
+namespace metal {
+namespace fpga {
 
 static inline void mtl_set64le(snap_membus_t & busline,
                               mfb_byteoffset_t lowest_byte,
@@ -353,4 +354,5 @@ static inline snap_membus_t swap_membus_endianness(snap_membus_t value) {
 //#define mtl_get16 mtl_get16le
 //#define mtl_set16 mtl_set16le
 
-#endif // __MTL_ENDIAN_H__
+}  // namespace fpga
+}  // namespace metal

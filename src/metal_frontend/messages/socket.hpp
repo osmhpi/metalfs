@@ -58,9 +58,9 @@ auto Socket::receive_message() -> typename Socket::MessageTypeAssignment<T>::typ
   return message;
 }
 
-ASSIGN_MESSAGE_TYPE(message_type::AGENT_HELLO, ClientHello)
-ASSIGN_MESSAGE_TYPE(message_type::AGENT_PUSH_BUFFER, ClientPushBuffer)
-ASSIGN_MESSAGE_TYPE(message_type::SERVER_ACCEPT_AGENT, ServerAcceptAgent)
-ASSIGN_MESSAGE_TYPE(message_type::SERVER_PROCESSED_BUFFER, ServerProcessedBuffer)
+ASSIGN_MESSAGE_TYPE(message_type::AgentHello, ClientHello)
+ASSIGN_MESSAGE_TYPE(message_type::AgentPushBuffer, ClientPushBuffer)
+ASSIGN_MESSAGE_TYPE(message_type::ServerAcceptAgent, ServerAcceptAgent)
+ASSIGN_MESSAGE_TYPE(message_type::ServerProcessedBuffer, ServerProcessedBuffer)
 
 } // namespace metal

@@ -282,9 +282,9 @@ int main(int argc, char *argv[]) {
 
     metal::Socket socket(sock);
 
-    socket.send_message<metal::message_type::AGENT_HELLO>(request);
+    socket.send_message<metal::message_type::AgentHello>(request);
 
-    auto response = socket.receive_message<metal::message_type::SERVER_ACCEPT_AGENT>();
+    auto response = socket.receive_message<metal::message_type::ServerAcceptAgent>();
 
     if (response.has_error_msg()) {
         fprintf(stderr, "%s", response.error_msg().c_str());
@@ -311,16 +311,13 @@ int main(int argc, char *argv[]) {
             eof = feof(stdin) != 0;
         }
 
-        // Tell the server about the data (if any)
-        // and wait for it to be consumed
+        // Tell the server about the data (if any) and wait for it to be consumed
 
         metal::ClientPushBuffer processing_request;
         processing_request.set_size(bytes_read);
         processing_request.set_eof(eof);
-
-        socket.send_message<metal::message_type::AGENT_PUSH_BUFFER>(processing_request);
-
-        auto processing_response = socket.receive_message<metal::message_type::SERVER_PROCESSED_BUFFER>();
+        socket.send_message<metal::message_type::AgentPushBuffer>(processing_request);
+        auto processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
 
         if (processing_response.size() && output_buffer != std::nullopt) {
             // Write to stdout

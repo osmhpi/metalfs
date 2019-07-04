@@ -1,4 +1,4 @@
-#include <hls_common/mtl_stream.h>
+#include <metal/stream.h>
 
 void hls_streamsink(mtl_stream &data) {
     #pragma HLS INTERFACE axis port=data

@@ -7,7 +7,7 @@
 #include "mtl_endian.h"
 #include "mtl_file.h"
 #include "mtl_jobstruct.h"
-#include <hls_common/mtl_stream.h>
+#include <metal/stream.h>
 
 #include "mtl_op_mem.h"
 #include "mtl_op_file.h"
@@ -22,13 +22,13 @@ void hls_action(snap_membus_t * din,
 #ifdef NVME_ENABLED
                 snapu32_t * nvme,
 #endif
-                axi_datamover_command_stream_t &mm2s_cmd,
-                axi_datamover_status_stream_t &mm2s_sts,
-                axi_datamover_command_stream_t &s2mm_cmd,
-                axi_datamover_status_ibtt_stream_t &s2mm_sts,
+                metal::fpga::axi_datamover_command_stream_t &mm2s_cmd,
+                metal::fpga::axi_datamover_status_stream_t &mm2s_sts,
+                metal::fpga::axi_datamover_command_stream_t &s2mm_cmd,
+                metal::fpga::axi_datamover_status_ibtt_stream_t &s2mm_sts,
                 snapu32_t *metal_ctrl,
                 hls::stream<snapu8_t> &interrupt_reg,
-                action_reg * action_reg,
+                metal::fpga::action_reg * action_reg,
                 action_RO_config_reg * action_config)
 {
     // Configure Host Memory AXI Interface
@@ -66,12 +66,12 @@ void hls_action(snap_membus_t * din,
     // Required Action Type Detection
     switch (action_reg->Control.flags) {
     case 0:
-        action_config->action_type = (snapu32_t)METALFPGA_ACTION_TYPE;
+        action_config->action_type = metal::fpga::ActionType;
         action_config->release_level = (snapu32_t)HW_RELEASE_LEVEL;
         action_reg->Control.Retc = (snapu32_t)0xe00f;
         break;
     default:
-        action_reg->Control.Retc = process_action(
+        action_reg->Control.Retc = metal::fpga::process_action(
             din,
             dout,
 #ifdef NVME_ENABLED

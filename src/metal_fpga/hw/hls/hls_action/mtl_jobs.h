@@ -1,11 +1,13 @@
-#ifndef __MTL_JOBS_H__
-#define __MTL_JOBS_H__
+#pragma once
 
 #include <hls_stream.h>
 #include <hls_snap.H>
 #include "action_metalfpga.H"
 #include "mtl_definitions.h"
 #include "mtl_op_mem.h"
+
+namespace metal {
+namespace fpga {
 
 mtl_retc_t process_action(snap_membus_t * mem_in,
                           snap_membus_t * mem_out,
@@ -20,4 +22,5 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
                           hls::stream<snapu8_t> &interrupt_reg,
                           action_reg * act_reg);
 
-#endif // __MTL_JOBS_H__
+}  // namespace fpga
+}  // namespace metal

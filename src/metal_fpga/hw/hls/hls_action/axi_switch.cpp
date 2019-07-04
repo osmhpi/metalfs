@@ -1,5 +1,8 @@
 #include "axi_switch.h"
 
+namespace metal {
+namespace fpga {
+
 #define AXI_STREAM_SWITCH_MAPPING_CONFIG_OFFSET (0x40 / sizeof(uint32_t))
 
 void switch_set_mapping(snapu32_t *switch_ctrl, snapu32_t data_in, snapu32_t data_out) {
@@ -17,3 +20,6 @@ void switch_disable_output(snapu32_t *switch_ctrl, snapu32_t data_out) {
 void switch_commit(snapu32_t *switch_ctrl) {
     switch_ctrl[0] = 0x2;
 }
+
+}  // namespace fpga
+}  // namespace metal

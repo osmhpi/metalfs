@@ -1,10 +1,12 @@
-#ifndef __MTL_OPERATORS_H__
-#define __MTL_OPERATORS_H__
+#pragma once
 
 #include <hls_stream.h>
 #include <hls_snap.H>
 #include "mtl_definitions.h"
 #include "mtl_op_mem.h"
+
+namespace metal {
+namespace fpga {
 
 void clear_operator_interrupts(hls::stream<snapu8_t> &interrupt_reg, snapu32_t *metal_ctrl);
 
@@ -21,4 +23,5 @@ void action_run_operators(
     snapu64_t *bytes_written
 );
 
-#endif // __MTL_OPERATORS_H__
+}  // namespace fpga
+}  // namespace metal

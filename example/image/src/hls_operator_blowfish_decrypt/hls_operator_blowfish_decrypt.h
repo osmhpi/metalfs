@@ -1,7 +1,6 @@
-#ifndef __HLS_OPERATOR_BLOWFISH_DECRYPT_H__
-#define __HLS_OPERATOR_BLOWFISH_DECRYPT_H__
+#pragma once
 
-#include <hls_common/mtl_stream.h>
+#include <metal/stream.h>
 
 // BF_INSTANCES: # of parallel bf_encrypt/bf_decrypt instances to be synthesized
 #define BF_INST_W 4
@@ -53,5 +52,3 @@ typedef ap_uint<BF_BPL_W + 1> bf_uiBpL_t;
 typedef ap_uint<BF_HBPL_W + 1> bf_uiHBpL_t;
 
 typedef ap_uint<5> bf_iteration_t;
-
-#endif // __HLS_OPERATOR_BLOWFISH_DECRYPT_H__

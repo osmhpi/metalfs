@@ -5,13 +5,11 @@
 namespace metal {
 
 enum class message_type : int {
-  AGENT_HELLO,
-  AGENT_PUSH_BUFFER,
+  AgentHello,
+  AgentPushBuffer,
 
-  SERVER_ACCEPT_AGENT,
-  SERVER_PROCESSED_BUFFER,
-
-  ERROR
+  ServerAcceptAgent,
+  ServerProcessedBuffer
 };
 
 class MessageHeader {

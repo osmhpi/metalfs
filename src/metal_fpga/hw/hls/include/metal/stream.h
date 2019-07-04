@@ -1,5 +1,4 @@
-#ifndef __MTL_STREAM_H__
-#define __MTL_STREAM_H__
+#pragma once
 
 #include <stdint.h>
 #include <ap_int.h>
@@ -88,6 +87,3 @@ void remove_padding(mtl_stream & in, mtl_stream &out) {
 
     } while(!current_element.last);
 }
-
-
-#endif // __MTL_STREAM_H__

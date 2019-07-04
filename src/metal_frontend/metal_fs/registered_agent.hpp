@@ -26,8 +26,8 @@ class RegisteredAgent {
   std::string internal_input_file;
   std::string internal_output_file;
 
-  std::weak_ptr<RegisteredAgent> output_agent;
-  int output_agent_pid{};
+  std::shared_ptr<RegisteredAgent> output_agent;
+  uint output_agent_pid{};
   std::optional<Buffer> output_buffer;
 
   std::string error;

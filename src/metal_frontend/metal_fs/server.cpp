@@ -75,7 +75,7 @@ void Server::startInternal(int card) {
 void Server::process_request(int connfd, int card) {
     try {
         Socket socket(connfd);
-        auto request = socket.receive_message<message_type::AGENT_HELLO>();
+        auto request = socket.receive_message<message_type::AgentHello>();
         _agents.register_agent(request, connfd);
     } catch (std::exception& ex) {
         // Don't know this guy -- doesn't even say hello

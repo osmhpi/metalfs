@@ -2,6 +2,8 @@
 
 #include "mtl_endian.h"
 
+namespace metal {
+namespace fpga {
 
 mtl_bool_t mtl_file_seek(mtl_extmap_t & map,
                        mtl_filebuf_t & buffer,
@@ -221,3 +223,6 @@ mtl_bool_t mtl_file_write_buffer(snapu32_t * nvme_ctrl,
 
     return MTL_TRUE;
 }
+
+}  // namespace fpga
+}  // namespace metal

@@ -1,7 +1,11 @@
-#ifndef __HLS_DEFINITIONS_H__
-#define __HLS_DEFINITIONS_H__
+#pragma once
 
 #include <hls_snap.H>
+
+namespace metal {
+namespace fpga {
+
+#define MTL_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
 // define missing log2 of MEMDW based on addr shift
 // (which is the byte instead of bit index width)
@@ -21,4 +25,5 @@ typedef ap_uint<ADDR_RIGHT_SHIFT+4> mfb_bitcount_t;
 
 #define MTL_MASK(BHI, BLO) ((0x1<<(BHI+1)) - (0x1<<BLO))
 
-#endif // __HLS_DEFINITIONS_H__
+}  // namespace fpga
+}  // namespace metal

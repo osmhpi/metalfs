@@ -1,7 +1,9 @@
-#ifndef __MTL_DEFINITIONS_H__
-#define __MTL_DEFINITIONS_H__
+#pragma once
 
 # include "hls_definitions.h"
+
+namespace metal {
+namespace fpga {
 
 // Action return code
 typedef snapu32_t mtl_retc_t;
@@ -48,5 +50,5 @@ typedef ap_uint<MTL_EXTENTS_PER_LINE_W+1> mtl_line_extent_count_t;
 /* typedef ap_uint<MTL_SLOT_OFFSET_W> mtl_slot_offset_t; */
 /* typedef ap_uint<MTL_SLOT_OFFSET_W+1> mtl_slot_count_t; */
 
-
-#endif // __MTL_DEFINITIONS_H__
+}  // namespace fpga
+}  // namespace metal

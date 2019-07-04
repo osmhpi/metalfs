@@ -1,7 +1,9 @@
-#ifndef __MTL_EXTMAP_H__
-#define __MTL_EXTMAP_H__
+#pragma once
 
 #include "mtl_definitions.h"
+
+namespace metal {
+namespace fpga {
 
 typedef struct {
     mtl_extent_count_t extent_count;
@@ -36,5 +38,5 @@ mtl_extent_offset_t mtl_extmap_extent(mtl_extmap_t & map);
 snapu64_t mtl_extmap_remaining_blocks(mtl_extmap_t & map);
 snapu64_t mtl_extmap_remaining_blocks(mtl_extmap_t & map, snapu64_t lblock);
 
-
-#endif // __MTL_EXTMAP_H__
+}  // namespace fpga
+}  // namespace metal

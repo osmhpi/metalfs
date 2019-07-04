@@ -4,6 +4,9 @@
 
 #include "mtl_endian.h"
 
+namespace metal {
+namespace fpga {
+
 const snapu32_t OperatorBaseAddr = 0x44A40000 / sizeof(uint32_t);
 const snapu32_t OperatorOffset = 0x10000 / sizeof(uint32_t);
 
@@ -133,3 +136,6 @@ void action_run_operators(
     poll_interrupts(enable_mask, interrupt_reg);
     do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask, bytes_written);
 }
+
+}  // namespace fpga
+}  // namespace metal

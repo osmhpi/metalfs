@@ -8,6 +8,9 @@
 #include "mtl_op_file.h"
 #include "mtl_file.h"
 
+namespace metal {
+namespace fpga {
+
 static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t * mem_in, const uint64_t job_address) {
     // Everything fits into one memory line
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
@@ -130,7 +133,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     mtl_retc_t result = SNAP_RETC_SUCCESS;
 
     switch (act_reg->Data.job_type) {
-    case MTL_JOB_MAP:
+    case JobType::Map:
     {
 #ifdef NVME_ENABLED
         mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
@@ -140,7 +143,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 #endif
         break;
     }
-    case MTL_JOB_MOUNT:
+    case JobType::Mount:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t mount_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
@@ -150,7 +153,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 #endif
         break;
     }
-    case MTL_JOB_WRITEBACK:
+    case JobType::Writeback:
     {
 #ifdef NVME_ENABLED
         mtl_job_fileop_t writeback_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
@@ -160,29 +163,29 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 #endif
         break;
     }
-    case MTL_JOB_CONFIGURE_STREAMS:
+    case JobType::ConfigureStreams:
     {
         result = action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
         break;
     }
-    case MTL_JOB_RESET_PERFMON:
+    case JobType::ResetPerfmon:
     {
         perfmon_reset(perfmon_ctrl);
         result = SNAP_RETC_SUCCESS;
         break;
     }
-    case MTL_JOB_CONFIGURE_PERFMON:
+    case JobType::ConfigurePerfmon:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         result = action_configure_perfmon(perfmon_ctrl, mtl_get64<0>(line), mtl_get64<8>(line));
         break;
     }
-    case MTL_JOB_READ_PERFMON_COUNTERS:
+    case JobType::ReadPerfmonCounters:
     {
         result = action_perfmon_read(mem_in + MFB_ADDRESS(act_reg->Data.job_address), perfmon_ctrl);
         break;
     }
-    case MTL_JOB_RUN_OPERATORS:
+    case JobType::RunOperators:
     {
         snapu64_t enable_mask = act_reg->Data.direct_data[0];
         snapu64_t perfmon_en = act_reg->Data.direct_data[1];
@@ -218,19 +221,19 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         result = SNAP_RETC_SUCCESS;
         break;
     }
-    case MTL_JOB_OP_MEM_SET_READ_BUFFER:
+    case JobType::SetReadBuffer:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), true, read_mem_config, data_preselect_switch_ctrl);
         break;
     }
-    case MTL_JOB_OP_MEM_SET_WRITE_BUFFER:
+    case JobType::SetWriteBuffer:
     {
         snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
         result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), false, write_mem_config, data_preselect_switch_ctrl);
         break;
     }
-    case MTL_JOB_OP_CONFIGURE:
+    case JobType::ConfigureOperator:
     {
         configure_operators(operator_ctrl, mem_in, act_reg->Data.job_address);
         break;
@@ -242,3 +245,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 
     return result;
 }
+
+}  // namespace fpga
+}  // namespace metal

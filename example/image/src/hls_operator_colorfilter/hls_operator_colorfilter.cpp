@@ -1,4 +1,4 @@
-#include "hls_common/mtl_stream.h"
+#include <metal/stream.h>
 
 #define HEADER_BYTES 138
 #define HEADER_ELEMENTS (HEADER_BYTES / 8) + 1

@@ -1,13 +1,16 @@
-#ifndef __ACTION_METALFPGA_H__
-#define __ACTION_METALFPGA_H__
+#pragma once
 
 #include <hls_snap.H>
-#include <action_metalfpga.h> /*job definition*/
+#include <snap_action_metal.h>
+
+namespace metal {
+namespace fpga {
 
 typedef struct {
     CONTROL Control;      /* ==  16 bytes */
-    metalfpga_job_t Data; /* <= 108 bytes */
-    uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(metalfpga_job_t)];
+    Job Data;             /* <= 108 bytes */
+    uint8_t padding[SNAP_HLS_JOBSIZE - sizeof(Job)];
 } action_reg;
 
-#endif // __ACTION_METALFPGA_H__
+}  // namespace fpga
+}  // namespace metal

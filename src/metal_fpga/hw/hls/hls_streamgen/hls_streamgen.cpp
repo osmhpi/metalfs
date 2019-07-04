@@ -1,4 +1,4 @@
-#include <hls_common/mtl_stream.h>
+#include <metal/stream.h>
 
 void hls_streamgen(snapu32_t length, mtl_stream &out) {
     #pragma HLS INTERFACE s_axilite port=length bundle=ctrl offset=0x010

@@ -3,7 +3,7 @@ extern "C" {
 #include <snap_hls_if.h>
 }
 
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <iostream>
 #include "data_sink.hpp"
 #include "snap_action.hpp"
@@ -17,7 +17,7 @@ void HostMemoryDataSink::configure(SnapAction &action) {
     job_struct[2] = htobe64(OP_MEM_MODE_HOST);
 
     try {
-        action.execute_job(MTL_JOB_OP_MEM_SET_WRITE_BUFFER, reinterpret_cast<char *>(job_struct));
+        action.execute_job(fpga::JobType::SetWriteBuffer, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
         free(job_struct);
         throw ex;
@@ -33,7 +33,7 @@ void CardMemoryDataSink::configure(SnapAction &action) {
     job_struct[2] = htobe64(OP_MEM_MODE_DRAM);
 
     try {
-        action.execute_job(MTL_JOB_OP_MEM_SET_WRITE_BUFFER, reinterpret_cast<char *>(job_struct));
+        action.execute_job(fpga::JobType::SetWriteBuffer, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
         free(job_struct);
         throw ex;
@@ -50,7 +50,7 @@ void NullDataSink::configure(SnapAction &action) {
     job_struct[2] = htobe64(OP_MEM_MODE_NULL);
 
     try {
-        action.execute_job(MTL_JOB_OP_MEM_SET_WRITE_BUFFER, reinterpret_cast<char *>(job_struct));
+        action.execute_job(fpga::JobType::SetWriteBuffer, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
         free(job_struct);
         throw ex;

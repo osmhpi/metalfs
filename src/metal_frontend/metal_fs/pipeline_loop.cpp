@@ -27,7 +27,8 @@ void PipelineLoop::run() {
   // Some data sources (e.g. FileDataSource) are capable of providing the overall processing size in the beginning
   // This might only be a temporary optimization since we will allow operators to provide arbitrary output data sizes
   // in the future.
-  if (auto total_size = dataSource->reportTotalSize()) {
+  size_t total_size = 0;
+  if ((total_size = dataSource->reportTotalSize()) > 0) {
     dataSink->prepareForTotalProcessingSize(total_size);
   }
 
@@ -45,11 +46,11 @@ void PipelineLoop::run() {
   auto lastAgentIt = (lastAgentReverseIt+1).base();
 
     // Receive ready signal from first client
-  auto inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
+  auto inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
 
   // Wait until all other clients signal ready as well
   for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
-    operatorAgentPair->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
+    operatorAgentPair->second->socket.receive_message<message_type::AgentPushBuffer>();
   }
 
   // Determine if any operator is selected for profiling
@@ -78,6 +79,11 @@ void PipelineLoop::run() {
     if (firstAgentIt->second->input_buffer) {
       size = inputBufferMessage.size();
       eof = inputBufferMessage.eof();
+    } else {
+      // Data comes from an internal source (file or generator), must have a total size then
+      size = total_size < BUFFER_SIZE ? total_size : BUFFER_SIZE;
+      total_size -= size;
+      eof = total_size == 0;
     }
 
     if (size) {
@@ -87,58 +93,41 @@ void PipelineLoop::run() {
       output_size = runner.run(eof);
     }
 
-    // Send a processing response for the input agent (eof, perfmon)
-    if (firstAgentIt->second->input_buffer) {
+    // Send processing responses
+    for (auto currentAgentIt = firstAgentIt; currentAgentIt != std::next(lastAgentIt, 1); ++currentAgentIt) {
       ServerProcessedBuffer msg;
+
+      if (!eof && currentAgentIt != firstAgentIt && currentAgentIt != lastAgentIt) {
+        continue;
+      }
+
       msg.set_eof(eof);
 
-      if (firstAgentIt == profilingOperator) {
+      if (currentAgentIt == lastAgentIt && lastAgentIt->second->output_buffer) {
+        msg.set_size(output_size);
+      }
+
+      if (currentAgentIt == profilingOperator) {
           msg.set_message(runner.formatProfilingResults());
       }
 
-      // If there's only one agent in total, make sure to tell him the output size if necessary
-      if (firstAgentIt == lastAgentIt && lastAgentIt->second->output_buffer)
-        msg.set_size(output_size);
-
-      firstAgentIt->second->socket.send_message<message_type::SERVER_PROCESSED_BUFFER>(msg);
+      currentAgentIt->second->socket.send_message<message_type::ServerProcessedBuffer>(msg);
     }
 
-    // Send a processing response for the output agent (eof, perfmon, size)
-    if (firstAgentIt != lastAgentIt && lastAgentIt->second->output_buffer) {
-      ServerProcessedBuffer msg;
-      msg.set_eof(eof);
-      if (lastAgentIt == profilingOperator) {
-        msg.set_message(runner.formatProfilingResults());
-      }
-      msg.set_size(output_size);
-      lastAgentIt->second->socket.send_message<message_type::SERVER_PROCESSED_BUFFER>(msg);
-    }
-
-    if (eof) {
-      // Send a processing response to all other agents (eof, perfmon)
-      for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
-        ServerProcessedBuffer msg;
-        msg.set_eof(true);
-        if (operatorAgentPair == profilingOperator) {
-            msg.set_message(runner.formatProfilingResults());
-        }
-        operatorAgentPair->second->socket.send_message<message_type::SERVER_PROCESSED_BUFFER>(msg);
-      }
-      return;
-    }
+    if (eof) return;
 
     if (lastAgentIt->second->output_buffer) {
       // Wait for output client push buffer message (i.e. 'ready')
       if (firstAgentIt == lastAgentIt) {
-        inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
+        inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
       } else {
-        lastAgentIt->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
+        lastAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
       }
     }
 
     if (firstAgentIt != lastAgentIt && firstAgentIt->second->input_buffer) {
       // Wait for input client push buffer message (i.e. the next inputBufferMessage)
-      inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AGENT_PUSH_BUFFER>();
+      inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
     }
   }
 }

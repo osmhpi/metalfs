@@ -1,8 +1,10 @@
-#ifndef __MTL_FILE_H__
-#define __MTL_FILE_H__
+#pragma once
 
 #include "mtl_definitions.h"
 #include "mtl_extmap.h"
+
+namespace metal {
+namespace fpga {
 
 #define MTL_FILEBLOCK_BYTES_W MTL_BRAM_BYTE_OFFSET_W
 #define MTL_FILEBLOCK_BYTES (0x1<<MTL_BLOCK_BYTE_OFFSET_W)
@@ -38,4 +40,5 @@ mtl_bool_t mtl_file_write_buffer(snapu32_t * nvme_ctrl,
                                snapu64_t dest,
                                snapu64_t length);
 
-#endif // __MTL_FILE_H__
+}  // namespace fpga
+}  // namespace metal

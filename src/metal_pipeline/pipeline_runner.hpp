@@ -57,7 +57,7 @@ protected:
     void pre_run(SnapAction &action, bool initialize) override;
     void post_run(SnapAction &action, bool finalize) override;
     template<typename ... Args>
-    static std::string string_format( const std::string& format, Args ... args);
+    static std::string string_format(const std::string& format, Args ... args);
 
     std::shared_ptr<AbstractOperator> _op;
     ProfilingResults _results;

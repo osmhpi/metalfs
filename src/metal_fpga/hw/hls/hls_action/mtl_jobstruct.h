@@ -1,7 +1,9 @@
-#ifndef __MTL_JOBSTRUCT_H__
-#define __MTL_JOBSTRUCT_H__
+#pragma once
 
 #include "mtl_definitions.h"
+
+namespace metal {
+namespace fpga {
 
 typedef struct mtl_job_map {
     snapu64_t slot;
@@ -20,4 +22,5 @@ typedef struct mtl_job_fileop {
 mtl_job_map_t mtl_read_job_map(snap_membus_t * mem, snapu64_t address);
 mtl_job_fileop_t mtl_read_job_fileop(snap_membus_t * mem, snapu64_t address);
 
-#endif // __MTL_JOBSTRUCT_H__
+}  // namespace fpga
+}  // namespace metal

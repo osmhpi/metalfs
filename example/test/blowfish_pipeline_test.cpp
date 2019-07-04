@@ -2,7 +2,7 @@
 #include <malloc.h>
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/pipeline_definition.hpp>
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <metal_pipeline/data_sink.hpp>
 #include <metal_pipeline/data_source.hpp>
 #include <metal_pipeline/snap_action.hpp>
@@ -40,7 +40,7 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
     pipeline.run(action);
@@ -80,7 +80,7 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKe
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, encrypt, decrypt, dataSink });
     pipeline.run(action);

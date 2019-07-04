@@ -3,6 +3,9 @@
 #include <snap_types.h>
 #include "mtl_endian.h"
 
+namespace metal {
+namespace fpga {
+
 mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id0, uint8_t stream_id1) {
     // Metrics Computed for AXI4-Stream Agent
 
@@ -114,3 +117,6 @@ mtl_retc_t action_perfmon_read(snap_membus_t *mem, snapu32_t *perfmon_ctrl) {
 
     return SNAP_RETC_SUCCESS;
 }
+
+}  // namespace fpga
+}  // namespace metal

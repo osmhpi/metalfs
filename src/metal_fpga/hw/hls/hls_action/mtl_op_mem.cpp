@@ -1,11 +1,14 @@
 #include "mtl_op_mem.h"
 #include "mtl_endian.h"
-#include "action_metalfpga.h"
+#include "snap_action_metal.h"
 #include "axi_switch.h"
 
 #include <snap_types.h>
 
 #define DRAM_BASE_OFFSET 0x8000000000000000
+
+namespace metal {
+namespace fpga {
 
 mtl_mem_configuration read_mem_config;
 mtl_mem_configuration write_mem_config;
@@ -128,7 +131,7 @@ uint64_t op_mem_write(
             for (;;) {
                 // Write data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_written;
-                
+
                 snap_bool_t end_of_frame = issue_command(bytes_remaining, bytes_written, baseaddr + config.offset, s2mm_cmd);
 
                 ap_uint<32> status = read_status(s2mm_sts);
@@ -145,3 +148,6 @@ uint64_t op_mem_write(
 
     return 0;
 }
+
+}  // namespace fpga
+}  // namespace metal

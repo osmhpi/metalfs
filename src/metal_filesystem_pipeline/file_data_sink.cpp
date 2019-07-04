@@ -8,7 +8,7 @@ extern "C" {
 }
 
 #include <metal_pipeline/snap_action.hpp>
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include "file_data_sink.hpp"
 
 namespace metal {
@@ -75,7 +75,7 @@ void FileDataSink::configure(SnapAction &action) {
     }
 
     try {
-      action.execute_job(MTL_JOB_MAP, reinterpret_cast<char *>(job_struct));
+      action.execute_job(fpga::JobType::Map, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
       free(job_struct);
       throw ex;
@@ -95,7 +95,7 @@ void FileDataSink::configure(SnapAction &action) {
     job_struct[3] = htobe64(1); // number of blocks to load
 
     try {
-      action.execute_job(MTL_JOB_MOUNT, reinterpret_cast<char *>(job_struct));
+      action.execute_job(fpga::JobType::Mount, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
       free(job_struct);
       throw ex;
@@ -113,7 +113,7 @@ void FileDataSink::configure(SnapAction &action) {
     job_struct[3] = htobe64(1); // number of blocks to load
 
     try {
-      action.execute_job(MTL_JOB_MOUNT, reinterpret_cast<char *>(job_struct));
+      action.execute_job(fpga::JobType::Mount, reinterpret_cast<char *>(job_struct));
     } catch (std::exception &ex) {
       free(job_struct);
       throw ex;

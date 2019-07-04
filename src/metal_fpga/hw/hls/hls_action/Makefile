@@ -1,6 +1,8 @@
 SOLUTION_NAME ?= hls_action_sln
 SOLUTION_DIR ?= hls_action_sln
 
+HLS_CFLAGS += -std=c++11
+
 srcs += \
 	axi_switch.cpp \
 	axi_perfmon.cpp \

@@ -2,7 +2,7 @@
 #include <metal_pipeline/data_source.hpp>
 #include <memory>
 #include <metal_pipeline/data_sink.hpp>
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <gtest/gtest.h>
 #include <metal_pipeline/pipeline_runner.hpp>
@@ -37,7 +37,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePage) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -58,7 +58,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -76,7 +76,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGene
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -92,7 +92,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGene
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));
@@ -117,7 +117,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultipleP
     auto dataSource = std::make_shared<HostMemoryDataSource>(src + src_offset, payload_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest + dest_offset, payload_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
     ASSERT_NO_THROW(pipeline.run(action));

@@ -1,7 +1,7 @@
 SOLUTION_NAME ?= hls_operator_colorfilter_sln
 SOLUTION_DIR ?= hls_operator_colorfilter_sln
 
-HLS_CFLAGS=-I../../../../src/metal_fpga/hw/hls/include
+HLS_CFLAGS = -std=c++11 -I../../../../src/metal_fpga/hw/hls/include
 
 srcs += hls_operator_colorfilter.cpp
 

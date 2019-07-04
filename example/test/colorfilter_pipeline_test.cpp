@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <metal_pipeline/data_sink.hpp>
@@ -33,7 +33,7 @@ TEST_F(SimulationPipelineTest, ColorfilterPipeline_Runs) {
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
 
-    SnapAction action(METALFPGA_ACTION_TYPE, 0);
+    SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, filter, dataSink });
     pipeline.run(action);

@@ -3,7 +3,7 @@ extern "C" {
 #include <snap_hls_if.h>
 }
 
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include <algorithm>
 #include <cstring>
 #include <iostream>
@@ -15,7 +15,7 @@ namespace metal {
 
 uint64_t SnapPipelineRunner::run(bool last) {
 
-    SnapAction action = SnapAction(METALFPGA_ACTION_TYPE, _card);
+    SnapAction action = SnapAction(fpga::ActionType, _card);
 
     pre_run(action, !_initialized);
     _initialized = true;
@@ -55,7 +55,7 @@ void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
             }
 
             try {
-                action.execute_job(MTL_JOB_CONFIGURE_PERFMON, reinterpret_cast<char *>(job_struct));
+                action.execute_job(fpga::JobType::ConfigurePerfmon, reinterpret_cast<char *>(job_struct));
             } catch (std::exception &ex) {
                 free(job_struct);
                 throw ex;
@@ -64,7 +64,7 @@ void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
             free(job_struct);
         }
 
-        action.execute_job(MTL_JOB_RESET_PERFMON);
+        action.execute_job(fpga::JobType::ResetPerfmon);
     }
 }
 
@@ -77,7 +77,7 @@ void ProfilingPipelineRunner::post_run(SnapAction &action, bool finalize) {
         auto *results32 = reinterpret_cast<uint32_t*>(results64 + 1);
 
         try {
-            action.execute_job(MTL_JOB_READ_PERFMON_COUNTERS, reinterpret_cast<char *>(results64));
+            action.execute_job(fpga::JobType::ReadPerfmonCounters, reinterpret_cast<char *>(results64));
         } catch (std::exception &ex) {
             free(results64);
             throw ex;

@@ -4,9 +4,10 @@
 #include <iostream>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 #include <libsnap.h>
 
-#include <metal_fpga/hw/hls/include/action_metalfpga.h>
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 
 namespace metal {
 
@@ -45,12 +46,12 @@ SnapAction::~SnapAction() {
     }
 }
 
-void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
+void SnapAction::execute_job(fpga::JobType job_type, const char *parameters, uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
 
-    spdlog::debug("Starting job {}...", job_id);
+    spdlog::debug("Starting job {}...", job_type_to_string(job_type));
 
-    metalfpga_job_t mjob;
-    mjob.job_type = job_id;
+    fpga::Job mjob;
+    mjob.job_type = job_type;
     mjob.job_address = reinterpret_cast<uint64_t>(parameters);
     mjob.direct_data[0] = direct_data_0;
     mjob.direct_data[1] = direct_data_1;
@@ -58,7 +59,7 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
     struct snap_job cjob{};
     snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
 
-    const unsigned long timeout = 30;
+    const unsigned long timeout = 10;
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
     if (rc != 0)
@@ -71,6 +72,41 @@ void SnapAction::execute_job(uint64_t job_id, const char *parameters, uint64_t d
         *direct_data_out_0 = mjob.direct_data[2];
     if (direct_data_out_1)
         *direct_data_out_1 = mjob.direct_data[3];
+}
+
+std::string SnapAction::job_type_to_string(fpga::JobType job)
+{
+    switch (job) {
+    case fpga::JobType::Map:
+        return "Map";
+    case fpga::JobType::Query:
+        return "Query";
+    case fpga::JobType::Access:
+        return "Access";
+    case fpga::JobType::Mount:
+        return "Mount";
+    case fpga::JobType::Writeback:
+        return "Writeback";
+    case fpga::JobType::ConfigureStreams:
+        return "ConfigureStreams";
+    case fpga::JobType::ResetPerfmon:
+        return "ResetPerfmon";
+    case fpga::JobType::ConfigurePerfmon:
+        return "ConfigurePerfmon";
+    case fpga::JobType::ReadPerfmonCounters:
+        return "ReadPerfmonCounters";
+    case fpga::JobType::RunOperators:
+        return "RunOperators";
+    case fpga::JobType::SetReadBuffer:
+        return "SetReadBuffer";
+    case fpga::JobType::SetWriteBuffer:
+        return "SetWriteBuffer";
+    case fpga::JobType::ConfigureOperator:
+        return "ConfigureOperator";
+    }
+
+    // The compiler should treat unhandled enum values as an error, so we should never end up here
+    return "Unknown";
 }
 
 std::string SnapAction::snap_return_code_to_string(int rc) {

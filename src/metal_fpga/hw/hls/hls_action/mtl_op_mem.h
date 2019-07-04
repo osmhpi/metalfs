@@ -1,8 +1,10 @@
-#ifndef __MTL_OP_MEM_H__
-#define __MTL_OP_MEM_H__
+#pragma once
 
+#include <metal/stream.h>
 #include "mtl_definitions.h"
-#include <hls_common/mtl_stream.h>
+
+namespace metal {
+namespace fpga {
 
 typedef struct axi_datamover_status {
     ap_uint<8> data;
@@ -43,4 +45,5 @@ uint64_t op_mem_write(
 extern mtl_mem_configuration read_mem_config;
 extern mtl_mem_configuration write_mem_config;
 
-#endif // __MTL_OP_MEM_H__
+}  // namespace fpga
+}  // namespace metal
