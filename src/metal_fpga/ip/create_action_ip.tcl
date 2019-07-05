@@ -8,7 +8,7 @@ set log_dir     $action_root
 set log_file    $log_dir/create_action_ip.log
 set src_dir     $aip_dir/action_ip_prj/action_ip_prj.srcs/sources_1/ip
 
-set hls_operator_path $::env(HLS_OPERATOR_PATH)
+set image_json  $::env(IMAGE_JSON)
 
 ## Create a new Vivado IP Project
 puts "\[CREATE_ACTION_IPs..........\] start [clock format [clock seconds] -format {%T %a %b %d/ %Y}]"
@@ -21,7 +21,7 @@ set_property target_language VHDL [current_project]
 puts "                        Configuring IP Catalog ......"
 set_property ip_repo_paths [concat \
     [glob -dir $aip_dir/../hw/hls */hls_impl_ip] \
-    [glob -dir $hls_operator_path */hls_impl_ip] \
+    [eval list [exec sh -c "$action_root/hw/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip='"]] \
 ] [current_project] >> $log_file
 update_ip_catalog >> $log_file
 

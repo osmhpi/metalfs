@@ -1,4 +1,5 @@
 {
+  "main": "hls_operator_changecase",
   "description": "Transform ASCII strings to lower- or uppercase (default)",
   "options": {
     "lowercase": {

@@ -3,19 +3,19 @@
     "stream_bytes": 8,
     "operators": {
         "colorfilter": {
-            "source": "hls_operator_colorfilter"
+            "source": "./src/hls_operator_colorfilter"
         },
         "better_colorfilter": {
-            "source": "hls_operator_colorfilter"
+            "source": "./src/hls_operator_colorfilter"
         },
         "changecase": {
-            "source": "hls_operator_changecase"
+            "source": "./src/hls_operator_changecase"
         },
         "blowfish_encrypt": {
-            "source": "hls_operator_blowfish_encrypt"
+            "source": "./src/hls_operator_blowfish_encrypt"
         },
         "blowfish_decrypt": {
-            "source": "hls_operator_blowfish_decrypt"
+            "source": "./src/hls_operator_blowfish_decrypt"
         }
     }
 }

@@ -1,4 +1,5 @@
 {
-    "description": "Convert bitmap to grayscale",
-    "options": {}
-  }
+  "main": "hls_operator_colorfilter",
+  "description": "Convert bitmap to grayscale",
+  "options": {}
+}

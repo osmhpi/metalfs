@@ -1,16 +1,16 @@
 {
-    "id": "blowfish_encrypt",
-    "description": "Encrypt data with the blowfish cipher",
-    "prepare_required": true,
-    "options": {
-      "key": {
-        "short": "k",
-        "type": {
-          "type": "buffer",
-          "size": 16
-        },
-        "description": "The encryption key to use",
-        "offset": 256
-      }
+  "main": "hls_operator_blowfish_decrypt",
+  "description": "Encrypt data with the blowfish cipher",
+  "prepare_required": true,
+  "options": {
+    "key": {
+      "short": "k",
+      "type": {
+        "type": "buffer",
+        "size": 16
+      },
+      "description": "The encryption key to use",
+      "offset": 256
     }
   }
+}

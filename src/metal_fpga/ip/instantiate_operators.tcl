@@ -1,6 +1,6 @@
-set image_json $::env(IMAGE_JSON)
-set image_target $::env(IMAGE_TARGET)
-set operators  [eval dict create [split [exec jq -r ".operators | to_entries | map(.key, .value.source) | join(\" \")" $image_json]]]
+set image_json      $::env(IMAGE_JSON)
+set image_target    $::env(IMAGE_TARGET)
+set operators       [eval dict create [split [exec sh -c "$action_root/hw/resolve_operators $image_json | paste -s -d ' '" ]]]
 
 exec mkdir -p "$image_target"
 
@@ -12,7 +12,7 @@ set_property -dict [list CONFIG.NUM_MI [expr [dict size $operators] + 4]] [get_b
 set i 1
 
 dict for {id path} $operators {
-    set component [file tail $path]
+    set component [exec jq -r .main $path/operator.json]
     create_bd_cell -type ip -vlnv xilinx.com:hls:$component:1.0 op_$id
 
     connect_bd_intf_net [get_bd_intf_pins op_$id/axis_output] [get_bd_intf_pins metal_switch/S0${i}_AXIS]
@@ -31,7 +31,7 @@ dict for {id path} $operators {
     assign_bd_address [get_bd_addr_segs {op_${id}/s_axi_control/Reg }]  >> $log_file
     include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg]  >> $log_file
 
-    exec jq --arg id $id --arg internal_id $i ". + {id: \$id, internal_id: \$internal_id | tonumber}" $hls_operator_path/$path/operator.json > $image_target/${id}.json
+    exec jq --arg id $id --arg internal_id $i ". + {id: \$id, internal_id: \$internal_id | tonumber}" $path/operator.json > $image_target/${id}.json
 
     incr i
 }

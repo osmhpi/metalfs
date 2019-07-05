@@ -1,8 +1,11 @@
-set hls_operator_path $::env(HLS_OPERATOR_PATH)
+set image_json      $::env(IMAGE_JSON)
 
-set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] [glob -dir $action_hw_dir/hls */hls_impl_ip]] [current_project] >> $log_file
-set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] [glob -dir $hls_operator_path */hls_impl_ip]] [current_project] >> $log_file
-set_property ip_repo_paths [concat [get_property ip_repo_paths [current_project]] $action_dir/ip/ip_user_files] [current_project] >> $log_file
+set_property ip_repo_paths [concat \
+    [get_property ip_repo_paths [current_project]] \
+    [glob -dir $action_hw_dir/hls */hls_impl_ip] \
+    [eval list [exec sh -c "$action_hw_dir/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip='"]] \
+    $action_dir/ip/ip_user_files \
+] [current_project] >> $log_file
 update_ip_catalog >> $log_file
 
 # create_ip -name bd_action -vendor user.org -library user -version 1.0 -module_name bd_action_0 >> $log_file

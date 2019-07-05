@@ -1,0 +1,15 @@
+#! /bin/sh
+
+image_json=$1
+image_basedir=$(dirname $image_json)
+
+jq -r ".operators | to_entries | .[] | [.key, .value.source] | join(\" \")" $image_json | while read name source; do
+    operator_json=$image_basedir/$source/operator.json
+
+    if [ ! -e $operator_json ]; then
+        >&2 echo "Could not find operator.json at $operator_json"
+        exit 1
+    fi
+
+    printf "${name}\t$(dirname $operator_json)\n"
+done

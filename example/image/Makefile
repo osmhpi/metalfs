@@ -4,7 +4,6 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 
 IMAGE_JSON        = $(PWD)/image.json
-HLS_OPERATOR_PATH = $(PWD)/src
 IMAGE_TARGET      = $(PWD)/operators
 METAL_ROOT        = $(PWD)/../..
 METAL_TARGET      = $(shell jq -r .target $(IMAGE_JSON))
@@ -21,7 +20,6 @@ clean_operators:
 $(SNAP_ROOT)/snap_env.sh:
 	@ \
 	IMAGE_JSON=$(IMAGE_JSON) \
-	HLS_OPERATOR_PATH=$(HLS_OPERATOR_PATH) \
 	IMAGE_TARGET=$(IMAGE_TARGET) \
 	METAL_ROOT=$(METAL_ROOT) \
 	$(METAL_ROOT)/targets/$(METAL_TARGET)/configure
@@ -29,7 +27,6 @@ $(SNAP_ROOT)/snap_env.sh:
 $(snap_targets): $(SNAP_ROOT)/snap_env.sh
 	@ \
 	IMAGE_JSON=$(IMAGE_JSON) \
-	HLS_OPERATOR_PATH=$(HLS_OPERATOR_PATH) \
 	IMAGE_TARGET=$(IMAGE_TARGET) \
 	METAL_ROOT=$(METAL_ROOT) \
 	make -C $(SNAP_ROOT) -s $@

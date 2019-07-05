@@ -2,10 +2,8 @@ set log_file    $log_dir/create_bd.log
 
 set bd_name     bd_action
 
-set image_json $::env(IMAGE_JSON)
 set stream_bytes [exec jq -r ".stream_bytes" $image_json]
 set stream_width [expr $stream_bytes * 8] 
-
 
 create_bd_design $bd_name >> $log_file
 
