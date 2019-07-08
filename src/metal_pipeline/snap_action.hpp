@@ -18,6 +18,7 @@ public:
     virtual ~SnapAction();
 
     void execute_job(fpga::JobType job_type, const char *parameters = nullptr, uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0, uint64_t *direct_data_out_0 = nullptr, uint64_t *direct_data_out_1 = nullptr);
+    bool is_nvme_enabled();
 
 protected:
     std::string job_type_to_string(fpga::JobType job);

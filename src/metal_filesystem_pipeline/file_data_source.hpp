@@ -26,9 +26,10 @@ class FileDataSource : public CardMemoryDataSource {
   // API to be used when building file pipelines (filename-based)
  public:
   explicit FileDataSource(std::string filename, uint64_t offset, uint64_t size = 0);
+  size_t reportTotalSize() override;
 
  protected:
-  void loadExtents();
+  uint64_t loadExtents();
 
   std::string _filename;
 

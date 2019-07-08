@@ -59,7 +59,7 @@ void SnapAction::execute_job(fpga::JobType job_type, const char *parameters, uin
     struct snap_job cjob{};
     snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
 
-    const unsigned long timeout = 10;
+    const unsigned long timeout = 30;
     int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
     if (rc != 0)
@@ -72,6 +72,12 @@ void SnapAction::execute_job(fpga::JobType job_type, const char *parameters, uin
         *direct_data_out_0 = mjob.direct_data[2];
     if (direct_data_out_1)
         *direct_data_out_1 = mjob.direct_data[3];
+}
+
+bool SnapAction::is_nvme_enabled() {
+    unsigned long have_nvme = 0;
+    snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
+    return have_nvme != 0;
 }
 
 std::string SnapAction::job_type_to_string(fpga::JobType job)

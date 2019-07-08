@@ -13,12 +13,9 @@ extern "C" {
 
 namespace metal {
 
-//uint64_t metal::FileDataSource::file_size() const {
-//
-//    // Resolve extent list
-//    mtl_prepare_storage_for_reading(_filename.c_str(), nullptr);
-//    return 0;
-//}
+size_t FileDataSource::reportTotalSize() {
+  return loadExtents();
+}
 
 FileDataSource::FileDataSource(std::string filename, uint64_t offset, uint64_t size)
         : CardMemoryDataSource(0, size), _offset(offset), _filename(std::move(filename)) {
@@ -32,11 +29,9 @@ FileDataSource::FileDataSource(std::string filename, uint64_t offset, uint64_t s
 }
 
 FileDataSource::FileDataSource(std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
-        : CardMemoryDataSource(0, size), _extents(extents), _offset(offset) {
+        : CardMemoryDataSource(0, size), _extents(extents), _offset(offset) {}
 
-}
-
-void FileDataSource::loadExtents() {
+uint64_t FileDataSource::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
   uint64_t extents_length, file_length;
   if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length, &file_length) != MTL_SUCCESS)
@@ -44,8 +39,8 @@ void FileDataSource::loadExtents() {
 
   extents.resize(extents_length);
 
-  _extents = extents;
-//  _cached_total_size = file_length;
+  _extents = std::move(extents);
+  return file_length;
 }
 
 #define READ_FILE_DRAM_BASEADDR 0x00000000
@@ -92,7 +87,7 @@ void FileDataSource::configure(SnapAction &action) {
 
   auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
   job_struct[0] = htobe64(0); // Slot
-  job_struct[1] = htobe64(_offset % NVME_BLOCK_BYTES); // File offset
+  job_struct[1] = htobe64(block_offset); // File offset
   job_struct[2] = htobe64(READ_FILE_DRAM_BASEADDR); // DRAM target address
   job_struct[3] = htobe64(blocks_length); // number of blocks to load
 

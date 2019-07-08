@@ -130,6 +130,25 @@ void FileDataSink::configure(SnapAction &action) {
 void FileDataSink::finalize(SnapAction &action) {
   CardMemoryDataSink::finalize(action);
 
+  uint64_t block_offset = _offset / NVME_BLOCK_BYTES;
+  uint64_t end_block_offset = (_offset + _size) / NVME_BLOCK_BYTES;
+  uint64_t blocks_length = end_block_offset - block_offset + 1;
+
+  auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
+  job_struct[0] = htobe64(1); // Slot
+  job_struct[1] = htobe64(block_offset); // File offset
+  job_struct[2] = htobe64(WRITE_FILE_DRAM_BASEADDR); // DRAM source address
+  job_struct[3] = htobe64(blocks_length); // number of blocks to write
+
+  try {
+    action.execute_job(fpga::JobType::Writeback, reinterpret_cast<char *>(job_struct));
+  } catch (std::exception &ex) {
+    free(job_struct);
+    throw ex;
+  }
+
+  free(job_struct);
+
   // Advance offset
   _offset += _size;
 }

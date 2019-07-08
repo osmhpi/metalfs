@@ -101,6 +101,10 @@ void PipelineLoop::run() {
         continue;
       }
 
+      if (!eof && !currentAgentIt->second->input_buffer && !currentAgentIt->second->output_buffer) {
+        continue;
+      }
+
       msg.set_eof(eof);
 
       if (currentAgentIt == lastAgentIt && lastAgentIt->second->output_buffer) {
