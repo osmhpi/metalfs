@@ -13,7 +13,7 @@ class PipelineStorage {
   static mtl_storage_backend backend();
 
  protected:
-  static PipelineStorage instance();
+  static PipelineStorage& instance();
 
   int initialize();
   int deinitialize();

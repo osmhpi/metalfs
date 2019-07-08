@@ -84,7 +84,7 @@ int PipelineStorage::deinitialize() {
   return MTL_SUCCESS;
 }
 
-PipelineStorage PipelineStorage::instance() {
+PipelineStorage& PipelineStorage::instance() {
   static PipelineStorage instance;
   return instance;
 }
