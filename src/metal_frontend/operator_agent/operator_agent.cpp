@@ -240,10 +240,6 @@ int main(int argc, char *argv[]) {
     if (connect(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
         perror("connect() failed");
 
-//    int input_file = -1, output_file = -1;
-    size_t bytes_read = 0;
-    bool eof = false;
-
     // Prepare to send the program parameters
     uint64_t argv_len[argc];
     uint64_t total_argv_len = 0;
@@ -305,6 +301,9 @@ int main(int argc, char *argv[]) {
         output_buffer = metal::Buffer::map_shared_buffer(response.output_buffer_filename(), false);
     }
 
+    size_t bytes_read = 0;
+    bool eof = false;
+
     // Read the first input
     if (input_buffer != std::nullopt) {
         bytes_read = fread(input_buffer.value().current(), sizeof(char), input_buffer.value().size(), stdin);
@@ -316,11 +315,13 @@ int main(int argc, char *argv[]) {
 
     // Processing loop
     while (true) {
-        // Tell the server about the data (if any) and wait for it to be consumed
-        metal::ClientPushBuffer processing_request;
-        processing_request.set_size(bytes_read);
-        processing_request.set_eof(eof);
-        socket.send_message<metal::message_type::AgentPushBuffer>(processing_request);
+        if (!processing_response.eof()) {
+            // Tell the server about the data (if any) and wait for it to be consumed
+            metal::ClientPushBuffer processing_request;
+            processing_request.set_size(bytes_read);
+            processing_request.set_eof(eof);
+            socket.send_message<metal::message_type::AgentPushBuffer>(processing_request);
+        }
 
         // Write output from previous iteration
         if (processing_response.size() && output_buffer != std::nullopt) {
@@ -336,14 +337,14 @@ int main(int argc, char *argv[]) {
             break;
 
         // Read the next input
-        if (input_buffer != std::nullopt) {
+        if (input_buffer != std::nullopt && !eof) {
             bytes_read = fread(input_buffer.value().current(), sizeof(char), input_buffer.value().size(), stdin);
             eof = feof(stdin) != 0;
             input_buffer.value().swap();
         }
 
         // Wait for a server response
-        auto processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
+        processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
     }
 
     return 0;

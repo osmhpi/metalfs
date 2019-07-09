@@ -22,8 +22,8 @@ class Buffer {
 
   virtual ~Buffer();
 
-  void *current() { return reinterpret_cast<void*>(reinterpret_cast<char*>(_buffer) + (_current ? 1 : 0 * BUFFER_SIZE)); }
-  void *next() { return reinterpret_cast<void*>(reinterpret_cast<char*>(_buffer) + (_current ? 0 : 1 * BUFFER_SIZE)); }
+  void *current() { return reinterpret_cast<void*>(reinterpret_cast<char*>(_buffer) + (_current ? BUFFER_SIZE : 0)); }
+  void *next() { return reinterpret_cast<void*>(reinterpret_cast<char*>(_buffer) + (_current ? 0 : BUFFER_SIZE)); }
   void swap() { _current = !_current; }
 
   const std::string &filename() const { return _filename; }

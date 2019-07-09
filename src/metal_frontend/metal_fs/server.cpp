@@ -101,7 +101,7 @@ void Server::process_request(int connfd, int card) {
         error.agent()->error = error.what();
     } catch (std::exception &ex) {
         // Something went wrong.
-        spdlog::debug("An error occurred during pipeline execution. {}", ex.what());
+        spdlog::warn("An error occurred during pipeline execution. {}", ex.what());
     }
 
     _agents.reset();
