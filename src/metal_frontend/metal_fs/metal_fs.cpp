@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    spdlog::set_level(spdlog::level::debug);
+    // spdlog::set_level(spdlog::level::debug);
 
     auto & c = metal::Context::instance();
 

@@ -100,10 +100,10 @@ std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registe
   if (dataSource == nullptr) {
     auto dataSourceAgent = operators.front().second;
     if (!dataSourceAgent->internal_input_file.empty()) {
-      dataSource = std::make_shared<FileDataSource>(dataSourceAgent->internal_input_file, 0, 0); // TODO who sets the size
+      dataSource = std::make_shared<FileDataSource>(dataSourceAgent->internal_input_file, 0, 0);
     } else {
       dataSourceAgent->input_buffer = Buffer::create_temp_file_for_shared_buffer(false);
-      dataSource = std::make_shared<HostMemoryDataSource>(dataSourceAgent->input_buffer.value().buffer(), 0); // TODO who sets the size?
+      dataSource = std::make_shared<HostMemoryDataSource>(nullptr, 0); // TODO: Address and size are set later
     }
     pipeline_operators.emplace_front(std::make_pair(dataSource, nullptr));
   }
@@ -115,10 +115,10 @@ std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registe
       if (dataSinkAgent->internal_output_file == "$NULL") // TODO: Check for /dev/null in here
         dataSink = std::make_shared<NullDataSink>(0 /* TODO */);
       else
-        dataSink = std::make_shared<FileDataSink>(dataSinkAgent->internal_output_file, 0, 0); // TODO who sets the size
+        dataSink = std::make_shared<FileDataSink>(dataSinkAgent->internal_output_file, 0, 0);
     } else {
       dataSinkAgent->output_buffer = Buffer::create_temp_file_for_shared_buffer(true);
-      dataSink = std::make_shared<HostMemoryDataSink>(dataSinkAgent->output_buffer.value().buffer(), 0); // TODO who sets the size?
+      dataSink = std::make_shared<HostMemoryDataSink>(nullptr, 0);  // TODO: Address and size are set later
     }
     pipeline_operators.emplace_back(std::make_pair(dataSink, nullptr));
   }

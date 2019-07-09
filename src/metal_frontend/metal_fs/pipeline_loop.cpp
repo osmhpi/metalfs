@@ -24,6 +24,9 @@ void PipelineLoop::run() {
   auto dataSource = std::dynamic_pointer_cast<DataSource>(_pipeline.front().first);
   auto dataSink = std::dynamic_pointer_cast<DataSink>(_pipeline.back().first);
 
+  auto hostMemoryDataSource = std::dynamic_pointer_cast<HostMemoryDataSource>(dataSource);
+  auto hostMemoryDataSink = std::dynamic_pointer_cast<HostMemoryDataSink>(dataSink);
+
   // Some data sources (e.g. FileDataSource) are capable of providing the overall processing size in the beginning
   // This might only be a temporary optimization since we will allow operators to provide arbitrary output data sizes
   // in the future.
@@ -79,11 +82,18 @@ void PipelineLoop::run() {
     if (firstAgentIt->second->input_buffer) {
       size = inputBufferMessage.size();
       eof = inputBufferMessage.eof();
+      hostMemoryDataSource->setSource(firstAgentIt->second->input_buffer.value().current());
+      firstAgentIt->second->input_buffer.value().swap();
     } else {
       // Data comes from an internal source (file or generator), must have a total size then
       size = total_size < BUFFER_SIZE ? total_size : BUFFER_SIZE;
       total_size -= size;
       eof = total_size == 0;
+    }
+
+    if (lastAgentIt->second->output_buffer) {
+      hostMemoryDataSink->setDest(lastAgentIt->second->input_buffer.value().current());
+      lastAgentIt->second->input_buffer.value().swap();
     }
 
     if (size) {

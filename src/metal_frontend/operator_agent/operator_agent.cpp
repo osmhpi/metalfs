@@ -305,25 +305,27 @@ int main(int argc, char *argv[]) {
         output_buffer = metal::Buffer::map_shared_buffer(response.output_buffer_filename(), false);
     }
 
-    // Process input
+    // Read the first input
+    if (input_buffer != std::nullopt) {
+        bytes_read = fread(input_buffer.value().current(), sizeof(char), input_buffer.value().size(), stdin);
+        eof = feof(stdin) != 0;
+        input_buffer.value().swap();
+    }
+
+    metal::ServerProcessedBuffer processing_response;
+
+    // Processing loop
     while (true) {
-
-        if (input_buffer != std::nullopt) {
-            bytes_read = fread(input_buffer.value().buffer(), sizeof(char), input_buffer.value().size(), stdin);
-            eof = feof(stdin) != 0;
-        }
-
         // Tell the server about the data (if any) and wait for it to be consumed
-
         metal::ClientPushBuffer processing_request;
         processing_request.set_size(bytes_read);
         processing_request.set_eof(eof);
         socket.send_message<metal::message_type::AgentPushBuffer>(processing_request);
-        auto processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
 
+        // Write output from previous iteration
         if (processing_response.size() && output_buffer != std::nullopt) {
-            // Write to stdout
-            fwrite(output_buffer.value().buffer(), sizeof(char), processing_response.size(), stdout);
+            fwrite(output_buffer.value().current(), sizeof(char), processing_response.size(), stdout);
+            output_buffer.value().swap();
         }
 
         if (processing_response.has_message()) {
@@ -332,6 +334,16 @@ int main(int argc, char *argv[]) {
 
         if (processing_response.eof())
             break;
+
+        // Read the next input
+        if (input_buffer != std::nullopt) {
+            bytes_read = fread(input_buffer.value().current(), sizeof(char), input_buffer.value().size(), stdin);
+            eof = feof(stdin) != 0;
+            input_buffer.value().swap();
+        }
+
+        // Wait for a server response
+        auto processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
     }
 
     return 0;
