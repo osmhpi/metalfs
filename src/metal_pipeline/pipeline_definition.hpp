@@ -9,7 +9,7 @@ namespace metal {
 class PipelineDefinition {
 public:
     explicit PipelineDefinition(std::vector<std::shared_ptr<AbstractOperator>> operators)
-        : _operators(std::move(operators)) {
+        : _operators(std::move(operators)), _cached_switch_configuration(false) {
         // TODO: Validate
         // operators size must be at least 2
         // first operator must be a DataSource
@@ -19,11 +19,12 @@ public:
     const std::vector<std::shared_ptr<AbstractOperator>> & operators() const { return _operators; }
 
     uint64_t run(SnapAction &action);
+    void configureSwitch(SnapAction &action, bool set_cached);
 
 protected:
     std::vector<std::shared_ptr<AbstractOperator>> _operators;
+    bool _cached_switch_configuration;
 
-    void configureSwitch(SnapAction &action) const;
 };
 
 } // namespace metal

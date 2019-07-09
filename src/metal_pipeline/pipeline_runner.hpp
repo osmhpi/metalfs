@@ -25,7 +25,7 @@ public:
     uint64_t run(bool last) override;
 
 protected:
-    virtual void pre_run(SnapAction &action, bool initialize) { (void)action; (void)initialize; }
+    virtual void pre_run(SnapAction &action, bool initialize);
     virtual void post_run(SnapAction &action, bool finalize) { (void)action; (void)finalize; }
     void requireReinitialization() { _initialized = false; }
 

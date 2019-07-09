@@ -27,8 +27,13 @@ uint64_t SnapPipelineRunner::run(bool last) {
     return output_size;
 }
 
-void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
+void SnapPipelineRunner::pre_run(SnapAction &action, bool initialize) {
+    if (initialize) {
+        _pipeline->configureSwitch(action, true);
+    }
+}
 
+void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
     if (_op != nullptr) {
         if (initialize) {
             auto operatorPosition = std::find(_pipeline->operators().begin(), _pipeline->operators().end(), _op);
@@ -66,6 +71,8 @@ void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
 
         action.execute_job(fpga::JobType::ResetPerfmon);
     }
+
+    SnapPipelineRunner::pre_run(action, initialize);
 }
 
 void ProfilingPipelineRunner::post_run(SnapAction &action, bool finalize) {

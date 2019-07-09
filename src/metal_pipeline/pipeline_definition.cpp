@@ -24,7 +24,8 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
         action.execute_job(fpga::JobType::RunOperators, nullptr, enable_mask);
     }
 
-    configureSwitch(action);
+    if (!_cached_switch_configuration)
+        configureSwitch(action, false);
 
     enable_mask = 0;
     for (const auto &op : _operators) {
@@ -41,7 +42,9 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
     return output_size;
 }
 
-void PipelineDefinition::configureSwitch(SnapAction &action) const {
+void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
+    _cached_switch_configuration = set_cached;
+
     auto *job_struct = reinterpret_cast<uint32_t*>(snap_malloc(sizeof(uint32_t) * 8));
     const uint32_t disable = 0x80000000;
     for (int i = 0; i < 8; ++i)
