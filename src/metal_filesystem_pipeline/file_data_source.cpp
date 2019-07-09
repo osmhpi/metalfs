@@ -83,7 +83,9 @@ void FileDataSource::configure(SnapAction &action) {
 
   uint64_t block_offset = _offset / NVME_BLOCK_BYTES;
   uint64_t end_block_offset = (_offset + _size) / NVME_BLOCK_BYTES;
-  uint64_t blocks_length = end_block_offset - block_offset + 1;
+  uint64_t blocks_length = end_block_offset - block_offset;
+  if ((_offset + _size) % NVME_BLOCK_BYTES)
+    blocks_length++;
 
   auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
   job_struct[0] = htobe64(0); // Slot

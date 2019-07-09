@@ -85,10 +85,6 @@ std::string SnapAction::job_type_to_string(fpga::JobType job)
     switch (job) {
     case fpga::JobType::Map:
         return "Map";
-    case fpga::JobType::Query:
-        return "Query";
-    case fpga::JobType::Access:
-        return "Access";
     case fpga::JobType::Mount:
         return "Mount";
     case fpga::JobType::Writeback:

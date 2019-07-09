@@ -18,29 +18,6 @@ enum class JobType : uint64_t {
     //   word(2n+8): extent n begin | R
     //   word(2n+9): extent n count | R
 
-    Query,
-    // 64bit words at job_address:
-    //   word0:                     |
-    //     byte0: slot              | R
-    //     byte1: query_mapping     | R
-    //     byte2: query_state       | R
-    //     byte3: is_open           | W  if query_state
-    //     byte4: is_active         | W  if query_state
-    //   word1: lblock_to_pblock    | RW if query_mapping
-    //   word2: extent_count        | W  if query_state
-    //   word3: block_count         | W  if query_state
-    //   word4: current_lblock      | W  if query_state
-    //   word5: current_pblock      | W  if query_state
-
-    Access,
-    // 64bit words at job_address:
-    //   word0:                     |
-    //     byte0: slot              | R
-    //     byte1: write_else_read   | R
-    //   word1: buffer_address      | R
-    //   word2: file_byte_offset    | R
-    //   word3: file_byte_count     | R
-
     Mount,
     // 64bit words at job_address:
     //   word0: slot                | R
