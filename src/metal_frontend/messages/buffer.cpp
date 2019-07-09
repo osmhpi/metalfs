@@ -18,7 +18,11 @@ Buffer Buffer::create_temp_file_for_shared_buffer(bool writable) {
     char output_file_name[23] = "/tmp/metal-mmap-XXXXXX";
     int file = mkstemp(output_file_name);
 
-    ftruncate(file, BUFFER_SIZE);
+    int res = ftruncate(file, BUFFER_SIZE);
+    if (res != 0) {
+        close(file);
+        throw std::runtime_error("Failed to extend buffer file");
+    }
 
     // Map it
     void *buffer = mmap(nullptr, BUFFER_SIZE, writable ? (PROT_READ | PROT_WRITE) : PROT_READ, MAP_SHARED, file, 0);

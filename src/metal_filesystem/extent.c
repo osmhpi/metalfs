@@ -162,7 +162,7 @@ int mtl_truncate_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
     mtl_ensure_extents_db_open(txn);
 
     // Find extent by offset
-    const mtl_extent *extent;
+    const mtl_extent *extent = NULL;
     mtl_load_extent(txn, offset, &extent);
 
     {
@@ -192,7 +192,7 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
     int res;
 
     // Find extent by offset
-    const mtl_extent *extent;
+    const mtl_extent *extent = NULL;
     mtl_load_extent(txn, offset, &extent);
     uint64_t extent_offset = offset;
     uint64_t extent_size = extent->length;
@@ -282,8 +282,8 @@ int mtl_dump_extents(MDB_txn *txn) {
     do {
 
         printf("  Offset: %lu\tLength: %lu\n", *(uint64_t*)next_extent_key.mv_data, ((mtl_extent*) next_extent_value.mv_data)->length);
-        
-        res = mdb_cursor_get(cursor, &next_extent_key, &next_extent_value, MDB_NEXT);    
+
+        res = mdb_cursor_get(cursor, &next_extent_key, &next_extent_value, MDB_NEXT);
     } while (res == MDB_SUCCESS);
 
 

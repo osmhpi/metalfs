@@ -276,7 +276,9 @@ int main(int argc, char *argv[]) {
 
     // Add the working directory to the request
     char cwd_buff[PATH_MAX];
-    getcwd(cwd_buff, PATH_MAX);
+    if (getcwd(cwd_buff, PATH_MAX) == nullptr) {
+        throw std::runtime_error("Could not determine working directory.");
+    }
     request.set_cwd(std::string(cwd_buff));
     request.set_metal_mountpoint(own_fs_mount_point);
 

@@ -408,7 +408,9 @@ void Context::initialize(std::string operators, bool in_memory, std::string bin_
 
     char socket_filename[255];
     char socket_dir[] = "/tmp/metal-socket-XXXXXX";
-    mkdtemp(socket_dir);
+    if (mkdtemp(socket_dir) == nullptr) {
+        throw std::runtime_error("Could not create temporary directory.");
+    }
     auto socket_file = std::string(socket_dir) + "/metal.sock";
     strncpy(socket_filename, socket_file.c_str(), 255);
     _socket_filename = std::string(socket_filename);

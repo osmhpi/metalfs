@@ -66,7 +66,7 @@ int mtl_load_directory(MDB_txn *txn, uint64_t inode_id, const mtl_inode **inode,
 
 int mtl_load_file(MDB_txn *txn, uint64_t inode_id, const mtl_inode **inode, const mtl_file_extent **extents, uint64_t *extents_length) {
 
-    uint64_t data_length;
+    uint64_t data_length = 0;
     int res = mtl_load_inode(txn, inode_id, inode, (const void**)extents, &data_length);
     if (extents_length != NULL)
         *extents_length = data_length / sizeof(mtl_file_extent);
@@ -79,8 +79,8 @@ int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id, char* fi
     // TODO: Check if len(filename) < FILENAME_MAX = 2^8 = 256
     uint64_t filename_length = strlen(filename);
 
-    const mtl_inode *dir_inode;
-    const void *dir_data;
+    const mtl_inode *dir_inode = NULL;
+    const void *dir_data = NULL;
     mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_data, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
@@ -124,7 +124,7 @@ int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, const void*
 
 int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent, uint64_t new_length) {
 
-    const mtl_inode *inode;
+    const mtl_inode *inode = NULL;
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
@@ -140,7 +140,7 @@ int mtl_add_extent_to_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new
 
 int mtl_extend_last_extent_in_file(MDB_txn *txn, uint64_t inode_id, mtl_file_extent *new_extent, uint64_t new_length) {
 
-    const mtl_inode *inode;
+    const mtl_inode *inode = NULL;
     const mtl_file_extent *extents;
     uint64_t extents_length;
     mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
@@ -156,7 +156,7 @@ int mtl_extend_last_extent_in_file(MDB_txn *txn, uint64_t inode_id, mtl_file_ext
 
 int mtl_truncate_file_extents(MDB_txn *txn, uint64_t inode_id, uint64_t new_file_length, uint64_t extents_length, uint64_t *update_last_extent_length) {
 
-    const mtl_inode *inode;
+    const mtl_inode *inode = NULL;
     const mtl_file_extent *extents;
     mtl_load_file(txn, inode_id, &inode, &extents, NULL);
 
@@ -177,8 +177,8 @@ int mtl_append_inode_id_to_directory(MDB_txn *txn, uint64_t dir_inode_id, char *
     // TODO: Check if len(filename) < FILENAME_MAX = 2^8 = 256
     uint64_t filename_length = strlen(filename);
 
-    const mtl_inode *dir_inode;
-    const void *dir_inode_data;
+    const mtl_inode *dir_inode = NULL;
+    const void *dir_inode_data = NULL;
     mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_inode_data, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
@@ -221,8 +221,8 @@ int mtl_remove_entry_from_directory(MDB_txn *txn, uint64_t dir_inode_id, char *f
 
     uint64_t filename_length = strlen(filename);
 
-    const mtl_inode *dir_inode;
-    const void *dir_inode_data;
+    const mtl_inode *dir_inode = NULL;
+    const void *dir_inode_data = NULL;
     mtl_load_inode(txn, dir_inode_id, &dir_inode, &dir_inode_data, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
@@ -268,8 +268,8 @@ int mtl_remove_entry_from_directory(MDB_txn *txn, uint64_t dir_inode_id, char *f
 
 int mtl_remove_directory(MDB_txn *txn, uint64_t dir_inode_id) {
 
-    const mtl_inode *dir_inode;
-    mtl_directory_entry_head *dir_entries;
+    const mtl_inode *dir_inode = NULL;
+    mtl_directory_entry_head *dir_entries = NULL;
     mtl_load_directory(txn, dir_inode_id, &dir_inode, &dir_entries, NULL);
 
     if (dir_inode->type != MTL_DIRECTORY) {
