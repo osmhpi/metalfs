@@ -1,18 +1,21 @@
-#include <metal_pipeline/pipeline_definition.hpp>
-#include <metal_pipeline/data_sink.hpp>
-#include <functional>
-#include <cstring>
 #include "metal_pipeline_storage.hpp"
+
+#include <cstring>
+#include <functional>
+
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <metal_pipeline/pipeline_definition.hpp>
+#include <metal_pipeline/pipeline_runner.hpp>
+#include <metal_pipeline/data_sink.hpp>
 #include "file_data_source.hpp"
 #include "file_data_sink.hpp"
-#include <metal_pipeline/pipeline_runner.hpp>
 
 namespace metal {
 
 int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
   if (metadata) {
     metadata->num_blocks = 64 * 1024 * 1024;
-    metadata->block_size = 4096;
+    metadata->block_size = fpga::StorageBlockSize;
   }
 
   return MTL_SUCCESS;

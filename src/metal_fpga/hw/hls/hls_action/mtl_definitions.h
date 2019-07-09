@@ -19,10 +19,6 @@ typedef ap_uint<1> mtl_bool_t;
 #define MTL_BRAM_BYTE_OFFSET_W (MTL_BRAM_BIT_OFFSET_W-4)
 #define MTL_BRAM_BYTES (0x1<<MTL_BRAM_BYTE_OFFSET_W)
 
-// File Block Size
-#define MTL_BLOCK_BYTE_OFFSET_W 12
-#define MTL_BLOCK_BYTES 4096
-
 // A file extent consisting of a begin physical block number
 // and a block count
 typedef struct mtl_extent {

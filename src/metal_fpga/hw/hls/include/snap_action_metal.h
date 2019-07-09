@@ -98,6 +98,8 @@ struct Job {
     uint64_t direct_data[4];
 };
 
+const uint64_t StorageBlockSize = 64 * 1024;
+
 #define OP_MEM_MODE_HOST 0
 #define OP_MEM_MODE_DRAM 1
 #define OP_MEM_MODE_NULL 2

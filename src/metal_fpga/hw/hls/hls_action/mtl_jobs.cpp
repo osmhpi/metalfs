@@ -51,11 +51,11 @@ static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
 {
     switch (job.slot) {
         case 0: {
-            mtl_file_load_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_nvme_transfer_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length, false);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mtl_file_load_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_nvme_transfer_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length, false);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -68,11 +68,11 @@ static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & jo
 {
     switch (job.slot) {
         case 0: {
-            mtl_file_write_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_nvme_transfer_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length, true);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mtl_file_write_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length);
+            mtl_nvme_transfer_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length, true);
             return SNAP_RETC_SUCCESS;
         }
         default: {
