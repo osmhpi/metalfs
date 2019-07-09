@@ -3,8 +3,6 @@
 
 namespace metal {
 
-#define NVME_BLOCK_BYTES 512
-
 class FileDataSource : public CardMemoryDataSource {
 
   // Common API

@@ -5,8 +5,6 @@
 
 namespace metal {
 
-#define NVME_BLOCK_BYTES 512
-
 class FileDataSink : public CardMemoryDataSink {
 
   // Common API

@@ -84,13 +84,13 @@ void FileDataSink::configure(SnapAction &action) {
     free(job_struct);
   }
 
-  auto file_contents_in_dram_offset = WRITE_FILE_DRAM_BASEADDR + (_offset % NVME_BLOCK_BYTES);
+  auto file_contents_in_dram_offset = WRITE_FILE_DRAM_BASEADDR + (_offset % fpga::StorageBlockSize);
 
   // If we only overwrite half of the first touched block load it to DRAM first
-  if (_offset % NVME_BLOCK_BYTES) {
+  if (_offset % fpga::StorageBlockSize) {
     auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
     job_struct[0] = htobe64(1); // Slot
-    job_struct[1] = htobe64(_offset % NVME_BLOCK_BYTES); // File offset
+    job_struct[1] = htobe64(_offset % fpga::StorageBlockSize); // File offset
     job_struct[2] = htobe64(WRITE_FILE_DRAM_BASEADDR); // DRAM target address
     job_struct[3] = htobe64(1); // number of blocks to load
 
@@ -105,11 +105,11 @@ void FileDataSink::configure(SnapAction &action) {
   }
 
   // If we only overwrite half of the last touched block load it to DRAM first
-  if ((_offset + _size) % NVME_BLOCK_BYTES) {
+  if ((_offset + _size) % fpga::StorageBlockSize) {
     auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
     job_struct[0] = htobe64(1); // Slot
-    job_struct[1] = htobe64(((_offset + _size) / NVME_BLOCK_BYTES) * NVME_BLOCK_BYTES); // File offset
-    job_struct[2] = htobe64(((file_contents_in_dram_offset + _size) / NVME_BLOCK_BYTES) * NVME_BLOCK_BYTES); // DRAM target address
+    job_struct[1] = htobe64(((_offset + _size) / fpga::StorageBlockSize) * fpga::StorageBlockSize); // File offset
+    job_struct[2] = htobe64(((file_contents_in_dram_offset + _size) / fpga::StorageBlockSize) * fpga::StorageBlockSize); // DRAM target address
     job_struct[3] = htobe64(1); // number of blocks to load
 
     try {
@@ -130,10 +130,10 @@ void FileDataSink::configure(SnapAction &action) {
 void FileDataSink::finalize(SnapAction &action) {
   CardMemoryDataSink::finalize(action);
 
-  uint64_t block_offset = _offset / NVME_BLOCK_BYTES;
-  uint64_t end_block_offset = (_offset + _size) / NVME_BLOCK_BYTES;
+  uint64_t block_offset = _offset / fpga::StorageBlockSize;
+  uint64_t end_block_offset = (_offset + _size) / fpga::StorageBlockSize;
   uint64_t blocks_length = end_block_offset - block_offset;
-  if ((_offset + _size) % NVME_BLOCK_BYTES)
+  if ((_offset + _size) % fpga::StorageBlockSize)
     blocks_length++;
 
   auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
