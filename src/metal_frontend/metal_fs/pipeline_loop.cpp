@@ -92,7 +92,7 @@ void PipelineLoop::run() {
     }
 
     if (lastAgentIt->second->output_buffer) {
-      hostMemoryDataSink->setDest(lastAgentIt->second->output_buffer.value().current());
+      hostMemoryDataSink->setDestination(lastAgentIt->second->output_buffer.value().current());
       lastAgentIt->second->output_buffer.value().swap();
     }
 

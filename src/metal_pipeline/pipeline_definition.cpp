@@ -21,7 +21,7 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
 
     if (enable_mask) {
         // At least one operator needs preparation.
-        action.execute_job(fpga::JobType::RunOperators, nullptr, enable_mask);
+        action.execute_job(fpga::JobType::RunOperators, nullptr, {}, {}, enable_mask);
     }
 
     if (!_cached_switch_configuration)
@@ -34,7 +34,7 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
     }
 
     uint64_t output_size;
-    action.execute_job(fpga::JobType::RunOperators, nullptr, enable_mask, /* perfmon_enable = */ 1, &output_size);
+    action.execute_job(fpga::JobType::RunOperators, nullptr, _dataSource->address(), _dataSink->address(), enable_mask, /* perfmon_enable = */ 1, &output_size);
 
     for (const auto &op : _operators)
         op->finalize(action);

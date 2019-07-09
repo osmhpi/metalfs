@@ -1,48 +1,56 @@
 #pragma once
 
-#include <string>
 #include "abstract_operator.hpp"
+
+#include <string>
+
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 
 namespace metal {
 
 class DataSource : public AbstractOperator {
 public:
-    explicit DataSource(size_t size = 0) : _size(size) {}
+    explicit DataSource(uint64_t address, size_t size = 0) : _address(address), _size(size) {}
 
     std::string id() const override { return ""; }
     uint8_t internal_id() const override { return 0; }
     size_t size() const { return _size; }
 
     virtual size_t reportTotalSize() { return 0; }
-    void setSize(size_t size);
+    void setSize(size_t size) { _size = size; }
+
+    fpga::Address address() {
+        return fpga::Address {
+            _address,
+            static_cast<uint32_t>(_size),
+            addressType(),
+            0 /* padding */
+        };
+    }
 
 protected:
+    virtual fpga::AddressType addressType() = 0;
+    uint64_t _address;
     size_t _size;
 
 };
 
 class HostMemoryDataSource : public DataSource {
 public:
-    explicit HostMemoryDataSource(const void *dest, size_t size = 0) : DataSource(size), _dest(dest) {}
-
-    void configure(SnapAction &action) override;
-    void finalize(SnapAction &action) override { (void) action; };
-    void setSource(const void *src) { _dest = src; }
+    explicit HostMemoryDataSource(const void *source, size_t size = 0) : DataSource(reinterpret_cast<uint64_t>(source), size) {}
+    void setSource(const void *source) { _address = reinterpret_cast<uint64_t>(source); }
 
 protected:
-    const void *_dest;
+    fpga::AddressType addressType() override { return fpga::AddressType::Host; }
 };
 
 class CardMemoryDataSource : public DataSource {
 public:
-    explicit CardMemoryDataSource(uint64_t address, size_t size = 0) : DataSource(size), _address(address) {}
-
-    void configure(SnapAction &action) override;
-    void finalize(SnapAction &action) override { (void)action; }
+    explicit CardMemoryDataSource(uint64_t address, size_t size = 0) : DataSource(address, size) {}
     void setAddress(uint64_t address) { _address = address; }
 
 protected:
-    uint64_t _address;
+    fpga::AddressType addressType() override { return fpga::AddressType::CardDRAM; }
 };
 
 class RandomDataSource : public DataSource {
@@ -53,9 +61,8 @@ public:
     std::string description() const override { return "Generate data on the FPGA for benchmarking operators."; }
 
     size_t reportTotalSize() override;
-
-    void configure(SnapAction &action) override;
-    void finalize(SnapAction& action) override { (void)action; }
+protected:
+    fpga::AddressType addressType() override { return fpga::AddressType::Random; }
 };
 
 } // namespace metal

@@ -10,38 +10,36 @@
 namespace metal {
 namespace fpga {
 
-mtl_mem_configuration read_mem_config;
-mtl_mem_configuration write_mem_config;
+Address read_mem_config;
+Address write_mem_config;
 
-mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap_bool_t read, mtl_mem_configuration &config, snapu32_t *data_preselect_switch_ctrl) {
-    config.offset = offset;
-    config.size = size;
-    config.mode = mode;
+mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config, snapu32_t *data_preselect_switch_ctrl) {
+    config = address;
 
     // Configure Data Preselector
 
     if (read) {
-        switch (config.mode) {
-            case OP_MEM_MODE_HOST:
-            case OP_MEM_MODE_DRAM: {
+        switch (config.type) {
+            case AddressType::Host:
+            case AddressType::CardDRAM: {
                 switch_set_mapping(data_preselect_switch_ctrl, 0, 0); // DataMover -> Metal Switch
                 break;
             }
-            case OP_MEM_MODE_RANDOM: {
+            case AddressType::Random: {
                 switch_set_mapping(data_preselect_switch_ctrl, 1, 0); // Stream Gen -> Metal Switch
                 break;
             }
             default: break;
         }
     } else {
-        switch (config.mode) {
-            case OP_MEM_MODE_HOST:
-            case OP_MEM_MODE_DRAM: {
+        switch (config.type) {
+            case AddressType::Host:
+            case AddressType::CardDRAM:{
                 switch_set_mapping(data_preselect_switch_ctrl, 2, 1); // Metal Switch -> DataMover
                 switch_disable_output(data_preselect_switch_ctrl, 2); // X -> Stream Sink
                 break;
             }
-            case OP_MEM_MODE_NULL: {
+            case AddressType::Null: {
                 switch_disable_output(data_preselect_switch_ctrl, 1); // X -> DataMover
                 switch_set_mapping(data_preselect_switch_ctrl, 2, 2); // Metal Switch -> Stream Sink
                 break;
@@ -59,13 +57,13 @@ void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     snapu32_t *random_ctrl,
-    mtl_mem_configuration &config) {
+    Address &config) {
 
-    const uint64_t baseaddr = config.mode == OP_MEM_MODE_DRAM ? DRAM_BASE_OFFSET : 0;
+    const uint64_t baseaddr = config.type == AddressType::CardDRAM ? DRAM_BASE_OFFSET : 0;
 
-    switch (config.mode) {
-        case OP_MEM_MODE_HOST:
-        case OP_MEM_MODE_DRAM: {
+    switch (config.type) {
+        case AddressType::Host:
+        case AddressType::CardDRAM: {
             const int N = 64; // Address width
             uint64_t bytes_read = 0;
             while (bytes_read < config.size) {
@@ -75,7 +73,7 @@ void op_mem_read(
                 ap_uint<23> read_bytes = end_of_frame ? bytes_remaining : 1<<16;
 
                 axi_datamover_command_t cmd = 0;
-                cmd((N+31), 32) = baseaddr + config.offset + bytes_read;
+                cmd((N+31), 32) = baseaddr + config.addr + bytes_read;
                 cmd[30] = end_of_frame;
                 cmd[23] = 1; // AXI burst type: INCR
                 cmd(22, 0) = read_bytes;
@@ -87,7 +85,7 @@ void op_mem_read(
             }
             break;
         }
-        case OP_MEM_MODE_RANDOM: {
+        case AddressType::Random: {
             random_ctrl[0x10 / sizeof(snapu32_t)] = config.size;
             random_ctrl[0] = 1;  // ap_start = true (self-clearing)
             break;
@@ -119,20 +117,20 @@ ap_uint<32> read_status(axi_datamover_status_ibtt_stream_t &s2mm_sts) {
 uint64_t op_mem_write(
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
-    mtl_mem_configuration &config) {
+    Address &config) {
 
-    const uint64_t baseaddr = config.mode == OP_MEM_MODE_DRAM ? DRAM_BASE_OFFSET : 0;
+    const uint64_t baseaddr = config.type == AddressType::CardDRAM ? DRAM_BASE_OFFSET : 0;
 
-    switch (config.mode) {
-        case OP_MEM_MODE_HOST:
-        case OP_MEM_MODE_DRAM: {
+    switch (config.type) {
+        case AddressType::Host:
+        case AddressType::CardDRAM: {
             uint64_t bytes_written = 0;
 
             for (;;) {
                 // Write data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_written;
 
-                snap_bool_t end_of_frame = issue_command(bytes_remaining, bytes_written, baseaddr + config.offset, s2mm_cmd);
+                snap_bool_t end_of_frame = issue_command(bytes_remaining, bytes_written, baseaddr + config.addr, s2mm_cmd);
 
                 ap_uint<32> status = read_status(s2mm_sts);
                 bytes_written += status(30, 8);

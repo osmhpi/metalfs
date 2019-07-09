@@ -2,6 +2,7 @@
 
 #include <hls_snap.H>
 #include <snap_action_metal.h>
+#include <snap_types.h>
 
 namespace metal {
 namespace fpga {

@@ -46,13 +46,20 @@ SnapAction::~SnapAction() {
     }
 }
 
-void SnapAction::execute_job(fpga::JobType job_type, const char *parameters, uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
+void SnapAction::execute_job(
+    fpga::JobType job_type,
+    const char *parameters,
+    fpga::Address source,
+    fpga::Address destination,
+    uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
 
     spdlog::debug("Starting job {}...", job_type_to_string(job_type));
 
     fpga::Job mjob;
     mjob.job_type = job_type;
     mjob.job_address = reinterpret_cast<uint64_t>(parameters);
+    mjob.source = source;
+    mjob.destination = destination;
     mjob.direct_data[0] = direct_data_0;
     mjob.direct_data[1] = direct_data_1;
 
@@ -99,10 +106,6 @@ std::string SnapAction::job_type_to_string(fpga::JobType job)
         return "ReadPerfmonCounters";
     case fpga::JobType::RunOperators:
         return "RunOperators";
-    case fpga::JobType::SetReadBuffer:
-        return "SetReadBuffer";
-    case fpga::JobType::SetWriteBuffer:
-        return "SetWriteBuffer";
     case fpga::JobType::ConfigureOperator:
         return "ConfigureOperator";
     }

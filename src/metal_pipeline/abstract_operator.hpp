@@ -11,8 +11,8 @@ class SnapAction;
 
 class AbstractOperator {
 public:
-    virtual void configure(SnapAction &action) = 0;
-    virtual void finalize(SnapAction &action) = 0;
+    virtual void configure(SnapAction &action) { (void)action; };
+    virtual void finalize(SnapAction &action) { (void)action; };
 
     virtual std::string id() const = 0;
     virtual std::string description() const { return ""; }

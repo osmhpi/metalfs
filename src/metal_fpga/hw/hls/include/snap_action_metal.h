@@ -1,7 +1,7 @@
 #pragma once
 
-#include "stdbool.h"
-#include <snap_types.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 namespace metal {
 namespace fpga {
@@ -71,18 +71,6 @@ enum class JobType : uint64_t {
     //   word1: perfmon_enable      | R
     //   word2: bytes_written       | W
 
-    SetReadBuffer,
-    // 64bit words at job_address:
-    //   word0: buffer_address      | R
-    //   word1: buffer_length       | R
-    //   word2: mode                | R
-
-    SetWriteBuffer,
-    // 64bit words at job_address:
-    //   word0: buffer_address      | R
-    //   word1: buffer_length       | R
-    //   word2: mode                | R
-
     ConfigureOperator
     // 32bit words at job_address:
     //   word0: offset in sizeof(snapu32_t) | R
@@ -92,18 +80,30 @@ enum class JobType : uint64_t {
     // <...> configuration data
 };
 
+const uint64_t StorageBlockSize = 64 * 1024;
+
+enum class AddressType : uint16_t {
+    Host,
+    CardDRAM,
+    NVMe,
+    Null,
+    Random
+};
+
+struct Address {
+    uint64_t addr;
+    uint32_t size;
+    AddressType type;
+    uint16_t padding;
+}; /* 16 bytes */
+
 struct Job {
     uint64_t job_address;
     JobType job_type;
+    Address source;
+    Address destination;
     uint64_t direct_data[4];
 };
-
-const uint64_t StorageBlockSize = 64 * 1024;
-
-#define OP_MEM_MODE_HOST 0
-#define OP_MEM_MODE_DRAM 1
-#define OP_MEM_MODE_NULL 2
-#define OP_MEM_MODE_RANDOM 3
 
 }  // namespace fpga
 }  // namespace metal

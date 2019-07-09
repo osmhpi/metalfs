@@ -1,5 +1,6 @@
 #pragma once
 
+#include <snap_action_metal.h>
 #include <metal/stream.h>
 #include "mtl_definitions.h"
 
@@ -23,27 +24,21 @@ typedef hls::stream<axi_datamover_ibtt_status_t> axi_datamover_status_ibtt_strea
 typedef ap_uint<103> axi_datamover_command_t;
 typedef hls::stream<axi_datamover_command_t> axi_datamover_command_stream_t;
 
-typedef struct mtl_mem_configuration {
-    uint64_t offset;
-    uint64_t size;
-    ap_uint<2> mode;
-} mtl_mem_configuration;
-
-mtl_retc_t op_mem_set_config(uint64_t offset, uint64_t size, uint64_t mode, snap_bool_t read, mtl_mem_configuration &config, snapu32_t *data_preselect_switch_ctrl);
+mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config, snapu32_t *data_preselect_switch_ctrl);
 
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,
     snapu32_t *random_ctrl,
-    mtl_mem_configuration &config);
+    Address &config);
 
 uint64_t op_mem_write(
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
-    mtl_mem_configuration &config);
+    Address &config);
 
-extern mtl_mem_configuration read_mem_config;
-extern mtl_mem_configuration write_mem_config;
+extern Address read_mem_config;
+extern Address write_mem_config;
 
 }  // namespace fpga
 }  // namespace metal

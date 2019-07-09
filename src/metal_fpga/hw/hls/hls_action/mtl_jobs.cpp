@@ -187,6 +187,9 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case JobType::RunOperators:
     {
+        op_mem_set_config(act_reg->Data.source, true, read_mem_config, data_preselect_switch_ctrl);
+        op_mem_set_config(act_reg->Data.destination, false, write_mem_config, data_preselect_switch_ctrl);
+
         snapu64_t enable_mask = act_reg->Data.direct_data[0];
         snapu64_t perfmon_en = act_reg->Data.direct_data[1];
 
@@ -219,18 +222,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     #endif
 
         result = SNAP_RETC_SUCCESS;
-        break;
-    }
-    case JobType::SetReadBuffer:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), true, read_mem_config, data_preselect_switch_ctrl);
-        break;
-    }
-    case JobType::SetWriteBuffer:
-    {
-        snap_membus_t line = mem_in[MFB_ADDRESS(act_reg->Data.job_address)];
-        result = op_mem_set_config(mtl_get64<0>(line), mtl_get64<8>(line), mtl_get64<16>(line), false, write_mem_config, data_preselect_switch_ctrl);
         break;
     }
     case JobType::ConfigureOperator:

@@ -30,7 +30,7 @@ void clear_operator_interrupts(hls::stream<snapu8_t> &interrupt_reg, snapu32_t *
 
 static void poll_interrupts(snapu8_t mask, hls::stream<snapu8_t> &interrupt_reg) {
     if (mask != 1 && mask != 0) {
-        while (interrupt_reg.read() != (ap_uint<1>(0), mask(7, 1)));
+        while (interrupt_reg.read() != snapu8_t((ap_uint<1>(0), mask(7, 1))));
     }
 }
 
