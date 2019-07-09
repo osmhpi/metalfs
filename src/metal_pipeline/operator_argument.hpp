@@ -6,13 +6,13 @@
 
 namespace metal {
 
-using OperatorArgumentValue = std::variant<int, bool, std::shared_ptr<std::vector<char>>>;
+using OperatorArgumentValue = std::variant<uint32_t, bool, std::shared_ptr<std::vector<char>>>;
 
 // Order matches the order of types above
 enum class OptionType : size_t {
-    INT,
-    BOOL,
-    BUFFER
+    Uint,
+    Bool,
+    Buffer
 };
 
 class OperatorOptionDefinition {

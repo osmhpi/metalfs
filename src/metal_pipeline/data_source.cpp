@@ -46,15 +46,15 @@ void CardMemoryDataSource::configure(SnapAction &action) {
 
 RandomDataSource::RandomDataSource(size_t size) : DataSource(size) {
     _optionDefinitions.insert(std::make_pair("length", OperatorOptionDefinition(
-        0, OptionType::INT, "length", "l", "The amount of data to generate, in bytes (default: 4096)"
+        0, OptionType::Uint, "length", "l", "The amount of data to generate, in bytes (default: 4096)"
     )));
 
-    _options.insert(std::make_pair("length", 4096));
+    _options.insert(std::make_pair("length", 4096u));
 }
 
 size_t RandomDataSource::reportTotalSize() {
     // TODO: Does this belong here? Maybe find a better method name then...
-    _size = std::get<int>(_options.at("length").value());
+    _size = std::get<uint32_t>(_options.at("length").value());
     return _size;
 }
 

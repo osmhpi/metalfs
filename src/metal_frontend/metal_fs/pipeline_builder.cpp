@@ -39,15 +39,15 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(const std::shared_ptr<Abs
   for (const auto &keyOptionPair : op->optionDefinitions()) {
     const auto &option = keyOptionPair.second;
     switch (option.type()) {
-      case OptionType::BOOL: {
+      case OptionType::Bool: {
         options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<bool>()->default_value("false"), "");
         break;
       }
-      case OptionType::INT: {
-        options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<int>(), "");
+      case OptionType::Uint: {
+        options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<uint32_t>(), "");
         break;
       }
-      case OptionType::BUFFER: {
+      case OptionType::Buffer: {
         options.add_option("", option.shrt(), option.key(), option.description(), cxxopts::value<std::string>(), "");
         break;
       }
@@ -173,15 +173,15 @@ void PipelineBuilder::set_operator_options_from_agent_request(
     auto result = parseResult[optionType.first];
 
     switch (optionType.second.type()) {
-      case OptionType::INT: {
-        op->setOption(optionType.first, result.as<int>());
+      case OptionType::Uint: {
+        op->setOption(optionType.first, result.as<uint32_t>());
         break;
       }
-      case OptionType::BOOL: {
+      case OptionType::Bool: {
         op->setOption(optionType.first, result.as<bool>());
         break;
       }
-      case OptionType::BUFFER: {
+      case OptionType::Buffer: {
         if (!optionType.second.bufferSize().has_value())
           throw std::runtime_error("File option metadata not found");
 

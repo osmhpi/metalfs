@@ -73,20 +73,20 @@ void UserOperator::configure(SnapAction &action) {
         const int configuration_data_offset = 4 * sizeof(uint32_t); // bytes
 
         switch ((OptionType)option.second.value().index()) {
-            case OptionType::INT: {
-                int beValue = htobe64(std::get<int>(option.second.value()));
+            case OptionType::Uint: {
+                uint32_t beValue = htobe64(std::get<uint32_t>(option.second.value()));
                 // Accessing un-validated, user-provided offset: dangerous!
-                memcpy(job_config + configuration_data_offset, &beValue, sizeof(int));
+                memcpy(job_config + configuration_data_offset, &beValue, sizeof(uint32_t));
                 metadata[1] = htobe32(sizeof(int) / sizeof(uint32_t)); // length
                 break;
             }
-            case OptionType::BOOL: {
+            case OptionType::Bool: {
                 uint32_t beValue = htobe32(std::get<bool>(option.second.value()) ? 1 : 0);
                 memcpy(job_config + configuration_data_offset, &beValue, sizeof(uint32_t));
                 metadata[1] = htobe32(1); // length
                 break;
             }
-            case OptionType::BUFFER: {
+            case OptionType::Buffer: {
                 // *No* endianness conversions on buffers
                 auto& buffer = *std::get<std::shared_ptr<std::vector<char>>>(option.second.value());
                 memcpy(job_config + configuration_data_offset, buffer.data(), buffer.size());
@@ -172,11 +172,11 @@ void UserOperator::initializeOptions() {
         if (jv_get_kind(type) == JV_KIND_STRING) {
             if (std::string("bool") == jv_string_value(type)) {
                 _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
-                    offset, OptionType::BOOL, jv_string_value(key), shortK, description
+                    offset, OptionType::Bool, jv_string_value(key), shortK, description
                 )));
             } else if (std::string("int") == jv_string_value(type)) {
                 _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
-                    offset, OptionType::INT, jv_string_value(key), shortK, description
+                    offset, OptionType::Uint, jv_string_value(key), shortK, description
                 )));
             }
         } else if (jv_get_kind(type) == JV_KIND_OBJECT) {
@@ -185,7 +185,7 @@ void UserOperator::initializeOptions() {
             if (type_str == "buffer") {
                 size_t size = jv_number_value(jv_object_get(jv_copy(type), jv_string("size")));
                 _optionDefinitions.insert(std::make_pair(jv_string_value(key), OperatorOptionDefinition(
-                    offset, OptionType::BUFFER, jv_string_value(key), shortK, description, size
+                    offset, OptionType::Buffer, jv_string_value(key), shortK, description, size
                 )));
             }
         }
