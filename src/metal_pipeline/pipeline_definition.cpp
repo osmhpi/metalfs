@@ -10,6 +10,23 @@ extern "C" {
 
 namespace metal {
 
+PipelineDefinition::PipelineDefinition(std::vector<std::shared_ptr<AbstractOperator>> operators) 
+    : _operators(std::move(operators)), _cached_switch_configuration(false) {
+    if (_operators.size() < 2) {
+        throw std::runtime_error("Pipeline must contain at least data source and data sink operators.");
+    }
+
+    _dataSource = std::dynamic_pointer_cast<DataSource>(_operators.front());
+    if (_dataSource == nullptr) {
+        throw std::runtime_error("Pipeline does not start with a data source");
+    }
+
+    _dataSink = std::dynamic_pointer_cast<DataSink>(_operators.back());
+    if (_dataSink == nullptr) {
+        throw std::runtime_error("Pipeline does not end with a data sink");
+    }
+}
+
 uint64_t PipelineDefinition::run(SnapAction &action) {
     for (const auto &op : _operators)
         op->configure(action);
