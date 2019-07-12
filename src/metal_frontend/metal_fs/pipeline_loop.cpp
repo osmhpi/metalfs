@@ -121,7 +121,7 @@ void PipelineLoop::run() {
         msg.set_size(output_size);
       }
 
-      if (currentAgentIt == profilingOperator) {
+      if (currentAgentIt == profilingOperator && eof) {
           msg.set_message(runner.formatProfilingResults());
       }
 
