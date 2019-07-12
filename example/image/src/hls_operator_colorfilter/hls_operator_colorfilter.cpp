@@ -1,8 +1,8 @@
 #include <metal/stream.h>
 
 #define HEADER_BYTES 138
-#define HEADER_ELEMENTS (HEADER_BYTES / 8) + 1
-#define HEADER_OFFSET (8 - (HEADER_BYTES % 8))
+#define HEADER_ELEMENTS ((HEADER_BYTES / STREAM_BYTES) + 1)
+#define HEADER_OFFSET (STREAM_BYTES - (HEADER_BYTES % STREAM_BYTES))
 
 #define RED_FACTOR 54
 #define GREEN_FACTOR 183
@@ -44,24 +44,19 @@ void process_stream(mtl_stream &in, mtl_stream &out) {
       output = input;
       ++element_idx;
     } else {
-      snapu32_t upper_pixel_in, lower_pixel_in,
-                upper_pixel_out, lower_pixel_out;
-      upper_pixel_in = (input.data >> 32) & 0xffffffff;
-      lower_pixel_in = input.data & 0xffffffff;
-
-      upper_pixel_out = transform_pixel(upper_pixel_in);
-      lower_pixel_out = transform_pixel(lower_pixel_in);
-
+      for (int i = 0; i < STREAM_BYTES / 4; ++i) {
+        #pragma HLS UNROLL
+        snapu32_t pixel_in = input.data(31 + 32*i, 32*i);
+        snapu32_t pixel_out = transform_pixel(pixel_in);
+        output.data(31 + 32*i, 32*i) = pixel_out;
+      }
       output.last = input.last;
       output.keep = input.keep;
-      output.data = ((snapu64_t)upper_pixel_out) << 32 | ((snapu64_t)lower_pixel_out);
     }
 
     out.write(output);
   } while (!output.last);
 }
-
-///////////////////////////////////////////////////////////////////////////////
 
 void hls_operator_colorfilter(mtl_stream &in, mtl_stream &out) {
 
@@ -70,6 +65,7 @@ void hls_operator_colorfilter(mtl_stream &in, mtl_stream &out) {
     #pragma HLS INTERFACE s_axilite port=return bundle=control
 
     #pragma HLS DATAFLOW
+
     mtl_stream padded_stream;
     mtl_stream processed_stream;
 
