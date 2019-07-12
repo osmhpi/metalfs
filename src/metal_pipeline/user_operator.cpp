@@ -3,7 +3,6 @@
 extern "C" {
 #include <unistd.h>
 #include <snap_hls_if.h>
-#include <jv.h>
 }
 
 #include "../../third_party/cxxopts/include/cxxopts.hpp"
@@ -17,27 +16,13 @@ extern "C" {
 
 namespace metal {
 
-UserOperator::UserOperator(std::string manifest_path) : _is_prepared(false) {
+UserOperator::UserOperator(std::string id, jv manifest) : _id(id), _is_prepared(false) {
 
     // Memory management with jq is a little cumbersome.
     // jv.h says:
     //    All jv_* functions consume (decref) input and produce (incref) output
     //    Except jv_copy
     // ... and jv_*_value, and jv_get_kind, ...
-
-    jv data = jv_load_file(manifest_path.c_str(), /* raw = */ false);
-
-    if (!jv_is_valid(data)) {
-        jv_free(data);
-        throw std::runtime_error("Error loading operator manifest");
-    }
-
-    if (jv_get_kind(data) != JV_KIND_ARRAY) {
-        jv_free(data);
-        throw std::runtime_error("Unexpected input");
-    }
-
-    jv manifest = jv_array_get(data, 0);
 
     // TODO: Validate manifest data
 
@@ -110,13 +95,6 @@ void UserOperator::configure(SnapAction &action) {
 
 void UserOperator::finalize(SnapAction &action) {
     (void)action;
-}
-
-std::string UserOperator::id() const {
-    auto jv_id = jv_object_get(manifest(), jv_string("id"));
-    std::string result = jv_string_value(jv_id);
-    jv_free(jv_id);
-    return result;
 }
 
 uint8_t UserOperator::internal_id() const {

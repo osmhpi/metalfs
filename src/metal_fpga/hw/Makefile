@@ -54,6 +54,11 @@ $(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/creat
 
 hls: $(hls_components)
 
+$(IMAGE_TARGET):
+	@./generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
+
+hls/hls_imageinfo: $(IMAGE_TARGET)
+
 $(hls_components):
 	@mkdir -p $(LOGS_DIR)
 	@echo "                        Generating IP from HLS component $(@F)"

@@ -15,7 +15,7 @@ public:
     SnapAction(SnapAction &&other) noexcept;
     virtual ~SnapAction();
 
-    void execute_job(fpga::JobType job_type, const char *parameters = nullptr, fpga::Address source = {}, fpga::Address destination = {}, uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0, uint64_t *direct_data_out_0 = nullptr, uint64_t *direct_data_out_1 = nullptr);
+    void execute_job(fpga::JobType job_type, const void *parameters = nullptr, fpga::Address source = {}, fpga::Address destination = {}, uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0, uint64_t *direct_data_out_0 = nullptr, uint64_t *direct_data_out_1 = nullptr);
     bool is_nvme_enabled();
 
 protected:

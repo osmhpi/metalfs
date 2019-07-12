@@ -48,7 +48,7 @@ SnapAction::~SnapAction() {
 
 void SnapAction::execute_job(
     fpga::JobType job_type,
-    const char *parameters,
+    const void *parameters,
     fpga::Address source,
     fpga::Address destination,
     uint64_t direct_data_0, uint64_t direct_data_1, uint64_t *direct_data_out_0, uint64_t *direct_data_out_1) {
@@ -90,6 +90,8 @@ bool SnapAction::is_nvme_enabled() {
 std::string SnapAction::job_type_to_string(fpga::JobType job)
 {
     switch (job) {
+    case fpga::JobType::ReadImageInfo:
+        return "ReadImageInfo";
     case fpga::JobType::Map:
         return "Map";
     case fpga::JobType::Mount:

@@ -4,11 +4,13 @@
 
 namespace metal {
 
-TEST(OperatorRegistryTest, DetectsOperatorsInSearchPath) {
+TEST(OperatorRegistryTest, DetectsOperatorsInJSON) {
 
-    OperatorRegistry registry("./test/metal_pipeline_test/operators");
+    std::string json = "{ \"operators\": { \"changecase\": { \"internal_id\": 1, \"description\": \"Transform ASCII strings to lower- or uppercase (default)\", \"options\": { \"lowercase\": { \"short\": \"l\", \"type\": \"bool\", \"description\": \"Transform to lowercase\", \"offset\": 256 } } } } }";
 
-    ASSERT_EQ(2u, registry.operators().size());
+    OperatorRegistry registry(json);
+
+    ASSERT_EQ(1u, registry.operators().size());
 }
 
 } // namespace

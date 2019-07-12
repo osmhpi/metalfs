@@ -1,50 +1,42 @@
 #include "operator_registry.hpp"
 
+extern "C" {
+#include <jv.h>
+}
+
 #include <dirent.h>
 #include <vector>
 #include <spdlog/spdlog.h>
 
 namespace metal {
 
-OperatorRegistry::OperatorRegistry(const std::string &search_path)
-    : _operators() {
+OperatorRegistry::OperatorRegistry(const std::string &image_json) : _operators() {
 
-    std::vector<std::string> files_in_search_path;
+    auto image = jv_parse(image_json.c_str());
 
-    {
-        struct dirent *dp = nullptr;
-        auto dirp = opendir(search_path.c_str());
-
-        if (dirp == nullptr) {
-            throw std::runtime_error("Could not resolve operators path");
-        }
-
-        while ((dp = readdir(dirp)) != nullptr) {
-            if (dp->d_type == DT_REG)
-                files_in_search_path.emplace_back(std::string(dp->d_name));
-        }
-        closedir(dirp);
+    if (!jv_is_valid(image)) {
+        jv_free(image);
+        throw std::runtime_error("Error loading operator manifest");
     }
 
-    for (const auto & filename : files_in_search_path) {
-        const std::string jsonFileEnding = ".json";
-
-        // if (!filename.ends_with(jsonFileEnding)):
-        if (!(filename.size() >= jsonFileEnding.size() && filename.compare(filename.size() - jsonFileEnding.size(), jsonFileEnding.size(), jsonFileEnding) == 0))
-            continue;
-
-        try {
-            auto full_path = search_path;
-            full_path.append("/");
-            full_path.append(filename);
-
-            auto op = std::make_unique<UserOperator>(full_path);
-            _operators.emplace(std::make_pair(op->id(), std::move(op)));
-        } catch (std::exception &ex) {
-            // Could not load operator
-            spdlog::warn("Could not load operator file: {} ({})", filename, ex.what());
-        }
+    if (jv_get_kind(image) != JV_KIND_OBJECT) {
+        jv_free(image);
+        throw std::runtime_error("Unexpected input");
     }
+
+    auto operators = jv_object_get(image, jv_string("operators"));
+    auto iter = jv_object_iter(operators);
+    while (jv_object_iter_valid(operators, iter)) {
+        auto key = jv_object_iter_key(operators, iter);
+        auto current_operator = jv_object_iter_value(operators, iter);
+
+        auto op = std::make_unique<UserOperator>(jv_string_value(key), jv_copy(current_operator));
+        _operators.emplace(std::make_pair(op->id(), std::move(op)));
+
+        iter = jv_object_iter_next(operators, iter);
+    }
+
+    jv_free(image);
 }
 
 } // namespace metal

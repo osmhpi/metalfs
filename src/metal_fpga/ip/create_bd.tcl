@@ -159,7 +159,7 @@ connect_bd_intf_net [get_bd_intf_pins snap_action/m_axi_metal_ctrl_V] [get_bd_in
 # AXI Crossbar
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_crossbar:2.1 axi_metal_ctrl_crossbar
-set_property -dict [list CONFIG.NUM_MI {4}] [get_bd_cells axi_metal_ctrl_crossbar]
+set_property -dict [list CONFIG.NUM_MI {5}] [get_bd_cells axi_metal_ctrl_crossbar]
 set_property -dict [list CONFIG.PROTOCOL.VALUE_SRC USER] [get_bd_cells axi_metal_ctrl_crossbar]
 set_property -dict [list CONFIG.PROTOCOL {AXI4LITE} CONFIG.CONNECTIVITY_MODE {SASD} CONFIG.R_REGISTER {1} CONFIG.S00_SINGLE_THREAD {1}] [get_bd_cells axi_metal_ctrl_crossbar]
 
@@ -207,6 +207,13 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 one
 connect_bd_net [get_bd_pins one/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TVALID] >> $log_file
 connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TDATA] >> $log_file
 
+# Image Info
+
+create_bd_cell -type ip -vlnv xilinx.com:hls:hls_imageinfo:1.0 imageinfo
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/ap_clk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/ap_rst_n]
+connect_bd_intf_net [get_bd_intf_pins imageinfo/s_axi_ctrl] [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI]
+
 # AXI Perfmon
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_perf_mon:5.0 axi_perf_mon_0
@@ -234,6 +241,8 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
+include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_Reg] >> $log_file
+
 # include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
 
 set_property offset 0x0000000000000000 [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]

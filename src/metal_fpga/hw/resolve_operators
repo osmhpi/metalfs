@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh -e
 
 image_json=$1
 image_basedir=$(dirname $image_json)

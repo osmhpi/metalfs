@@ -9,6 +9,11 @@ namespace fpga {
 const uint64_t ActionType = 0xFB060001;
 
 enum class JobType : uint64_t {
+    ReadImageInfo,
+    // data is written to job_address
+    // 64bit words direct data:
+    //   word2: bytes_written       | W
+
     Map,
     // 64bit words at job_address:
     //   word0: slot                | R

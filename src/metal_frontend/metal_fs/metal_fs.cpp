@@ -29,7 +29,6 @@ enum {
 static struct fuse_opt metal_opts[] = {
         METAL_OPT("--card=%i",         card, 0),
         METAL_OPT("-c %i",             card, 0),
-        METAL_OPT("--operators %s",    operators, 0),
         METAL_OPT("--metadata %s",     metadata_dir, 0),
         METAL_OPT("--in_memory",       in_memory, 1),
 //        METAL_OPT("nomybool",          in_memory, 0),
@@ -94,7 +93,6 @@ int main(int argc, char *argv[])
     auto & c = metal::Context::instance();
 
     c.initialize(
-            std::string(conf.operators),
             static_cast<bool>(conf.in_memory),
             std::string(argv[0]),
             std::string(conf.metadata_dir),

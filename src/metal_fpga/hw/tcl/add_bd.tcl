@@ -3,7 +3,7 @@ set image_json      $::env(IMAGE_JSON)
 set_property ip_repo_paths [concat \
     [get_property ip_repo_paths [current_project]] \
     [glob -dir $action_hw_dir/hls */hls_impl_ip] \
-    [eval list [exec sh -c "$action_hw_dir/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip='"]] \
+    [eval list [exec sh -c "$action_hw_dir/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip=' | paste -s -d ' '"]] \
     $action_dir/ip/ip_user_files \
 ] [current_project] >> $log_file
 update_ip_catalog >> $log_file

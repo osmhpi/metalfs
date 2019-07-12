@@ -18,6 +18,7 @@ extern "C" {
 #include <thread>
 #include <cxxopts.hpp>
 
+#include <metal_pipeline/pipeline_runner.hpp>
 #include <metal_pipeline/data_source.hpp>
 #include "server.hpp"
 
@@ -392,9 +393,11 @@ Context &Context::instance() {
     return _instance;
 }
 
-void Context::initialize(std::string operators, bool in_memory, std::string bin_path, std::string metadata_dir, int card) {
+void Context::initialize(bool in_memory, std::string bin_path, std::string metadata_dir, int card) {
     _card = card;
-    _registry = std::make_shared<metal::OperatorRegistry>(operators);
+
+    auto image_info = SnapPipelineRunner::readImageInfo(_card);
+    _registry = std::make_shared<OperatorRegistry>(image_info);
 
     // Add the random data source operator
     auto datagen = std::make_shared<RandomDataSource>();

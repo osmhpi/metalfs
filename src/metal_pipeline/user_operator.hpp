@@ -16,13 +16,13 @@ namespace metal {
 class UserOperator : public AbstractOperator {
 
 public:
-    explicit UserOperator(std::string manifest_path);
+    explicit UserOperator(std::string id, jv manifest);
     virtual ~UserOperator();
 
     void configure(SnapAction& action) override;
     void finalize(SnapAction& action) override;
 
-    std::string id() const override;
+    std::string id() const override { return _id; }
     std::string description() const override;
     uint8_t internal_id() const override;
     bool needs_preparation() const override;
@@ -35,6 +35,7 @@ protected:
     jv manifest() const { return jv_copy(_manifest); }
     jv _manifest;
 
+    std::string _id;
     bool _is_prepared;
 
 };

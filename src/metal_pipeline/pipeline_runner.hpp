@@ -24,6 +24,8 @@ public:
       : AbstractPipelineRunner(std::move(pipeline)), _initialized(false), _card(card) {}
     uint64_t run(bool last) override;
 
+    static std::string readImageInfo(int card);
+
 protected:
     virtual void pre_run(SnapAction &action, bool initialize);
     virtual void post_run(SnapAction &action, bool finalize) { (void)action; (void)finalize; }

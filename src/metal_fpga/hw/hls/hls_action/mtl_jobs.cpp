@@ -125,14 +125,36 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         (metal_ctrl + (0x44A10000 / sizeof(uint32_t)));
     snapu32_t *random_ctrl =
         (metal_ctrl + (0x44A20000 / sizeof(uint32_t)));
-    snapu32_t *switch_ctrl =
+    snapu32_t *image_info_ctrl =
         (metal_ctrl + (0x44A30000 / sizeof(uint32_t)));
-    snapu32_t *operator_ctrl =
+    snapu32_t *switch_ctrl =
         (metal_ctrl + (0x44A40000 / sizeof(uint32_t)));
+    snapu32_t *operator_ctrl =
+        (metal_ctrl + (0x44A50000 / sizeof(uint32_t)));
 
     mtl_retc_t result = SNAP_RETC_SUCCESS;
 
     switch (act_reg->Data.job_type) {
+    case JobType::ReadImageInfo:
+    {
+        uint32_t info_len = image_info_ctrl[0x10];
+        uint32_t read_len = info_len > 4096 ? 4096 : info_len;
+
+        snap_membus_t current_line = 0;
+        for (int i = 0; i < read_len; i += sizeof(uint32_t)) {
+            #pragma HLS PIPELINE
+            int lineoffset = i % sizeof(snap_membus_t);
+            current_line(31 + 32*lineoffset, 32*lineoffset) = image_info_ctrl[(0x100 + i) / sizeof(uint32_t))];
+
+            if (lineoffset == sizeof(snap_membus_t) - sizeof(uint32_t)) {
+                mem_in[MFB_ADDRESS(act_reg->Data.job_address) + (i / sizeof(snap_membus_t))] = current_line;
+            }
+        }
+
+        act_reg->Data.direct_data[2] = read_len;
+        result = SNAP_RETC_SUCCESS;
+        break;
+    }
     case JobType::Map:
     {
 #ifdef NVME_ENABLED

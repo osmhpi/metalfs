@@ -16,7 +16,7 @@ class OperatorRegistry;
 class Context {
  public:
   static Context &instance();
-  void initialize(std::string operators, bool in_memory, std::string bin_path, std::string metadata_dir, int card);
+  void initialize(bool in_memory, std::string bin_path, std::string metadata_dir, int card);
 
   int card() { return _card; }
 

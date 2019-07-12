@@ -21,7 +21,7 @@ set_property target_language VHDL [current_project]
 puts "                        Configuring IP Catalog ......"
 set_property ip_repo_paths [concat \
     [glob -dir $aip_dir/../hw/hls */hls_impl_ip] \
-    [eval list [exec sh -c "$action_root/hw/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip='"]] \
+    [eval list [exec sh -c "$action_root/hw/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip=' | paste -s -d ' '"]] \
 ] [current_project] >> $log_file
 update_ip_catalog >> $log_file
 
