@@ -137,14 +137,16 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     switch (act_reg->Data.job_type) {
     case JobType::ReadImageInfo:
     {
-        uint32_t info_len = image_info_ctrl[0x10];
+        image_info_ctrl[0] = 1;  // ap_start = true (self-clearing)
+        while (image_info_ctrl[0] & 2 == 0);
+        uint32_t info_len = image_info_ctrl[0x10 / sizeof(uint32_t)];
         uint32_t read_len = info_len > 4096 ? 4096 : info_len;
 
         snap_membus_t current_line = 0;
         for (int i = 0; i < read_len; i += sizeof(uint32_t)) {
             #pragma HLS PIPELINE
             int lineoffset = i % sizeof(snap_membus_t);
-            current_line(31 + 32*lineoffset, 32*lineoffset) = image_info_ctrl[(0x100 + i) / sizeof(uint32_t)];
+            current_line(31 + 32*lineoffset, 32*lineoffset) = image_info_ctrl[(0x200 + i) / sizeof(uint32_t)];
 
             if (lineoffset == sizeof(snap_membus_t) - sizeof(uint32_t)) {
                 mem_in[MFB_ADDRESS(act_reg->Data.job_address) + (i / sizeof(snap_membus_t))] = current_line;
