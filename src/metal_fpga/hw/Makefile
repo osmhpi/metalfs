@@ -46,11 +46,22 @@ endif
 
 .PHONY: config clean vhdl $(hls_components)
 
-all: vhd_files hls $(ACTION_ROOT)/ip/ip_user_files/component.xml
+all: vhd_files hls $(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml
 
-$(ACTION_ROOT)/ip/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/create_action_ip.tcl $(ACTION_ROOT)/ip/create_bd.tcl $(ACTION_ROOT)/ip/instantiate_operators.tcl
+$(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl $(ACTION_ROOT)/ip/block_design/create_bd.tcl $(ACTION_ROOT)/ip/block_design/instantiate_operators.tcl $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml
 	@echo "                        Generating Block Design"
-	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+
+$(ACTION_ROOT)/ip/image_info/info: $(IMAGE_TARGET)
+	@jq -c . $(IMAGE_TARGET) | xxd -p | tr -d '\n' > info
+
+$(ACTION_ROOT)/ip/image_info/image_info.vhd: $(ACTION_ROOT)/ip/image_info/image_info.vhd_source $(ACTION_ROOT)/ip/image_info/info
+	$(ACTION_ROOT)/ip/image_info/format_vhd $< $(ACTION_ROOT)/ip/image_info/info $@
+
+$(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/image_info/create_ip.tcl $(ACTION_ROOT)/ip/image_info/config_store.vhd $(ACTION_ROOT)/ip/image_info/image_info.vhd
+	@echo "                        Generating Image Info"
+	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/image_info/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+
 
 hls: $(hls_components)
 

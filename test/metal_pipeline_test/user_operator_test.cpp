@@ -4,34 +4,36 @@
 
 namespace metal {
 
-TEST(UserOperatorTest, ParsesOperatorID) {
+const char* OperatorJson = R"({"id":"blowfish_encrypt","description":"Encrypt data with the blowfish cipher","prepare_required":true,"options":{"key":{"short":"k","type":{"type":"buffer","size":16},"description":"The encryption key to use","offset":256}},"internal_id":4})";
 
-    UserOperator op("./test/metal_pipeline_test/operators/blowfish_encrypt.json");
+ TEST(UserOperatorTest, AssignsOperatorID) {
 
-    ASSERT_EQ(op.id(), "blowfish_encrypt");
-}
+     UserOperator op("blowfish_encrypt", OperatorJson);
 
-
-TEST(UserOperatorTest, AllowsToSetOptions) {
-
-    UserOperator op("./test/metal_pipeline_test/operators/blowfish_encrypt.json");
-
-    ASSERT_NO_THROW(op.setOption("key", std::make_unique<std::vector<char>>(128)));
-}
-
-TEST(UserOperatorTest, RevokesInvalidOptions) {
-
-    UserOperator op("./test/metal_pipeline_test/operators/blowfish_encrypt.json");
-
-    ASSERT_ANY_THROW(op.setOption("does_not_exist", false));
-}
+     ASSERT_EQ(op.id(), "blowfish_encrypt");
+ }
 
 
-TEST(UserOperatorTest, RevokesInvalidOptionValues) {
+ TEST(UserOperatorTest, AllowsToSetOptions) {
 
-    UserOperator op("./test/metal_pipeline_test/operators/blowfish_encrypt.json");
+    UserOperator op("blowfish_encrypt", OperatorJson);
 
-    ASSERT_ANY_THROW(op.setOption("key", false));
-}
+     ASSERT_NO_THROW(op.setOption("key", std::make_unique<std::vector<char>>(128)));
+ }
+
+ TEST(UserOperatorTest, RevokesInvalidOptions) {
+
+    UserOperator op("blowfish_encrypt", OperatorJson);
+
+     ASSERT_ANY_THROW(op.setOption("does_not_exist", false));
+ }
+
+
+ TEST(UserOperatorTest, RevokesInvalidOptionValues) {
+
+    UserOperator op("blowfish_encrypt", OperatorJson);
+
+     ASSERT_ANY_THROW(op.setOption("key", false));
+ }
 
 } // namespace

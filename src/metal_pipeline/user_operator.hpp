@@ -16,7 +16,7 @@ namespace metal {
 class UserOperator : public AbstractOperator {
 
 public:
-    explicit UserOperator(std::string id, jv manifest);
+    explicit UserOperator(std::string id, std::string manifest);
     virtual ~UserOperator();
 
     void configure(SnapAction& action) override;

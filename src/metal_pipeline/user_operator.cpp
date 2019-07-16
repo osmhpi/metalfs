@@ -16,7 +16,7 @@ extern "C" {
 
 namespace metal {
 
-UserOperator::UserOperator(std::string id, jv manifest) : _id(id), _is_prepared(false) {
+UserOperator::UserOperator(std::string id, std::string manifest) : _id(id), _is_prepared(false) {
 
     // Memory management with jq is a little cumbersome.
     // jv.h says:
@@ -26,12 +26,14 @@ UserOperator::UserOperator(std::string id, jv manifest) : _id(id), _is_prepared(
 
     // TODO: Validate manifest data
 
-    if (jv_get_kind(manifest) != JV_KIND_OBJECT) {
-        jv_free(manifest);
+    auto m = jv_parse(manifest.c_str());
+
+    if (jv_get_kind(m) != JV_KIND_OBJECT) {
+        jv_free(m);
         throw std::runtime_error("Unexpected input");
     }
 
-    _manifest = manifest;
+    _manifest = m;
 
     // Build options object
     initializeOptions();

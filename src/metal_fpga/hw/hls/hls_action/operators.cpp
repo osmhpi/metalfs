@@ -7,9 +7,6 @@
 namespace metal {
 namespace fpga {
 
-const snapu32_t OperatorBaseAddr = 0x44A50000 / sizeof(uint32_t);
-const snapu32_t OperatorOffset = 0x10000 / sizeof(uint32_t);
-
 void clear_operator_interrupts(hls::stream<snapu8_t> &interrupt_reg, snapu32_t *metal_ctrl) {
     snapu32_t *operator_ctrl =
         (metal_ctrl + OperatorBaseAddr);
@@ -76,7 +73,7 @@ void do_configure_and_run_operators(
     snapu64_t *bytes_written
 ) {
     snapu32_t *random_ctrl =
-        (metal_ctrl + (0x44A20000 / sizeof(uint32_t)));
+        (metal_ctrl + RandomBaseAddr);
 
     snapu32_t *operator_ctrl =
         (metal_ctrl + OperatorBaseAddr);

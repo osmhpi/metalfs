@@ -23,7 +23,8 @@ std::string SnapPipelineRunner::readImageInfo(int card) {
         free(json);
         throw ex;
     }
-    std::string result(reinterpret_cast<const char*>(json));
+
+    std::string result(reinterpret_cast<const char*>(json), json_len);
     free(json);
     return result;
 }

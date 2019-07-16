@@ -3,7 +3,7 @@ set log_file    $log_dir/create_bd.log
 set bd_name     bd_action
 
 set stream_bytes [exec jq -r ".stream_bytes" $image_json]
-set stream_width [expr $stream_bytes * 8] 
+set stream_width [expr $stream_bytes * 8]
 
 create_bd_design $bd_name >> $log_file
 
@@ -208,23 +208,12 @@ connect_bd_net [get_bd_pins one/dout] [get_bd_pins snap_action/interrupt_reg_V_V
 connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/interrupt_reg_V_V_TDATA] >> $log_file
 
 # Image Info
-
-add_files -norecurse $action_root/hw/hls/hls_imageinfo/config_store.vhd
-#create_bd_cell -type ip -vlnv xilinx.com:hls:hls_imageinfo:1.0 imageinfo
-#connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/ap_clk]
-#connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/ap_rst_n]
-#connect_bd_intf_net [get_bd_intf_pins imageinfo/s_axi_ctrl] [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI]
-
 set_property source_mgmt_mode All [current_project]
-create_bd_cell -type module -reference ConfigStore imageinfo
-#set_property -dict [list \
-#    CONFIG.g_ConstData {0x32764832789} \
-#    CONFIG.g_ConstDataLength {20} \
-#] [get_bd_cells imageinfo]
+create_bd_cell -type ip -vlnv user.org:user:ImageInfo:1.0 imageinfo
 connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI] [get_bd_intf_pins imageinfo/p_regs]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/p_clk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/p_rst_n]
-assign_bd_address [get_bd_addr_segs {imageinfo/p_regs/reg0 }]
+assign_bd_address [get_bd_addr_segs {imageinfo/p_regs/reg0 }] >> $log_file
 
 
 # AXI Perfmon
@@ -254,10 +243,7 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
-#include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_reg0] >> $log_file
-
-# include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
 
 set_property offset 0x0000000000000000 [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
 set_property range 16E [get_bd_addr_segs {snap_action/Data_m_axi_host_mem/SEG_m_axi_host_mem_Reg}]
