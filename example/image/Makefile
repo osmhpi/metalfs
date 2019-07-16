@@ -8,7 +8,7 @@ IMAGE_TARGET      = $(PWD)/image.json.o
 METAL_ROOT        = $(PWD)/../..
 METAL_TARGET      = $(shell jq -r .target $(IMAGE_JSON))
 
-snap_targets = snap_config clean hw_project model sim sim_screen image help
+snap_targets = snap_config clean hw_project model sim sim_tmux image help
 
 all: help
 

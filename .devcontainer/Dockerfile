@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     xterm \
-    screen \
+    tmux \
     libncurses-dev \
     libfuse-dev \
     liblmdb-dev \
@@ -29,7 +29,7 @@ RUN cd $PSLSE_ROOT && make
 
 # SNAP
 ENV SNAP_ROOT=/frameworks/snap
-RUN git clone -b sim_screen https://github.com/rs22/snap $SNAP_ROOT
+RUN git clone https://github.com/open-power/snap $SNAP_ROOT
 RUN cd $SNAP_ROOT && make software
 
 # GCC 7
@@ -39,11 +39,11 @@ RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 60C317803A41BA51845
     && apt-get install -y gcc-7 g++-7 \
     && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7
 
-RUN echo "source /opt/Xilinx/Vivado/2018.1/settings64.sh" >> /root/.bashrc
-RUN echo "export XILINXD_LICENSE_FILE=/tmp/null" >> /root/.bashrc
-RUN echo "export PSLSE_ROOT=$PSLSE_ROOT" >> /root/.bashrc
-RUN echo "export SNAP_ROOT=$SNAP_ROOT" >> /root/.bashrc
-RUN echo "export LC_ALL=C" >> /root/.bashrc
+RUN echo "source /opt/Xilinx/Vivado/2018.1/settings64.sh" >> /root/.bashrc \
+    && echo "export XILINXD_LICENSE_FILE=/tmp/null" >> /root/.bashrc \
+    && echo "export PSLSE_ROOT=$PSLSE_ROOT" >> /root/.bashrc \
+    && echo "export SNAP_ROOT=$SNAP_ROOT" >> /root/.bashrc \
+    && echo "export LC_ALL=C" >> /root/.bashrc
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

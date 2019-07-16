@@ -209,10 +209,23 @@ connect_bd_net [get_bd_pins interrupt_concat/dout] [get_bd_pins snap_action/inte
 
 # Image Info
 
-create_bd_cell -type ip -vlnv xilinx.com:hls:hls_imageinfo:1.0 imageinfo
-connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/ap_clk]
-connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/ap_rst_n]
-connect_bd_intf_net [get_bd_intf_pins imageinfo/s_axi_ctrl] [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI]
+add_files -norecurse $action_root/hw/hls/hls_imageinfo/config_store.vhd
+#create_bd_cell -type ip -vlnv xilinx.com:hls:hls_imageinfo:1.0 imageinfo
+#connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/ap_clk]
+#connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/ap_rst_n]
+#connect_bd_intf_net [get_bd_intf_pins imageinfo/s_axi_ctrl] [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI]
+
+set_property source_mgmt_mode All [current_project]
+create_bd_cell -type module -reference ConfigStore imageinfo
+#set_property -dict [list \
+#    CONFIG.g_ConstData {0x32764832789} \
+#    CONFIG.g_ConstDataLength {20} \
+#] [get_bd_cells imageinfo]
+connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M04_AXI] [get_bd_intf_pins imageinfo/p_regs]
+connect_bd_net [get_bd_ports ap_clk] [get_bd_pins imageinfo/p_clk]
+connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins imageinfo/p_rst_n]
+assign_bd_address [get_bd_addr_segs {imageinfo/p_regs/reg0 }]
+
 
 # AXI Perfmon
 
@@ -241,7 +254,8 @@ include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctr
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_data_selector_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_hls_streamgen_Reg] >> $log_file
 include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_metal_switch_Reg] >> $log_file
-include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_Reg] >> $log_file
+#include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_Reg] >> $log_file
+include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_imageinfo_reg0] >> $log_file
 
 # include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_*_Reg] >> $log_file
 
