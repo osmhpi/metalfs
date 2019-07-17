@@ -18,7 +18,7 @@ size_t FileDataSource::reportTotalSize() {
 }
 
 FileDataSource::FileDataSource(std::string filename, uint64_t offset, uint64_t size)
-        : CardMemoryDataSource(0, size), _offset(offset), _filename(std::move(filename)) {
+        : DataSource(offset, size), _filename(std::move(filename)) {
   if (size > 0) {
     if (_filename.empty())
       return;
@@ -29,7 +29,7 @@ FileDataSource::FileDataSource(std::string filename, uint64_t offset, uint64_t s
 }
 
 FileDataSource::FileDataSource(std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
-        : CardMemoryDataSource(0, size), _extents(extents), _offset(offset) {}
+        : DataSource(offset, size), _extents(extents) {}
 
 uint64_t FileDataSource::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
@@ -53,7 +53,7 @@ void FileDataSource::configure(SnapAction &action) {
   // TODO: There is a potential race condition when the file metadata was modified between obtaining the extent list and calling configure()
 
   // Transfer extent list
-  {
+
     auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
             sizeof(uint64_t) * (
                     8 // words for the prefix
@@ -77,41 +77,13 @@ void FileDataSource::configure(SnapAction &action) {
     }
 
     free(job_struct);
-  }
 
-  auto file_contents_in_dram_offset = READ_FILE_DRAM_BASEADDR + (_offset % fpga::StorageBlockSize);
-
-  uint64_t block_offset = _offset / fpga::StorageBlockSize;
-  uint64_t end_block_offset = (_offset + _size) / fpga::StorageBlockSize;
-  uint64_t blocks_length = end_block_offset - block_offset;
-  if ((_offset + _size) % fpga::StorageBlockSize)
-    blocks_length++;
-
-  auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(4 * sizeof(uint64_t)));
-  job_struct[0] = htobe64(0); // Slot
-  job_struct[1] = htobe64(block_offset); // File offset
-  job_struct[2] = htobe64(READ_FILE_DRAM_BASEADDR); // DRAM target address
-  job_struct[3] = htobe64(blocks_length); // number of blocks to load
-
-  try {
-    action.execute_job(fpga::JobType::Mount, reinterpret_cast<char *>(job_struct));
-  } catch (std::exception &ex) {
-    free(job_struct);
-    throw ex;
-  }
-
-  free(job_struct);
-
-  setAddress(file_contents_in_dram_offset);
-
-  CardMemoryDataSource::configure(action);
 }
 
 void FileDataSource::finalize(SnapAction &action) {
-  CardMemoryDataSource::finalize(action);
-
+    (void)action;
   // Advance offset
-  _offset += _size;
+  _address += _size;
 }
 
 } // namespace metal

@@ -82,6 +82,7 @@ enum class AddressType : uint16_t {
 };
 
 enum class MapType : uint16_t {
+    None,
     NVMe
 };
 

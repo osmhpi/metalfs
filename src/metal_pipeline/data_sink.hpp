@@ -23,7 +23,7 @@ public:
             _address,
             static_cast<uint32_t>(_size),
             addressType(),
-            0 /* padding */
+            fpga::MapType::None
         };
     }
 

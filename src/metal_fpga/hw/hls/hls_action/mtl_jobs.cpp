@@ -5,8 +5,6 @@
 #include "axi_switch.h"
 #include "mtl_endian.h"
 #include "operators.h"
-#include "mtl_op_file.h"
-#include "mtl_file.h"
 
 namespace metal {
 namespace fpga {

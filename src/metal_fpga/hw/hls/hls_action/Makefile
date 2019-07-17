@@ -7,10 +7,8 @@ srcs += \
 	axi_switch.cpp \
 	axi_perfmon.cpp \
 	mtl_extmap.cpp \
-	mtl_file.cpp \
 	mtl_jobs.cpp \
 	mtl_jobstruct.cpp \
-	mtl_op_file.cpp \
 	mtl_op_mem.cpp \
 	operators.cpp \
 	hls_action.cpp

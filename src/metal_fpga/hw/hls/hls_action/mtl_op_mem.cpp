@@ -75,6 +75,7 @@ uint64_t resolve_effective_address (Address &config, uint64_t current_offset) {
     return current_offset;
 }
 
+template<bool Write>
 void issue_pmem_transfer_command(uint64_t current_offset, mtl_extmap_t &map, NVMeCommandStream &nvme_cmd, NVMeResponseStream &nvme_resp) {
     mtl_extmap_seek(map, current_offset / StorageBlockSize);
 
@@ -82,11 +83,13 @@ void issue_pmem_transfer_command(uint64_t current_offset, mtl_extmap_t &map, NVM
     auto drive_id = logical_block_offset[0];
     auto physical_block_offset = (logical_block_offset >> 1) * (StorageBlockSize / 512);
 
-    nvme_cmd.write(NVMeCommand{
-        NVMeDRAMWriteOffset + current_offset,
-        physical_block_offset,
-        1
-    });
+    NVMeCommand cmd;
+    cmd.dram_offset() = (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset;
+    cmd.nvme_block_offset() = physical_block_offset;
+    cmd.num_blocks() = 1;
+    cmd.drive() = drive_id;
+
+    nvme_cmd.write(cmd);
 
     // Wait for completion
     nvme_resp.read();
@@ -131,7 +134,7 @@ void op_mem_read(
 
             #ifdef NVME_ENABLED
                 if (config.map == MapType::NVMe)
-                    issue_pmem_transfer_command(bytes_read, nvme_read_extmap, nvme_read_cmd, nvme_read_resp);
+                    issue_pmem_transfer_command</*write=*/false>(bytes_read, nvme_read_extmap, nvme_read_cmd, nvme_read_resp);
             #endif
 
                 // Stream data in block-sized chunks (64K)
@@ -180,7 +183,7 @@ uint64_t op_mem_write(
 
             #ifdef NVME_ENABLED
                 if (config.map == MapType::NVMe)
-                    issue_pmem_transfer_command(bytes_written, nvme_write_extmap, nvme_write_cmd, nvme_write_resp);
+                    issue_pmem_transfer_command</*write=*/true>(bytes_written, nvme_write_extmap, nvme_write_cmd, nvme_write_resp);
             #endif
 
                 bytes_written += num_bytes_transferred;

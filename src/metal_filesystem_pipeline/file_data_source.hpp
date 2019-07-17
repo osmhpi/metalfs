@@ -3,17 +3,17 @@
 
 namespace metal {
 
-class FileDataSource : public CardMemoryDataSource {
+class FileDataSource : public DataSource {
 
   // Common API
  public:
  protected:
+   fpga::AddressType addressType() override { return fpga::AddressType::NVMe; }
 
-  void configure(SnapAction &action) override;
-  void finalize(SnapAction &action) override;
+   void configure(SnapAction &action) override;
+   void finalize(SnapAction &action) override;
 
-  std::vector<mtl_file_extent> _extents;
-  uint64_t _offset;
+   std::vector<mtl_file_extent> _extents;
 
 
   // API to be used from PipelineStorage (extent list-based)

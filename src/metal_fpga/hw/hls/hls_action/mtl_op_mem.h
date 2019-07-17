@@ -25,10 +25,12 @@ typedef hls::stream<axi_datamover_ibtt_status_t> axi_datamover_status_ibtt_strea
 typedef ap_uint<103> axi_datamover_command_t;
 typedef hls::stream<axi_datamover_command_t> axi_datamover_command_stream_t;
 
-struct NVMeCommand {
-    ap_uint<64> dram_offset;
-    ap_uint<64> nvme_block_offset;
-    ap_uint<64> num_blocks;
+class NVMeCommand : public ap_uint<168> {
+public:
+    auto dram_offset()          -> decltype(ap_uint<168>::range(63, 0))     { return this->range(63, 0); }
+    auto nvme_block_offset()    -> decltype(ap_uint<168>::range(127, 64))   { return this->range(127, 64); }
+    auto num_blocks()           -> decltype(ap_uint<168>::range(159, 128))  { return this->range(159, 128); }
+    auto drive()                -> decltype(ap_uint<168>::range(162, 160))  { return this->range(162, 160); }
 };
 
 typedef hls::stream<NVMeCommand> NVMeCommandStream;

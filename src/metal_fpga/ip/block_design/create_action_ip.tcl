@@ -22,6 +22,7 @@ puts "                        Configuring IP Catalog ......"
 set_property ip_repo_paths [concat \
     [glob -dir $action_root/hw/hls */hls_impl_ip] \
     $action_root/ip/image_info/ip_user_files \
+    $action_root/ip/nvme_arbiter/ip_user_files \
     [eval list [exec sh -c "$action_root/hw/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip=' | paste -s -d ' '"]] \
 ] [current_project] >> $log_file
 update_ip_catalog >> $log_file

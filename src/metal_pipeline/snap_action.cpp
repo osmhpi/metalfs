@@ -94,10 +94,6 @@ std::string SnapAction::job_type_to_string(fpga::JobType job)
         return "ReadImageInfo";
     case fpga::JobType::Map:
         return "Map";
-    case fpga::JobType::Mount:
-        return "Mount";
-    case fpga::JobType::Writeback:
-        return "Writeback";
     case fpga::JobType::ConfigureStreams:
         return "ConfigureStreams";
     case fpga::JobType::ResetPerfmon:

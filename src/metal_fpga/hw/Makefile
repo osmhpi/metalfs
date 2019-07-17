@@ -48,7 +48,7 @@ endif
 
 all: vhd_files hls $(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml
 
-$(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl $(ACTION_ROOT)/ip/block_design/create_bd.tcl $(ACTION_ROOT)/ip/block_design/instantiate_operators.tcl $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml
+$(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl $(ACTION_ROOT)/ip/block_design/create_bd.tcl $(ACTION_ROOT)/ip/block_design/instantiate_operators.tcl $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml $(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml
 	@echo "                        Generating Block Design"
 	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 
@@ -62,6 +62,9 @@ $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROO
 	@echo "                        Generating Image Info"
 	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/image_info/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 
+$(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl
+	@echo "                        Generating NVMe Arbiter"
+	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 
 hls: $(hls_components)
 

@@ -5,12 +5,10 @@
 #include "axi_switch.h"
 #include "mtl_jobs.h"
 #include "mtl_endian.h"
-#include "mtl_file.h"
 #include "mtl_jobstruct.h"
 #include <metal/stream.h>
 
 #include "mtl_op_mem.h"
-#include "mtl_op_file.h"
 
 #define HW_RELEASE_LEVEL       0x00000013
 

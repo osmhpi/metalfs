@@ -4,6 +4,7 @@ set_property ip_repo_paths [concat \
     [get_property ip_repo_paths [current_project]] \
     [glob -dir $action_hw_dir/hls */hls_impl_ip] \
     $action_dir/ip/image_info/ip_user_files \
+    $action_dir/ip/nvme_arbiter/ip_user_files \
     [eval list [exec sh -c "$action_hw_dir/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip=' | paste -s -d ' '"]] \
     $action_dir/ip/block_design/ip_user_files \
 ] [current_project] >> $log_file
