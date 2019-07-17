@@ -7,9 +7,6 @@
 namespace metal {
 namespace fpga {
 
-extern mtl_extmap_t read_extmap;
-extern mtl_extmap_t write_extmap;
-
 }  // namespace fpga
 }  // namespace metal
 

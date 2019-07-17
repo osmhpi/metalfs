@@ -88,8 +88,8 @@ $(vhd_files): $(vhd_srcs) .snap_config
 clean:
 	@$(RM) $(ACTION_ROOT)/ip/*.log
 	@$(RM) $(ACTION_ROOT)/ip/*.jou
-	@$(RM) -fr $(ACTION_ROOT)/ip/action_ip_prj
-	@$(RM) -fr $(ACTION_ROOT)/ip/ip_user_files
+	@$(RM) -fr $(ACTION_ROOT)/ip/block_design/action_ip_prj
+	@$(RM) -fr $(ACTION_ROOT)/ip/block_design/ip_user_files
 	@$(RM) $(vhd_files)
 
 	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done

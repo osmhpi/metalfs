@@ -23,20 +23,6 @@ enum class JobType : uint64_t {
     //   word(2n+8): extent n begin | R
     //   word(2n+9): extent n count | R
 
-    Mount,
-    // 64bit words at job_address:
-    //   word0: slot                | R
-    //   word1: file_offset (blocks)| R
-    //   word2: dram_offset         | R
-    //   word3: length (blocks)     | R
-
-    Writeback,
-    // 64bit words at job_address:
-    //   word0: slot                | R
-    //   word1: file_offset (blocks)| R
-    //   word2: dram_offset         | R
-    //   word3: length (blocks)     | R
-
     ConfigureStreams,
     // 64bit words at job_address:
     //   word0:                     | R
@@ -95,11 +81,15 @@ enum class AddressType : uint16_t {
     Random
 };
 
+enum class MapType : uint16_t {
+    NVMe
+};
+
 struct Address {
     uint64_t addr;
     uint32_t size;
     AddressType type;
-    uint16_t padding;
+    MapType map;
 }; /* 16 bytes */
 
 struct Job {

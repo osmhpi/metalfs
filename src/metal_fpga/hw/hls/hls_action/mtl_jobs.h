@@ -12,7 +12,10 @@ namespace fpga {
 mtl_retc_t process_action(snap_membus_t * mem_in,
                           snap_membus_t * mem_out,
 #ifdef NVME_ENABLED
-                          snapu32_t * nvme,
+                          NVMeCommandStream &nvme_read_cmd,
+                          NVMeResponseStream &nvme_read_resp,
+                          NVMeCommandStream &nvme_write_cmd,
+                          NVMeResponseStream &nvme_write_resp,
 #endif
                           axi_datamover_command_stream_t &mm2s_cmd,
                           axi_datamover_status_stream_t &mm2s_sts,

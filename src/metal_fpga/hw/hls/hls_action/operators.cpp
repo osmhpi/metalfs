@@ -39,6 +39,12 @@ void do_run_operators(
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *random_ctrl,
+#ifdef NVME_ENABLED
+    NVMeCommandStream &nvme_read_cmd,
+    NVMeResponseStream &nvme_read_resp,
+    NVMeCommandStream &nvme_write_cmd,
+    NVMeResponseStream &nvme_write_resp,
+#endif
     snapu64_t &enable_mask,
     snapu64_t *bytes_written
 ) {
@@ -51,12 +57,20 @@ void do_run_operators(
             mm2s_cmd,
             mm2s_sts,
             random_ctrl,
+#ifdef NVME_ENABLED
+            nvme_read_cmd,
+            nvme_read_resp,
+#endif
             read_mem_config);
 
         // Output Operators
         *bytes_written = op_mem_write(
             s2mm_cmd,
             s2mm_sts,
+#ifdef NVME_ENABLED
+            nvme_write_cmd,
+            nvme_write_resp,
+#endif
             write_mem_config);
     }
 }
@@ -69,6 +83,12 @@ void do_configure_and_run_operators(
     axi_datamover_command_stream_t &s2mm_cmd,
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
+#ifdef NVME_ENABLED
+    NVMeCommandStream &nvme_read_cmd,
+    NVMeResponseStream &nvme_read_resp,
+    NVMeCommandStream &nvme_write_cmd,
+    NVMeResponseStream &nvme_write_resp,
+#endif
     snapu64_t &enable_mask,
     snapu64_t *bytes_written
 ) {
@@ -106,7 +126,14 @@ void do_configure_and_run_operators(
 
     if (enable_mask[0]) {
         // This triggers the data source and sink (not enabled in preparation mode)
-        do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl, enable_mask, bytes_written);
+        do_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, random_ctrl,
+#ifdef NVME_ENABLED
+                            nvme_read_cmd,
+                            nvme_read_resp,
+                            nvme_write_cmd,
+                            nvme_write_resp,
+#endif
+                            enable_mask, bytes_written);
     }
 
     for (int i = 0; i < 8; ++i) {
@@ -126,12 +153,25 @@ void action_run_operators(
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
     hls::stream<snapu8_t> &interrupt_reg,
+#ifdef NVME_ENABLED
+    NVMeCommandStream &nvme_read_cmd,
+    NVMeResponseStream &nvme_read_resp,
+    NVMeCommandStream &nvme_write_cmd,
+    NVMeResponseStream &nvme_write_resp,
+#endif
     snapu64_t enable_mask,
     snapu64_t *bytes_written
 ) {
     #pragma HLS DATAFLOW
     poll_interrupts(enable_mask, interrupt_reg);
-    do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl, enable_mask, bytes_written);
+    do_configure_and_run_operators(mem_in, mem_out, mm2s_cmd, mm2s_sts, s2mm_cmd, s2mm_sts, metal_ctrl,
+#ifdef NVME_ENABLED
+                                    nvme_read_cmd,
+                                    nvme_read_resp,
+                                    nvme_write_cmd,
+                                    nvme_write_resp,
+#endif
+                                    enable_mask, bytes_written);
 }
 
 }  // namespace fpga

@@ -19,15 +19,18 @@
 // ------------------------------------------------
 void hls_action(snap_membus_t * din,
                 snap_membus_t * dout,
-#ifdef NVME_ENABLED
-                snapu32_t * nvme,
-#endif
                 metal::fpga::axi_datamover_command_stream_t &mm2s_cmd,
                 metal::fpga::axi_datamover_status_stream_t &mm2s_sts,
                 metal::fpga::axi_datamover_command_stream_t &s2mm_cmd,
                 metal::fpga::axi_datamover_status_ibtt_stream_t &s2mm_sts,
                 snapu32_t *metal_ctrl,
                 hls::stream<snapu8_t> &interrupt_reg,
+            #ifdef NVME_ENABLED
+                metal::fpga::NVMeCommandStream &nvme_read_cmd,
+                metal::fpga::NVMeResponseStream &nvme_read_resp,
+                metal::fpga::NVMeCommandStream &nvme_write_cmd,
+                metal::fpga::NVMeResponseStream &nvme_write_resp,
+            #endif
                 metal::fpga::action_reg * action_reg,
                 action_RO_config_reg * action_config)
 {
@@ -50,9 +53,10 @@ void hls_action(snap_membus_t * din,
 #pragma HLS INTERFACE axis port=interrupt_reg
 
 #ifdef NVME_ENABLED
-    //NVME Config Interface
-#pragma HLS INTERFACE m_axi port=nvme bundle=nvme //offset=slave
-//#pragma HLS INTERFACE s_axilite port=nvme bundle=ctrl_reg offset=0x060
+    #pragma HLS INTERFACE axis port=nvme_read_cmd
+    #pragma HLS INTERFACE axis port=nvme_read_resp
+    #pragma HLS INTERFACE axis port=nvme_write_cmd
+    #pragma HLS INTERFACE axis port=nvme_write_resp
 #endif
 
     // Configure AXI4 Stream Interface
@@ -75,7 +79,10 @@ void hls_action(snap_membus_t * din,
             din,
             dout,
 #ifdef NVME_ENABLED
-            nvme,
+            nvme_read_cmd,
+            nvme_read_resp,
+            nvme_write_cmd,
+            nvme_write_resp,
 #endif
             mm2s_cmd,
             mm2s_sts,
@@ -88,4 +95,6 @@ void hls_action(snap_membus_t * din,
     }
 }
 
-#include "testbench.c"
+int main() {
+	return 0;
+}

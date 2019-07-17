@@ -34,45 +34,11 @@ static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job)
 {
     switch (job.slot) {
         case 0: {
-            mtl_extmap_load(read_extmap, job.extent_count, job.extent_address, mem_in);
+            mtl_extmap_load(nvme_read_extmap, job.extent_count, job.extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mtl_extmap_load(write_extmap, job.extent_count, job.extent_address, mem_in);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
-
-static mtl_retc_t action_mount(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_nvme_transfer_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length, false);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_nvme_transfer_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length, false);
-            return SNAP_RETC_SUCCESS;
-        }
-        default: {
-            return SNAP_RETC_FAILURE;
-        }
-    }
-}
-
-static mtl_retc_t action_writeback(snapu32_t * nvme, const mtl_job_fileop_t & job)
-{
-    switch (job.slot) {
-        case 0: {
-            mtl_nvme_transfer_buffer(nvme, read_extmap, job.file_offset, job.dram_offset, job.length, true);
-            return SNAP_RETC_SUCCESS;
-        }
-        case 1: {
-            mtl_nvme_transfer_buffer(nvme, write_extmap, job.file_offset, job.dram_offset, job.length, true);
+            mtl_extmap_load(nvme_write_extmap, job.extent_count, job.extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -109,7 +75,10 @@ static void configure_operators(snapu32_t *operator_ctrl, snap_membus_t * mem_in
 mtl_retc_t process_action(snap_membus_t * mem_in,
                           snap_membus_t * mem_out,
 #ifdef NVME_ENABLED
-                          snapu32_t * nvme,
+                          NVMeCommandStream &nvme_read_cmd,
+                          NVMeResponseStream &nvme_read_resp,
+                          NVMeCommandStream &nvme_write_cmd,
+                          NVMeResponseStream &nvme_write_resp,
 #endif
                           axi_datamover_command_stream_t &mm2s_cmd,
                           axi_datamover_status_stream_t &mm2s_sts,
@@ -171,26 +140,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 #endif
         break;
     }
-    case JobType::Mount:
-    {
-#ifdef NVME_ENABLED
-        mtl_job_fileop_t mount_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
-        result = action_mount(nvme, mount_job);
-#else
-        result = SNAP_RETC_SUCCESS;
-#endif
-        break;
-    }
-    case JobType::Writeback:
-    {
-#ifdef NVME_ENABLED
-        mtl_job_fileop_t writeback_job = mtl_read_job_fileop(mem_in, act_reg->Data.job_address);
-        result = action_writeback(nvme, writeback_job);
-#else
-        result = SNAP_RETC_SUCCESS;
-#endif
-        break;
-    }
     case JobType::ConfigureStreams:
     {
         result = action_configure_streams(switch_ctrl, mem_in, act_reg->Data.job_address);
@@ -236,6 +185,12 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
             s2mm_sts,
             metal_ctrl,
             interrupt_reg,
+#ifdef NVME_ENABLED
+            nvme_read_cmd,
+            nvme_read_resp,
+            nvme_write_cmd,
+            nvme_write_resp,
+#endif
             enable_mask,
             &bytes_written
         );

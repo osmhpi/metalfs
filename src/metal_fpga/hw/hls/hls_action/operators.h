@@ -27,6 +27,12 @@ void action_run_operators(
     axi_datamover_status_ibtt_stream_t &s2mm_sts,
     snapu32_t *metal_ctrl,
     hls::stream<snapu8_t> &interrupt_reg,
+#ifdef NVME_ENABLED
+    NVMeCommandStream &nvme_read_cmd,
+    NVMeResponseStream &nvme_read_resp,
+    NVMeCommandStream &nvme_write_cmd,
+    NVMeResponseStream &nvme_write_resp,
+#endif
     snapu64_t enable_mask,
     snapu64_t *bytes_written
 );
