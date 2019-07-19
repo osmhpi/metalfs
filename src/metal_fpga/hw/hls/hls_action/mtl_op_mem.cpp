@@ -65,14 +65,40 @@ uint64_t resolve_effective_address (Address &config, uint64_t current_offset) {
         case AddressType::NVMe:
             return ((Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset) % (1 << 31);
         case AddressType::CardDRAM:
-            return DRAMBaseOffset + current_offset;
+            return DRAMBaseOffset + config.addr + current_offset;
         //     // If we support block mappings into DRAM as well, perform translation here.
         //     return ...
         default:
             break;
     }
 
-    return current_offset;
+    return config.addr + current_offset;
+}
+
+template<typename TReadStreamElement>
+TReadStreamElement read(hls::stream<TReadStreamElement> &stream, hls::stream<ap_uint<1>> &signal) {
+    signal.read();
+    return stream.read();
+}
+
+template<typename TWriteStreamElement>
+void write(hls::stream<TWriteStreamElement> &stream, TWriteStreamElement &data, hls::stream<ap_uint<1>> &signal) {
+    stream.write(data);
+    signal.write(0);
+}
+
+template<typename TReadStreamElement, typename TWriteStreamElement>
+TReadStreamElement writeThenRead(hls::stream<TWriteStreamElement> &writeStream, TWriteStreamElement &data, hls::stream<TReadStreamElement> &readStream) {
+
+    // HLS is not aware of a dependency between the write and read streams, so it seems to synthesize logic
+    // that attempts to read before writing. In order to clarify the dependency we have to get a little
+    // creative here...
+
+    hls::stream<ap_uint<1>> signal;
+
+#pragma HLS DATAFLOW
+    write(writeStream, data, signal);
+    return read(readStream, signal);
 }
 
 template<bool Write>
@@ -86,13 +112,10 @@ void issue_pmem_transfer_command(uint64_t current_offset, mtl_extmap_t &map, NVM
     NVMeCommand cmd;
     cmd.dram_offset() = (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset;
     cmd.nvme_block_offset() = physical_block_offset;
-    cmd.num_blocks() = 1;
+    cmd.num_blocks() = StorageBlockSize / 512;  // 512 = native block size
     cmd.drive() = drive_id;
 
-    nvme_cmd.write(cmd);
-
-    // Wait for completion
-    nvme_resp.read();
+    writeThenRead(nvme_cmd, cmd, nvme_resp);
 }
 
 template<typename TStatusWord>
@@ -107,10 +130,8 @@ TStatusWord issue_transfer_command(uint64_t bytes_remaining, uint64_t effective_
     cmd[30]         = end_of_frame;
     cmd[23]         = 1;                    // AXI burst type: INCR
     cmd(22, 0)      = transfer_bytes;
-    dm_cmd.write(cmd);
 
-    // Wait for completion
-    return dm_sts.read();
+    return writeThenRead(dm_cmd, cmd, dm_sts);
 }
 
 void op_mem_read(

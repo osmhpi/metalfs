@@ -62,7 +62,7 @@ $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROO
 	@echo "                        Generating Image Info"
 	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/image_info/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 
-$(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl
+$(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl $(ACTION_ROOT)/ip/nvme_arbiter/NvmeControllerWrapper.vhd
 	@echo "                        Generating NVMe Arbiter"
 	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
 

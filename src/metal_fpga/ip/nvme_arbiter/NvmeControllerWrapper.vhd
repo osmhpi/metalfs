@@ -28,7 +28,7 @@ entity NvmeControllerWrapper is
     p_rspWr_TVALID  : out std_logic;
     p_rspWr_TREADY  : in  std_logic;
 
-    p_nvme_AWADDR   : out std_logic_vector(63 downto 0);
+    p_nvme_AWADDR   : out std_logic_vector(31 downto 0);
     p_nvme_AWVALID  : out std_logic;
     p_nvme_WDATA    : out std_logic_vector(31 downto 0);
     p_nvme_WSTRB    : out std_logic_vector(3 downto 0);

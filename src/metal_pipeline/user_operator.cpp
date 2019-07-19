@@ -16,7 +16,7 @@ extern "C" {
 
 namespace metal {
 
-UserOperator::UserOperator(std::string id, std::string manifest) : _id(id), _is_prepared(false) {
+UserOperator::UserOperator(std::string id, const std::string& manifest) : _manifest(jv_null()), _id(std::move(id)), _is_prepared(false) {
 
     // Memory management with jq is a little cumbersome.
     // jv.h says:
