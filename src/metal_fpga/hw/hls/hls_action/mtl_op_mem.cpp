@@ -22,7 +22,8 @@ mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config
     if (read) {
         switch (config.type) {
             case AddressType::Host:
-            case AddressType::CardDRAM: {
+            case AddressType::CardDRAM:
+            case AddressType::NVMe: {
                 switch_set_mapping(data_preselect_switch_ctrl, 0, 0); // DataMover -> Metal Switch
                 break;
             }
@@ -35,7 +36,8 @@ mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config
     } else {
         switch (config.type) {
             case AddressType::Host:
-            case AddressType::CardDRAM:{
+            case AddressType::CardDRAM:
+            case AddressType::NVMe: {
                 switch_set_mapping(data_preselect_switch_ctrl, 2, 1); // Metal Switch -> DataMover
                 switch_disable_output(data_preselect_switch_ctrl, 2); // X -> Stream Sink
                 break;
@@ -57,13 +59,14 @@ mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config
 const uint64_t DRAMBaseOffset = 0x8000000000000000;
 
 const uint64_t NVMeDRAMReadOffset = DRAMBaseOffset + 0;
-const uint64_t NVMeDRAMWriteOffset = DRAMBaseOffset + (1 << 31); // 2 GiB
+const uint64_t NVMeDRAMWriteOffset = DRAMBaseOffset + (1u << 31); // 2 GiB
 
 template<bool Write>
 uint64_t resolve_effective_address (Address &config, uint64_t current_offset) {
     switch (config.type) {
         case AddressType::NVMe:
-            return ((Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset) % (1 << 31);
+            // Support transfer lengths of > 2GiB, but wrap around
+            return ((Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + (current_offset % (1u << 31)));
         case AddressType::CardDRAM:
             return DRAMBaseOffset + config.addr + current_offset;
         //     // If we support block mappings into DRAM as well, perform translation here.
@@ -148,13 +151,12 @@ void op_mem_read(
         case AddressType::Host:
         case AddressType::CardDRAM:
         case AddressType::NVMe: {
-            const int N = 64; // Address width
             uint64_t bytes_read = 0;
             while (bytes_read < config.size) {
                 uint64_t effective_address = resolve_effective_address</*write=*/false>(config, bytes_read);
 
             #ifdef NVME_ENABLED
-                if (config.map == MapType::NVMe)
+                if (config.type == AddressType::NVMe)
                     issue_pmem_transfer_command</*write=*/false>(bytes_read, nvme_read_extmap, nvme_read_cmd, nvme_read_resp);
             #endif
 
@@ -203,7 +205,7 @@ uint64_t op_mem_write(
                 auto num_bytes_transferred = result.data(30, 8);
 
             #ifdef NVME_ENABLED
-                if (config.map == MapType::NVMe)
+                if (config.type == AddressType::NVMe)
                     issue_pmem_transfer_command</*write=*/true>(bytes_written, nvme_write_extmap, nvme_write_cmd, nvme_write_resp);
             #endif
 

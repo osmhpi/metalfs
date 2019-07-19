@@ -49,11 +49,6 @@ architecture NvmeController of NvmeController is
   type t_CmdState is (IdleRd, IdleWr, AckRd, AckWr);
   signal s_cmdState : t_CmdState;
 
-  signal s_readDrive : integer range 0 to c_NvmeDrivesPresent-1;
-  signal s_readDriveValid : std_logic;
-  signal s_writeDrive : integer range 0 to c_NvmeDrivesPresent-1;
-  signal s_writeDriveValid : std_logic;
-
   signal s_cmdBufferAddr : t_NvmeBufferAddr;
   signal s_cmdDrive : t_NvmeDriveAddr;
   signal s_cmdBlockAddr : t_NvmeBlockAddr;
@@ -195,7 +190,7 @@ begin
     to_unsigned(20, s_regAddr'length) when WriteControl,
     to_unsigned(4, s_regAddr'length) when ReadStatus,
     (others => '0') when others;
-  with s_state select s_regAddr <=
+  with s_state select s_regWrData <=
     s_cmdBufferAddr(31 downto  0) when WriteBufferAddrLoPush,
     s_cmdBufferAddr(31 downto  0) when WriteBufferAddrLo,
     s_cmdBufferAddr(63 downto 32) when WriteBufferAddrHi,
@@ -261,10 +256,16 @@ begin
     v_cmdWrDrive := to_integer(pi_cmdWr_ms.drive);
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
-        s_cmdState <= IdleRd;
-        s_driveInc <= (others => '0');
         po_cmdRd_sm.ready <= '0';
         po_cmdWr_sm.ready <= '0';
+        s_driveInc <= (others => '0');
+        s_cmdBufferAddr  <= (others => '0');
+        s_cmdDrive       <= (others => '0');
+        s_cmdBlockAddr   <= (others => '0');
+        s_cmdBlockCnt    <= (others => '0');
+        s_cmdWrNotRd     <= '0';
+        s_cmdValid      <= '0';
+        s_cmdState <= IdleRd;
       else
         s_driveInc <= (others => '0');
         po_cmdRd_sm.ready <= '0';
