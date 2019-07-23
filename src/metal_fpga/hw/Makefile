@@ -52,7 +52,7 @@ block_design: $(hls_ip) nvme_arbiter image_info
 	@echo "                        Generating Block Design"
 	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) make -C $(ACTION_ROOT)/ip/block_design ip
 
-image_info:
+image_info: $(IMAGE_TARGET)
 	@echo "                        Generating Image Info"
 	@make -C $(ACTION_ROOT)/ip/image_info ip
 

@@ -12,8 +12,8 @@ set i 0
 dict for {id path} $operators {
     set internal_id [ exec jq --arg id $id -r ".operators\[\$id\].internal_id" $image_target ]
 
-    set component [exec jq -r .main $path/operator.json]
-    create_bd_cell -type ip -vlnv xilinx.com:hls:$component:1.0 op_$id
+    set component [exec jq -r .component $path/operator.json]
+    create_bd_cell -type ip -vlnv $component op_$id
 
     connect_bd_intf_net [get_bd_intf_pins op_$id/axis_output] [get_bd_intf_pins metal_switch/S0${internal_id}_AXIS]
     connect_bd_intf_net [get_bd_intf_pins metal_switch/M0${internal_id}_AXIS] [get_bd_intf_pins op_${id}/axis_input]

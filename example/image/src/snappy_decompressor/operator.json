@@ -1,18 +1,19 @@
 {
-    "main": "top",
+    "main": "SnappyWrapper",
+    "component": "user.org:user:SnappyWrapper:1.0",
     "description": "Unpack snappy-compressed data",
     "options": {
         "compressed-length": {
             "short": "c",
             "type": "int",
             "description": "Length of the compressed payload",
-            "offset": 256
+            "offset": 16
         },
         "uncompressed-length": {
             "short": "u",
             "type": "int",
             "description": "Length of the uncompressed payload",
-            "offset": 512
+            "offset": 32
         }
     }
 }
