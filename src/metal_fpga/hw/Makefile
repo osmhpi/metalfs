@@ -62,7 +62,7 @@ nvme_arbiter:
 
 hls: $(hls_components)
 
-$(IMAGE_TARGET):
+$(IMAGE_TARGET): $(IMAGE_JSON)
 	@./generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
 
 hls/hls_imageinfo: $(IMAGE_TARGET)

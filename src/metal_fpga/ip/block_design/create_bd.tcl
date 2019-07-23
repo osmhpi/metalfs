@@ -44,11 +44,6 @@ make_bd_intf_pins_external  [get_bd_intf_pins axi_host_mem_crossbar/M00_AXI]
 set_property name m_axi_host_mem [get_bd_intf_ports M00_AXI_0]
 
 if { ( $::env(NVME_USED) == "TRUE" ) } {
-    # set_property -dict [list \
-    #     CONFIG.C_M_AXI_NVME_ENABLE_ID_PORTS {true} \
-    #     CONFIG.C_M_AXI_NVME_ENABLE_USER_PORTS {true} \
-    # ] [get_bd_cells snap_action]
-
     create_bd_cell -type ip -vlnv user.org:user:NvmeControllerWrapper:1.0 nvme_arbiter
     connect_bd_net [get_bd_ports ap_clk] [get_bd_pins nvme_arbiter/pi_clk]
     connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins nvme_arbiter/pi_rst_n]
@@ -142,7 +137,7 @@ if { ( $::env(DDRI_USED) == "TRUE" ) } {
     set_property -dict [list CONFIG.ADDR_WIDTH {32} CONFIG.DATA_WIDTH {512}] [get_bd_intf_ports m_axi_card_mem0]
 
     set_property -dict [list CONFIG.M00_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M01_A00_BASE_ADDR.VALUE_SRC USER CONFIG.M00_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.M01_A00_ADDR_WIDTH.VALUE_SRC USER CONFIG.ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells axi_crossbar]
-    set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.M00_A00_BASE_ADDR {0} CONFIG.M01_A00_BASE_ADDR {1000000000000000000000000000000000000000000000000000000000000000} CONFIG.M00_A00_ADDR_WIDTH {63} CONFIG.M01_A00_ADDR_WIDTH {32}] [get_bd_cells axi_crossbar]
+    set_property -dict [list CONFIG.ADDR_WIDTH {64} CONFIG.M00_A00_BASE_ADDR {0} CONFIG.M01_A00_BASE_ADDR {1000000000000000000000000000000000000000000000000000000000000000 } CONFIG.M00_A00_ADDR_WIDTH {63} CONFIG.M01_A00_ADDR_WIDTH {32}] [get_bd_cells axi_crossbar]
 
     set_property -dict [list CONFIG.AWUSER_WIDTH.VALUE_SRC USER CONFIG.ARUSER_WIDTH.VALUE_SRC USER CONFIG.WUSER_WIDTH.VALUE_SRC USER CONFIG.RUSER_WIDTH.VALUE_SRC USER CONFIG.BUSER_WIDTH.VALUE_SRC USER] [get_bd_cells axi_crossbar]
     set_property -dict [list CONFIG.AWUSER_WIDTH {1} CONFIG.ARUSER_WIDTH {1} CONFIG.WUSER_WIDTH {1} CONFIG.RUSER_WIDTH {1} CONFIG.BUSER_WIDTH {1}] [get_bd_cells axi_crossbar]

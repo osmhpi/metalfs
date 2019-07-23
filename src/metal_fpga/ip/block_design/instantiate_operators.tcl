@@ -27,9 +27,9 @@ dict for {id path} $operators {
     set interrupt_id [expr $internal_id - 1]
     connect_bd_net [get_bd_pins op_$id/interrupt] [get_bd_pins interrupt_concat/In${interrupt_id}]
 
-    delete_bd_objs [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg]  >> $log_file
+    delete_bd_objs [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg*]  >> $log_file
     assign_bd_address [get_bd_addr_segs {op_${id}/s_axi_control/Reg }]  >> $log_file
-    include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg]  >> $log_file
+    include_bd_addr_seg [get_bd_addr_segs -excluded snap_action/Data_m_axi_metal_ctrl_V/SEG_op_${id}_Reg*]  >> $log_file
 
     set i [expr max($i, $internal_id)]
 }

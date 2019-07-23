@@ -5,7 +5,7 @@ sources += \
 
 ip: ip_user_files/component.xml
 
-info: $(IMAGE_TARGET)
+info:
 	@jq -c . $(IMAGE_TARGET) | xxd -p | tr -d '\n' > info
 
 image_info.vhd: image_info.vhd_source info
