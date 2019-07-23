@@ -46,25 +46,19 @@ endif
 
 .PHONY: config clean vhdl $(hls_components)
 
-all: vhd_files hls $(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml
+all: vhd_files hls block_design
 
-$(ACTION_ROOT)/ip/block_design/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl $(ACTION_ROOT)/ip/block_design/create_bd.tcl $(ACTION_ROOT)/ip/block_design/instantiate_operators.tcl $(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml $(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml
+block_design: $(hls_ip) nvme_arbiter image_info
 	@echo "                        Generating Block Design"
-	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/block_design/create_action_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) make -C $(ACTION_ROOT)/ip/block_design ip
 
-$(ACTION_ROOT)/ip/image_info/info: $(IMAGE_TARGET)
-	@jq -c . $(IMAGE_TARGET) | xxd -p | tr -d '\n' > info
-
-$(ACTION_ROOT)/ip/image_info/image_info.vhd: $(ACTION_ROOT)/ip/image_info/image_info.vhd_source $(ACTION_ROOT)/ip/image_info/info
-	$(ACTION_ROOT)/ip/image_info/format_vhd $< $(ACTION_ROOT)/ip/image_info/info $@
-
-$(ACTION_ROOT)/ip/image_info/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/image_info/create_ip.tcl $(ACTION_ROOT)/ip/image_info/config_store.vhd $(ACTION_ROOT)/ip/image_info/image_info.vhd
+image_info:
 	@echo "                        Generating Image Info"
-	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/image_info/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+	@make -C $(ACTION_ROOT)/ip/image_info ip
 
-$(ACTION_ROOT)/ip/nvme_arbiter/ip_user_files/component.xml: $(hls_ip) $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl $(ACTION_ROOT)/ip/nvme_arbiter/NvmeControllerWrapper.vhd
+nvme_arbiter:
 	@echo "                        Generating NVMe Arbiter"
-	@vivado -quiet -mode batch -source $(ACTION_ROOT)/ip/nvme_arbiter/create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+	@make -C $(ACTION_ROOT)/ip/nvme_arbiter ip
 
 hls: $(hls_components)
 

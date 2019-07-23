@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 
 use work.fosi_ctrl.all;
 use work.fosi_nvme.all;
-use work.fose_util.all;
+use work.fosi_util.all;
 
 
 entity NvmeControllerWrapper is
@@ -170,7 +170,7 @@ begin
     p_nvme_awvalid  <=            s_nvme_ms.awvalid;
     p_nvme_wdata    <= f_resizeUV(s_nvme_ms.wdata, p_nvme_wdata'length);
     p_nvme_wstrb    <= f_resizeUV(s_nvme_ms.wstrb, p_nvme_wstrb'length);
-    p_nvme_wlast    <=            s_nvme_ms.wlast;
+    p_nvme_wlast    <=            '1';                                        -- No write bursts, so wlast always '1'
     p_nvme_wuser    <=           (others => '0');
     p_nvme_wvalid   <=            s_nvme_ms.wvalid;
     p_nvme_bready   <=            s_nvme_ms.bready;
@@ -195,6 +195,5 @@ begin
     s_nvme_sm.rresp     <= f_resizeVU(p_nvme_rresp, s_nvme_sm.rresp'length);
     s_nvme_sm.rlast     <=            p_nvme_rlast;
     s_nvme_sm.rvalid    <=            p_nvme_rvalid;
-    s_nvme_sm <= c_CtrlNull_sm;                                                     -- only for NVME_USED!=TRUE
 
 end NvmeControllerWrapper;

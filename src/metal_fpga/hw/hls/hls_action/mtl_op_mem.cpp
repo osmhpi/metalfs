@@ -58,15 +58,15 @@ mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config
 
 const uint64_t DRAMBaseOffset = 0x8000000000000000;
 
-const uint64_t NVMeDRAMReadOffset = DRAMBaseOffset + 0;
-const uint64_t NVMeDRAMWriteOffset = DRAMBaseOffset + (1u << 31); // 2 GiB
+const uint64_t NVMeDRAMReadOffset  = 0;
+const uint64_t NVMeDRAMWriteOffset = (1u << 31); // 2 GiB
 
 template<bool Write>
 uint64_t resolve_effective_address (Address &config, uint64_t current_offset) {
     switch (config.type) {
         case AddressType::NVMe:
             // Support transfer lengths of > 2GiB, but wrap around
-            return ((Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + (current_offset % (1u << 31)));
+            return (DRAMBaseOffset + (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + (current_offset % (1u << 31)));
         case AddressType::CardDRAM:
             return DRAMBaseOffset + config.addr + current_offset;
         //     // If we support block mappings into DRAM as well, perform translation here.
@@ -115,7 +115,7 @@ void issue_pmem_transfer_command(uint64_t current_offset, mtl_extmap_t &map, NVM
     NVMeCommand cmd;
     cmd.dram_offset() = (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset;
     cmd.nvme_block_offset() = physical_block_offset;
-    cmd.num_blocks() = StorageBlockSize / 512;  // 512 = native block size
+    cmd.num_blocks() = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
     cmd.drive() = drive_id;
 
     writeThenRead(nvme_cmd, cmd, nvme_resp);

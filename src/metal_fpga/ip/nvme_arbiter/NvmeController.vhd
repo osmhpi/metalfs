@@ -168,9 +168,7 @@ begin
               s_state <= NextReady;
             end if;
           when NextReady =>
-            if s_regReady = '1' then
-              s_state <= ReadStatus;
-            end if;
+            s_state <= ReadStatus;
 
         end case;
       end if;
@@ -275,7 +273,7 @@ begin
           when IdleRd =>
             if pi_cmdRd_ms.valid = '1' and v_cmdRdDrive < c_NvmeDrivesPresent and s_driveFree(v_cmdRdDrive) = '1' then
               po_cmdRd_sm.ready <= '1';
-              s_driveInc(s_readDrive) <= '1';
+              s_driveInc(v_cmdRdDrive) <= '1';
               s_cmdBufferAddr  <= pi_cmdRd_ms.bufferAddr;
               s_cmdDrive       <= pi_cmdRd_ms.drive;
               s_cmdBlockAddr   <= pi_cmdRd_ms.blockAddr;
@@ -285,7 +283,7 @@ begin
               s_cmdState <= AckRd;
             elsif pi_cmdWr_ms.valid = '1' and v_cmdWrDrive < c_NvmeDrivesPresent and s_driveFree(v_cmdWrDrive) = '1' then
               po_cmdWr_sm.ready <= '1';
-              s_driveInc(s_writeDrive) <= '1';
+              s_driveInc(v_cmdWrDrive) <= '1';
               s_cmdBufferAddr  <= pi_cmdWr_ms.bufferAddr;
               s_cmdDrive       <= pi_cmdWr_ms.drive;
               s_cmdBlockAddr   <= pi_cmdWr_ms.blockAddr;
@@ -298,7 +296,7 @@ begin
           when IdleWr =>
             if pi_cmdWr_ms.valid = '1' and v_cmdWrDrive < c_NvmeDrivesPresent and s_driveFree(v_cmdWrDrive) = '1' then
               po_cmdWr_sm.ready <= '1';
-              s_driveInc(s_writeDrive) <= '1';
+              s_driveInc(v_cmdWrDrive) <= '1';
               s_cmdBufferAddr <= pi_cmdWr_ms.bufferAddr;
               s_cmdDrive      <= pi_cmdWr_ms.drive;
               s_cmdBlockAddr  <= pi_cmdWr_ms.blockAddr;
@@ -308,7 +306,7 @@ begin
               s_cmdState <= AckWr;
             elsif pi_cmdRd_ms.valid = '1' and v_cmdRdDrive < c_NvmeDrivesPresent and s_driveFree(v_cmdRdDrive) = '1' then
               po_cmdRd_sm.ready <= '1';
-              s_driveInc(s_readDrive) <= '1';
+              s_driveInc(v_cmdRdDrive) <= '1';
               s_cmdBufferAddr <= pi_cmdRd_ms.bufferAddr;
               s_cmdDrive      <= pi_cmdRd_ms.drive;
               s_cmdBlockAddr  <= pi_cmdRd_ms.blockAddr;
