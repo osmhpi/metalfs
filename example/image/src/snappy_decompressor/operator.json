@@ -1,0 +1,18 @@
+{
+    "main": "top",
+    "description": "Unpack snappy-compressed data",
+    "options": {
+        "compressed-length": {
+            "short": "c",
+            "type": "int",
+            "description": "Length of the compressed payload",
+            "offset": 256
+        },
+        "uncompressed-length": {
+            "short": "u",
+            "type": "int",
+            "description": "Length of the uncompressed payload",
+            "offset": 512
+        }
+    }
+}
