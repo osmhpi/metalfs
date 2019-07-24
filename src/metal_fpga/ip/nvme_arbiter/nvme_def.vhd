@@ -64,7 +64,7 @@ package nvme_def is
   constant c_NvmeAxiDataWidth : integer := 32;
   subtype t_NvmeAxiData is std_logic_vector (c_NvmeAxiDataWidth-1 downto 0);
 
-  constant c_NvmeAxiStrbWidth : integer := c_NvmeAxiDataWidth/8;
+  constant c_NvmeAxiStrbWidth : integer := 4;
   subtype t_NvmeAxiStrb is std_logic_vector (c_NvmeAxiStrbWidth-1 downto 0);
 
   constant c_NvmeAxiAddrWidth : integer := 32;

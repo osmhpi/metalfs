@@ -44,7 +44,7 @@ make_bd_intf_pins_external  [get_bd_intf_pins axi_host_mem_crossbar/M00_AXI]
 set_property name m_axi_host_mem [get_bd_intf_ports M00_AXI_0]
 
 if { ( $::env(NVME_USED) == "TRUE" ) } {
-    create_bd_cell -type ip -vlnv user.org:user:NvmeControllerWrapper:1.0 nvme_arbiter
+    create_bd_cell -type ip -vlnv user.org:user:NvmeController:1.0 nvme_arbiter
     connect_bd_net [get_bd_ports ap_clk] [get_bd_pins nvme_arbiter/pi_clk]
     connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins nvme_arbiter/pi_rst_n]
     connect_bd_intf_net [get_bd_intf_pins nvme_arbiter/p_rspRd] [get_bd_intf_pins snap_action/nvme_read_resp_V_V]

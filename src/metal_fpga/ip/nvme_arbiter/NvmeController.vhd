@@ -395,6 +395,7 @@ begin
     if pi_clk'event and pi_clk = '1' then
       if pi_rst_n = '0' then
         s_regState <= Idle;
+        s_regStatus <= (others => '0');
       else
         case s_regState is
 
@@ -512,6 +513,10 @@ begin
       end if;
     end if;
   end process;
+
+  with s_regState select s_regDone <=
+    '1' when Done,
+    '0' when others;
 
   p_nvme_ARADDR <= x"00000004";
   p_nvme_ARLEN <= x"00";
