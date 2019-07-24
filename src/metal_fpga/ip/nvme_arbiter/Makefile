@@ -3,10 +3,7 @@ IP_ROOT:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 sources += \
 	create_ip.tcl \
 	NvmeController.vhd \
-	NvmeControllerWrapper.vhd \
-	fosi_ctrl.vhd \
-	fosi_nvme.vhd \
-	fosi_util.vhd
+  	nvme_def.vhd
 
 ip: ip_user_files/component.xml
 

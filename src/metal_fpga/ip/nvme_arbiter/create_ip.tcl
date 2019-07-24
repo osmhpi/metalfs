@@ -14,11 +14,8 @@ set_property simulator_language VHDL [current_project]
 set_property target_simulator XSim [current_project]
 
 add_files -norecurse \
-    $ip_dir/fosi_ctrl.vhd \
-    $ip_dir/fosi_nvme.vhd \
-    $ip_dir/fosi_util.vhd \
-    $ip_dir/NvmeController.vhd \
-    $ip_dir/NvmeControllerWrapper.vhd \
+    $ip_dir/nvme_def.vhd \
+    $ip_dir/NvmeController.vhd
 
 update_compile_order -fileset sources_1
 
