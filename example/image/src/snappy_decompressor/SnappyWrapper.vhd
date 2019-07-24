@@ -66,6 +66,27 @@ architecture SnappyWrapper of SnappyWrapper is
     return v_result;
   end f_bitCount;
 
+  function f_byteswap(v_input: std_logic_vector) return std_logic_vector is
+    constant c_input_bits : integer := v_input'length;
+    constant c_input_bytes : integer := c_input_bits / 8;
+    variable v_return : std_logic_vector(c_input_bits-1 downto 0);
+  begin
+    for v_idx in 0 to c_input_bytes-1 loop
+      v_return(8*v_idx + 7 downto 8*v_idx) := v_input(c_input_bits-8*v_idx-1 downto c_input_bits-8*v_idx-8);
+    end loop;
+    return v_return;
+  end f_byteswap;
+
+  function f_bitswap(v_input: std_logic_vector) return std_logic_vector is
+    constant c_input_bits : integer := v_input'length;
+    variable v_return : std_logic_vector(c_input_bits-1 downto 0);
+  begin
+    for v_idx in 0 to c_input_bits-1 loop
+      v_return(v_idx) := v_input(c_input_bits-v_idx-1);
+    end loop;
+    return v_return;
+  end f_bitswap;
+
   -- Decompressor Module:
   component decompressor is
     port (
@@ -156,7 +177,7 @@ begin
   -- s_dcmpLast ignored
 
   ---- Input Stream Mapping:
-  s_dcmpInData <= axis_input_TDATA;
+  s_dcmpInData <= f_byteswap(axis_input_TDATA);
   -- axis_input_TKEEP and  axis_input_TLAST ignored
   s_dcmpInValid <= axis_input_TVALID;
   axis_input_TREADY <= s_dcmpInReady;
@@ -181,8 +202,8 @@ begin
     end if;
   end process;
 
-  axis_output_TDATA <= s_dcmpOutData;
-  axis_output_TKEEP <= s_dcmpOutKeep;
+  axis_output_TDATA <= f_byteswap(s_dcmpOutData);
+  axis_output_TKEEP <= f_bitswap(s_dcmpOutKeep);
   axis_output_TLAST <= '0' when (s_byteCounter > s_tkeepBytes) else '1';
   axis_output_TVALID <= s_dcmpOutValid;
   s_dcmpOutReady <= axis_output_TREADY;

@@ -94,11 +94,17 @@ void PipelineLoop::run() {
     if (lastAgentIt->second->output_buffer) {
       hostMemoryDataSink->setDestination(lastAgentIt->second->output_buffer.value().current());
       lastAgentIt->second->output_buffer.value().swap();
+
+      // If we're writing to a pre-allocated output buffer, we can allow writing up to the buffer size
+      // (which should be at least as big as the pipeline input, i.e. <= BUFFER_SIZE)
+      hostMemoryDataSink->setSize(lastAgentIt->second->output_buffer.value().size());
+    } else {
+      // Generic case: Allow at most as many output bytes as there were input bytes
+      dataSink->setSize(size);
     }
 
     if (size) {
       dataSource->setSize(size);
-      dataSink->setSize(size);
 
       output_size = runner.run(eof);
     }
