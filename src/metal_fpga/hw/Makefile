@@ -23,13 +23,13 @@ hls_ip=$(hls_components:=/hls_impl_ip)
 ADDITIONAL_HLS_CFLAGS += -DSTREAM_BYTES=$(shell jq -r .stream_bytes $(IMAGE_JSON))
 
 ifeq ($(DDRI_USED),)
-	DDRI_USED := $(shell grep DDRI_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+	export DDRI_USED = $(shell grep DDRI_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
 ifeq ($(NVME_USED),)
-	NVME_USED := $(shell grep NVME_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+	export NVME_USED = $(shell grep NVME_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
 ifeq ($(FPGACHIP),)
-	FPGACHIP  := $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+	export FPGACHIP  = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
 
 ifeq ($(DDRI_USED),TRUE)
@@ -53,7 +53,7 @@ $(IMAGE_TARGET): $(IMAGE_JSON)
 
 block_design: $(hls_ip) nvme_arbiter image_info
 	@echo "                        Generating Block Design"
-	@DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) make -C $(ACTION_ROOT)/ip/block_design ip
+	@make -C $(ACTION_ROOT)/ip/block_design ip
 
 image_info: $(IMAGE_TARGET)
 	@echo "                        Generating Image Info"
@@ -68,8 +68,8 @@ hls: $(hls_components)
 $(hls_components):
 	@mkdir -p $(LOGS_DIR)
 	@echo "                        Generating IP from HLS component $(@F)"
-	@echo "Calling make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
-	@make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
+	@echo "Calling make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
+	@make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
 	if [ $${hls_ret} -ne 0 ]; then \
 		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
 	fi

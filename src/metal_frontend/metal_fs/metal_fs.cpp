@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
 
     auto server = std::thread(metal::Server::start, c.socket_filename(), c.registry(), c.card());
 
+    spdlog::info("Starting FUSE driver...");
     auto retc = fuse_main(args.argc, args.argv, &metal::metal_fuse_operations, nullptr);
 
     // This de-allocates the action/card, so this must be called every time we exit
