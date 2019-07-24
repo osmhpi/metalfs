@@ -7,7 +7,7 @@
             "short": "c",
             "type": "int",
             "description": "Length of the compressed payload",
-            "offset": 16
+            "offset": 24
         },
         "uncompressed-length": {
             "short": "u",

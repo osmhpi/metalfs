@@ -84,7 +84,7 @@ clean:
 	@$(RM) $(vhd_files)
 
 	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done
-	@for ip_dir in ./ip/*/; do make -C $$ip_dir clean; done
+	@for ip_dir in ../ip/*; do make -C $$ip_dir clean; done
 
 vhdl:
 

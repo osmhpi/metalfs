@@ -94,6 +94,7 @@ architecture SnappyWrapper of SnappyWrapper is
   signal s_dcmpInData    : std_logic_vector (511 downto 0);
   signal s_dcmpInValid   : std_logic;
   signal s_dcmpInReady   : std_logic;
+  signal s_dcmpInReady_n : std_logic;
   signal s_dcmpOutData   : std_logic_vector (511 downto 0);
   signal s_dcmpOutKeep   : std_logic_vector (63 downto 0);
   signal s_dcmpOutValid  : std_logic;
@@ -141,11 +142,13 @@ begin
       last => s_dcmpLast,
       data => s_dcmpInData,
       valid_in => s_dcmpInValid,
-      data_fifo_almostfull => s_dcmpInReady,
+      data_fifo_almostfull => s_dcmpInReady_n,
       data_out => s_dcmpOutData,
       byte_valid_out => s_dcmpOutKeep,
       valid_out => s_dcmpOutValid,
       wr_ready => s_dcmpOutReady);
+
+  s_dcmpInReady <= not s_dcmpInReady_n;
 
   -----------------------------------------------------------------------------
   -- Wrapper Logic
@@ -262,13 +265,13 @@ begin
               -- Ignore WSTRB for simplicity
               if    s_axi_control_AWADDR = x"00" then -- Control Register
                 s_regEventStartSet <= s_axi_control_WDATA(0);
-              elsif s_axi_control_AWADDR = x"10" then -- Input Length Lo
+              elsif s_axi_control_AWADDR = x"18" then -- Input Length Lo
                 a_regInLengthLo <= s_axi_control_WDATA;
-              elsif s_axi_control_AWADDR = x"14" then -- Input Length Hi
+              elsif s_axi_control_AWADDR = x"1C" then -- Input Length Hi
                 a_regInLengthHi <= s_axi_control_WDATA;
-              elsif s_axi_control_AWADDR = x"18" then -- Output Length Lo
+              elsif s_axi_control_AWADDR = x"20" then -- Output Length Lo
                 a_regOutLengthLo <= s_axi_control_WDATA;
-              elsif s_axi_control_AWADDR = x"1C" then -- Output Length Hi
+              elsif s_axi_control_AWADDR = x"24" then -- Output Length Hi
                 a_regOutLengthHi <= s_axi_control_WDATA;
               end if;
               s_regState <= WrAck;
@@ -276,13 +279,13 @@ begin
               if    s_axi_control_ARADDR = x"00" then -- Control Register
                 s_axi_control_RDATA <= x"0000000" & s_regReady & s_regIdle & s_regDone & s_regStart;
                 s_regEventDoneRead <= '1';
-              elsif s_axi_control_ARADDR = x"10" then -- Input Length Lo
+              elsif s_axi_control_ARADDR = x"18" then -- Input Length Lo
                 s_axi_control_RDATA <= a_regInLengthLo;
-              elsif s_axi_control_ARADDR = x"14" then -- Input Length Hi
+              elsif s_axi_control_ARADDR = x"1C" then -- Input Length Hi
                 s_axi_control_RDATA <= a_regInLengthHi;
-              elsif s_axi_control_ARADDR = x"18" then -- Output Length Lo
+              elsif s_axi_control_ARADDR = x"20" then -- Output Length Lo
                 s_axi_control_RDATA <= a_regOutLengthLo;
-              elsif s_axi_control_ARADDR = x"1C" then -- Output Length Hi
+              elsif s_axi_control_ARADDR = x"24" then -- Output Length Hi
                 s_axi_control_RDATA <= a_regOutLengthHi;
               end if;
               s_regState <= RdAck;
