@@ -8,7 +8,7 @@ ifeq ($(NVME_USED),TRUE)
 	HLS_CFLAGS += -DNVME_ENABLED
 endif
 
-# run_hls_script.tcl: .hls_cflags
+run_hls_script.tcl: hls_cflags.cache
 
 run_hls_ip_script.tcl: run_hls_script.tcl
 	@sed "s/#export_design/export_design -library user -vendor user.org -version 1.0/g" $< > $@
@@ -34,15 +34,15 @@ clean_run_hls_ip_script:
 clean_run_hls_csim_script:
 	@$(RM) run_hls_csim_script.tcl
 clean_hls_cflags:
-	@$(RM) .hls_cflags
+	@$(RM) hls_cflags.cache
+	@$(RM) hls_cflags.force
+	@$(RM) hls_cflags.sig
 
-$(srcs): .hls_cflags
+# Special sauce: we want to re-make certain targets whenever $HLS_CFLAGS changes.
+include $(METAL_ROOT)/third_party/make-utils/gmsl
+include $(METAL_ROOT)/third_party/make-utils/signature
 
-# Special sauce: we want to re-make certain targets whenever $HLS_CFLAGS changes
-# include $(METAL_ROOT)/third_party/make-utils/signature
+%.cache:
+	$(call do,echo \"$$(HLS_CFLAGS)\" > $$@)
 
-.hls_cflags:
-	@echo $(HLS_CFLAGS) > .hls_cflags
-	# $(call do,echo \"$$(HLS_CFLAGS)\" > .hls_cflags)
-
-# -include .sig
+-include hls_cflags.sig

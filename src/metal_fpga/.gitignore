@@ -5,7 +5,6 @@ hw/hls/*/hls_impl_ip
 sw/snap_fs
 ip/ipshared
 action_wrapper.vhd
-.hls_cflags
-.force
-.sig
-.snap_config
+hls_cflags.cache
+hls_cflags.force
+hls_cflags.sig

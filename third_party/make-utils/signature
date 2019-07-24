@@ -1,7 +1,5 @@
 # From https://www.cmcrossroads.com/article/rebuilding-when-cppflags-changes
 
-include $(METAL_ROOT)/third_party/make-utils/gmsl
-
 last_target :=
 
 dump_var = \$$(eval $1 := $($1))
