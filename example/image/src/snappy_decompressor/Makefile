@@ -25,4 +25,4 @@ sources += \
 ip: hls_impl_ip/component.xml
 
 hls_impl_ip/component.xml: $(sources)
-	@vivado -quiet -mode batch -source create_ip.tcl -notrace -nojournal -tclargs $(OPERATOR_ROOT) $(FPGACHIP)
+	@vivado -quiet -mode batch -source create_ip.tcl -nolog -notrace -nojournal -tclargs $(OPERATOR_ROOT) $(FPGACHIP)

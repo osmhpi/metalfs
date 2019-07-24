@@ -1,6 +1,6 @@
 set image_json      $::env(IMAGE_JSON)
 set image_target    $::env(IMAGE_TARGET)
-set operators       [eval dict create [split [exec sh -c "$action_root/hw/resolve_operators $image_json | paste -s -d ' '" ]]]
+set operators       [eval dict create [split [exec sh -c "$aip_dir/../../hw/resolve_operators $image_json | paste -s -d ' '" ]]]
 
 set streams_count [expr [dict size $operators] + 1]
 
