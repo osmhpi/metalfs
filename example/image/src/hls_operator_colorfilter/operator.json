@@ -1,5 +1,6 @@
 {
   "main": "hls_operator_colorfilter",
+  "component": "xilinx.com:hls:hls_operator_colorfilter:1.0",
   "description": "Convert bitmap to grayscale",
   "options": {}
 }

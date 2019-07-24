@@ -10,3 +10,9 @@ ip: ip_user_files/component.xml
 
 ip_user_files/component.xml: $(sources)
 	@vivado -quiet -mode batch -source create_ip.tcl -notrace -nojournal -tclargs $(ACTION_ROOT) $(FPGACHIP)
+
+clean:
+	@$(RM) *.log
+	@$(RM) *.jou
+	@$(RM) -fr managed_ip_project
+	@$(RM) -fr ip_user_files

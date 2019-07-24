@@ -4,7 +4,7 @@ set action_root [lindex $argv 0]
 set fpga_part   [lindex $argv 1]
 
 set aip_dir     $action_root/ip/block_design
-set log_dir     $action_root
+set log_dir     $action_root/logs
 set log_file    $log_dir/create_action_ip.log
 set src_dir     $aip_dir/action_ip_prj/action_ip_prj.srcs/sources_1/ip
 

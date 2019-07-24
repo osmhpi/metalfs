@@ -61,15 +61,14 @@ void UserOperator::configure(SnapAction &action) {
 
         switch ((OptionType)option.second.value().index()) {
             case OptionType::Uint: {
-                uint32_t beValue = htobe64(std::get<uint32_t>(option.second.value()));
-                // Accessing un-validated, user-provided offset: dangerous!
-                memcpy(job_config + configuration_data_offset, &beValue, sizeof(uint32_t));
-                metadata[1] = htobe32(sizeof(int) / sizeof(uint32_t)); // length
+                uint32_t value = std::get<uint32_t>(option.second.value());
+                memcpy(job_config + configuration_data_offset, &value, sizeof(uint32_t));
+                metadata[1] = htobe32(sizeof(uint32_t) / sizeof(uint32_t)); // length
                 break;
             }
             case OptionType::Bool: {
-                uint32_t beValue = htobe32(std::get<bool>(option.second.value()) ? 1 : 0);
-                memcpy(job_config + configuration_data_offset, &beValue, sizeof(uint32_t));
+                uint32_t value = std::get<bool>(option.second.value()) ? 1 : 0;
+                memcpy(job_config + configuration_data_offset, &value, sizeof(uint32_t));
                 metadata[1] = htobe32(1); // length
                 break;
             }

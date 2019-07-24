@@ -15,7 +15,7 @@ ACTION_ROOT ?= $(PWD)/..
 LOGS_DIR ?= $(PWD)/../logs
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
 
-hls_components = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
+hls_components  = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
 hls_components += $(shell $(ACTION_ROOT)/hw/resolve_operators $(IMAGE_JSON) | cut -f 2 | uniq)
 
 hls_ip=$(hls_components:=/hls_impl_ip)
@@ -29,7 +29,7 @@ ifeq ($(NVME_USED),)
 	NVME_USED := $(shell grep NVME_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
 ifeq ($(FPGACHIP),)
-	FPGACHIP := $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+	FPGACHIP  := $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
 endif
 
 ifeq ($(DDRI_USED),TRUE)
@@ -44,9 +44,12 @@ else
 	NVME_FILTER = "\-\- only for NVME_USED=TRUE"
 endif
 
-.PHONY: config clean vhdl $(hls_components)
+.PHONY: clean vhdl $(hls_components) block_design image_info nvme_arbiter
 
 all: vhd_files hls block_design
+
+$(IMAGE_TARGET): $(IMAGE_JSON)
+	@./generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
 
 block_design: $(hls_ip) nvme_arbiter image_info
 	@echo "                        Generating Block Design"
@@ -61,11 +64,6 @@ nvme_arbiter:
 	@make -C $(ACTION_ROOT)/ip/nvme_arbiter ip
 
 hls: $(hls_components)
-
-$(IMAGE_TARGET): $(IMAGE_JSON)
-	@./generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
-
-hls/hls_imageinfo: $(IMAGE_TARGET)
 
 $(hls_components):
 	@mkdir -p $(LOGS_DIR)
@@ -83,18 +81,12 @@ $(vhd_files): $(vhd_srcs) .snap_config
 	@grep -v $(DDRI_FILTER) $< | grep -v $(NVME_FILTER) > $@
 
 clean:
-	@$(RM) $(ACTION_ROOT)/ip/*.log
-	@$(RM) $(ACTION_ROOT)/ip/*.jou
-	@$(RM) -fr $(ACTION_ROOT)/ip/block_design/action_ip_prj
-	@$(RM) -fr $(ACTION_ROOT)/ip/block_design/ip_user_files
 	@$(RM) $(vhd_files)
 
 	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done
+	@for ip_dir in ./ip/*/; do make -C $$ip_dir clean; done
 
 vhdl:
 
-.snap_config: FORCE
-	@if [ -n .snap_config ]; then touch .snap_config; fi
-	@if [ $$(echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) | comm -3 .snap_config - | wc -c) -gt 0 ]; then echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) > .snap_config; fi
-
-FORCE:
+.snap_config:
+	@echo DDRI_USED=$(DDRI_USED) NVME_USED=$(NVME_USED) > .snap_config

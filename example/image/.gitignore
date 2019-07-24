@@ -6,3 +6,4 @@ src/*/hls_impl_ip
 .force
 .sig
 operators
+image_compiled.json

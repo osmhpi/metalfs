@@ -4,7 +4,7 @@ $(error Please make sure that $$SNAP_ROOT is set up correctly.)
 endif
 
 IMAGE_JSON        = $(PWD)/image.json
-IMAGE_TARGET      = $(PWD)/image.json.o
+IMAGE_TARGET      = $(PWD)/image_compiled.json
 METAL_ROOT        = $(PWD)/../..
 METAL_TARGET      = $(shell jq -r .target $(IMAGE_JSON))
 

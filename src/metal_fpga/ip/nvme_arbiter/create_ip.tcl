@@ -1,10 +1,10 @@
 ## Env Variables
 
 set action_root [lindex $argv 0]
-set fpga_part  	[lindex $argv 1]
+set fpga_part   [lindex $argv 1]
 
-set aip_dir 	$action_root/ip/nvme_arbiter
-set log_dir     $action_root
+set aip_dir     $action_root/ip/nvme_arbiter
+set log_dir     $action_root/logs
 set log_file    $log_dir/create_nvme_arbiter_ip.log
 
 ## Create a new Vivado IP Project
@@ -26,7 +26,7 @@ add_files -norecurse \
 
 update_compile_order -fileset sources_1
 
-ipx::package_project -root_dir $aip_dir/ip_user_files -vendor user.org -library user -taxonomy /UserIP -import_files
+ipx::package_project -root_dir $aip_dir/ip_user_files -vendor user.org -library user -taxonomy /UserIP -import_files >> $log_file
 
 ipx::create_xgui_files [ipx::current_core]
 ipx::update_checksums [ipx::current_core]
