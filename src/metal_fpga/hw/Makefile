@@ -16,9 +16,7 @@ LOGS_DIR ?= $(PWD)/../logs
 CONFIG_FILE = $(SNAP_ROOT)/.snap_config
 
 hls_components  = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
-hls_components += $(shell $(ACTION_ROOT)/hw/resolve_operators $(IMAGE_JSON) | cut -f 2 | uniq)
-
-hls_ip=$(hls_components:=/hls_impl_ip)
+metal_operators = $(shell ./resolve_operators $(IMAGE_JSON) | cut -f 2 | uniq)
 
 ADDITIONAL_HLS_CFLAGS += -DSTREAM_BYTES=$(shell jq -r .stream_bytes $(IMAGE_JSON))
 
@@ -44,14 +42,14 @@ else
 	NVME_FILTER = "\-\- only for NVME_USED=TRUE"
 endif
 
-.PHONY: clean vhdl $(hls_components) block_design image_info nvme_arbiter
+.PHONY: clean vhdl $(hls_components) $(metal_operators) block_design image_info nvme_arbiter
 
-all: vhd_files hls block_design
+all: vhd_files block_design
 
 $(IMAGE_TARGET): $(IMAGE_JSON)
 	@./generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
 
-block_design: $(hls_ip) nvme_arbiter image_info
+block_design: hls operators nvme_arbiter image_info
 	@echo "                        Generating Block Design"
 	@make -C $(ACTION_ROOT)/ip/block_design ip
 
@@ -68,6 +66,17 @@ hls: $(hls_components)
 $(hls_components):
 	@mkdir -p $(LOGS_DIR)
 	@echo "                        Generating IP from HLS component $(@F)"
+	@echo "Calling make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
+	@make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
+	if [ $${hls_ret} -ne 0 ]; then \
+		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
+	fi
+
+operators: $(metal_operators)
+
+$(metal_operators):
+	@mkdir -p $(LOGS_DIR)
+	@echo "                        Generating IP from Metal FS Operator $(@F)"
 	@echo "Calling make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip" > $(LOGS_DIR)/$(@F)_make.log
 	@make ADDITIONAL_HLS_CFLAGS='$(ADDITIONAL_HLS_CFLAGS)' -C $@ ip >> $(LOGS_DIR)/$(@F)_make.log; hls_ret=$$?; \
 	if [ $${hls_ret} -ne 0 ]; then \

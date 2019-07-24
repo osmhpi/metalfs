@@ -7,7 +7,7 @@ set stream_width [expr $stream_bytes * 8]
 
 create_bd_design $bd_name >> $log_file
 
-create_bd_cell -type ip -vlnv xilinx.com:hls:hls_action:1.0 snap_action
+create_bd_cell -type ip -vlnv user.org:user:hls_action:1.0 snap_action
 
 make_bd_pins_external  \
     [get_bd_pins snap_action/ap_clk] \
@@ -172,13 +172,13 @@ connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M02_AXI] [get_bd_i
 
 # Stream Sink
 
-create_bd_cell -type ip -vlnv xilinx.com:hls:hls_streamsink:1.0 axi_streamsink
+create_bd_cell -type ip -vlnv user.org:user:hls_streamsink:1.0 axi_streamsink
 set_property location {3 1279 1513} [get_bd_cells axi_streamsink]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins axi_streamsink/ap_clk]
 connect_bd_net [get_bd_ports ap_rst_n] [get_bd_pins axi_streamsink/ap_rst_n]
 
 # Stream Generator
-create_bd_cell -type ip -vlnv xilinx.com:hls:hls_streamgen:1.0 hls_streamgen
+create_bd_cell -type ip -vlnv user.org:user:hls_streamgen:1.0 hls_streamgen
 
 connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M01_AXI] [get_bd_intf_pins hls_streamgen/s_axi_ctrl]
 connect_bd_net [get_bd_ports ap_clk] [get_bd_pins hls_streamgen/ap_clk]

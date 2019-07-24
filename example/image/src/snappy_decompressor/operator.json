@@ -1,6 +1,5 @@
 {
     "main": "SnappyWrapper",
-    "component": "user.org:user:SnappyWrapper:1.0",
     "description": "Unpack snappy-compressed data",
     "options": {
         "compressed-length": {

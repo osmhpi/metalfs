@@ -11,7 +11,7 @@ endif
 # run_hls_script.tcl: .hls_cflags
 
 run_hls_ip_script.tcl: run_hls_script.tcl
-	@sed "s/#export_design/export_design/g" $< > $@
+	@sed "s/#export_design/export_design -library user -vendor user.org -version 1.0/g" $< > $@
 
 run_hls_csim_script.tcl: run_hls_script.tcl
 	@sed "s/csynth_design/csim_design -compiler clang/g" $< > $@
