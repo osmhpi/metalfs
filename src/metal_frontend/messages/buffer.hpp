@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <string>
 
-#define BUFFER_SIZE (1024 * 1024)
+#define BUFFER_SIZE (64 * 1024 * 1024)
 
 namespace metal {
 class Buffer {
