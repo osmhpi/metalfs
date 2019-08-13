@@ -122,10 +122,16 @@ architecture SnappyWrapper of SnappyWrapper is
   signal s_dcmpOutReady  : std_logic;
 
   -- Wrapper Logic:
+  type t_OutState is (Idle, Empty, Full, FullLast, Overflow, OverflowLast);
+  signal s_outState : t_OutState;
+
   subtype t_ByteCounter is unsigned (31 downto 0);
   constant c_ByteCounterZero : t_ByteCounter := to_unsigned(0, t_ByteCounter'length);
-  signal s_tkeepBytes : t_ByteCounter;
-  signal s_byteCounter : t_ByteCounter;
+  signal s_outTransferBytes : t_ByteCounter;
+  signal s_outByteCounter : t_ByteCounter;
+
+  signal s_outBufData : std_logic_vector (511 downto 0);
+  signal s_outBufKeep : std_logic_vector (63 downto 0);
 
   type t_State is (Idle, Starting, Running, DoneInt, Done);
   signal s_state : t_State;
@@ -182,31 +188,96 @@ begin
   s_dcmpInValid <= axis_input_TVALID;
   axis_input_TREADY <= s_dcmpInReady;
 
-  ---- Output Stream Mapping:
-  s_tkeepBytes <= to_unsigned(f_bitCount(unsigned(s_dcmpOutKeep)), t_ByteCounter'length);
-
+  ---- Output Stream State Machine:
+  s_outTransferBytes <= to_unsigned(f_bitCount(unsigned(s_dcmpOutKeep)), t_ByteCounter'length);
   process (ap_clk)
   begin
     if ap_clk'event and ap_clk = '1' then
       if ap_rst_n = '0' then
-        s_byteCounter <= c_ByteCounterZero;
-      elsif s_dcmpStart = '1' then
-        s_byteCounter <= unsigned(s_dcmpOutLength);
-      elsif s_dcmpOutValid = '1' and s_dcmpOutReady = '1' and s_byteCounter > c_ByteCounterZero then
-        if s_byteCounter <= s_tkeepBytes then
-          s_byteCounter <= c_ByteCounterZero;
-        else
-          s_byteCounter <= s_byteCounter - s_tkeepBytes;
-        end if;
+        s_outState <= Idle;
+        s_outByteCounter <= c_ByteCounterZero;
+        s_outBufData <= (others => '0');
+        s_outBufKeep <= (others => '0');
+        axis_output_TDATA <= (others => '0');
+        axis_output_TKEEP <= (others => '0');
+      else
+        case s_outState is
+
+          when Idle =>
+            if s_regEventStartSet = '1' then
+              s_outByteCounter <= unsigned(s_dcmpOutLength);
+              s_outState <= Empty;
+            end if;
+
+          when Empty =>
+            if s_dcmpOutValid = '1' then
+              axis_output_TDATA <= f_byteswap(s_dcmpOutData);
+              axis_output_TKEEP <= f_bitswap(s_dcmpOutKeep);
+              if s_outByteCounter > s_outTransferBytes then
+                s_outByteCounter <= s_outByteCounter - s_outTransferBytes;
+                s_outState <= Full;
+              else
+                s_outByteCounter <= c_ByteCounterZero;
+                s_outState <= FullLast;
+              end if;
+            end if;
+
+          when Full =>
+            if s_dcmpOutValid = '1' and axis_output_TREADY = '1' then
+              axis_output_TDATA <= f_byteswap(s_dcmpOutData);
+              axis_output_TKEEP <= f_bitswap(s_dcmpOutKeep);
+              if s_outByteCounter > s_outTransferBytes then
+                s_outByteCounter <= s_outByteCounter - s_outTransferBytes;
+                s_outState <= Full;
+              else
+                s_outByteCounter <= c_ByteCounterZero;
+                s_outState <= FullLast;
+              end if;
+            elsif s_dcmpOutValid = '1' and axis_output_TREADY = '0' then
+              s_outBufData <= f_byteswap(s_dcmpOutData);
+              s_outBufKeep <= f_bitswap(s_dcmpOutKeep);
+              if s_outByteCounter > s_outTransferBytes then
+                s_outByteCounter <= s_outByteCounter - s_outTransferBytes;
+                s_outState <= Overflow;
+              else
+                s_outByteCounter <= c_ByteCounterZero;
+                s_outState <= OverflowLast;
+              end if;
+            elsif s_dcmpOutValid = '0' and axis_output_TREADY = '1' then
+              s_outState <= Empty;
+            end if;
+
+          when FullLast =>
+            if axis_output_TREADY = '1' then
+              s_outState <= Idle;
+            end if;
+
+          when Overflow =>
+            if axis_output_TREADY = '1' then
+              s_outState <= Full;
+            end if;
+
+          when OverflowLast =>
+            if axis_output_TREADY = '1' then
+              s_outState <= FullLast;
+            end if;
+        end case;
       end if;
     end if;
   end process;
-
-  axis_output_TDATA <= f_byteswap(s_dcmpOutData);
-  axis_output_TKEEP <= f_bitswap(s_dcmpOutKeep);
-  axis_output_TLAST <= '0' when (s_byteCounter > s_tkeepBytes) else '1';
-  axis_output_TVALID <= s_dcmpOutValid;
-  s_dcmpOutReady <= axis_output_TREADY;
+  with s_outState select s_dcmpOutReady <=
+    '1' when Empty,
+    '1' when Full,
+    '0' when others;
+  with s_outState select axis_output_TVALID <=
+    '1' when Full,
+    '1' when FullLast,
+    '1' when Overflow,
+    '1' when OverflowLast,
+    '0' when others;
+  with s_outState select axis_output_TLAST <=
+    '1' when FullLast,
+    '0' when others;
 
   ---- Length Register Mapping:
   s_dcmpInLength <= s_regInLength(s_dcmpInLength'length-1 downto 0);
