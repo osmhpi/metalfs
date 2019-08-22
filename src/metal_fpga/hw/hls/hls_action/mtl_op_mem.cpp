@@ -113,7 +113,8 @@ void issue_pmem_transfer_command(uint64_t current_offset, mtl_extmap_t &map, NVM
     auto physical_block_offset = (logical_block_offset >> 1) * (StorageBlockSize / 512);
 
     NVMeCommand cmd;
-    cmd.dram_offset() = (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset;
+    const uint64_t NVMeDRAMBaseOffset = 0x200000000;  // According to https://github.com/open-power/snap/blob/master/hardware/doc/NVMe.md
+    cmd.dram_offset() = NVMeDRAMBaseOffset + (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + current_offset;
     cmd.nvme_block_offset() = physical_block_offset;
     cmd.num_blocks() = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
     cmd.drive() = drive_id;

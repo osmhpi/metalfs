@@ -35,11 +35,13 @@ void insert_padding(mtl_stream &in, mtl_stream &out) {
 #pragma HLS PIPELINE
     element = in.read();
 
-    current_element.data |= element.data << (bytes * 8);
-    current_element.keep |= element.keep << (bytes);
+    const auto word_bytes = sizeof(current_element.data);
 
-    next_element.data = element.data >> ((8 - bytes) * 8);
-    next_element.keep = element.keep >> (8 - bytes);
+    current_element.data((word_bytes * 8) - 1, bytes * 8) = element.data(((word_bytes - bytes) * 8) - 1, 0);
+    current_element.keep((word_bytes    ) - 1, bytes    ) = element.keep(((word_bytes - bytes)    ) - 1, 0);
+
+    next_element.data((bytes * 8) - 1, 0) = element.data(((word_bytes) * 8) - 1, (word_bytes - bytes) * 8);
+    next_element.keep((bytes    ) - 1, 0) = element.keep(((word_bytes)    ) - 1, (word_bytes - bytes)    );
 
     current_element.last = element.last && next_element.keep == 0;
 
@@ -56,7 +58,7 @@ void insert_padding(mtl_stream &in, mtl_stream &out) {
 
 template<int bytes>
 void remove_padding(mtl_stream & in, mtl_stream &out) {
-  mtl_stream_element current_element, previous_element;
+  mtl_stream_element current_element, previous_element, out_element;
   snap_bool_t previous_element_valid = false;
 
   remove_padding:
@@ -64,20 +66,23 @@ void remove_padding(mtl_stream & in, mtl_stream &out) {
 #pragma HLS PIPELINE
     current_element = in.read();
 
-    previous_element.data |= current_element.data << (8 * (8 - bytes));
-    previous_element.keep |= current_element.keep << (8 - bytes);
+    const auto word_bytes = sizeof(current_element.data);
 
-    current_element.data >>= (8 * bytes);
-    current_element.keep >>= bytes;
+    out_element.data(((word_bytes - bytes) * 8) - 1, 0) = previous_element.data((word_bytes * 8) - 1, bytes * 8);
+    out_element.keep(((word_bytes - bytes)    ) - 1, 0) = previous_element.keep((word_bytes    ) - 1, bytes    );
+    out_element.data(((word_bytes) * 8) - 1, (word_bytes - bytes) * 8) = current_element.data((bytes * 8) - 1, 0);
+    out_element.keep(((word_bytes)    ) - 1, (word_bytes - bytes)    ) = current_element.keep((bytes    ) - 1, 0);
 
-    previous_element.last = current_element.last && current_element.keep == 0;
+    out_element.last = current_element.last && current_element.keep(word_bytes - 1, bytes) == 0;
 
-    if (previous_element_valid || previous_element.last) {
-        out.write(previous_element);
+    if (previous_element_valid || out_element.last) {
+        out.write(out_element);
     }
 
-    if (current_element.last && !previous_element.last) {
+    if (current_element.last && !out_element.last) {
         // Flush remaining bytes
+        current_element.data >>= bytes * 8;
+        current_element.keep >>= bytes;
         out.write(current_element);
     }
 

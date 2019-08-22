@@ -22,17 +22,18 @@ void mtl_extmap_load(mtl_extmap_t & map,
     snap_membus_t line = 0;
     snapu64_t last_block = 0;
     for (mtl_extent_count_t i_extent = 0; i_extent < extent_count; ++i_extent) {
-        mtl_line_extent_offset_t o_line_extent = i_extent & MTL_MASK(MTL_EXTENTS_PER_LINE_W,0);
+        mtl_line_extent_offset_t o_line_extent = i_extent & MTL_MASK(MTL_EXTENTS_PER_LINE_W, 0);
         if (o_line_extent == 0) {
             line = mem[MFB_ADDRESS(line_address)];
             line_address += MFB_INCREMENT;
         }
-        snapu64_t begin = mtl_get64(line, o_line_extent * 16);
-        snapu64_t count = mtl_get64(line, o_line_extent * 16 + 8);
+        snapu64_t begin = mtl_get64<0>(line);
+        snapu64_t count = mtl_get64<8>(line);
         last_block += count;
         map.extents_begin[i_extent] = begin;
         map.extents_count[i_extent] = count;
         map.extents_nextlblock[i_extent] = last_block;
+        line >>= (sizeof(snapu64_t) + sizeof(snapu64_t)) * 8;
     }
 
     map.extent_count = extent_count;
