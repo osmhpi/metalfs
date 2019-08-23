@@ -8,7 +8,6 @@ srcs += \
 	axi_perfmon.cpp \
 	mtl_extmap.cpp \
 	mtl_jobs.cpp \
-	mtl_jobstruct.cpp \
 	mtl_op_mem.cpp \
 	operators.cpp \
 	hls_action.cpp

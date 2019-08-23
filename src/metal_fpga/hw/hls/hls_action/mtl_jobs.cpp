@@ -1,6 +1,5 @@
 #include "mtl_jobs.h"
 
-#include "mtl_jobstruct.h"
 #include "axi_perfmon.h"
 #include "axi_switch.h"
 #include "mtl_endian.h"
@@ -28,15 +27,21 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
 
 
 // File Map / Unmap Operation:
-static mtl_retc_t action_map(snap_membus_t * mem_in, const mtl_job_map_t & job)
+static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 {
-    switch (job.slot) {
+	snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
+	auto slot = mtl_get64<0>(line);
+	auto map_else_unmap = (mtl_get64<8>(line) == 0) ? MTL_FALSE : MTL_TRUE;
+	auto extent_count = mtl_get64<16>(line);
+	auto extent_address = job_address + MFB_INCREMENT;
+
+    switch (slot) {
         case 0: {
-            mtl_extmap_load(nvme_read_extmap, job.extent_count, job.extent_address, mem_in);
+            mtl_extmap_load(nvme_read_extmap, extent_count, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mtl_extmap_load(nvme_write_extmap, job.extent_count, job.extent_address, mem_in);
+            mtl_extmap_load(nvme_write_extmap, extent_count, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         default: {
@@ -129,8 +134,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     case JobType::Map:
     {
 #ifdef NVME_ENABLED
-        mtl_job_map_t map_job = mtl_read_job_map(mem_in, act_reg->Data.job_address);
-        result = action_map(mem_in, map_job);
+        result = action_map(mem_in, act_reg->Data.job_address);
 #else
         result = SNAP_RETC_SUCCESS;
 #endif
