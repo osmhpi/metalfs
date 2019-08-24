@@ -1,6 +1,10 @@
-#include <utility>
+extern "C" {
+#include <metal_filesystem/storage.h>
+}
 
+#include <utility>
 #include <string>
+
 #include <metal_pipeline/data_sink.hpp>
 
 namespace metal {
@@ -10,7 +14,7 @@ class FileDataSink : public DataSink {
   // Common API
  public:
  protected:
-    fpga::AddressType addressType() override { return fpga::AddressType::NVMe; }
+  fpga::AddressType addressType() override { return fpga::AddressType::NVMe; }
 
   void configure(SnapAction &action) override;
   void finalize(SnapAction &action) override;

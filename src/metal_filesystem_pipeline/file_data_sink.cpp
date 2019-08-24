@@ -1,11 +1,10 @@
-#include <utility>
-
-
 extern "C" {
 #include <metal_filesystem/metal.h>
 #include <unistd.h>
 #include <snap_hls_if.h>
 }
+
+#include <utility>
 
 #include <metal_pipeline/snap_action.hpp>
 #include <metal_fpga/hw/hls/include/snap_action_metal.h>
@@ -14,7 +13,7 @@ extern "C" {
 namespace metal {
 
 FileDataSink::FileDataSink(std::string filename, uint64_t offset, uint64_t size)
-    : DataSink(offset, size), _filename(std::move(filename)) {
+    : DataSink(offset, size), _filename(std::move(filename)), _cached_total_size(0) {
   if (size > 0) {
     prepareForTotalProcessingSize(offset + size);
   } else {
@@ -23,7 +22,7 @@ FileDataSink::FileDataSink(std::string filename, uint64_t offset, uint64_t size)
 }
 
 FileDataSink::FileDataSink(std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
-        : DataSink(offset, size), _extents(extents) {}
+        : DataSink(offset, size), _extents(extents), _cached_total_size(0) {}
 
 void FileDataSink::prepareForTotalProcessingSize(size_t size) {
 
@@ -57,39 +56,39 @@ void FileDataSink::configure(SnapAction &action) {
 
   // Transfer extent list
 
-    auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
-            sizeof(uint64_t) * (
-                    8 // words for the prefix
-                    + (2 * _extents.size()) // two words for each extent
-            ))
-    );
-    job_struct[0] = htobe64(1);  // slot number
-    job_struct[1] = htobe64(1);  // map (vs unmap)
-    job_struct[2] = htobe64(_extents.size());  // extent count
+  auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
+    sizeof(uint64_t) * (
+      8 // words for the prefix
+      + (2 * _extents.size()) // two words for each extent
+    ))
+  );
+  job_struct[0] = htobe64(1);  // slot number
+  job_struct[1] = htobe64(1);  // map (vs unmap)
+  job_struct[2] = htobe64(_extents.size());  // extent count
 
-    for (uint64_t i = 0; i < _extents.size(); ++i) {
-      job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
-      job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
-    }
+  for (uint64_t i = 0; i < _extents.size(); ++i) {
+    job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
+    job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
+  }
 
-    try {
-      action.execute_job(fpga::JobType::Map, reinterpret_cast<char *>(job_struct));
-    } catch (std::exception &ex) {
-      free(job_struct);
-      throw ex;
-    }
-
+  try {
+    action.execute_job(fpga::JobType::Map, reinterpret_cast<char *>(job_struct));
+  } catch (std::exception &ex) {
     free(job_struct);
+    throw ex;
+  }
+
+  free(job_struct);
 }
 
 void FileDataSink::finalize(SnapAction &action) {
-    (void)action;
+  (void)action;
   // Advance offset
   _address += _size;
 }
 
 void FileDataSink::setSize(size_t size) {
-    _size = size;
+  _size = size;
 
   // Make sure that the file is big enough
   if (size + _address > _cached_total_size) {

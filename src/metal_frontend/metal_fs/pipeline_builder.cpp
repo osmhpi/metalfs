@@ -112,10 +112,11 @@ std::vector<std::pair<std::shared_ptr<AbstractOperator>, std::shared_ptr<Registe
   if (dataSink == nullptr) {  // To my knowledge, there are no user-accessible data sinks, so always true
     auto dataSinkAgent = operators.back().second;
     if (!dataSinkAgent->internal_output_file.empty()) {
-      if (dataSinkAgent->internal_output_file == "$NULL") // TODO: Check for /dev/null in here
-        dataSink = std::make_shared<NullDataSink>(0 /* TODO */);
-      else
+      if (dataSinkAgent->internal_output_file == "$NULL") {
+        dataSink = std::make_shared<NullDataSink>(0);
+      } else {
         dataSink = std::make_shared<FileDataSink>(dataSinkAgent->internal_output_file, 0, 0);
+      }
     } else {
       dataSinkAgent->output_buffer = Buffer::create_temp_file_for_shared_buffer(true);
       dataSink = std::make_shared<HostMemoryDataSink>(nullptr, 0);  // TODO: Address and size are set later

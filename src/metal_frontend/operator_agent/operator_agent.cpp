@@ -114,16 +114,12 @@ ConnectedFile determine_process_or_file_connected_to_std_fd(
         }
 
         if (strlen(internal_filename)) {
-            return ConnectedFile { internal_filename, 0, true };
+          return ConnectedFile { internal_filename, 0, true };
         }
 
-//        if (strncmp("/dev/null", fd_file, 9) == 0) {
-//            return ConnectedFile {};
-//            *is_metal_file = true;
-//            *pid = 0;
-//            strncpy(filename, "$NULL", filename_size);
-//            return 0;
-//        }
+        if (strncmp("/dev/null", fd_file, 9) == 0) {
+          return ConnectedFile { "$NULL", 0, true };
+        }
 
         return ConnectedFile { fd_file, 0, false };
     }

@@ -48,14 +48,6 @@ void PipelineLoop::run() {
   assert(lastAgentReverseIt != _pipeline.crend());
   auto lastAgentIt = (lastAgentReverseIt+1).base();
 
-    // Receive ready signal from first client
-  auto inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
-
-  // Wait until all other clients signal ready as well
-  for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
-    operatorAgentPair->second->socket.receive_message<message_type::AgentPushBuffer>();
-  }
-
   // Determine if any operator is selected for profiling
   auto profilingOperator = _pipeline.cend();
   for (auto operatorAgentPairIt = _pipeline.cbegin(); operatorAgentPairIt != _pipeline.cend(); ++operatorAgentPairIt) {
@@ -70,6 +62,14 @@ void PipelineLoop::run() {
 
   if (profilingOperator != _pipeline.cend()) {
     runner.selectOperatorForProfiling(profilingOperator->first);
+  }
+
+  // Receive ready signal from first client
+  auto inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+
+  // Wait until all other clients signal ready as well
+  for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
+    operatorAgentPair->second->socket.receive_message<message_type::AgentPushBuffer>();
   }
 
   for (;;) {

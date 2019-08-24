@@ -7,6 +7,8 @@ set(
     changecase_pipeline_test.cpp
     colorfilter_pipeline_test.cpp
     readwrite_pipeline_test.cpp
+    nvme_pipeline_test.cpp
+    dram_pipeline_test.cpp
     profiling_test.cpp
 
     gtest_main.cpp
@@ -15,6 +17,7 @@ set(
 set(
     LIBRARIES
     metal_pipeline
+    metal_filesystem_pipeline
     gtest
 
     ${JQ_LIBRARIES}
