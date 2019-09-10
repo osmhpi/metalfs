@@ -1,0 +1,8 @@
+kind: pipeline
+name: default
+
+steps:
+- name: Compile Software
+  image: metalfs/build-base:webpack
+  commands:
+  - mkdir build && cd build && cmake .. && make -j4

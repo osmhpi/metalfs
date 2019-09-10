@@ -2,7 +2,7 @@
 
 cat > $SNAP_ROOT/snap_env.sh <<- EOF
 export PSLVER=8
-export TIMING_LABLIMIT="-200"
+export TIMING_LABLIMIT="-800"
 export ACTION_ROOT=$METAL_ROOT/src/metal_fpga
 #export PSL_DCP= <for CAPI1.0 cards: path to b_route_design.dcp file>
 export PSLSE_ROOT=$PSLSE_ROOT
