@@ -6,3 +6,8 @@ steps:
   image: metalfs/build-base:webpack
   commands:
   - mkdir build && cd build && cmake .. && make -j4
+
+- name: Compile Simulation Model for Example Image
+  image: metalfs/build-base:webpack
+  commands:
+  - cd example/image && make model
