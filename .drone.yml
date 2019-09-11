@@ -4,10 +4,12 @@ name: default
 steps:
 - name: Compile Software
   image: metalfs/build-base:webpack
+  pull: true
   commands:
   - mkdir build && cd build && cmake .. && make -j4
 
 - name: Compile Simulation Model for Example Image
   image: metalfs/build-base:webpack
+  pull: true
   commands:
   - cd example/image && make model
