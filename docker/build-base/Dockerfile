@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+    cmake \
     libfuse-dev \
     liblmdb-dev \
     libprotobuf-dev \
@@ -33,11 +34,3 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
-
-RUN echo "export PSLSE_ROOT=$PSLSE_ROOT" >> /root/.bashrc \
- && echo "export SNAP_ROOT=$SNAP_ROOT" >> /root/.bashrc
-
-# Set the default shell to bash instead of sh
-ENV SHELL /bin/bash
-
-CMD tail -f /dev/null
