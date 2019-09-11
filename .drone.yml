@@ -28,12 +28,12 @@ steps:
   depends_on:
     - software-build
 
-- name: storage-test
-  image: metalfs/build-base:webpack
-  commands:
-  - cd build && ./metal_storage_test
-  depends_on:
-    - software-build
+# - name: storage-test
+#   image: metalfs/build-base:webpack
+#   commands:
+#   - cd build && ./metal_storage_test
+#   depends_on:
+#     - software-build
 
 - name: example-test
   image: metalfs/build-base:webpack
