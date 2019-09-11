@@ -3,7 +3,7 @@
     "target": "SNAP_WEBPACK_SIM",
     "operators": {
         "changecase": {
-            "source": "./src/hls_operator_changecase"
+            "source": "./changecase"
         },
         "colorfilter": {
             "source": "@metalfs/colorfilter"
