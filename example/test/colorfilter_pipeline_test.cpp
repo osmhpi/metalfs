@@ -19,12 +19,16 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-TEST_F(SimulationPipelineTest, ColorfilterPipeline_Runs) {
+TEST_F(SimulationPipelineTest, ColorfilterPipeline_PreservesHeaderData) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
     auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
-    fill_payload(src, n_bytes);
+
+    // The header spans the first 138 bytes. Set the rest to zeroes,
+    // so the output will equal the input
+    memset(src, 0, n_bytes);
+    fill_payload(src, 138);
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
