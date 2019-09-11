@@ -2,20 +2,20 @@
     "stream_bytes": 8,
     "target": "SNAP_WEBPACK_SIM",
     "operators": {
-        "colorfilter": {
-            "source": "./src/hls_operator_colorfilter"
-        },
-        "better_colorfilter": {
-            "source": "./src/hls_operator_colorfilter"
-        },
         "changecase": {
             "source": "./src/hls_operator_changecase"
         },
+        "colorfilter": {
+            "source": "@metalfs/colorfilter"
+        },
+        "another_colorfilter": {
+            "source": "@metalfs/colorfilter"
+        },
         "blowfish_encrypt": {
-            "source": "./src/hls_operator_blowfish_encrypt"
+            "source": "@metalfs/blowfish-encrypt"
         },
         "blowfish_decrypt": {
-            "source": "./src/hls_operator_blowfish_decrypt"
+            "source": "@metalfs/blowfish-decrypt"
         }
     }
 }

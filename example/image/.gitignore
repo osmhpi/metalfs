@@ -7,3 +7,4 @@ src/*/hls_impl_ip
 .sig
 operators
 image_compiled.json
+node_modules/

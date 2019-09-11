@@ -1,0 +1,14 @@
+{
+  "name": "metalfs-example",
+  "version": "0.0.1",
+  "description": "An example Metal FS project",
+  "main": "index.js",
+  "author": "Metal FS Developers",
+  "license": "MIT",
+  "dependencies": {
+    "@metalfs/blowfish-decrypt": "0.0.1",
+    "@metalfs/blowfish-encrypt": "0.0.1",
+    "@metalfs/colorfilter": "0.0.1",
+    "@metalfs/snappy-decompress": "0.0.1"
+  }
+}
