@@ -13,7 +13,7 @@ steps:
   image: metalfs/build-base:webpack
   commands:
     - cd example/image && make model
-    - echo "$DRONE_DIR/build/example_test --gtest_filter=Simulation*" > $SNAP_ROOT/hardware/sim/testlist.sh
+    - echo "$DRONE_WORKSPACE/build/example_test --gtest_filter=Simulation*" > $SNAP_ROOT/hardware/sim/testlist.sh
     - chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
     - cd $SNAP_ROOT/hardware/sim/xsim && ../run_sim -explore -list testlist.sh -noaet
   depends_on:
