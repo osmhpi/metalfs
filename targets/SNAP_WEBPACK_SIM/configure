@@ -8,12 +8,13 @@ export ACTION_ROOT=$METAL_ROOT/src/metal_fpga
 export PSLSE_ROOT=$PSLSE_ROOT
 EOF
 
-cat > $SNAP_ROOT/defconfig/N250S.hls_metalfpga.SDRAM.NVME.defconfig <<- EOF
+cat > $SNAP_ROOT/defconfig/WEBPACK_SIM.hls_metalfpga.defconfig <<- EOF
 #
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
 #
-N250S=y
+WEBPACK_SIM=y
+# N250S is not set
 # ADKU3 is not set
 # AD8K5 is not set
 # S121B_BPIx16 is not set
@@ -24,15 +25,15 @@ N250S=y
 # U200 is not set
 # FX609 is not set
 # AD9V3 is not set
-FPGACARD="N250S"
+FPGACARD="WEBPACK_SIM"
 FLASH_INTERFACE="BPIx16"
-FLASH_SIZE="64"
+FLASH_SIZE="128"
 FLASH_FACTORYADDR="0x00000000"
-FLASH_USERADDR="0x01000000"
+FLASH_USERADDR="0x02000000"
 # S121B is not set
 CAPI10=y
 # CAPI20 is not set
-FPGACHIP="xcku060-ffva1156-2-e"
+FPGACHIP="xcku035-ffva1156-2-e"
 NUM_OF_ACTIONS=1
 HDL_ACTION=y
 # HDL_HELLOWORLD is not set
@@ -51,24 +52,23 @@ HDL_ACTION=y
 # HLS_MM_TEST is not set
 # HLS_DECIMAL_MULT is not set
 # HLS_SCATTER_GATHER is not set
+# HLS_VECTOR_GENERATOR is not set
+# HLS_PARALLEL_MEMCPY is not set
 # ENABLE_HLS_SUPPORT is not set
 HLS_SUPPORT="FALSE"
 # DISABLE_SDRAM_AND_BRAM is not set
-FORCE_SDRAM_OR_BRAM=y
-FORCE_SDRAM=y
-ENABLE_SDRAM=y
-SDRAM_USED="TRUE"
+# FORCE_SDRAM_OR_BRAM is not set
+# ENABLE_SDRAM is not set
+SDRAM_USED="FALSE"
 # ENABLE_BRAM is not set
 BRAM_USED="FALSE"
 DDR3_USED="FALSE"
-ENABLE_DDR4=y
-DDR4_USED="TRUE"
-ENABLE_DDRI=y
-DDRI_USED="TRUE"
+DDR4_USED="FALSE"
+DDRI_USED="FALSE"
 # DISABLE_NVME is not set
 # FORCE_NVME is not set
-ENABLE_NVME=y
-NVME_USED="TRUE"
+# ENABLE_NVME is not set
+NVME_USED="FALSE"
 SIM_XSIM=y
 # SIM_IRUN is not set
 # SIM_XCELIUM is not set
@@ -93,4 +93,4 @@ CLOUD_USER_FLOW="FALSE"
 CLOUD_BUILD_BITFILE="FALSE"
 EOF
 
-make -C $SNAP_ROOT N250S.hls_metalfpga.SDRAM.NVME.defconfig <&-
+make -C $SNAP_ROOT WEBPACK_SIM.hls_metalfpga.defconfig <&-

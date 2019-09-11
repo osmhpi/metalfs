@@ -1,6 +1,6 @@
 {
     "stream_bytes": 8,
-    "target": "SNAP_N250S",
+    "target": "SNAP_WEBPACK_SIM",
     "operators": {
         "colorfilter": {
             "source": "./src/hls_operator_colorfilter"
