@@ -1,0 +1,24 @@
+#! /bin/bash -e
+
+VIVADO_VERSION=2018.1
+VIVADO_EDITION=webpack  # Choose from hl_design_edition or webpack
+
+docker build \
+    -t xilinx-base:${VIVADO_VERSION} \
+    -f ./${VIVADO_VERSION}/Dockerfile \
+    .
+
+docker run \
+    --name xilinx-vivado-install-${VIVADO_VERSION}-${VIVADO_EDITION} \
+    -v $PWD/${VIVADO_VERSION}/installer:/installer \
+    -v $PWD/${VIVADO_VERSION}/${VIVADO_EDITION}.txt:/install_config.txt \
+    xilinx-base:${VIVADO_VERSION} \
+        /bin/bash -c "/installer/*/xsetup --agree 3rdPartyEULA,WebTalkTerms,XilinxEULA --batch Install --config /install_config.txt"
+
+docker commit \
+    --change='ENTRYPOINT []' \
+    --change='CMD [ "/bin/bash" ]' \
+    xilinx-vivado-install-${VIVADO_VERSION}-${VIVADO_EDITION} \
+    xilinx-vivado:${VIVADO_VERSION}-${VIVADO_EDITION}
+
+docker rm xilinx-vivado-install-${VIVADO_VERSION}-${VIVADO_EDITION}
