@@ -1,73 +1,46 @@
 ---
 kind: pipeline
-name: software-build
+type: docker
+name: default
 
 steps:
-- name: Compile Software
+- name: software-build
   image: metalfs/build-base:webpack
   commands:
   - mkdir build && cd build && cmake .. && make -j4
 
----
-kind: pipeline
-name: model-build
-steps:
-- name: Compile Simulation Model for Example Image
+- name: model-build
   image: metalfs/build-base:webpack
   commands:
   - cd example/image && make model
 
----
-kind: pipeline
-name: filesystem-test
-
-steps:
-- name: Metal Filesystem Test
+- name: filesystem-test
   image: metalfs/build-base:webpack
   commands:
   - cd build && ./metal_filesystem_test
+  depends_on:
+    - software-build
 
-depends_on:
-  - software-build
-
----
-kind: pipeline
-name: pipeline-test
-
-steps:
-- name: Metal Pipeline Test
+- name: pipeline-test
   image: metalfs/build-base:webpack
   commands:
   - cd build && ./metal_pipeline_test
+  depends_on:
+    - software-build
 
-depends_on:
-  - software-build
-
----
-kind: pipeline
-name: storage-test
-
-steps:
-- name: Metal Storage Test
+- name: storage-test
   image: metalfs/build-base:webpack
   commands:
   - cd build && ./metal_storage_test
+  depends_on:
+    - software-build
 
-depends_on:
-  - software-build
-
----
-kind: pipeline
-name: example-model-test
-
-steps:
-- name: Example Test
+- name: example-test
   image: metalfs/build-base:webpack
   commands:
    - echo "$DRONE_DIR/build/example_test --gtest_filter=Simulation*" > $SNAP_ROOT/hardware/sim/testlist.sh
    - chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
    - cd $SNAP_ROOT/hardware/sim/xsim && ../run_sim -explore -list testlist.sh -noaet
-
-depends_on:
-  - software-build
-  - model-build
+  depends_on:
+    - software-build
+    - model-build
