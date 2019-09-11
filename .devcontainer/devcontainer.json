@@ -1,6 +1,6 @@
 {
 	"name": "Metal FS",
-	"dockerFile": "Dockerfile",
+	"image": "metalfs/build-base:webpack",
 	"extensions": [
 		"ms-vscode.cpptools"
 	],
@@ -13,7 +13,15 @@
 		"/dev/fuse",
 		"--cap-add",
 		"SYS_ADMIN",
+		"--cap-add",
+		"SYS_PTRACE",
 		"--security-opt",
-		"apparmor:unconfined"
-	]
+		"apparmor=unconfined",
+		"--security-opt",
+		"seccomp=unconfined"
+	],
+	// There is a name collision with Ubuntu Snaps, which eventually results in VS Code
+	// removing the image-defined SNAP_ROOT environment variable.
+	// We can work around this by explicitly loading it from the bash profile.
+	"postCreateCommand": "echo export SNAP_ROOT=/frameworks/snap >> ~/.snap_profile"
 }
