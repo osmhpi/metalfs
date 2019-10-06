@@ -2,15 +2,18 @@ extern "C" {
 #include <unistd.h>
 #include <snap_hls_if.h>
 }
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+
 #include <iostream>
 #include <algorithm>
+#include <spdlog/spdlog.h>
+
+#include <metal_fpga/hw/hls/include/snap_action_metal.h>
 #include "pipeline_definition.hpp"
 #include "snap_action.hpp"
 
 namespace metal {
 
-PipelineDefinition::PipelineDefinition(std::vector<std::shared_ptr<AbstractOperator>> operators) 
+PipelineDefinition::PipelineDefinition(std::vector<std::shared_ptr<AbstractOperator>> operators)
     : _operators(std::move(operators)), _cached_switch_configuration(false) {
     if (_operators.size() < 2) {
         throw std::runtime_error("Pipeline must contain at least data source and data sink operators.");
@@ -51,6 +54,9 @@ uint64_t PipelineDefinition::run(SnapAction &action) {
     }
 
     uint64_t output_size;
+    spdlog::debug("Running Pipeline, Read: (Address: {:x}, Size: {}, Type: {}), Write: (Address: {:x}, Size: {}, Type: {})",
+        _dataSource->address().addr, _dataSource->address().size, (uint64_t)_dataSource->address().type,
+        _dataSink->address().addr, _dataSink->address().size, (uint64_t)_dataSink->address().type);
     action.execute_job(fpga::JobType::RunOperators, nullptr, _dataSource->address(), _dataSink->address(), enable_mask, /* perfmon_enable = */ 1, &output_size);
 
     for (const auto &op : _operators)

@@ -281,7 +281,11 @@ int mtl_dump_extents(MDB_txn *txn) {
     printf("Extents:\n");
     do {
 
-        printf("  Offset: %lu\tLength: %lu\n", *(uint64_t*)next_extent_key.mv_data, ((mtl_extent*) next_extent_value.mv_data)->length);
+        printf("  Offset: %lu\tLength: %lu\tStatus:%u\n",
+            *(uint64_t*)next_extent_key.mv_data,
+            ((mtl_extent*) next_extent_value.mv_data)->length,
+            ((mtl_extent*) next_extent_value.mv_data)->status
+        );
 
         res = mdb_cursor_get(cursor, &next_extent_key, &next_extent_value, MDB_NEXT);
     } while (res == MDB_SUCCESS);

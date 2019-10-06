@@ -1,12 +1,20 @@
 FROM ubuntu:bionic
 
-RUN apt-get update && apt-get install -y \
+# Avoid warnings by switching to noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
-    git \
     libcxl-dev \
     libfuse-dev \
-    liblmdb-dev
+    liblmdb-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libjq-dev \
+ && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
 
 WORKDIR /metal
 
@@ -20,6 +28,7 @@ ADD cmake/ cmake/
 ADD CMakeLists.txt .
 ADD test/ test/
 ADD src/ src/
+ADD example/ example/
 
 RUN mkdir build && cd build && cmake ..
 RUN make -C build -j8
