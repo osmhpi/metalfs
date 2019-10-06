@@ -141,6 +141,21 @@ TStatusWord issue_block_transfer_command(uint64_t bytes_remaining, uint64_t effe
     return writeThenRead(dm_cmd, cmd, dm_sts);
 }
 
+#ifdef NVME_ENABLED
+void preload_nvme_blocks(const Address &address, mtl_extmap_t &map, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp) {
+    snapu64_t start_addr = address.addr;
+    if (start_addr % StorageBlockSize) {
+        // We start writing in the middle of a block
+        issue_pmem_block_transfer_command<true>(start_addr, map, nvme_read_cmd, nvme_read_resp);
+    }
+    snapu64_t end_addr = start_addr + address.size;
+    if (end_addr % StorageBlockSize && start_addr(63, 16) != end_addr(63, 16)) {
+        // We end writing in the middle of a block that is different from the block above
+        issue_pmem_block_transfer_command<true>(end_addr, map, nvme_read_cmd, nvme_read_resp);
+    }
+}
+#endif
+
 void op_mem_read(
     axi_datamover_command_stream_t &mm2s_cmd,
     axi_datamover_status_stream_t &mm2s_sts,

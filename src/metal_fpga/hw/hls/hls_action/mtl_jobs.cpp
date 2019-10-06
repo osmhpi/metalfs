@@ -170,11 +170,18 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
         snapu64_t enable_mask = act_reg->Data.direct_data[0];
         snapu64_t perfmon_en = act_reg->Data.direct_data[1];
 
+        clear_operator_interrupts(interrupt_reg, metal_ctrl);
+
+        #ifdef NVME_ENABLED
+        if (write_mem_config.type == AddressType::NVMe) {
+            preload_nvme_blocks(write_mem_config, nvme_write_extmap, nvme_read_cmd, nvme_read_resp);
+        }
+        #endif
+
         if (perfmon_en == 1) {
             perfmon_enable(perfmon_ctrl);
         }
 
-        clear_operator_interrupts(interrupt_reg, metal_ctrl);
         snapu64_t bytes_written;
         action_run_operators(
             mem_in,
