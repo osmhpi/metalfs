@@ -157,6 +157,7 @@ void op_mem_read(
         case AddressType::NVMe: {
             uint64_t bytes_read = 0;
             while (bytes_read < config.size) {
+            #pragma HLS pipeline II=128
                 uint64_t effective_address = resolve_effective_address</*write=*/false>(config, config.addr + bytes_read);
 
             #ifdef NVME_ENABLED
@@ -196,6 +197,7 @@ uint64_t op_mem_write(
             uint64_t bytes_written = 0;
 
             for (;;) {
+            #pragma HLS pipeline II=128
                 uint64_t bytes_remaining = config.size - bytes_written;
                 uint64_t effective_address = resolve_effective_address</*write=*/true>(config, config.addr + bytes_written);
 
