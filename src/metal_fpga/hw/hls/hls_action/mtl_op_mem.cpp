@@ -104,35 +104,10 @@ TReadStreamElement writeThenRead(hls::stream<TWriteStreamElement> &writeStream, 
     return read(readStream, signal);
 }
 
-template<bool Write>
-void issue_pmem_block_transfer_command(uint64_t file_offset, mtl_extmap_t &map, NVMeCommandStream &nvme_cmd, NVMeResponseStream &nvme_resp) {
-    mtl_extmap_seek(map, file_offset / StorageBlockSize);
-
-    auto logical_block_offset = mtl_extmap_pblock(map);
-    auto drive_id = logical_block_offset[0];
-    auto physical_block_offset = (logical_block_offset >> 1) * (StorageBlockSize / 512);
-
-    auto align_address_to_block_mask = ~(StorageBlockSize-1);
-
-    NVMeCommand cmd;
-    const uint64_t NVMeDRAMBaseOffset = 0x200000000;  // According to https://github.com/open-power/snap/blob/master/hardware/doc/NVMe.md
-    cmd.dram_offset()       = NVMeDRAMBaseOffset + (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + (file_offset % (1u << 31)) & align_address_to_block_mask;
-    cmd.nvme_block_offset() = physical_block_offset;
-    cmd.num_blocks()        = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
-    cmd.drive()             = drive_id;
-
-    writeThenRead(nvme_cmd, cmd, nvme_resp);
-}
-
 template<typename TStatusWord>
-TStatusWord issue_block_transfer_command(uint64_t bytes_remaining, uint64_t effective_address, axi_datamover_command_stream_t &dm_cmd, hls::stream<TStatusWord> &dm_sts) {
-    // Always perform block-aligned transfers
-    auto transfer_limit = StorageBlockSize - (effective_address % StorageBlockSize);
-
-    snap_bool_t end_of_frame = bytes_remaining <= transfer_limit;
-    ap_uint<23> transfer_bytes = end_of_frame ? bytes_remaining : transfer_limit;
-
+TStatusWord issue_block_transfer_command(uint64_t transfer_bytes, snap_bool_t end_of_frame, uint64_t effective_address, axi_datamover_command_stream_t &dm_cmd, hls::stream<TStatusWord> &dm_sts) {
     DatamoverCommand cmd;
+    cmd = 0;
     cmd.effective_address() = effective_address;
     cmd.end_of_frame()      = end_of_frame;
     cmd.axi_burst_type()    = 1; // INCR
@@ -142,6 +117,27 @@ TStatusWord issue_block_transfer_command(uint64_t bytes_remaining, uint64_t effe
 }
 
 #ifdef NVME_ENABLED
+template<bool Write>
+void issue_pmem_block_transfer_command(uint64_t file_offset, mtl_extmap_t &map, NVMeCommandStream &nvme_cmd, NVMeResponseStream &nvme_resp) {
+    mtl_extmap_seek(map, file_offset / StorageBlockSize);
+
+    auto logical_block_offset = mtl_extmap_pblock(map);
+    auto drive_id = logical_block_offset[0];
+    auto physical_block_offset = (logical_block_offset >> 1) * (StorageBlockSize / 512);
+
+    const uint64_t NVMeDRAMBaseOffset = 0x200000000;  // According to https://github.com/open-power/snap/blob/master/hardware/doc/NVMe.md
+    const uint64_t align_address_to_block_mask = ~(StorageBlockSize-1);
+    auto dram_address = NVMeDRAMBaseOffset + (Write ? NVMeDRAMWriteOffset : NVMeDRAMReadOffset) + (file_offset % (1u << 31)) & align_address_to_block_mask;
+
+    NVMeCommand cmd;
+    cmd.dram_offset()       = dram_address;
+    cmd.nvme_block_offset() = physical_block_offset;
+    cmd.num_blocks()        = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
+    cmd.drive()             = drive_id;
+
+    writeThenRead(nvme_cmd, cmd, nvme_resp);
+}
+
 void preload_nvme_blocks(const Address &address, mtl_extmap_t &map, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp) {
     snapu64_t start_addr = address.addr;
     if (start_addr % StorageBlockSize) {
@@ -180,10 +176,15 @@ void op_mem_read(
                     issue_pmem_block_transfer_command</*write=*/false>(config.addr + bytes_read, nvme_read_extmap, nvme_read_cmd, nvme_read_resp);
             #endif
 
-                // Stream data in block-sized chunks (64K)
                 uint64_t bytes_remaining = config.size - bytes_read;
-                issue_block_transfer_command(bytes_remaining, effective_address, mm2s_cmd, mm2s_sts);
-                bytes_read += bytes_remaining <= StorageBlockSize ? bytes_remaining : StorageBlockSize;
+
+                // Always perform block-aligned transfers (i.e. a transfer does not cross a block boundary)
+                auto transfer_limit = StorageBlockSize - (effective_address % StorageBlockSize);
+                auto bytes_this_round = bytes_remaining <= transfer_limit ? bytes_remaining : transfer_limit;
+                snap_bool_t end_of_frame = bytes_this_round == bytes_remaining;
+
+                issue_block_transfer_command(bytes_this_round, end_of_frame, effective_address, mm2s_cmd, mm2s_sts);
+                bytes_read += bytes_this_round;
             }
             break;
         }
@@ -216,8 +217,13 @@ uint64_t op_mem_write(
                 uint64_t bytes_remaining = config.size - bytes_written;
                 uint64_t effective_address = resolve_effective_address</*write=*/true>(config, config.addr + bytes_written);
 
-                auto result = issue_block_transfer_command(bytes_remaining, effective_address, s2mm_cmd, s2mm_sts);
-                auto done = result.data.end_of_packet();
+                // Always perform block-aligned transfers (i.e. a transfer does not cross a block boundary)
+                auto transfer_limit = StorageBlockSize - (effective_address % StorageBlockSize);
+                auto max_bytes_this_round = bytes_remaining <= transfer_limit ? bytes_remaining : transfer_limit;
+                snap_bool_t end_of_frame = max_bytes_this_round == bytes_remaining;
+
+                auto result = issue_block_transfer_command(max_bytes_this_round, false /* end of frame does not matter because of ibtt mode */, effective_address, s2mm_cmd, s2mm_sts);
+                auto done = result.data.end_of_packet() || end_of_frame;  // Either the pipeline stops sending data or we have no space left
                 auto num_bytes_transferred = result.data.num_bytes_transferred();
 
             #ifdef NVME_ENABLED
