@@ -107,7 +107,6 @@ TReadStreamElement writeThenRead(hls::stream<TWriteStreamElement> &writeStream, 
 template<typename TStatusWord>
 TStatusWord issue_block_transfer_command(uint64_t transfer_bytes, snap_bool_t end_of_frame, uint64_t effective_address, axi_datamover_command_stream_t &dm_cmd, hls::stream<TStatusWord> &dm_sts) {
     DatamoverCommand cmd;
-    cmd = 0;
     cmd.effective_address() = effective_address;
     cmd.end_of_frame()      = end_of_frame;
     cmd.axi_burst_type()    = 1; // INCR

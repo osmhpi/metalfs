@@ -30,6 +30,7 @@ typedef hls::stream<axi_datamover_ibtt_status_t> axi_datamover_status_ibtt_strea
 
 class DatamoverCommand : public ap_uint<103> {
 public:
+    DatamoverCommand() : ap_uint(0) {};
     auto end_of_frame()      -> decltype(ap_uint<103>::operator[](30)) { return (*this)[30]; }
     auto axi_burst_type()    -> decltype(ap_uint<103>::operator[](23)) { return (*this)[23]; }
     auto effective_address() -> decltype(ap_uint<103>::range(95, 32))  { return this->range(95, 32); }
