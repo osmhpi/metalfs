@@ -9,10 +9,14 @@ options. The project adheres to semantic versioning.
 
 * Allow integers to have leading zeroes.
 * Build the tests by default.
+* Don't check for container when showing positional help.
 
 ### Added
 
 * Iterator inputs to `parse_positional`.
+* Throw an exception if the option in `parse_positional` doesn't exist.
+* Parse a delimited list in a single argument for vector options.
+* Add an option to disable implicit value on booleans.
 
 ### Bug Fixes
 
@@ -22,6 +26,7 @@ options. The project adheres to semantic versioning.
 * Throw on invalid option syntax when beginning with a `-`.
 * Throw in `as` when option wasn't present.
 * Fix catching exceptions by reference.
+* Fix out of bounds errors parsing integers.
 
 ## 2.1.1
 
