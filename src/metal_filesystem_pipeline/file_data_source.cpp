@@ -64,12 +64,12 @@ void FileDataSource::configure(SnapAction &action) {
     job_struct[0] = htobe64(0);  // slot number
     job_struct[1] = htobe64(1);  // map (vs unmap)
     job_struct[2] = htobe64(_extents.size());  // extent count
-    spdlog::debug("Mapping {} extents for reading", _extents.size());
+    spdlog::trace("Mapping {} extents for reading", _extents.size());
 
     for (uint64_t i = 0; i < _extents.size(); ++i) {
       job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
       job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
-      spdlog::debug("  Offset {}  Length {}", _extents[i].offset, _extents[i].length);
+      spdlog::trace("  Offset {}  Length {}", _extents[i].offset, _extents[i].length);
     }
 
     try {
