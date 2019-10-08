@@ -17,16 +17,36 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-TEST(NVMePipelineTest, TransferBlockToNVMe) {
+TEST(NVMePipeline, TransferBlockFromNVMe) {
 
-    uint64_t n_pages = 1;
-    uint64_t n_bytes = n_pages * 4096;
+    uint64_t n_blocks = 1;
+    uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+
+    // Read unwritten data
+    std::vector<mtl_file_extent> file = {{0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
+    auto dataSource = std::make_shared<FileDataSource>(file, 0, n_bytes);
+
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
+
+    free(dest);
+}
+
+TEST(NVMePipeline, TransferBlockToNVMe) {
+
+    uint64_t n_blocks = 1;
+    uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
     auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
 
-    std::vector<mtl_file_extent> file = {{0, 1ul << 20}};  // 1 MB
+    std::vector<mtl_file_extent> file = {{0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
     auto dataSink = std::make_shared<FileDataSink>(file, 0, n_bytes);
 
     SnapAction action(fpga::ActionType, 0);
@@ -37,14 +57,14 @@ TEST(NVMePipelineTest, TransferBlockToNVMe) {
     free(src);
 }
 
-TEST(NVMePipelineTest, WriteAndReadBlock) {
+TEST(NVMePipeline, ReadBlockHasPreviouslyWrittenContents) {
 
-    uint64_t n_pages = 1;
-    uint64_t n_bytes = n_pages * 4096;
+    uint64_t n_blocks = 1;
+    uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
     auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
     fill_payload(src, n_bytes);
 
-    std::vector<mtl_file_extent> file = {{0, 1ul << 20}};  // 1 MB
+    std::vector<mtl_file_extent> file = {{0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
@@ -68,8 +88,63 @@ TEST(NVMePipelineTest, WriteAndReadBlock) {
         ASSERT_NO_THROW(pipeline.run(action));
     }
 
+    EXPECT_EQ(0, memcmp(src, dest, n_bytes));
+
     free(src);
     free(dest);
+}
+
+TEST(NVMePipeline, WritingInMiddleOfFilePreservesSurroundingContents) {
+
+    uint64_t n_blocks = 10;
+    uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+    fill_payload(src, n_bytes);
+
+    std::vector<mtl_file_extent> file = {{0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+
+    uint64_t newBytesSize = fpga::StorageBlockSize + 4711;
+    uint64_t newBytesOffset = 42;
+    auto newBytes = reinterpret_cast<uint8_t*>(malloc(newBytesSize));
+    fill_payload(newBytes, newBytesSize);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    {   // Write
+        auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+
+        auto dataSink = std::make_shared<FileDataSink>(file, 0, n_bytes);
+
+        auto pipeline = PipelineDefinition({dataSource, dataSink});
+        ASSERT_NO_THROW(pipeline.run(action));
+    }
+
+    {   // Write new bytes
+        auto dataSource = std::make_shared<HostMemoryDataSource>(newBytes, newBytesSize);
+
+        auto dataSink = std::make_shared<FileDataSink>(file, newBytesOffset, newBytesSize);
+
+        auto pipeline = PipelineDefinition({dataSource, dataSink});
+        ASSERT_NO_THROW(pipeline.run(action));
+    }
+
+    {   // Read
+        auto dataSource = std::make_shared<FileDataSource>(file, 0, n_bytes);
+
+        auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+
+        auto pipeline = PipelineDefinition({dataSource, dataSink});
+        ASSERT_NO_THROW(pipeline.run(action));
+    }
+
+    EXPECT_EQ(0, memcmp(src, dest, newBytesOffset));
+    EXPECT_EQ(0, memcmp(src+newBytesOffset, dest+newBytesOffset, newBytesSize));
+    EXPECT_EQ(0, memcmp(src+newBytesOffset+newBytesSize, dest+newBytesOffset+newBytesSize, n_bytes-newBytesSize-newBytesOffset));
+
+    free(src);
+    free(dest);
+    free(newBytes);
 }
 
 } // namespace

@@ -25,8 +25,15 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    auto encrypt = _registry->operators().at("blowfish_encrypt");
-    auto decrypt = _registry->operators().at("blowfish_decrypt");
+    std::shared_ptr<AbstractOperator> encrypt, decrypt;
+    try {
+        encrypt = _registry->operators().at("blowfish_encrypt");
+        decrypt = _registry->operators().at("blowfish_decrypt");
+    } catch (std::exception &e) {
+        // Could not find operators
+        GTEST_SKIP();
+        return;
+    }
 
     auto keyBuffer = std::make_shared<std::vector<char>>(16);
     {
@@ -61,8 +68,15 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKe
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    auto encrypt = _registry->operators().at("blowfish_encrypt");
-    auto decrypt = _registry->operators().at("blowfish_decrypt");
+    std::shared_ptr<AbstractOperator> encrypt, decrypt;
+    try {
+        encrypt = _registry->operators().at("blowfish_encrypt");
+        decrypt = _registry->operators().at("blowfish_decrypt");
+    } catch (std::exception &e) {
+        // Could not find operators
+        GTEST_SKIP();
+        return;
+    }
 
     auto encryptKeyBuffer = std::make_shared<std::vector<char>>(16);
     auto decryptKeyBuffer = std::make_shared<std::vector<char>>(16);
