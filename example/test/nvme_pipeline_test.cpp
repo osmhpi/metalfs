@@ -9,15 +9,13 @@
 #include <gtest/gtest.h>
 #include <metal_pipeline/snap_action.hpp>
 
+#include "base_test.hpp"
+
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i;
-    }
-}
+using NVMePipelineTest = BaseTest;
 
-TEST(NVMePipeline, TransferBlockFromNVMe) {
+TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
 
     uint64_t n_blocks = 1;
     uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
@@ -37,7 +35,7 @@ TEST(NVMePipeline, TransferBlockFromNVMe) {
     free(dest);
 }
 
-TEST(NVMePipeline, TransferBlockToNVMe) {
+TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
 
     uint64_t n_blocks = 1;
     uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
@@ -57,7 +55,7 @@ TEST(NVMePipeline, TransferBlockToNVMe) {
     free(src);
 }
 
-TEST(NVMePipeline, ReadBlockHasPreviouslyWrittenContents) {
+TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
 
     uint64_t n_blocks = 1;
     uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
@@ -94,7 +92,7 @@ TEST(NVMePipeline, ReadBlockHasPreviouslyWrittenContents) {
     free(dest);
 }
 
-TEST(NVMePipeline, WritingInMiddleOfFilePreservesSurroundingContents) {
+TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
 
     uint64_t n_blocks = 10;
     uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
@@ -139,7 +137,7 @@ TEST(NVMePipeline, WritingInMiddleOfFilePreservesSurroundingContents) {
     }
 
     EXPECT_EQ(0, memcmp(src, dest, newBytesOffset));
-    EXPECT_EQ(0, memcmp(src+newBytesOffset, dest+newBytesOffset, newBytesSize));
+    EXPECT_EQ(0, memcmp(newBytes, dest+newBytesOffset, newBytesSize));
     EXPECT_EQ(0, memcmp(src+newBytesOffset+newBytesSize, dest+newBytesOffset+newBytesSize, n_bytes-newBytesSize-newBytesOffset));
 
     free(src);

@@ -1,4 +1,4 @@
-#include <include/gtest/gtest.h>
+#include <gtest/gtest.h>
 #include <malloc.h>
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/pipeline_definition.hpp>
@@ -10,13 +10,9 @@
 
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i % 256;
-    }
-}
+using BlowfishPipeline = PipelineTest;
 
-TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
+TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayload) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -25,16 +21,13 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    std::shared_ptr<AbstractOperator> encrypt, decrypt;
-    try {
-        encrypt = _registry->operators().at("blowfish_encrypt");
-        decrypt = _registry->operators().at("blowfish_decrypt");
-    } catch (std::exception &e) {
-        // Could not find operators
+    auto encrypt = try_get_operator("blowfish_encrypt");
+    auto decrypt = try_get_operator("blowfish_decrypt");
+    if (!encrypt || !decrypt) {
         GTEST_SKIP();
         return;
     }
-
+    
     auto keyBuffer = std::make_shared<std::vector<char>>(16);
     {
         std::vector<char> key ({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF });
@@ -59,7 +52,7 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayload) {
 }
 
 
-TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKeys) {
+TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayloadUsingDifferentKeys) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -68,12 +61,9 @@ TEST_F(PipelineTest, BlowfishPipeline_EncryptsAndDecryptsPayloadUsingDifferentKe
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    std::shared_ptr<AbstractOperator> encrypt, decrypt;
-    try {
-        encrypt = _registry->operators().at("blowfish_encrypt");
-        decrypt = _registry->operators().at("blowfish_decrypt");
-    } catch (std::exception &e) {
-        // Could not find operators
+    auto encrypt = try_get_operator("blowfish_encrypt");
+    auto decrypt = try_get_operator("blowfish_decrypt");
+    if (!encrypt || !decrypt) {
         GTEST_SKIP();
         return;
     }

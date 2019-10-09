@@ -13,7 +13,9 @@
 
 namespace metal {
 
-TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToUppercase) {
+using ChangecasePipeline = SimulationPipelineTest;
+
+TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
     const char input[] = "Hello World";
     char dest[20] = { 0 };
@@ -40,7 +42,7 @@ TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToUppercase) {
     EXPECT_EQ("HELLO WORLD", std::string(dest));
 }
 
-TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToLowercase) {
+TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
     const char input[] = "Hello World";
     char dest[20] = { 0 };

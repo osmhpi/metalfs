@@ -5,14 +5,29 @@
 
 namespace metal {
 
-class PipelineTest : public ::testing::Test {
+class BaseTest : public ::testing::Test {
+public:
+    static void fill_payload(uint8_t *buffer, uint64_t length);
+    static void print_memory_64(void * mem);
+};
+
+class PipelineTest : public BaseTest {
 protected:
     void SetUp() override;
+    std::shared_ptr<AbstractOperator> try_get_operator(const std::string &key);
 
     std::unique_ptr<OperatorRegistry> _registry;
 };
 
-// Aliases for selecting tests during simulation
-using SimulationPipelineTest = PipelineTest;
-using SimulationTest = ::testing::Test;
+
+class SimulationTest : public BaseTest {
+protected:
+    void SetUp() override;
+};
+
+class SimulationPipelineTest : public PipelineTest {
+protected:
+    void SetUp() override;
+};
+
 }
