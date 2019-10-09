@@ -16,7 +16,10 @@ set(
 )
 
 
-include_directories(../../third_party/googletest/googletest/)
+include_directories(
+    ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/
+    ${PROJECT_SOURCE_DIR}/third_party/spdlog
+)
 
 add_executable(metal_filesystem_test ${METAL_FILESYSTEM_TEST_SOURCES})
 target_link_libraries(metal_filesystem_test metal_filesystem ${LIBRARIES})

@@ -13,13 +13,9 @@
 
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i % 256;
-    }
-}
+using ColorfilterPipeline = SimulationPipelineTest;
 
-TEST_F(SimulationPipelineTest, ColorfilterPipeline_PreservesHeaderData) {
+TEST_F(ColorfilterPipeline, PreservesHeaderData) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;

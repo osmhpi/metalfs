@@ -13,12 +13,22 @@
 
 namespace metal {
 
-TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToUppercase) {
+using ChangecasePipeline = SimulationPipelineTest;
+
+TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
     const char input[] = "Hello World";
     char dest[20] = { 0 };
 
-    auto transformer = _registry->operators().at("changecase");
+    std::shared_ptr<AbstractOperator> transformer;
+    try {
+        transformer = _registry->operators().at("changecase");
+    } catch (std::exception &e) {
+        // Could not find operator
+        GTEST_SKIP();
+        return;
+    }
+
     transformer->setOption("lowercase", false);
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(input, sizeof(input) - 1);
@@ -32,12 +42,20 @@ TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToUppercase) {
     EXPECT_EQ("HELLO WORLD", std::string(dest));
 }
 
-TEST_F(SimulationPipelineTest, ChangecasePipeline_TransformsToLowercase) {
+TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
     const char input[] = "Hello World";
     char dest[20] = { 0 };
 
-    auto transformer = _registry->operators().at("changecase");
+    std::shared_ptr<AbstractOperator> transformer;
+    try {
+        transformer = _registry->operators().at("changecase");
+    } catch (std::exception &e) {
+        // Could not find operator
+        GTEST_SKIP();
+        return;
+    }
+
     transformer->setOption("lowercase", true);
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(input, sizeof(input) - 1);

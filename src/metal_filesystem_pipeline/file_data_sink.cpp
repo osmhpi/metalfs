@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include <utility>
+#include <spdlog/spdlog.h>
 
 #include <metal_pipeline/snap_action.hpp>
 #include <metal_fpga/hw/hls/include/snap_action_metal.h>
@@ -65,10 +66,12 @@ void FileDataSink::configure(SnapAction &action) {
   job_struct[0] = htobe64(1);  // slot number
   job_struct[1] = htobe64(1);  // map (vs unmap)
   job_struct[2] = htobe64(_extents.size());  // extent count
+  spdlog::trace("Mapping {} extents for writing", _extents.size());
 
   for (uint64_t i = 0; i < _extents.size(); ++i) {
     job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
     job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
+    spdlog::trace("  Offset {}  Length {}", _extents[i].offset, _extents[i].length);
   }
 
   try {

@@ -1,16 +1,14 @@
-
 extern "C" {
 #include "../../metal_filesystem/metal.h"
-};
+}
 
-#include <metal_filesystem_pipeline/metal_pipeline_storage.hpp>
-#include <thread>
-#include <libgen.h>
 #include <dirent.h>
+#include <thread>
+
 #include <spdlog/spdlog.h>
-#include <spdlog/common.h>
+#include <cxxopts.hpp>
+
 #include "server.hpp"
-#include "../../../third_party/cxxopts/include/cxxopts.hpp"
 #include "metal_fuse_operations.hpp"
 
 struct metal_config {

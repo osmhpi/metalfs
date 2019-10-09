@@ -17,7 +17,7 @@ static void fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
-TEST(DRAMPipelineTest, TransferBlockToNVMe) {
+TEST(DRAMPipelineTest, TransferBlockToDRAM) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;

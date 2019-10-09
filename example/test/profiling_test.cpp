@@ -11,20 +11,6 @@
 
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i;
-    }
-}
-
-//static void print_memory_64(void * mem)
-//{
-//    for (int i = 0; i < 64; ++i) {
-//        printf("%02x ", ((uint8_t*)mem)[i]);
-//        if (i%8 == 7) printf("\n");
-//    }
-//}
-
 TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
 
     uint64_t n_pages = 1;
@@ -35,9 +21,13 @@ TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    auto decrypt = _registry->operators().at("blowfish_decrypt");
-    auto change_case = _registry->operators().at("changecase");
-    auto encrypt = _registry->operators().at("blowfish_encrypt");
+    auto decrypt = try_get_operator("blowfish_decrypt");
+    auto change_case = try_get_operator("changecase");
+    auto encrypt = try_get_operator("blowfish_encrypt");
+    if (!decrypt || !change_case || !encrypt) {
+        GTEST_SKIP();
+        return;
+    }
 
     auto keyBuffer = std::make_shared<std::vector<char>>(16);
     {
@@ -73,7 +63,12 @@ TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 128;
 
-    auto change_case = _registry->operators().at("changecase");
+    auto change_case = try_get_operator("changecase");
+    if (!change_case) {
+        GTEST_SKIP();
+        return;
+    }
+
     auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
     auto dataSink = std::make_shared<NullDataSink>(n_bytes);
 

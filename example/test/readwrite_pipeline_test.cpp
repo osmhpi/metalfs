@@ -11,21 +11,9 @@
 
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i;
-    }
-}
+using ReadWritePipeline = SimulationTest;
 
-//static void print_memory_64(void * mem)
-//{
-//    for (int i = 0; i < 64; ++i) {
-//        printf("%02x ", ((uint8_t*)mem)[i]);
-//        if (i%8 == 7) printf("\n");
-//    }
-//}
-
-TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePage) {
+TEST_F(ReadWritePipeline, TransfersEntirePage) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -48,7 +36,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePage) {
     free(dest);
 }
 
-TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
+TEST_F(ReadWritePipeline, TransfersEntirePageToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -66,7 +54,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageToInternalSink) {
     free(src);
 }
 
-TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGenerator) {
+TEST_F(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -84,7 +72,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGene
     free(dest);
 }
 
-TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
+TEST_F(ReadWritePipeline, TransfersEntirePageFromInternalDataGeneratorToInternalSink) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -98,7 +86,7 @@ TEST_F(SimulationTest, ReadWritePipeline_TransfersEntirePageFromInternalDataGene
     ASSERT_NO_THROW(pipeline.run(action));
 }
 
-TEST_F(SimulationTest, ReadWritePipeline_TransfersUnalignedDataSpanningMultiplePages) {
+TEST_F(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
 
     uint64_t src_pages = 3;
     uint64_t src_bytes = src_pages * 4096;
