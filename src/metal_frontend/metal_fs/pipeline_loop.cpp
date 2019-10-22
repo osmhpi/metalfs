@@ -1,3 +1,4 @@
+#include <spdlog/spdlog.h>
 #include <Messages.pb.h>
 #include <metal_frontend/messages/message_header.hpp>
 #include <metal_pipeline/data_source.hpp>
@@ -66,10 +67,14 @@ void PipelineLoop::run() {
 
   // Receive ready signal from first client
   auto inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+  spdlog::trace("AgentPushBuffer({}, {})", inputBufferMessage.size(), inputBufferMessage.eof());
+
 
   // Wait until all other clients signal ready as well
   for (auto operatorAgentPair = std::next(firstAgentIt, 1); operatorAgentPair != std::next(lastAgentIt, 1); ++operatorAgentPair) {
-    operatorAgentPair->second->socket.receive_message<message_type::AgentPushBuffer>();
+    auto msg = operatorAgentPair->second->socket.receive_message<message_type::AgentPushBuffer>();
+
+    spdlog::trace("AgentPushBuffer({}, {})", msg.size(), msg.eof());
   }
 
   for (;;) {
@@ -132,6 +137,7 @@ void PipelineLoop::run() {
       }
 
       currentAgentIt->second->socket.send_message<message_type::ServerProcessedBuffer>(msg);
+      spdlog::trace("ServerProcessedBuffer({}, {})", msg.size(), msg.eof());
     }
 
     if (eof) return;
@@ -140,14 +146,17 @@ void PipelineLoop::run() {
       // Wait for output client push buffer message (i.e. 'ready')
       if (firstAgentIt == lastAgentIt) {
         inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+	spdlog::trace("AgentPushBuffer({}, {})", inputBufferMessage.size(), inputBufferMessage.eof());
       } else {
-        lastAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+        auto msg = lastAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+	spdlog::trace("AgentPushBuffer({}, {})", msg.size(), msg.eof());
       }
     }
 
-    if (firstAgentIt != lastAgentIt && firstAgentIt->second->input_buffer) {
+    if ((firstAgentIt != lastAgentIt || !lastAgentIt->second->output_buffer) && firstAgentIt->second->input_buffer) {
       // Wait for input client push buffer message (i.e. the next inputBufferMessage)
       inputBufferMessage = firstAgentIt->second->socket.receive_message<message_type::AgentPushBuffer>();
+	spdlog::trace("AgentPushBuffer({}, {})", inputBufferMessage.size(), inputBufferMessage.eof());
     }
   }
 }
