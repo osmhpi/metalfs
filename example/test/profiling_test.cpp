@@ -11,7 +11,9 @@
 
 namespace metal {
 
-TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
+using ProfilingPipeline = PipelineTest;
+
+TEST_F(ProfilingPipeline, ProfileOperators) {
 
     uint64_t n_pages = 1;
 
@@ -58,7 +60,7 @@ TEST_F(PipelineTest, ProfilingPipeline_ProfileOperators) {
 //    std::cout << runner.formatProfilingResults();
 }
 
-TEST_F(PipelineTest, ProfilingPipeline_BenchmarkChangecase) {
+TEST_F(ProfilingPipeline, BenchmarkChangecase) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 128;
