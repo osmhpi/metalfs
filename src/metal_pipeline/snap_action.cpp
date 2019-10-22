@@ -12,6 +12,8 @@
 namespace metal {
 
 SnapAction::SnapAction(snap_action_type_t action_type, int card_no) {
+    spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card_no);
+
     char device[128];
     snprintf(device, sizeof(device)-1, "/dev/cxl/afu%d.0s", card_no);
 
@@ -19,6 +21,8 @@ SnapAction::SnapAction(snap_action_type_t action_type, int card_no) {
     if (!_card) {
         throw std::runtime_error("Failed to open card");
     }
+
+    spdlog::trace("Attaching to Metal FS action...");
 
     auto action_irq = (snap_action_flag_t)(SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
     _action = snap_attach_action(_card, action_type, action_irq, 10);
