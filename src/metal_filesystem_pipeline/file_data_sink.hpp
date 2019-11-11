@@ -12,12 +12,13 @@ namespace metal {
 class FileDataSink : public DataSink {
 
   // Common API
- public:
- protected:
+public:
+protected:
   fpga::AddressType addressType() override { return fpga::AddressType::NVMe; }
 
   void configure(SnapAction &action) override;
   void finalize(SnapAction &action) override;
+  void seek(uint64_t offset) { _address = offset; }
 
   std::vector<mtl_file_extent> _extents;
 
@@ -27,13 +28,13 @@ public:
 
 
   // API to be used when building file pipelines (filename-based)
- public:
+public:
   explicit FileDataSink(std::string filename, uint64_t offset, uint64_t size = 0);
 
   void prepareForTotalProcessingSize(size_t size) override;
   void setSize(size_t size) override;
 
- protected:
+protected:
   void loadExtents();
 
   std::string _filename;

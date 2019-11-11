@@ -16,6 +16,7 @@ struct metal_config {
   char *operators;
   char *metadata_dir;
   int in_memory;
+  int verbosity;
 };
 enum {
   KEY_HELP,
@@ -28,10 +29,12 @@ static struct fuse_opt metal_opts[] = {
         METAL_OPT("--card=%i",         card, 0),
         METAL_OPT("-c %i",             card, 0),
         METAL_OPT("--metadata %s",     metadata_dir, 0),
-        METAL_OPT("--in_memory",       in_memory, 1),
-//        METAL_OPT("nomybool",          in_memory, 0),
-        METAL_OPT("--in_memory=true",  in_memory, 1),
-        METAL_OPT("--in_memory=false", in_memory, 0),
+        METAL_OPT("--in-memory",       in_memory, 1),
+        METAL_OPT("--in-memory=true",  in_memory, 1),
+        METAL_OPT("--in-memory=false", in_memory, 0),
+        METAL_OPT("-v",                verbosity, 1),
+        METAL_OPT("-vv",               verbosity, 2),
+        METAL_OPT("-vvv",              verbosity, 3),
 
         FUSE_OPT_KEY("-V",             KEY_VERSION),
         FUSE_OPT_KEY("--version",      KEY_VERSION),
@@ -55,20 +58,17 @@ static int metal_opt_proc(void *data, const char *arg, int key, struct fuse_args
                     "    -h   --help      print help\n"
                     "    -V   --version   print version\n"
                     "\n"
-                    "Myfs options:\n"
-                    "    -o card=CARD (0)\n"
-                    "    -o mystring=STRING\n"
-                    "    -o mybool\n"
-                    "    -o nomybool\n"
-                    "    -n NUM           same as '-omynum=NUM'\n"
-                    "    --mybool=BOOL    same as 'mybool' or 'nomybool'\n"
+                    "metal_fs options:\n"
+                    "    --card=CARD (0)\n"
+                    "    --metadata=METADATA_PATH\n"
+                    "    --in-memory=(true|false)\n"
                     , outargs->argv[0]);
         fuse_opt_add_arg(outargs, "-h");
         fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations, NULL);
         exit(1);
 
         case KEY_VERSION:
-            fprintf(stderr, "Metal version %s\n", "0.0.1");
+            fprintf(stderr, "metal_fs version %s\n", "0.0.1");
         fuse_opt_add_arg(outargs, "--version");
         fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations, NULL);
         exit(0);
@@ -86,7 +86,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // spdlog::set_level(spdlog::level::debug);
+    if (conf.verbosity >= 3) {
+        spdlog::set_level(spdlog::level::trace);
+    } else if (conf.verbosity == 2) {
+        spdlog::set_level(spdlog::level::debug);
+    } else if (conf.verbosity == 1) {
+        spdlog::set_level(spdlog::level::info);
+    } else {
+        spdlog::set_level(spdlog::level::warn);
+    }
 
     auto & c = metal::Context::instance();
 

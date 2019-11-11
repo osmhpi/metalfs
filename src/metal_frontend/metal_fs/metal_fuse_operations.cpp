@@ -17,6 +17,7 @@ extern "C" {
 
 #include <thread>
 #include <cxxopts.hpp>
+#include <spdlog/spdlog.h>
 
 #include <metal_pipeline/pipeline_runner.hpp>
 #include <metal_pipeline/data_source.hpp>
@@ -25,6 +26,7 @@ extern "C" {
 namespace metal {
 
 int fuse_chown(const char *path, uid_t uid, gid_t gid) {
+    spdlog::trace("fuse_chown {}", path);
     auto &c = Context::instance();
     if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) != 0)
         return -ENOSYS;
@@ -33,6 +35,7 @@ int fuse_chown(const char *path, uid_t uid, gid_t gid) {
 }
 
 int fuse_getattr(const char *path, struct stat *stbuf) {
+    spdlog::trace("fuse_getattr {}", path);
     memset(stbuf, 0, sizeof(struct stat));
 
     int res;
@@ -115,6 +118,8 @@ int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     (void) offset;
     (void) fi;
 
+    spdlog::trace("fuse_readdir {}", path);
+
     auto &c = Context::instance();
 
     if (strcmp(path, "/") == 0) {
@@ -165,6 +170,7 @@ int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 int fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
+    spdlog::trace("fuse_create {}", path);
     int res;
     (void) mode; // TODO
 
@@ -185,6 +191,7 @@ int fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
 }
 
 int fuse_readlink(const char *path, char *buf, size_t size) {
+    spdlog::trace("fuse_readlink {}", path);
     auto &c = Context::instance();
     if (strncmp(path, "/", 1) == 0) {  // probably nonsense
         if (strcmp(path + 1, c.socket_alias().c_str()) == 0) {
@@ -197,6 +204,7 @@ int fuse_readlink(const char *path, char *buf, size_t size) {
 }
 
 int fuse_open(const char *path, struct fuse_file_info *fi) {
+    spdlog::trace("fuse_open {}", path);
 
     int res;
 
@@ -219,6 +227,7 @@ int fuse_open(const char *path, struct fuse_file_info *fi) {
 
 int fuse_read(const char *path, char *buf, size_t size, off_t offset,
               struct fuse_file_info *fi) {
+    spdlog::trace("fuse_read {}", path);
 
     auto &c = Context::instance();
 
@@ -267,12 +276,14 @@ int fuse_read(const char *path, char *buf, size_t size, off_t offset,
 }
 
 int fuse_release(const char *path, struct fuse_file_info *fi) {
+    spdlog::trace("fuse_release {}", path);
     (void) path;
     (void) fi;
     return 0;
 }
 
 int fuse_truncate(const char *path, off_t size) {
+    spdlog::trace("fuse_truncate {}", path);
     // struct fuse_file_info* is not available in truncate :/
     int res;
 
@@ -300,6 +311,8 @@ int fuse_write(const char *path, const char *buf, size_t size,
                off_t offset, struct fuse_file_info *fi) {
     (void) path;
 
+    spdlog::trace("fuse_write {}", path);
+
     auto &c = Context::instance();
 
     if (fi->fh != 0) {
@@ -313,6 +326,7 @@ int fuse_write(const char *path, const char *buf, size_t size,
 }
 
 int fuse_unlink(const char *path) {
+    spdlog::trace("fuse_unlink {}", path);
 
     int res;
 
@@ -335,6 +349,8 @@ int fuse_mkdir(const char *path, mode_t mode) {
     int res;
     (void) mode; // TODO
 
+    spdlog::trace("fuse_mkdir {}", path);
+
     auto &c = Context::instance();
 
     if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) == 0) {
@@ -352,6 +368,7 @@ int fuse_mkdir(const char *path, mode_t mode) {
 
 
 int fuse_rmdir(const char *path) {
+    spdlog::trace("fuse_rmdir {}", path);
     int res;
 
     auto &c = Context::instance();
@@ -370,6 +387,7 @@ int fuse_rmdir(const char *path) {
 }
 
 int fuse_rename(const char *from_path, const char *to_path) {
+    spdlog::trace("fuse_rename {} {}", from_path, to_path);
     int res;
 
     auto &c = Context::instance();
@@ -396,8 +414,12 @@ Context &Context::instance() {
 void Context::initialize(bool in_memory, std::string bin_path, std::string metadata_dir, int card) {
     _card = card;
 
-    auto image_info = SnapPipelineRunner::readImageInfo(_card);
-    _registry = std::make_shared<OperatorRegistry>(image_info);
+    if (!in_memory) {
+        auto image_info = SnapPipelineRunner::readImageInfo(_card);
+        _registry = std::make_shared<OperatorRegistry>(image_info);
+    } else {
+        _registry = std::make_shared<OperatorRegistry>("{\"operators\": {}}");
+    }
 
     // Add the random data source operator
     auto datagen = std::make_shared<RandomDataSource>();
