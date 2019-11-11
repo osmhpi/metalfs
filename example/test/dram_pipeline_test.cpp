@@ -8,16 +8,13 @@
 #include <metal_filesystem_pipeline/file_data_source.hpp>
 #include <gtest/gtest.h>
 #include <metal_pipeline/snap_action.hpp>
+#include "base_test.hpp"
 
 namespace metal {
 
-static void fill_payload(uint8_t *buffer, uint64_t length) {
-    for (uint64_t i = 0; i < length; ++i) {
-        buffer[i] = i;
-    }
-}
+using DRAMPipeline = BaseTest;
 
-TEST(DRAMPipelineTest, TransferBlockToDRAM) {
+TEST_F(DRAMPipeline, TransferBlockToDRAM) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
@@ -36,7 +33,7 @@ TEST(DRAMPipelineTest, TransferBlockToDRAM) {
     free(src);
 }
 
-TEST(DRAMPipelineTest, WriteAndReadBlock) {
+TEST_F(DRAMPipeline, WriteAndReadBlock) {
 
     uint64_t n_pages = 1;
     uint64_t n_bytes = n_pages * 4096;
