@@ -37,13 +37,23 @@ static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 
     switch (slot) {
         case 0: {
-            mtl_extmap_load(nvme_read_extmap, extent_count, extent_address, mem_in);
+            mtl_extmap_load(dram_read_extmap, extent_count, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
+            mtl_extmap_load(dram_write_extmap, extent_count, extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+#ifdef NVME_ENABLED
+        case 2: {
+            mtl_extmap_load(nvme_read_extmap, extent_count, extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+        case 3: {
             mtl_extmap_load(nvme_write_extmap, extent_count, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
+#endif
         default: {
             return SNAP_RETC_FAILURE;
         }

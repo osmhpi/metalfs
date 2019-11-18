@@ -9,11 +9,13 @@ class BaseTest : public ::testing::Test {
 public:
     static void fill_payload(uint8_t *buffer, uint64_t length);
     static void print_memory_64(void * mem);
+    void SetUp() override;
+    virtual void _setUp(){};
 };
 
 class PipelineTest : public BaseTest {
 protected:
-    void SetUp() override;
+    void _setUp() override;
     std::shared_ptr<AbstractOperator> try_get_operator(const std::string &key);
 
     std::unique_ptr<OperatorRegistry> _registry;

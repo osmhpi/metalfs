@@ -72,6 +72,7 @@ enum class JobType : uint64_t {
 };
 
 const uint64_t StorageBlockSize = 64 * 1024;
+const uint64_t PagefileSize = 128 * StorageBlockSize;
 
 enum class AddressType : uint16_t {
     Host,
@@ -83,7 +84,9 @@ enum class AddressType : uint16_t {
 
 enum class MapType : uint16_t {
     None,
-    NVMe
+    DRAM,
+    NVMe,
+    DRAMAndNVMe
 };
 
 struct Address {
