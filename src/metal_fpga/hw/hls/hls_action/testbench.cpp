@@ -6,6 +6,7 @@
 namespace metal {
 namespace fpga {
 
+#ifndef NVME_ENABLED
 TEST_CASE("Issue partial transfer") {
     hls::stream<TransferElement> partial_transfers;
 
@@ -47,7 +48,6 @@ TEST_CASE("Load NVMe blocks does nothing") {
     REQUIRE(output.data.address == input.data.address);
     REQUIRE(output.data.size == input.data.size);
     REQUIRE(output.data.type == input.data.type);
-    void transfer_to_stream(hls::stream<TransferElement> &in, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_stream_t &dm_sts);
 }
 
 TEST_CASE("Transfer to stream returns") {
@@ -95,6 +95,37 @@ TEST_CASE("Read memory from host") {
 
     REQUIRE(mm2s_cmd.size() == 1);
 }
+#endif
+
+#ifdef NVME_ENABLED
+TEST_CASE("Load NVMe blocks does something") {
+    hls::stream<TransferElement> in, out;
+    hls::stream<uint64_t> nvme_transfers;
+    NVMeCommandStream nvme_cmd; NVMeResponseStream nvme_resp;
+    TransferElement input, output;
+
+    input.last = true;
+    input.data.address = 42 * StorageBlockSize;
+    input.data.size = StorageBlockSize;
+    input.data.type = AddressType::NVMe;
+    in << input;
+
+    nvme_transfers << 0;
+
+    nvme_resp << 1;
+
+    load_nvme_data(in, out, nvme_transfers, nvme_cmd, nvme_resp);
+
+    REQUIRE(nvme_cmd.size() == 1);
+    REQUIRE(out.size() == 1);
+
+    out >> output;
+    REQUIRE(output.last);
+    REQUIRE(output.data.address == input.data.address);
+    REQUIRE(output.data.size == input.data.size);
+    REQUIRE(output.data.type == input.data.type);
+}
+#endif
 
 }
 }

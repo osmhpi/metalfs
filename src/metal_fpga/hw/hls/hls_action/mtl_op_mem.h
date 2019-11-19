@@ -65,7 +65,7 @@ extern mtl_extmap_t nvme_write_extmap;
 mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config, snapu32_t *data_preselect_switch_ctrl);
 
 #ifdef NVME_ENABLED
-void preload_nvme_blocks(const Address &address, mtl_extmap_t &map, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp);
+void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, mtl_extmap_t &nvme_extentmap, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp);
 #endif
 
 void op_mem_read(

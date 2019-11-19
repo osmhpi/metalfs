@@ -24,12 +24,13 @@ public:
             _address,
             static_cast<uint32_t>(_size),
             addressType(),
-            fpga::MapType::None
+            mapType(),
         };
     }
 
 protected:
     virtual fpga::AddressType addressType() = 0;
+    virtual fpga::MapType mapType() { return fpga::MapType::None; }
     uint64_t _address;
     size_t _size;
 

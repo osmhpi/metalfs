@@ -184,7 +184,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 
         #ifdef NVME_ENABLED
         if (write_mem_config.type == AddressType::NVMe) {
-            preload_nvme_blocks(write_mem_config, nvme_write_extmap, nvme_read_cmd, nvme_read_resp);
+            preload_nvme_blocks(write_mem_config, dram_write_extmap, nvme_write_extmap, nvme_read_cmd, nvme_read_resp);
         }
         #endif
 
