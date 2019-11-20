@@ -50,7 +50,7 @@ mtl_bool_t mtl_extmap_seek(mtl_extmap_t & map, snapu64_t lblock) {
 
     map.current_lblock = lblock;
     for (mtl_extent_count_t i_extent = 0; i_extent < map.extent_count; ++i_extent) {
-#pragma HLS UNROLL factor=16
+// #pragma HLS UNROLL factor=16
         uint64_t extent_begin = mtl_extmap_firstlblock(map, i_extent);
         uint64_t extent_end = map.extents_nextlblock[i_extent];
         if (extent_begin <= lblock && lblock < extent_end) {

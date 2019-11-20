@@ -149,6 +149,24 @@ void issue_partial_transfers(const Address& transfer
 ) {
     uint64_t bytes_transferred = 0;
 
+    // Perform seek in the extent maps
+    switch (transfer.map) {
+        case MapType::DRAM:
+            mtl_extmap_seek(dram_extentmap, transfer.addr / StorageBlockSize);
+            break;
+#ifdef NVME_ENABLED
+        case MapType::NVMe:
+            mtl_extmap_seek(nvme_extentmap, transfer.addr / StorageBlockSize);
+            break;
+        case MapType::DRAMAndNVMe:
+            mtl_extmap_seek(nvme_extentmap, transfer.addr / StorageBlockSize);
+            mtl_extmap_seek(dram_extentmap, (transfer.addr % PagefileSize) / StorageBlockSize);
+            break;
+#endif
+        default:
+            break;
+    }
+
     while (bytes_transferred < transfer.size) {
         uint64_t bytes_remaining = transfer.size - bytes_transferred;
         uint64_t current_address = transfer.addr + bytes_transferred;
@@ -162,23 +180,22 @@ void issue_partial_transfers(const Address& transfer
         TransferElement partial_transfer = {};
         switch (transfer.map) {
             case MapType::DRAM: {
-                mtl_extmap_seek(dram_extentmap, current_address / StorageBlockSize);
                 partial_transfer.data.address = (mtl_extmap_pblock(dram_extentmap) * StorageBlockSize) + intra_block_offset;
+                mtl_extmap_next(dram_extentmap);
                 break;
             }
 #ifdef NVME_ENABLED
             case MapType::NVMe: {
-                mtl_extmap_seek(nvme_extentmap, current_address / StorageBlockSize);
                 partial_transfer.data.address = NVMeDRAMReadOffset + (current_address % (1u << 31)); // Where to put data in DRAM
                 nvme_transfers << (mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize) + intra_block_offset; // Where to read from NVMe
+                mtl_extmap_next(nvme_extentmap);
                 break;
             }
             case MapType::DRAMAndNVMe:{
-                uint64_t pagefile_offset = current_address % PagefileSize;
-                mtl_extmap_seek(dram_extentmap, pagefile_offset / StorageBlockSize);
                 partial_transfer.data.address = (mtl_extmap_pblock(dram_extentmap) * StorageBlockSize) + intra_block_offset; // Where to put data in DRAM
-                mtl_extmap_seek(nvme_extentmap, current_address / StorageBlockSize);
                 nvme_transfers << (mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize) + intra_block_offset; // Where to read from NVMe
+                mtl_extmap_next(dram_extentmap);
+                mtl_extmap_next(nvme_extentmap);
                 break;
             }
 #endif
