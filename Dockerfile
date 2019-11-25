@@ -1,10 +1,12 @@
-FROM ubuntu:bionic
+FROM ubuntu:bionic AS build
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
     build-essential \
     cmake \
     libcxl-dev \
@@ -30,7 +32,24 @@ ADD test/ test/
 ADD src/ src/
 ADD example/ example/
 
-RUN mkdir build && cd build && cmake ..
+RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 RUN make -C build -j8
 
-ENTRYPOINT /metal/build/metal_fs
+
+FROM ubuntu:bionic
+COPY --from=build /metal/build/metal_fs /usr/bin/metal_fs
+COPY --from=build /metal/snap/software/lib/libsnap.so /usr/lib/libsnap.so
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    fuse \
+    liblmdb0 \
+    libjq1 \
+    libprotobuf10 \
+    libcxl1 \
+ && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=
+
+ENTRYPOINT /usr/bin/metal_fs

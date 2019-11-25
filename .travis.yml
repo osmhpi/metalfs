@@ -1,0 +1,10 @@
+language: generic
+
+os: linux
+arch: ppc64le
+
+services:
+- docker
+
+script:
+- docker build -t metalfs/metalfs:latest .
