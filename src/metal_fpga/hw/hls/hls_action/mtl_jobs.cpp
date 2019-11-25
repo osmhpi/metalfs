@@ -29,26 +29,25 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
 // File Map / Unmap Operation:
 static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 {
-	snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
-	auto slot = mtl_get64<0>(line);
-	auto map_else_unmap = (mtl_get64<8>(line) == 0) ? MTL_FALSE : MTL_TRUE;
-	auto extent_address = job_address + MFB_INCREMENT;
+    snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
+    auto slot = reinterpret_cast<ExtmapSlot>(mtl_get64<0>(line));
+    auto extent_address = job_address + MFB_INCREMENT;
 
     switch (slot) {
-        case 0: {
+        case ExtmapSlot::CardDRAMRead: {
             mtl_extmap_load(dram_read_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
-        case 1: {
+        case ExtmapSlot::CardDRAMWrite: {
             mtl_extmap_load(dram_write_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
 #ifdef NVME_ENABLED
-        case 2: {
+        case ExtmapSlot::NVMeRead: {
             mtl_extmap_load(nvme_read_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
-        case 3: {
+        case ExtmapSlot::NVMeWrite: {
             mtl_extmap_load(nvme_write_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
@@ -215,7 +214,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 
     #ifndef NO_SYNTH
         if (perfmon_en == 1) {
-        // perfmon_disable(perfmon_ctrl);
             perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
         }
     #endif

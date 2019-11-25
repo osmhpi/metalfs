@@ -61,7 +61,7 @@ void FileDataSource::configure(SnapAction &action) {
                     + (2 * _extents.size()) // two words for each extent
             ))
     );
-    job_struct[0] = htobe64(0);  // slot number
+    job_struct[0] = htobe64(static_cast<uint64_t>(fpga::ExtmapSlot::NVMeRead));  // slot number
     job_struct[1] = htobe64(1);  // map (vs unmap)
     job_struct[2] = htobe64(_extents.size());  // extent count
     spdlog::trace("Mapping {} extents for reading", _extents.size());

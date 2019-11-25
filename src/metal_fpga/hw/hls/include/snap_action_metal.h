@@ -17,8 +17,6 @@ enum class JobType : uint64_t {
     Map,
     // 64bit words at job_address:
     //   word0: slot                | R
-    //   word1: map_else_unmap      | R
-    //   word2: extent_count        | R
     //   ...
     //   word(2n+8): extent n begin | R
     //   word(2n+9): extent n count | R
@@ -73,20 +71,28 @@ enum class JobType : uint64_t {
 
 const uint64_t StorageBlockSize = 64 * 1024;
 const uint64_t PagefileSize = 128 * StorageBlockSize;
+const uint64_t MaxExtentsPerFile = 512;
+
+enum class ExtmapSlot : uint64_t {
+    CardDRAMRead = 0,
+    CardDRAMWrite = 1,
+    NVMeRead = 2,
+    NVMeWrite = 3
+};
 
 enum class AddressType : uint16_t {
-    Host,
-    CardDRAM,
-    NVMe,
-    Null,
-    Random
+    Host = 0,
+    CardDRAM = 1,
+    NVMe = 2,
+    Null = 3,
+    Random = 4
 };
 
 enum class MapType : uint16_t {
-    None,
-    DRAM,
-    NVMe,
-    DRAMAndNVMe
+    None = 0,
+    DRAM = 1,
+    NVMe = 2,
+    DRAMAndNVMe = 3
 };
 
 struct Address {
