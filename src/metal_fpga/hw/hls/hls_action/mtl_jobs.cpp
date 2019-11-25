@@ -30,7 +30,7 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
 static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 {
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
-    auto slot = reinterpret_cast<ExtmapSlot>(mtl_get64<0>(line));
+    auto slot = static_cast<ExtmapSlot>(uint64_t(mtl_get64<0>(line)));
     auto extent_address = job_address + MFB_INCREMENT;
 
     switch (slot) {
