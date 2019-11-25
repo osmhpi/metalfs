@@ -44,20 +44,20 @@ mtl_retc_t action_configure_perfmon(snapu32_t *perfmon_ctrl, uint8_t stream_id0,
     // Slot 6 : 22
 
     uint32_t metrics_0 = 0x15121110
-        | stream_id0 << (0 * 8) + 5
-        | stream_id0 << (1 * 8) + 5
-        | stream_id0 << (2 * 8) + 5
-        | stream_id0 << (3 * 8) + 5;
+        | stream_id0 << ((0 * 8) + 5)
+        | stream_id0 << ((1 * 8) + 5)
+        | stream_id0 << ((2 * 8) + 5)
+        | stream_id0 << ((3 * 8) + 5);
 
     uint32_t metrics_1 = 0x12111016
-        | stream_id0 << (0 * 8) + 5
-        | stream_id1 << (1 * 8) + 5
-        | stream_id1 << (2 * 8) + 5
-        | stream_id1 << (3 * 8) + 5;
+        | stream_id0 << ((0 * 8) + 5)
+        | stream_id1 << ((1 * 8) + 5)
+        | stream_id1 << ((2 * 8) + 5)
+        | stream_id1 << ((3 * 8) + 5);
 
     uint32_t metrics_2 = 0x00001615
-        | stream_id1 << (0 * 8) + 5
-        | stream_id1 << (1 * 8) + 5;
+        | stream_id1 << ((0 * 8) + 5)
+        | stream_id1 << ((1 * 8) + 5);
 
     // Write Metric Selection Register 0
     perfmon_ctrl[0x44 / sizeof(uint32_t)] = metrics_0;

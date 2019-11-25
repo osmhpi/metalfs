@@ -32,25 +32,24 @@ static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 	snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
 	auto slot = mtl_get64<0>(line);
 	auto map_else_unmap = (mtl_get64<8>(line) == 0) ? MTL_FALSE : MTL_TRUE;
-	auto extent_count = mtl_get64<16>(line);
 	auto extent_address = job_address + MFB_INCREMENT;
 
     switch (slot) {
         case 0: {
-            mtl_extmap_load(dram_read_extmap, extent_count, extent_address, mem_in);
+            mtl_extmap_load(dram_read_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 1: {
-            mtl_extmap_load(dram_write_extmap, extent_count, extent_address, mem_in);
+            mtl_extmap_load(dram_write_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
 #ifdef NVME_ENABLED
         case 2: {
-            mtl_extmap_load(nvme_read_extmap, extent_count, extent_address, mem_in);
+            mtl_extmap_load(nvme_read_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
         case 3: {
-            mtl_extmap_load(nvme_write_extmap, extent_count, extent_address, mem_in);
+            mtl_extmap_load(nvme_write_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
 #endif
