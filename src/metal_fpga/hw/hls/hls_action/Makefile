@@ -12,6 +12,9 @@ srcs += \
 	operators.cpp \
 	hls_action.cpp
 
+testbench_srcs += \
+	transfer_test.cpp
+
 WRAPPER ?= hls_action
 
 include $(SNAP_ROOT)/actions/hls.mk

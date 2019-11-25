@@ -1,5 +1,4 @@
-#define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 #include "snap_action_metal.h"
 #include "mtl_op_mem.h"
 
@@ -72,6 +71,7 @@ TEST_CASE("Transfer to stream returns") {
     transfer_to_stream(in, mm2s_cmd, mm2s_sts);
 
     REQUIRE(mm2s_cmd.size() == 1);
+    mm2s_cmd.read();  // Empty stream to avoid runtime warning
 }
 
 TEST_CASE("Read memory from host") {
@@ -94,6 +94,7 @@ TEST_CASE("Read memory from host") {
     op_mem_read(mm2s_cmd, mm2s_sts, random_ctrl, config);
 
     REQUIRE(mm2s_cmd.size() == 1);
+    mm2s_cmd.read();  // Empty stream to avoid runtime warning
 }
 #endif
 
@@ -117,6 +118,7 @@ TEST_CASE("Load NVMe blocks does something") {
     load_nvme_data(in, out, nvme_transfers, nvme_cmd, nvme_resp);
 
     REQUIRE(nvme_cmd.size() == 1);
+    nvme_cmd.read();  // Empty stream to avoid runtime warning
     REQUIRE(out.size() == 1);
 
     out >> output;
@@ -128,8 +130,4 @@ TEST_CASE("Load NVMe blocks does something") {
 #endif
 
 }
-}
-
-int main(int argc, char* argv[]) {
-  return Catch::Session().run( argc, argv );
 }
