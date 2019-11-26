@@ -1,0 +1,25 @@
+#! /bin/bash -e
+
+image_json=$1
+image_target=$2
+
+jq '{ target: .target, streamBytes: .streamBytes, operators: {} }' $image_json > $image_target
+
+internal_id=1
+$METAL_ROOT/buildpacks/image/scripts/resolve_operators $image_json | while read operator source; do
+    operator_json=$source/operator.json
+    cat <<< $(jq --arg id $operator --argjson internal_id $internal_id -s "
+        .[0] + {
+            operators: (
+                .[0].operators + ({
+                    (\$id): ({
+                        internal_id: \$internal_id,
+                        description: .[1].description,
+                        options: .[1].options
+                    })
+                })
+            )
+        }" $image_target $operator_json) > $image_target
+
+    internal_id=$((internal_id+1))
+done

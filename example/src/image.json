@@ -1,6 +1,6 @@
 {
-    "stream_bytes": 8,
-    "target": "SNAP_WEBPACK_SIM",
+    "streamBytes": 8,
+    "target": "SNAP_WebPACK_Sim",
     "operators": {
         "changecase": {
             "source": "./changecase"
