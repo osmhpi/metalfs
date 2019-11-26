@@ -28,7 +28,7 @@ steps:
   image: metalfs/build-base:webpack
   commands:
     - cd example/src
-    - make model
+    - /bin/bash -c "make model"
     - echo "$DRONE_WORKSPACE/build/example_test" > $SNAP_ROOT/hardware/sim/testlist.sh
     - chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
     - cd $SNAP_ROOT/hardware/sim/xsim
