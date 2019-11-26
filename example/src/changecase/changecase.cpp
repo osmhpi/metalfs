@@ -2,7 +2,7 @@
 
 #include <metal/stream.h>
 
-void hls_operator_changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
+void changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
 
     #pragma HLS INTERFACE axis port=in name=axis_input
     #pragma HLS INTERFACE axis port=out name=axis_output

@@ -1,7 +1,7 @@
 BUILD_DIR     ?= build
 
-SOLUTION_NAME ?= hls_sln
-SOLUTION_DIR  ?= hls_component
+SOLUTION_NAME ?= hls_component
+SOLUTION_DIR  ?= hls_solution
 
 # Assume some defaults
 FPGACHIP         ?= xcku035-ffva1156-2-e
@@ -17,8 +17,6 @@ WRAPPER ?= $(shell jq -r .main operator.json)
 
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
-
-$(BUILD_DIR)/hls_cflags.cache: $(BUILD_DIR)
 
 $(BUILD_DIR)/run_hls_script.tcl: $(BUILD_DIR)/hls_cflags.cache
 	@$(METAL_ROOT)/buildpacks/hls/scripts/create_run_hls_script.sh	\
@@ -43,7 +41,7 @@ $(BUILD_DIR)/$(ip_dir): $(BUILD_DIR)/run_hls_ip_script.tcl $(srcs)
 	@cd $(BUILD_DIR) && vivado_hls -f run_hls_ip_script.tcl
 
 ip: $(BUILD_DIR)/$(ip_dir)
-	cd $(BUILD_DIR) && rm -f hls_impl_ip && ln -s $(ip_dir) hls_impl_ip
+	@cd $(BUILD_DIR) && rm -f hls_impl_ip && ln -s $(ip_dir) hls_impl_ip
 
 test: $(BUILD_DIR)/run_hls_csim_script.tcl $(srcs)
 	@cd $(BUILD_DIR) && vivado_hls -f run_hls_csim_script.tcl
@@ -58,4 +56,5 @@ include $(METAL_ROOT)/third_party/make-utils/signature
 %.cache:
 	@$(call do,echo \"$$(HLS_CFLAGS)\" > $$@)
 
+$(BUILD_DIR)/hls_cflags.sig: $(BUILD_DIR)
 -include $(BUILD_DIR)/hls_cflags.sig

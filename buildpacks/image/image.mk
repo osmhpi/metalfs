@@ -5,8 +5,8 @@ endif
 
 BUILD_DIR           = build
 LOGS_DIR            = logs
-export IMAGE_JSON   = image.json
-export IMAGE_TARGET = $(BUILD_DIR)/image.json
+export IMAGE_JSON   = $(PWD)/image.json
+export IMAGE_TARGET = $(PWD)/$(BUILD_DIR)/image.json
 export METAL_TARGET = $(shell jq -r .target $(IMAGE_JSON))
 
 targets   = overlay model sim image

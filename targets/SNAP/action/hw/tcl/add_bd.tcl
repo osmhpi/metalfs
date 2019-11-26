@@ -1,11 +1,13 @@
 set image_json      $::env(IMAGE_JSON)
+set metal_root      $::env(METAL_ROOT)
+set snap_target     $::env(SNAP_TARGET)
 
 set_property ip_repo_paths [concat \
     [get_property ip_repo_paths [current_project]] \
-    [glob -dir $action_hw_dir/hls */hls_impl_ip] \
-    $action_dir/ip/image_info/ip_user_files \
-    $action_dir/ip/nvme_arbiter/ip_user_files \
-    [eval list [exec sh -c "$action_hw_dir/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/hls_impl_ip=' | paste -s -d ' '"]] \
+    [glob -dir $metal_root/targets/SNAP/build/$snap_target/ip */hls_impl_ip] \
+    $action_dir/ip/image_info/build/ip_user_files \
+    $action_dir/ip/nvme_arbiter/build/ip_user_files \
+    [eval list [exec sh -c "$metal_root/buildpacks/image/scripts/resolve_operators $image_json | cut -f2 | uniq | sed -e 's=$=/build/hls_impl_ip=' | paste -s -d ' '"]] \
     $action_dir/ip/block_design/ip_user_files \
 ] [current_project] >> $log_file
 update_ip_catalog >> $log_file
