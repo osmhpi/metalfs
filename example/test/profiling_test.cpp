@@ -3,7 +3,7 @@
 #include <metal_pipeline/operator_registry.hpp>
 #include <metal_pipeline/data_source.hpp>
 #include <metal_pipeline/data_sink.hpp>
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <metal_pipeline/pipeline_runner.hpp>
 #include "base_test.hpp"

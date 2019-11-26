@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 
 namespace metal {
 

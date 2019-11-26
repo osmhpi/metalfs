@@ -9,7 +9,7 @@ extern "C" {
 
 #include <stdexcept>
 #include <iostream>
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 #include <spdlog/spdlog.h>
 
 #include "snap_action.hpp"

@@ -7,7 +7,7 @@ extern "C" {
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 #include "pipeline_definition.hpp"
 #include "snap_action.hpp"
 

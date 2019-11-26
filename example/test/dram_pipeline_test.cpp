@@ -2,7 +2,7 @@
 #include <metal_pipeline/data_source.hpp>
 #include <memory>
 #include <metal_pipeline/data_sink.hpp>
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 #include <metal_pipeline/pipeline_definition.hpp>
 #include <metal_filesystem_pipeline/file_data_sink.hpp>
 #include <metal_filesystem_pipeline/file_data_source.hpp>

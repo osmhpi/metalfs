@@ -8,7 +8,7 @@ extern "C" {
 #include <spdlog/spdlog.h>
 
 #include <metal_pipeline/snap_action.hpp>
-#include <metal_fpga/hw/hls/include/snap_action_metal.h>
+#include <snap_action_metal.h>
 #include "file_data_sink.hpp"
 
 namespace metal {
