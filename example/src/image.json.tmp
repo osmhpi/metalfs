@@ -1,0 +1,11 @@
+{
+    "streamBytes": 8,
+    "target": "SNAP/WebPACK_Sim",
+    "operators": {
+        "changecase":           "./changecase",
+        "colorfilter":          "@metalfs/colorfilter",
+        "another_colorfilter":  "@metalfs/colorfilter",
+        "blowfish_encrypt":     "@metalfs/blowfish-encrypt",
+        "blowfish_decrypt":     "@metalfs/blowfish-decrypt"
+    }
+}

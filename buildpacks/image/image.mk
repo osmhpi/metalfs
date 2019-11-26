@@ -32,14 +32,15 @@ clean_operators:
 	@for dir in $(operators); do make -C $$dir -s clean; done
 
 $(IMAGE_TARGET): $(IMAGE_JSON) $(BUILD_DIR)
-	echo $(operators)
 	@$(METAL_ROOT)/buildpacks/image/scripts/generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
 
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
 
+.FORCE:
+
 # Operators
-$(operators):
+$(operators): .FORCE
 	@echo "                        Generating IP from Metal FS Operator $(@F)"
 	@make -C $@ ip; hls_ret=$$?; \
 	if [ $${hls_ret} -ne 0 ]; then \

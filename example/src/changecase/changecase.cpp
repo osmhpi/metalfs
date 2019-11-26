@@ -1,8 +1,9 @@
-#include <snap_types.h>
-
 #include <metal/stream.h>
 
-void changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
+using ap_uint8  = ap_uint<8>;
+using ap_uint32 = ap_uint<32>;
+
+void changecase(mtl_stream &in, mtl_stream &out, ap_uint32 mode) {
 
     #pragma HLS INTERFACE axis port=in name=axis_input
     #pragma HLS INTERFACE axis port=out name=axis_output
@@ -17,7 +18,7 @@ void changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
             for (int i = 0; i < sizeof(element.data); ++i)
             {
 #pragma HLS unroll
-                snapu8_t tmp = element.data(i * 8 + 7, i * 8);
+                ap_uint8 tmp = element.data(i * 8 + 7, i * 8);
                 if (tmp >= 'a' && tmp <= 'z' && element.keep[i])
                     element.data(i * 8 + 7, i * 8) = tmp - ('a' - 'A');
             }
@@ -25,7 +26,7 @@ void changecase(mtl_stream &in, mtl_stream &out, snapu32_t mode) {
             for (int i = 0; i < sizeof(element.data); ++i)
             {
 #pragma HLS unroll
-                snapu8_t tmp = element.data(i * 8 + 7, i * 8);
+                ap_uint8 tmp = element.data(i * 8 + 7, i * 8);
                 if (tmp >= 'A' && tmp <= 'Z' && element.keep[i])
                     element.data(i * 8 + 7, i * 8) = tmp + ('a' - 'A');
             }

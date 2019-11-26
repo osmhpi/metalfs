@@ -1,1 +1,2 @@
-include $(PWD)/../../buildpacks/image/image.mk
+export METAL_ROOT = $(PWD)/../..
+include $(METAL_ROOT)/buildpacks/image/image.mk
