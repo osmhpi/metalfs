@@ -13,7 +13,8 @@ srcs += \
 	hls_action.cpp
 
 testbench_srcs += \
-	transfer_test.cpp
+	transfer_to_stream_test.cpp \
+	transfer_from_stream_test.cpp
 
 WRAPPER ?= hls_action
 

@@ -317,7 +317,10 @@ void write_nvme_data(hls::stream<TransferElement> &in
             auto dram_address = NVMeDRAMBaseOffset + currentTransfer.data.address & align_address_to_block_mask;
 
             const uint64_t nvme_address = nvme_transfers.read();  // There must be an item in the queue
-            issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_cmd);
+
+            if (currentTransfer.data.size > 0) {  // We need transfers of size==0 to empty the nvme_transfers queue
+                issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_cmd);
+            }
 
             pendingTransfers << currentTransfer;
         } while (!currentTransfer.last);
@@ -340,31 +343,53 @@ void write_nvme_data(hls::stream<TransferElement> &in
 #endif
 }
 
-void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_ibtt_stream_t &dm_sts) {
+
+void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_ibtt_stream_t &dm_sts, uint64_t* size) {
     hls::stream<TransferElement> pendingTransfers;
+    hls::stream<snap_bool_t> streamIsTerminated;
 
-    #pragma HLS dataflow
+    #pragma HLS stream variable=pendingTransfers depth=1
+    #pragma HLS stream variable=streamIsTerminated depth=1
+
+    streamIsTerminated << false;
+
     {
-        TransferElement currentTransfer;
-        do {
-            in >> currentTransfer;
-            uint64_t address = currentTransfer.data.address;
-            if (currentTransfer.data.type == AddressType::CardDRAM || currentTransfer.data.type == AddressType::NVMe) {
-                address += DRAMBaseOffset;
-            }
+        #pragma HLS dataflow
+        {
+            TransferElement currentTransfer;
+            do {
+                in >> currentTransfer;
+                uint64_t address = currentTransfer.data.address;
+                if (currentTransfer.data.type == AddressType::CardDRAM || currentTransfer.data.type == AddressType::NVMe) {
+                    address += DRAMBaseOffset;
+                }
 
-            issue_block_transfer_command(currentTransfer.data.size, currentTransfer.last, address, dm_cmd);
+                if (!streamIsTerminated.read()) {
+                    issue_block_transfer_command(currentTransfer.data.size, currentTransfer.last, address, dm_cmd);
+                }
 
-            pendingTransfers << currentTransfer;
-        } while (!currentTransfer.last);
-    }
-    {
-        TransferElement currentTransfer;
-        do {
-            pendingTransfers >> currentTransfer;
-            dm_sts.read();
-            out << currentTransfer;
-        } while (!currentTransfer.last);
+                pendingTransfers << currentTransfer;
+            } while (!currentTransfer.last);
+        }
+        {
+            TransferElement currentTransfer;
+            snap_bool_t endOfPacket = false;
+            do {
+                pendingTransfers >> currentTransfer;
+                if (!endOfPacket) {
+                    auto result = dm_sts.read();
+                    size += result.data(30, 8);
+                    endOfPacket = result.data[31];
+                } else {
+                    currentTransfer.data.size = 0;
+                }
+                if (!currentTransfer.last) {
+                    // Allow or deny the next transfer
+                    streamIsTerminated << endOfPacket;
+                }
+                out << currentTransfer;
+            } while (!currentTransfer.last);
+        }
     }
 }
 
@@ -443,6 +468,7 @@ void write_data(const Address &transfer
     , NVMeCommandStream &nvme_cmd
     , NVMeResponseStream &nvme_resp
 #endif
+    , uint64_t *size
 ) {
     hls::stream<TransferElement> partial_transfers, ready_transfers;
 
@@ -461,7 +487,7 @@ void write_data(const Address &transfer
     );
 
     // 3. Issue DataMover transfers
-    transfer_from_stream(partial_transfers, ready_transfers, dm_cmd, dm_sts);
+    transfer_from_stream(partial_transfers, ready_transfers, dm_cmd, dm_sts, size);
 
     // 2. Issue NVMe transfers
     write_nvme_data(ready_transfers
@@ -483,6 +509,8 @@ uint64_t op_mem_write(
 #endif
     Address &config) {
 
+    uint64_t size = 0;
+
     switch (config.type) {
         case AddressType::Host:
         case AddressType::CardDRAM:
@@ -496,13 +524,14 @@ uint64_t op_mem_write(
                     , nvme_write_cmd
                     , nvme_write_resp
                 #endif
+                    , &size
             );
             break;
         }
         default: break;
     }
 
-    return 0;
+    return size;
 }
 
 }  // namespace fpga

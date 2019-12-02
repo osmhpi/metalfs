@@ -29,6 +29,13 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
 // File Map / Unmap Operation:
 static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 {
+    #pragma HLS RESOURCE variable=dram_read_extmap latency=2
+    #pragma HLS RESOURCE variable=dram_write_extmap latency=2
+#ifdef NVME_ENABLED
+    #pragma HLS RESOURCE variable=nvme_read_extmap latency=2
+    #pragma HLS RESOURCE variable=nvme_write_extmap latency=2
+#endif
+
     snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
     auto slot = static_cast<ExtmapSlot>(uint64_t(mtl_get64<0>(line)));
     auto extent_address = job_address + MFB_INCREMENT;
@@ -141,11 +148,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case JobType::Map:
     {
-#ifdef NVME_ENABLED
         result = action_map(mem_in, act_reg->Data.job_address);
-#else
-        result = SNAP_RETC_SUCCESS;
-#endif
         break;
     }
     case JobType::ConfigureStreams:
