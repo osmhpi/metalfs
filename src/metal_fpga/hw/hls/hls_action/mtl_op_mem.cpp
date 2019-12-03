@@ -345,51 +345,46 @@ void write_nvme_data(hls::stream<TransferElement> &in
 
 
 void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_ibtt_stream_t &dm_sts, uint64_t* size) {
+    #pragma HLS dataflow
     hls::stream<TransferElement> pendingTransfers;
     hls::stream<snap_bool_t> streamIsTerminated;
 
-    #pragma HLS stream variable=pendingTransfers depth=1
-    #pragma HLS stream variable=streamIsTerminated depth=1
-
-    streamIsTerminated << false;
-
     {
-        #pragma HLS dataflow
-        {
-            TransferElement currentTransfer;
-            do {
-                in >> currentTransfer;
-                uint64_t address = currentTransfer.data.address;
-                if (currentTransfer.data.type == AddressType::CardDRAM || currentTransfer.data.type == AddressType::NVMe) {
-                    address += DRAMBaseOffset;
-                }
+        TransferElement currentTransfer;
+        do {
+            in >> currentTransfer;
+            uint64_t address = currentTransfer.data.address;
+            if (currentTransfer.data.type == AddressType::CardDRAM || currentTransfer.data.type == AddressType::NVMe) {
+                address += DRAMBaseOffset;
+            }
 
-                if (!streamIsTerminated.read()) {
-                    issue_block_transfer_command(currentTransfer.data.size, currentTransfer.last, address, dm_cmd);
-                }
+            if (!streamIsTerminated.read()) {
+                issue_block_transfer_command(currentTransfer.data.size, currentTransfer.last, address, dm_cmd);
+            }
 
-                pendingTransfers << currentTransfer;
-            } while (!currentTransfer.last);
-        }
-        {
-            TransferElement currentTransfer;
-            snap_bool_t endOfPacket = false;
-            do {
-                pendingTransfers >> currentTransfer;
-                if (!endOfPacket) {
-                    auto result = dm_sts.read();
-                    size += result.data(30, 8);
-                    endOfPacket = result.data[31];
-                } else {
-                    currentTransfer.data.size = 0;
-                }
-                if (!currentTransfer.last) {
-                    // Allow or deny the next transfer
-                    streamIsTerminated << endOfPacket;
-                }
-                out << currentTransfer;
-            } while (!currentTransfer.last);
-        }
+            pendingTransfers << currentTransfer;
+        } while (!currentTransfer.last);
+    }
+    {
+        TransferElement currentTransfer;
+        snap_bool_t endOfPacket = false;
+        do {
+            // Allow or deny the next transfer
+            streamIsTerminated << endOfPacket;
+
+            ap_wait();  // Tick-tock
+
+            pendingTransfers >> currentTransfer;
+
+            if (!endOfPacket) {
+                auto result = dm_sts.read();
+                size += result.data(30, 8);
+                endOfPacket = result.data[31];
+            } else {
+                currentTransfer.data.size = 0;
+            }
+            out << currentTransfer;
+        } while (!currentTransfer.last);
     }
 }
 

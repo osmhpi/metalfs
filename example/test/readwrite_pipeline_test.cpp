@@ -13,6 +13,51 @@ namespace metal {
 
 using ReadWritePipeline = SimulationTest;
 
+TEST_F(ReadWritePipeline, TransfersSmallBuffer) {
+
+    uint64_t n_bytes = 42;
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+    fill_payload(src, n_bytes);
+
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
+
+    EXPECT_EQ(0, memcmp(src, dest, n_bytes));
+
+    free(src);
+    free(dest);
+}
+
+TEST_F(ReadWritePipeline, ToleratesTooLargeOutputBuffer) {
+
+    uint64_t n_pages = 1;
+    uint64_t n_bytes = n_pages * fpga::StorageBlockSize;
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+    fill_payload(src, n_bytes);
+
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, 2*fpga::StorageBlockSize));
+
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, 2*fpga::StorageBlockSize);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    ASSERT_NO_THROW(pipeline.run(action));
+
+    EXPECT_EQ(0, memcmp(src, dest, n_bytes));
+
+    free(src);
+    free(dest);
+}
+
 TEST_F(ReadWritePipeline, TransfersEntirePage) {
 
     uint64_t n_pages = 1;
