@@ -113,6 +113,7 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
         }
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
+        ap_wait();
         nvme_read_resp.read();
     }
     snapu64_t end_addr = start_addr + address.size;
@@ -134,6 +135,7 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
         }
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
+        ap_wait();
         nvme_read_resp.read();
     }
 }
@@ -368,6 +370,7 @@ void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<Transfer
     {
         TransferElement currentTransfer;
         snap_bool_t endOfPacket = false;
+        uint64_t tmpSize = 0;
         do {
             // Allow or deny the next transfer
             streamIsTerminated << endOfPacket;
@@ -378,13 +381,14 @@ void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<Transfer
 
             if (!endOfPacket) {
                 auto result = dm_sts.read();
-                size += result.data(30, 8);
+                tmpSize += result.data(30, 8);
                 endOfPacket = result.data[31];
             } else {
                 currentTransfer.data.size = 0;
             }
             out << currentTransfer;
         } while (!currentTransfer.last);
+        *size = tmpSize;
     }
 }
 
