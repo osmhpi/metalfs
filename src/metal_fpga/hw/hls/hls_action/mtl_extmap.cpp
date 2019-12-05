@@ -20,7 +20,7 @@ void mtl_extmap_load(mtl_extmap_t & map,
     snapu64_t line_address = extent_address;
     snap_membus_t line = 0;
     snapu64_t last_block = 0;
-    for (mtl_extent_count_t i_extent = 0; i_extent < MTL_EXTENT_COUNT; ++i_extent) {
+    for (mtl_extent_count_t i_extent = 0; i_extent < MaxExtentsPerFile; ++i_extent) {
         mtl_line_extent_offset_t o_line_extent = i_extent & MTL_MASK(MTL_EXTENTS_PER_LINE_W, 0);
         if (o_line_extent == 0) {
             line = mem[MFB_ADDRESS(line_address)];
@@ -40,7 +40,7 @@ void mtl_extmap_load(mtl_extmap_t & map,
 }
 
 mtl_bool_t mtl_extmap_seek(mtl_extmap_t & map, snapu64_t lblock) {
-    for (mtl_extent_count_t i_extent = 0; i_extent < MTL_EXTENT_COUNT; ++i_extent) {
+    for (mtl_extent_count_t i_extent = 0; i_extent < MaxExtentsPerFile; ++i_extent) {
         uint64_t extent_begin = mtl_extmap_firstlblock(map, i_extent);
         uint64_t extent_end = map.extents_nextlblock[i_extent];
         if (extent_begin <= lblock && lblock < extent_end) {

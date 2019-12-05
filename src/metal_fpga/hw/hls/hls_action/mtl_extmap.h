@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mtl_definitions.h"
+#include "snap_action_metal.h"
 
 namespace metal {
 namespace fpga {
@@ -8,9 +9,9 @@ namespace fpga {
 typedef struct {
     mtl_extent_offset_t current_extent;
     snapu64_t current_pblock;
-    snapu64_t extents_begin[MTL_EXTENT_COUNT];
-    snapu64_t extents_count[MTL_EXTENT_COUNT];
-    snapu64_t extents_nextlblock[MTL_EXTENT_COUNT];
+    snapu64_t extents_begin[MaxExtentsPerFile];
+    snapu64_t extents_count[MaxExtentsPerFile];
+    snapu64_t extents_nextlblock[MaxExtentsPerFile];
 } mtl_extmap_t;
 
 
