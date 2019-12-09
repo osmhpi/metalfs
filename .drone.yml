@@ -29,9 +29,9 @@ steps:
   commands:
     - cd example/src
     - /bin/bash -c "make model"
-    - echo "$DRONE_WORKSPACE/build/example_test" > $SNAP_ROOT/hardware/sim/testlist.sh
-    - chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
-    - cd $SNAP_ROOT/hardware/sim/xsim
+    - echo "$DRONE_WORKSPACE/build/example_test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+    - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+    - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
     - ../run_sim -explore -list testlist.sh -noaet
   depends_on:
     - software-build
