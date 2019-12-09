@@ -31,6 +31,7 @@ ADD CMakeLists.txt .
 ADD test/ test/
 ADD src/ src/
 ADD example/ example/
+ADD targets/ targets/
 
 RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
 RUN make -C build -j8

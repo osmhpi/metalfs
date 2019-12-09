@@ -1,9 +1,19 @@
 ARG VIVADO_EDITION=webpack
-FROM metalfs/snap:$VIVADO_EDITION
+FROM metalfs/xilinx-vivado:2018.1-$VIVADO_EDITION
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Compilers etc.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    vim \
+    curl ca-certificates \
+    build-essential \
+    git \
+ && rm -rf /var/lib/apt/lists/*
+
+# Metal FS Libraries
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     cmake \
@@ -13,11 +23,11 @@ RUN apt-get update \
     protobuf-compiler \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /frameworks
-
 # libjq
-RUN curl -sL https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz --output jq-1.5.tar.gz && tar -xzf jq-1.5.tar.gz && rm jq-1.5.tar.gz
-RUN cd jq-1.5 && ./configure --with-oniguruma=builtin --disable-maintainer-mode && make LDFLAGS=-all-static && mkdir -p builtin/lib && make install
+RUN curl -sL https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz --output /tmp/jq-1.5.tar.gz \
+ && (cd /tmp && tar -xzf jq-1.5.tar.gz && rm jq-1.5.tar.gz) \
+ && (cd /tmp/jq-1.5 && ./configure --with-oniguruma=builtin --disable-maintainer-mode && make LDFLAGS=-all-static && mkdir -p builtin/lib && make install) \
+ && rm -rf /tmp/jq-1.5
 
 # GCC 7
 RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 60C317803A41BA51845E371A1E9377A2BA9EF27F \
@@ -32,5 +42,26 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/*
 
+# Prerequisites for SNAP
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    xterm \
+    tmux \
+    libncurses-dev \
+ && rm -rf /var/lib/apt/lists/*
+
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
+
+WORKDIR /frameworks
+
+ENV LC_ALL=C
+ENV XILINXD_LICENSE_FILE=/dev/null
+
+RUN echo ". /opt/Xilinx/Vivado/2018.1/settings64.sh" >> ~/.metal_profile
+
+# Load .metal_profile for non-interactive bash shells
+ENV BASH_ENV=/root/.metal_profile
+
+# Load .metal_profile for interactive bash shells
+RUN echo ". ~/.metal_profile" >> ~/.bashrc
