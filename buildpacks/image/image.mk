@@ -3,10 +3,10 @@ $(info You have specified a wrong $$METAL_ROOT.)
 $(error Please make sure that $$METAL_ROOT is set up correctly.)
 endif
 
-BUILD_DIR           = build
+BUILD_DIR           = $(PWD)/build
 LOGS_DIR            = logs
 export IMAGE_JSON   = $(PWD)/image.json
-export IMAGE_TARGET = $(PWD)/$(BUILD_DIR)/image.json
+export IMAGE_TARGET = $(BUILD_DIR)/image.json
 export METAL_TARGET = $(shell jq -r .target $(IMAGE_JSON))
 
 targets   = overlay model sim image

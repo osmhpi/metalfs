@@ -1,8 +1,8 @@
 export SNAP_TARGET = $(shell basename $(METAL_TARGET))
 
 # Define underscored variables as not to interfere with externally set values
-export _PSLSE_ROOT  = $(METAL_ROOT)/targets/SNAP/build/$(SNAP_TARGET)/pslse
-export _SNAP_ROOT   = $(METAL_ROOT)/targets/SNAP/build/$(SNAP_TARGET)/snap
+export _PSLSE_ROOT  = $(BUILD_DIR)/$(SNAP_TARGET)/pslse
+export _SNAP_ROOT   = $(BUILD_DIR)/$(SNAP_TARGET)/snap
 export _ACTION_ROOT = $(METAL_ROOT)/targets/SNAP/action
 
 snap_targets = snap_config clean hw_project model sim sim_screen image help
@@ -18,5 +18,5 @@ $(_SNAP_ROOT): $(_PSLSE_ROOT)
 $(_SNAP_ROOT)/snap_env.sh: $(_SNAP_ROOT)
 	@$(METAL_ROOT)/targets/$(METAL_TARGET)/configure
 
-$(snap_targets): $(_SNAP_ROOT)/snap_env.sh
+$(snap_targets): $(_SNAP_ROOT)/snap_env.sh $(operators) $(IMAGE_TARGET)
 	@make -C $(_SNAP_ROOT) -s $@
