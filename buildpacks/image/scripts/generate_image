@@ -3,7 +3,11 @@
 image_json=$1
 image_target=$2
 
-jq '{ target: .target, streamBytes: .streamBytes, operators: {} }' $image_json > $image_target
+jq '{ streamBytes: .streamBytes, operators: {} }' $image_json > $image_target
+
+build_target=$(jq -r .target $image_json)
+target_manifest=$METAL_ROOT/targets/$build_target/target.json
+cat <<< $(jq -s ".[0] + { target: .[1] }" $image_target $target_manifest) > $image_target
 
 internal_id=1
 $METAL_ROOT/buildpacks/image/scripts/resolve_operators $image_json | while read operator source; do
