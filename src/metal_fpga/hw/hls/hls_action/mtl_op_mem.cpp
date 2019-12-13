@@ -80,7 +80,7 @@ void issue_block_transfer_command(uint64_t transfer_bytes, snap_bool_t end_of_fr
 #ifdef NVME_ENABLED
 void issue_nvme_block_transfer_command(uint64_t nvme_address, uint64_t dram_address, NVMeCommandStream &nvme_cmd) {
     snapu64_t logical_block_offset = nvme_address / StorageBlockSize;
-    auto physical_block_offset = logical_block_offset * (StorageBlockSize / 512);
+    snapu64_t physical_block_offset = logical_block_offset * (StorageBlockSize / 512);
 
     NVMeCommand cmd;
     cmd.dram_offset()       = dram_address;
