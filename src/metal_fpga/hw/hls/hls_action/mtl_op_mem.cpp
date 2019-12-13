@@ -80,14 +80,13 @@ void issue_block_transfer_command(uint64_t transfer_bytes, snap_bool_t end_of_fr
 #ifdef NVME_ENABLED
 void issue_nvme_block_transfer_command(uint64_t nvme_address, uint64_t dram_address, NVMeCommandStream &nvme_cmd) {
     snapu64_t logical_block_offset = nvme_address / StorageBlockSize;
-    auto drive_id = logical_block_offset[0];
-    auto physical_block_offset = (logical_block_offset >> 1) * (StorageBlockSize / 512);
+    auto physical_block_offset = logical_block_offset * (StorageBlockSize / 512);
 
     NVMeCommand cmd;
     cmd.dram_offset()       = dram_address;
     cmd.nvme_block_offset() = physical_block_offset;
     cmd.num_blocks()        = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
-    cmd.drive()             = drive_id;
+    cmd.drive()             = 0;
 
     nvme_cmd.write(cmd);
 }
@@ -117,7 +116,7 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
         cmdCount++;
     }
     snapu64_t end_addr = start_addr + address.size;
-    if (end_addr % StorageBlockSize && start_addr(63, 16) != end_addr(63, 16)) {
+    if (end_addr % StorageBlockSize && start_addr(63, StorageBlockSizeD) != end_addr(63, StorageBlockSizeD)) {
         // We end writing in the middle of a block that is different from the block above
 
         uint64_t dram_address = 0;
@@ -170,6 +169,7 @@ void issue_partial_transfers(const Address& transfer
     }
 
     while (bytes_transferred < transfer.size) {
+        #pragma HLS pipeline II=64
         uint64_t bytes_remaining = transfer.size - bytes_transferred;
         uint64_t current_address = transfer.addr + bytes_transferred;
         uint64_t intra_block_offset = current_address % StorageBlockSize;
@@ -227,10 +227,12 @@ void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElemen
 
 #ifdef NVME_ENABLED
     hls::stream<TransferElement> pendingTransfers;
+    #pragma HLS stream variable=pendingTransfers depth=16
     #pragma HLS dataflow
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             in >> currentTransfer;
 
             if (currentTransfer.data.type != AddressType::NVMe) {
@@ -250,6 +252,7 @@ void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElemen
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             pendingTransfers >> currentTransfer;
             if (currentTransfer.data.type == AddressType::NVMe) {
                 nvme_resp.read();
@@ -261,6 +264,7 @@ void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElemen
     // Passthrough (no NVMe)
     TransferElement currentTransfer;
     do {
+        #pragma HLS pipeline
         in >> currentTransfer;
         out << currentTransfer;
     } while (!currentTransfer.last);
@@ -274,6 +278,7 @@ void transfer_to_stream(hls::stream<TransferElement> &in, axi_datamover_command_
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             in >> currentTransfer;
             uint64_t address = currentTransfer.data.address;
             if (currentTransfer.data.type == AddressType::CardDRAM || currentTransfer.data.type == AddressType::NVMe) {
@@ -288,6 +293,7 @@ void transfer_to_stream(hls::stream<TransferElement> &in, axi_datamover_command_
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             pendingTransfers >> currentTransfer;
             dm_sts.read();
         } while (!currentTransfer.last);
@@ -304,10 +310,12 @@ void write_nvme_data(hls::stream<TransferElement> &in
 
 #ifdef NVME_ENABLED
     hls::stream<TransferElement> pendingTransfers;
+    #pragma HLS stream variable=pendingTransfers depth=16
     #pragma HLS dataflow
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             in >> currentTransfer;
 
             if (currentTransfer.data.type != AddressType::NVMe) {
@@ -330,6 +338,7 @@ void write_nvme_data(hls::stream<TransferElement> &in
     {
         TransferElement currentTransfer;
         do {
+            #pragma HLS pipeline
             pendingTransfers >> currentTransfer;
             if (currentTransfer.data.type == AddressType::NVMe) {
                 nvme_resp.read();
@@ -406,6 +415,7 @@ void load_data(const Address &transfer
 
 #ifdef NVME_ENABLED
     hls::stream<uint64_t> nvme_transfers;
+    #pragma HLS stream variable=nvme_transfers depth=16
 #endif
 
 #pragma HLS dataflow
@@ -473,6 +483,7 @@ void write_data(const Address &transfer
 
 #ifdef NVME_ENABLED
     hls::stream<uint64_t> nvme_transfers;
+    #pragma HLS stream variable=nvme_transfers depth=16
 #endif
 
 #pragma HLS dataflow

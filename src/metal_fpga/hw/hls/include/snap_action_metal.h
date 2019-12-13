@@ -68,8 +68,8 @@ enum class JobType : uint64_t {
     //   word3: prepare             | R
     // <...> configuration data
 };
-
-const uint64_t StorageBlockSize = 64 * 1024;
+const uint64_t StorageBlockSizeD = 18;
+const uint64_t StorageBlockSize = 1 << StorageBlockSizeD;
 const uint64_t PagefileSize = 128 * StorageBlockSize;
 const uint64_t MaxExtentsPerFile = 512;
 
