@@ -60,18 +60,21 @@ void FileDataSink::configure(SnapAction &action) {
   auto *job_struct = reinterpret_cast<uint64_t*>(snap_malloc(
     sizeof(uint64_t) * (
       8 // words for the prefix
-      + (2 * _extents.size()) // two words for each extent
+      + (2 * fpga::MaxExtentsPerFile) // two words for each extent
     ))
   );
-  job_struct[0] = htobe64(1);  // slot number
-  job_struct[1] = htobe64(1);  // map (vs unmap)
-  job_struct[2] = htobe64(_extents.size());  // extent count
+  job_struct[0] = htobe64(static_cast<uint64_t>(fpga::ExtmapSlot::NVMeWrite));  // slot number
   spdlog::trace("Mapping {} extents for writing", _extents.size());
 
-  for (uint64_t i = 0; i < _extents.size(); ++i) {
-    job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
-    job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
-    spdlog::trace("  Offset {}  Length {}", _extents[i].offset, _extents[i].length);
+  for (uint64_t i = 0; i < fpga::MaxExtentsPerFile; ++i) {
+    if (i < _extents.size()) {
+      job_struct[8 + 2*i + 0] = htobe64(_extents[i].offset);
+      job_struct[8 + 2*i + 1] = htobe64(_extents[i].length);
+      spdlog::trace("  Offset {}  Length {}", _extents[i].offset, _extents[i].length);
+    } else {
+      job_struct[8 + 2*i + 0] = 0;
+      job_struct[8 + 2*i + 1] = 0;
+    }
   }
 
   try {

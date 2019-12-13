@@ -104,7 +104,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
 
     uint64_t newBytesSize = fpga::StorageBlockSize + 4711;
     uint64_t newBytesOffset = 42;
-    auto newBytes = reinterpret_cast<uint8_t*>(malloc(newBytesSize));
+    auto newBytes = reinterpret_cast<uint8_t*>(memalign(4096, newBytesSize));
     fill_payload(newBytes, newBytesSize);
 
     SnapAction action(fpga::ActionType, 0);

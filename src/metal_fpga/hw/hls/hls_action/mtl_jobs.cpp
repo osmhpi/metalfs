@@ -29,21 +29,29 @@ static mtl_retc_t action_configure_streams(snapu32_t *switch_ctrl, snap_membus_t
 // File Map / Unmap Operation:
 static mtl_retc_t action_map(snap_membus_t * mem_in, const uint64_t job_address)
 {
-	snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
-	auto slot = mtl_get64<0>(line);
-	auto map_else_unmap = (mtl_get64<8>(line) == 0) ? MTL_FALSE : MTL_TRUE;
-	auto extent_count = mtl_get64<16>(line);
-	auto extent_address = job_address + MFB_INCREMENT;
+    snap_membus_t line = mem_in[MFB_ADDRESS(job_address)];
+    auto slot = static_cast<ExtmapSlot>(uint64_t(mtl_get64<0>(line)));
+    auto extent_address = job_address + MFB_INCREMENT;
 
     switch (slot) {
-        case 0: {
-            mtl_extmap_load(nvme_read_extmap, extent_count, extent_address, mem_in);
+        case ExtmapSlot::CardDRAMRead: {
+            mtl_extmap_load(dram_read_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
-        case 1: {
-            mtl_extmap_load(nvme_write_extmap, extent_count, extent_address, mem_in);
+        case ExtmapSlot::CardDRAMWrite: {
+            mtl_extmap_load(dram_write_extmap, extent_address, mem_in);
             return SNAP_RETC_SUCCESS;
         }
+#ifdef NVME_ENABLED
+        case ExtmapSlot::NVMeRead: {
+            mtl_extmap_load(nvme_read_extmap, extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+        case ExtmapSlot::NVMeWrite: {
+            mtl_extmap_load(nvme_write_extmap, extent_address, mem_in);
+            return SNAP_RETC_SUCCESS;
+        }
+#endif
         default: {
             return SNAP_RETC_FAILURE;
         }
@@ -133,11 +141,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
     }
     case JobType::Map:
     {
-#ifdef NVME_ENABLED
         result = action_map(mem_in, act_reg->Data.job_address);
-#else
-        result = SNAP_RETC_SUCCESS;
-#endif
         break;
     }
     case JobType::ConfigureStreams:
@@ -174,7 +178,7 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 
         #ifdef NVME_ENABLED
         if (write_mem_config.type == AddressType::NVMe) {
-            preload_nvme_blocks(write_mem_config, nvme_write_extmap, nvme_read_cmd, nvme_read_resp);
+            preload_nvme_blocks(write_mem_config, dram_write_extmap, nvme_write_extmap, nvme_read_cmd, nvme_read_resp);
         }
         #endif
 
@@ -206,7 +210,6 @@ mtl_retc_t process_action(snap_membus_t * mem_in,
 
     #ifndef NO_SYNTH
         if (perfmon_en == 1) {
-        // perfmon_disable(perfmon_ctrl);
             perfmon_ctrl[0x300 / sizeof(uint32_t)] = 0x0;
         }
     #endif

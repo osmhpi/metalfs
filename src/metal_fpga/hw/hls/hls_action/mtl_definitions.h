@@ -30,7 +30,6 @@ typedef struct mtl_extent {
 
 // Address into the internal extent lists
 #define MTL_EXTENT_COUNT_W 9
-#define MTL_EXTENT_COUNT (0x1 << MTL_EXTENT_COUNT_W)
 typedef ap_uint<MTL_EXTENT_COUNT_W> mtl_extent_offset_t;
 typedef ap_uint<MTL_EXTENT_COUNT_W+1> mtl_extent_count_t;
 

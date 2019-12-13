@@ -55,13 +55,17 @@ struct MemoryTransferResult {
     snapu32_t num_bytes;
 };
 
+extern mtl_extmap_t dram_read_extmap;
+extern mtl_extmap_t dram_write_extmap;
+#ifdef NVME_ENABLED
 extern mtl_extmap_t nvme_read_extmap;
 extern mtl_extmap_t nvme_write_extmap;
+#endif
 
 mtl_retc_t op_mem_set_config(Address &address, snap_bool_t read, Address &config, snapu32_t *data_preselect_switch_ctrl);
 
 #ifdef NVME_ENABLED
-void preload_nvme_blocks(const Address &address, mtl_extmap_t &map, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp);
+void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, mtl_extmap_t &nvme_extentmap, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp);
 #endif
 
 void op_mem_read(
@@ -85,6 +89,46 @@ uint64_t op_mem_write(
 
 extern Address read_mem_config;
 extern Address write_mem_config;
+
+struct Transfer {
+    uint64_t address;
+    uint64_t size;
+    AddressType type;
+};
+
+struct TransferElement {
+    Transfer data;
+    snap_bool_t last;
+};
+
+void issue_partial_transfers(const Address& transfer
+    , mtl_extmap_t &dram_extentmap
+    , hls::stream<TransferElement> &partial_transfers
+#ifdef NVME_ENABLED
+    , mtl_extmap_t &nvme_extentmap
+    , hls::stream<uint64_t> &nvme_transfers
+#endif
+);
+
+void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out
+#ifdef NVME_ENABLED
+    , hls::stream<uint64_t> &nvme_transfers
+    , NVMeCommandStream &nvme_cmd
+    , NVMeResponseStream &nvme_resp
+#endif
+);
+
+void write_nvme_data(hls::stream<TransferElement> &in
+#ifdef NVME_ENABLED
+    , hls::stream<uint64_t> &nvme_transfers
+    , NVMeCommandStream &nvme_cmd
+    , NVMeResponseStream &nvme_resp
+#endif
+);
+
+void transfer_to_stream(hls::stream<TransferElement> &in, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_stream_t &dm_sts);
+void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_ibtt_stream_t &dm_sts, uint64_t *size);
+
 
 }  // namespace fpga
 }  // namespace metal

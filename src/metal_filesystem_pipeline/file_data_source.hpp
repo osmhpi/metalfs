@@ -9,6 +9,7 @@ class FileDataSource : public DataSource {
 public:
 protected:
   fpga::AddressType addressType() override { return fpga::AddressType::NVMe; }
+  fpga::MapType mapType() override { return fpga::MapType::NVMe; }
 
   void configure(SnapAction &action) override;
   void finalize(SnapAction &action) override;

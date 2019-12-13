@@ -28,7 +28,11 @@ TEST_F(ColorfilterPipeline, PreservesHeaderData) {
 
     auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
 
-    auto filter = _registry->operators().at("colorfilter");
+    auto filter = try_get_operator("colorfilter");
+    if (!filter) {
+        GTEST_SKIP();
+        return;
+    }
 
     auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
     auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);

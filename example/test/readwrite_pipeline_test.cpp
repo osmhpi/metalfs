@@ -13,6 +13,55 @@ namespace metal {
 
 using ReadWritePipeline = SimulationTest;
 
+TEST_F(ReadWritePipeline, TransfersSmallBuffer) {
+
+    uint64_t n_bytes = 42;
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+    fill_payload(src, n_bytes);
+
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    uint64_t size;
+    ASSERT_NO_THROW(size = pipeline.run(action));
+
+    EXPECT_EQ(n_bytes, size);
+    EXPECT_EQ(0, memcmp(src, dest, n_bytes));
+
+    free(src);
+    free(dest);
+}
+
+TEST_F(ReadWritePipeline, ToleratesTooLargeOutputBuffer) {
+
+    uint64_t n_pages = 1;
+    uint64_t n_bytes = n_pages * 4096;
+    auto *src = reinterpret_cast<uint8_t*>(memalign(4096, n_bytes));
+    fill_payload(src, n_bytes);
+
+    auto *dest = reinterpret_cast<uint8_t*>(memalign(4096, 2 * 4096));
+
+    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, 2 * 4096);
+
+    SnapAction action(fpga::ActionType, 0);
+
+    auto pipeline = PipelineDefinition({ dataSource, dataSink });
+    uint64_t size;
+    ASSERT_NO_THROW(size = pipeline.run(action));
+
+    EXPECT_EQ(n_bytes, size);
+    EXPECT_EQ(0, memcmp(src, dest, n_bytes));
+
+    free(src);
+    free(dest);
+}
+
 TEST_F(ReadWritePipeline, TransfersEntirePage) {
 
     uint64_t n_pages = 1;
@@ -28,8 +77,10 @@ TEST_F(ReadWritePipeline, TransfersEntirePage) {
     SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
-    ASSERT_NO_THROW(pipeline.run(action));
+    uint64_t size;
+    ASSERT_NO_THROW(size = pipeline.run(action));
 
+    EXPECT_EQ(n_bytes, size);
     EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
     free(src);
@@ -67,7 +118,10 @@ TEST_F(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
     SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
-    ASSERT_NO_THROW(pipeline.run(action));
+    uint64_t size;
+    ASSERT_NO_THROW(size = pipeline.run(action));
+
+    EXPECT_EQ(n_bytes, size);
 
     free(dest);
 }
@@ -108,8 +162,10 @@ TEST_F(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
     SnapAction action(fpga::ActionType, 0);
 
     auto pipeline = PipelineDefinition({ dataSource, dataSink });
-    ASSERT_NO_THROW(pipeline.run(action));
+    uint64_t size;
+    ASSERT_NO_THROW(size = pipeline.run(action));
 
+    EXPECT_EQ(payload_bytes, size);
     EXPECT_EQ(0, memcmp(src + src_offset, dest + dest_offset, payload_bytes));
 
     free(src);

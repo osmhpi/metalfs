@@ -11,8 +11,14 @@ void BaseTest::fill_payload(uint8_t *buffer, uint64_t length) {
     }
 }
 
+void BaseTest::SetUp() {
+#ifndef __PPC64__
+    GTEST_SKIP();
+#endif
+    _setUp();
+}
 
-void PipelineTest::SetUp() {
+void PipelineTest::_setUp() {
     auto info = SnapPipelineRunner::readImageInfo(0);
     _registry = std::make_unique<OperatorRegistry>(info);
 }
@@ -25,17 +31,12 @@ std::shared_ptr<AbstractOperator> PipelineTest::try_get_operator(const std::stri
     return op->second;
 }
 
-void SimulationPipelineTest::SetUp() {  
-#ifndef __PPC64__
-    GTEST_SKIP();
-#endif
-    PipelineTest::SetUp();
+void SimulationPipelineTest::SetUp() {
+    _setUp();
 }
 
-void SimulationTest::SetUp() {  
-#ifndef __PPC64__
-    GTEST_SKIP();
-#endif
-    BaseTest::SetUp();
+void SimulationTest::SetUp() {
+    _setUp();
 }
+
 } // namespace metal

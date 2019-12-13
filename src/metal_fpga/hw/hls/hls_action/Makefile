@@ -12,7 +12,13 @@ srcs += \
 	operators.cpp \
 	hls_action.cpp
 
+testbench_srcs += \
+	transfer_to_stream_test.cpp \
+	transfer_from_stream_test.cpp
+
 WRAPPER ?= hls_action
 
 include $(SNAP_ROOT)/actions/hls.mk
 include ../hls.mk
+
+HLS_ACTION_CLOCK = 3.5

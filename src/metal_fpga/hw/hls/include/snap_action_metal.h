@@ -9,21 +9,19 @@ namespace fpga {
 const uint64_t ActionType = 0xFB060001;
 
 enum class JobType : uint64_t {
-    ReadImageInfo,
+    ReadImageInfo = 0,
     // data is written to job_address
     // 64bit words direct data:
     //   word2: bytes_written       | W
 
-    Map,
+    Map = 1,
     // 64bit words at job_address:
     //   word0: slot                | R
-    //   word1: map_else_unmap      | R
-    //   word2: extent_count        | R
     //   ...
     //   word(2n+8): extent n begin | R
     //   word(2n+9): extent n count | R
 
-    ConfigureStreams,
+    ConfigureStreams = 2,
     // 64bit words at job_address:
     //   word0:                     | R
     //     halfword0: stream 0 dest | R
@@ -33,14 +31,14 @@ enum class JobType : uint64_t {
     //     halfword0: stream 6 dest | R
     //     halfword1: stream 7 dest | R
 
-    ResetPerfmon,
+    ResetPerfmon = 3,
 
-    ConfigurePerfmon,
+    ConfigurePerfmon = 4,
     // 64bit words at job_address:
     //   word0: stream id 0         | R
     //   word0: stream id 1         | R
 
-    ReadPerfmonCounters,
+    ReadPerfmonCounters = 5,
     // 64bit words at job_address:
     //   word0: global clock ctr    | W
     // 32bit words at job_address + 8:
@@ -55,14 +53,14 @@ enum class JobType : uint64_t {
     //   word8: counter8            | W
     //   word9: counter9            | W
 
-    RunOperators,
+    RunOperators = 6,
     // no indirect payload data
     // 64bit words direct data:
     //   word0: enable mask         | R
     //   word1: perfmon_enable      | R
     //   word2: bytes_written       | W
 
-    ConfigureOperator
+    ConfigureOperator = 7
     // 32bit words at job_address:
     //   word0: offset in sizeof(snapu32_t) | R
     //   word1: length in sizeof(snapu32_t) | R
@@ -70,20 +68,31 @@ enum class JobType : uint64_t {
     //   word3: prepare             | R
     // <...> configuration data
 };
+const uint64_t StorageBlockSizeD = 18;
+const uint64_t StorageBlockSize = 1 << StorageBlockSizeD;
+const uint64_t PagefileSize = 128 * StorageBlockSize;
+const uint64_t MaxExtentsPerFile = 512;
 
-const uint64_t StorageBlockSize = 64 * 1024;
+enum class ExtmapSlot : uint64_t {
+    CardDRAMRead = 0,
+    CardDRAMWrite = 1,
+    NVMeRead = 2,
+    NVMeWrite = 3
+};
 
 enum class AddressType : uint16_t {
-    Host,
-    CardDRAM,
-    NVMe,
-    Null,
-    Random
+    Host = 0,
+    CardDRAM = 1,
+    NVMe = 2,
+    Null = 3,
+    Random = 4
 };
 
 enum class MapType : uint16_t {
-    None,
-    NVMe
+    None = 0,
+    DRAM = 1,
+    NVMe = 2,
+    DRAMAndNVMe = 3
 };
 
 struct Address {
