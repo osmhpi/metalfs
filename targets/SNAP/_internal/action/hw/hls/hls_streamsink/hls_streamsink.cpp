@@ -9,3 +9,8 @@ void hls_streamsink(mtl_stream &data) {
         data.read();
     }
 }
+
+#ifndef __SYNTHESIS__
+// No tests specified
+int main(int argc, char* argv[]) { return 0; }
+#endif

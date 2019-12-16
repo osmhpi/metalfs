@@ -19,8 +19,8 @@ steps:
 - name: snap-action-testbench
   image: metalfs/build-base:webpack
   commands:
-    - cd src/metal_fpga/hw/hls/hls_action
-    - bash -c "METAL_ROOT=$DRONE_WORKSPACE make ADDITIONAL_HLS_CFLAGS='-DSTREAM_BYTES=8' test"
+    - cd example/src
+    - bash -c "make test_target"
   depends_on:
     - snap-action
 

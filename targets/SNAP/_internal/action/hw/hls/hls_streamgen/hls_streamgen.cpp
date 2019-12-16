@@ -23,3 +23,8 @@ void hls_streamgen(snapu32_t length, mtl_stream &out) {
         out.write(element);
     } while (!element.last);
 }
+
+#ifndef __SYNTHESIS__
+// No tests specified
+int main(int argc, char* argv[]) { return 0; }
+#endif

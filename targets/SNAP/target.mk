@@ -33,3 +33,6 @@ $(snap_targets): $(_SNAP_ROOT)/snap_env.sh $(operators) $(IMAGE_TARGET)
 
 sim:
 	@$(METAL_ROOT)/targets/SNAP/_internal/scripts/sim
+
+test_target:
+	@make -C $(_ACTION_ROOT)/hw test

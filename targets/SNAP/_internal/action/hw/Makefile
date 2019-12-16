@@ -74,6 +74,14 @@ $(hls_components): $(LOGS_DIR)
 		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
 	fi
 
+test: $(LOGS_DIR)
+	@for hls_dir in ./hls/hls_*/; do \
+	make -C $$hls_dir test; hls_ret=$$?; \
+	if [ $${hls_ret} -ne 0 ]; then \
+		echo "                        Error: Test of $$(basename $$hls_dir) failed"; exit -1; \
+	fi \
+	done
+
 vhd_files: $(vhd_files)
 
 $(ACTION_BUILDROOT):
