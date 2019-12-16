@@ -30,7 +30,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
     ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/include
+    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 
     ${SNAP_INCLUDE_DIR}
 )

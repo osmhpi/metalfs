@@ -9,7 +9,7 @@ include_directories(
     ${PROTOBUF_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
     ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/include
+    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 )
 
 SET(METAL_FS_SOURCES
