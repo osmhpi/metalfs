@@ -3,8 +3,8 @@ STREAM_BYTES  ?= 8
 BUILD_DIR     = $(ACTION_BUILDROOT)/hls_action
 
 HLS_CFLAGS    += \
-	-I$(SNAP_ROOT)/actions/include \
-	-I$(SNAP_ROOT)/software/include \
+	-I$(_SNAP_ROOT)/actions/include \
+	-I$(_SNAP_ROOT)/software/include \
 	-I$(METAL_ROOT)/targets/SNAP/_internal/include
 
 srcs += \

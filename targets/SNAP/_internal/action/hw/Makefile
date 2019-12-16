@@ -1,8 +1,3 @@
-ifndef SNAP_ROOT
-$(info You have specified a wrong $$SNAP_ROOT.)
-$(error Please make sure that $$SNAP_ROOT is set up correctly.)
-endif
-
 export ACTION_BUILDROOT=$(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/action
 
 vhd_srcs=$(wildcard *.vhd_source)
@@ -10,7 +5,7 @@ vhd_targets=$(addprefix $(ACTION_BUILDROOT)/,$(vhd_srcs))
 vhd_files=$(vhd_targets:.vhd_source=.vhd)
 
 ACTION_ROOT ?= $(PWD)/..
-CONFIG_FILE  = $(SNAP_ROOT)/.snap_config
+CONFIG_FILE  = $(_SNAP_ROOT)/.snap_config
 
 hls_components  = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
 
