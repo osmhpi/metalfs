@@ -17,6 +17,8 @@ dict for {id path} $operators {
 
     connect_bd_intf_net [get_bd_intf_pins op_$id/axis_output] [get_bd_intf_pins metal_switch/S0${internal_id}_AXIS]
     connect_bd_intf_net [get_bd_intf_pins metal_switch/M0${internal_id}_AXIS] [get_bd_intf_pins op_${id}/axis_input]
+    # Disable connectivity to itself
+    set_property -dict [list CONFIG.M0${internal_id}_S0${internal_id}_CONNECTIVITY {0}] [get_bd_cells metal_switch]
 
     set control_port [expr $internal_id + 4]
     connect_bd_intf_net [get_bd_intf_pins axi_metal_ctrl_crossbar/M0${control_port}_AXI] [get_bd_intf_pins op_$id/s_axi_control]
