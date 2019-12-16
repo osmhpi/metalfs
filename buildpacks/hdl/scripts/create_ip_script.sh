@@ -67,7 +67,11 @@ set_property target_simulator   XSim [current_project]
 
 # Can that be a list?
 foreach file [ list ${files} ] {
-  add_files -norecurse ${PWD}/\${file}
+  if {[string match "/*" \$file]} {
+    add_files -norecurse \${file}
+  } else {
+    add_files -norecurse ${PWD}/\${file}
+  }
 }
 
 update_compile_order -fileset sources_1

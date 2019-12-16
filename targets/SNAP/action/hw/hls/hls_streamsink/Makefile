@@ -1,6 +1,6 @@
 WRAPPER       ?= hls_streamsink
 STREAM_BYTES  ?= 8
-BUILD_DIR     = $(METAL_ROOT)/targets/SNAP/build/$(SNAP_TARGET)/ip/hls_streamsink
+BUILD_DIR     = $(ACTION_BUILDROOT)/hls_streamsink
 
 HLS_CFLAGS    += \
 	-I$(SNAP_ROOT)/actions/include \

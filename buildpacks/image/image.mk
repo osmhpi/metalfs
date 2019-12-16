@@ -3,11 +3,10 @@ $(info You have specified a wrong $$METAL_ROOT.)
 $(error Please make sure that $$METAL_ROOT is set up correctly.)
 endif
 
-BUILD_DIR           = $(PWD)/build
-LOGS_DIR            = logs
-export IMAGE_JSON   = $(PWD)/image.json
-export IMAGE_TARGET = $(BUILD_DIR)/image.json
-export METAL_TARGET = $(shell jq -r .target $(IMAGE_JSON))
+export IMAGE_BUILD_DIR = $(PWD)/build
+export IMAGE_JSON      = $(PWD)/image.json
+export IMAGE_TARGET    = $(IMAGE_BUILD_DIR)/image.json
+export METAL_TARGET    = $(shell jq -r .target $(IMAGE_JSON))
 
 targets   = overlay model sim image
 operators = $(shell $(METAL_ROOT)/buildpacks/image/scripts/resolve_operators $(IMAGE_JSON) | cut -f 2 | uniq)
@@ -22,6 +21,8 @@ all: help
 #  - image           Create FPGA image
 #  - help            (optional)
 #  - clean
+# As well as the following variables:
+#  - LOGS_DIR
 include $(METAL_ROOT)/targets/$(METAL_TARGET)/../target.mk
 
 # Additional dependencies:
@@ -31,18 +32,21 @@ clean: clean_operators
 clean_operators:
 	@for dir in $(operators); do make -C $$dir -s clean; done
 
-$(IMAGE_TARGET): $(IMAGE_JSON) $(BUILD_DIR)
+$(IMAGE_TARGET): $(IMAGE_JSON) $(IMAGE_BUILD_DIR)
 	@$(METAL_ROOT)/buildpacks/image/scripts/generate_image $(IMAGE_JSON) $(IMAGE_TARGET)
 
-$(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
+$(IMAGE_BUILD_DIR):
+	@mkdir -p $(IMAGE_BUILD_DIR)
+
+$(LOGS_DIR):
+	@mkdir -p $(LOGS_DIR)
 
 .FORCE:
 
 # Operators
-$(operators): .FORCE
+$(operators): .FORCE $(LOGS_DIR)
 	@echo "                        Generating IP from Metal FS Operator $(@F)"
-	@make -C $@ ip; hls_ret=$$?; \
-	if [ $${hls_ret} -ne 0 ]; then \
-		echo "                        Error: please look into $(LOGS_DIR)/$(@F)_make.log"; exit -1; \
+	@make -C $@ ip >> $(LOGS_DIR)/operator_$(@F)_make.log; op_ret=$$?; \
+	if [ $${op_ret} -ne 0 ]; then \
+		echo "                        Error: please look into $(LOGS_DIR)/operator_$(@F)_make.log"; exit -1; \
 	fi

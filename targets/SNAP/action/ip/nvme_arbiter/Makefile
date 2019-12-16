@@ -1,3 +1,5 @@
+BUILD_DIR=$(ACTION_BUILDROOT)/nvme_arbiter
+
 WRAPPER = ImageInfo
 
 srcs += \
