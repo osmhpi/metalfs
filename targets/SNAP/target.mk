@@ -4,9 +4,9 @@ export LOGS_DIR    = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/logs
 # Define underscored variables as not to interfere with externally set values
 export _PSLSE_ROOT  = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/pslse
 export _SNAP_ROOT   = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/snap
-export _ACTION_ROOT = $(METAL_ROOT)/targets/SNAP/action
+export _ACTION_ROOT = $(METAL_ROOT)/targets/SNAP/_internal/action
 
-snap_targets = snap_config clean hw_project model sim sim_screen image help
+snap_targets = snap_config clean hw_project model image help
 
 overlay: hw_project
 
@@ -30,3 +30,6 @@ $(_SNAP_ROOT)/snap_env.sh: $(_SNAP_ROOT) $(LOGS_DIR)
 
 $(snap_targets): $(_SNAP_ROOT)/snap_env.sh $(operators) $(IMAGE_TARGET)
 	@make -C $(_SNAP_ROOT) -s $@
+
+sim:
+	@$(METAL_ROOT)/targets/SNAP/_internal/scripts/sim

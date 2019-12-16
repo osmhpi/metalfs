@@ -5,7 +5,7 @@ BUILD_DIR     = $(ACTION_BUILDROOT)/hls_action
 HLS_CFLAGS    += \
 	-I$(SNAP_ROOT)/actions/include \
 	-I$(SNAP_ROOT)/software/include \
-	-I$(METAL_ROOT)/targets/SNAP/include
+	-I$(METAL_ROOT)/targets/SNAP/_internal/include
 
 srcs += \
 	axi_switch.cpp \
