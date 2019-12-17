@@ -53,8 +53,6 @@ RUN apt-get update \
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
 
-WORKDIR /frameworks
-
 ENV LC_ALL=C
 ENV XILINXD_LICENSE_FILE=/dev/null
 
@@ -65,3 +63,21 @@ ENV BASH_ENV=/root/.metal_profile
 
 # Load .metal_profile for interactive bash shells
 RUN echo ". ~/.metal_profile" >> ~/.bashrc
+
+ARG PSLVER=8
+
+# PSLSE and SNAP
+RUN mkdir /tmp/pslse \
+ && curl -sL https://github.com/ibm-capi/pslse/archive/v4.1.tar.gz | tar xvz -C /tmp/pslse --strip 1 \
+ && git clone https://github.com/open-power/snap /tmp/snap \
+ && cd /tmp/snap/software \
+ && git checkout bc58d6c \
+ && PSLVER=$PSLVER make \
+ && cp /tmp/snap/software/include/* /usr/local/include/ \
+ && cp /tmp/snap/software/lib/*.a /usr/local/lib/ \
+ && cp /tmp/snap/software/lib/*.so /usr/local/lib/ \
+ && cp /tmp/pslse/libcxl/*.h /usr/local/include/ \
+ && cp /tmp/pslse/libcxl/*.a /usr/local/lib/ \
+ && cp /tmp/pslse/libcxl/*.so /usr/local/lib/ \
+ && rm -rf /tmp/snap \
+ && rm -rf /tmp/pslse
