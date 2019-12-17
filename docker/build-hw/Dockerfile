@@ -64,20 +64,21 @@ ENV BASH_ENV=/root/.metal_profile
 # Load .metal_profile for interactive bash shells
 RUN echo ". ~/.metal_profile" >> ~/.bashrc
 
-ARG PSLVER=8
 
-# PSLSE and SNAP
-RUN mkdir /tmp/pslse \
- && curl -sL https://github.com/ibm-capi/pslse/archive/v4.1.tar.gz | tar xvz -C /tmp/pslse --strip 1 \
- && git clone https://github.com/open-power/snap /tmp/snap \
+# PSLSE
+ARG PSLVER=8
+ENV PSLSE_ROOT=/frameworks/pslse
+RUN mkdir -p /frameworks/pslse \
+ && curl -sL https://github.com/ibm-capi/pslse/archive/v4.1.tar.gz | tar xvz -C /frameworks/pslse --strip 1 \
+ && cd /frameworks/pslse/libcxl \
+ && PSLVER=$PSLVER make
+
+# SNAP 
+RUN git clone https://github.com/open-power/snap /tmp/snap \
  && cd /tmp/snap/software \
  && git checkout bc58d6c \
- && PSLVER=$PSLVER make \
+ && make \
  && cp /tmp/snap/software/include/* /usr/local/include/ \
  && cp /tmp/snap/software/lib/*.a /usr/local/lib/ \
  && cp /tmp/snap/software/lib/*.so /usr/local/lib/ \
- && cp /tmp/pslse/libcxl/*.h /usr/local/include/ \
- && cp /tmp/pslse/libcxl/*.a /usr/local/lib/ \
- && cp /tmp/pslse/libcxl/*.so /usr/local/lib/ \
- && rm -rf /tmp/snap \
- && rm -rf /tmp/pslse
+ && rm -rf /tmp/snap
