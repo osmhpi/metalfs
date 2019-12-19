@@ -1,6 +1,6 @@
 {
 	"name": "Metal FS",
-	"image": "metalfs/sdk:webpack-psl8",
+	"image": "metalfs/sdk-base:webpack-psl8",
 	"extensions": [
 		"ms-vscode.cpptools"
 	],
