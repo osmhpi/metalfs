@@ -30,16 +30,12 @@ RUN git clone https://github.com/open-power/snap /tmp/snap \
 
 WORKDIR /metal
 
-ADD third_party/ third_party/
-ADD cmake/ cmake/
-
-ADD CMakeLists.txt .
-ADD src/ src/
-ADD targets/ targets/
+ADD . ./
 
 RUN mkdir build \
  && cd build \
  && cmake \
+   -DCMAKE_INSTALL_PREFIX=/install/ \
    -DCMAKE_BUILD_TYPE=Release \
    -DOPTION_BUILD_TESTS=OFF \
    .. \
@@ -47,7 +43,10 @@ RUN mkdir build \
  && make install
 
 FROM ubuntu:bionic
-COPY --from=build /metal/build/metal_fs /usr/bin/metal_fs
+
+COPY --from=build /install/metal-driver /usr/local/bin/
+COPY --from=build /install/metal-driver-placeholder /usr/local/bin/
+COPY --from=build /install/lib/ /usr/local/lib/
 COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/libsnap.so
 RUN ldconfig
 

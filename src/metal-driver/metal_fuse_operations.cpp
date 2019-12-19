@@ -440,11 +440,11 @@ void Context::initialize(bool in_memory, std::string bin_path, std::string metad
     strncpy(socket_filename, socket_file.c_str(), 255);
     _socket_filename = std::string(socket_filename);
 
-    // Determine the path to the operator_agent executable
+    // Determine the path to the metal-driver-placeholder executable
     char agent_filepath[255];
     strncpy(agent_filepath, bin_path.c_str(), sizeof(agent_filepath));
     dirname(agent_filepath);
-    strncat(agent_filepath, "/operator_agent", sizeof(agent_filepath) - 1);
+    strncat(agent_filepath, "/metal-driver-placeholder", sizeof(agent_filepath) - 1);
     _agent_filepath = std::string(agent_filepath);
 
     DIR *dir = opendir(metadata_dir.c_str());
