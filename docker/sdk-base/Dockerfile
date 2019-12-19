@@ -16,17 +16,23 @@ RUN apt-get update \
 # Metal FS Libraries
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    cmake \
     libfuse-dev \
     liblmdb-dev \
     libprotobuf-dev \
     protobuf-compiler \
  && rm -rf /var/lib/apt/lists/*
 
+# CMake (newer than version available from package sources)
+RUN mkdir /tmp/cmake \
+ && curl -sL https://cmake.org/files/v3.16/cmake-3.16.1-Linux-x86_64.tar.gz | tar xvz -C /tmp/cmake --strip 1 \
+ && cp -rf /tmp/cmake/bin /usr/ \
+ && cp -rf /tmp/cmake/share /usr/ \
+ && rm -rf /tmp/cmake
+
 # libjq
 RUN curl -sL https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz --output /tmp/jq-1.5.tar.gz \
  && (cd /tmp && tar -xzf jq-1.5.tar.gz && rm jq-1.5.tar.gz) \
- && (cd /tmp/jq-1.5 && ./configure --with-oniguruma=builtin --disable-maintainer-mode && make LDFLAGS=-all-static && mkdir -p builtin/lib && make install) \
+ && (cd /tmp/jq-1.5 && ./configure --with-oniguruma=builtin --disable-maintainer-mode && mkdir -p builtin/lib && make && make install) \
  && rm -rf /tmp/jq-1.5
 
 # GCC 7
@@ -73,7 +79,7 @@ RUN mkdir -p /frameworks/pslse \
  && cd /frameworks/pslse/libcxl \
  && PSLVER=$PSLVER make
 
-# SNAP 
+# SNAP
 RUN git clone https://github.com/open-power/snap /tmp/snap \
  && cd /tmp/snap/software \
  && git checkout bc58d6c \
