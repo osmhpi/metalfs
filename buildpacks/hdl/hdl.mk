@@ -3,10 +3,8 @@ WRAPPER       ?= $(shell jq -r .main operator.json)
 
 ip: $(BUILD_DIR)/ip_user_files/component.xml
 
-$(BUILD_DIR):
-	@mkdir -p $(BUILD_DIR)
-
-$(BUILD_DIR)/create_ip.tcl: $(BUILD_DIR)
+$(BUILD_DIR)/create_ip.tcl:
+	mkdir -p $(BUILD_DIR)
 	$(METAL_ROOT)/buildpacks/hdl/scripts/create_ip_script.sh	\
 		-w $(WRAPPER)	\
 		-p $(FPGACHIP)	\
