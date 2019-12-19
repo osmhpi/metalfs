@@ -1,21 +1,7 @@
 {
-    "stream_bytes": 8,
-    "target": "SNAP_WEBPACK_SIM",
+    "streamBytes": 8,
+    "target": "SNAP/WebPACK_Sim",
     "operators": {
-        "changecase": {
-            "source": "./changecase"
-        },
-        "colorfilter": {
-            "source": "@metalfs/colorfilter"
-        },
-        "another_colorfilter": {
-            "source": "@metalfs/colorfilter"
-        },
-        "blowfish_encrypt": {
-            "source": "@metalfs/blowfish-encrypt"
-        },
-        "blowfish_decrypt": {
-            "source": "@metalfs/blowfish-decrypt"
-        }
+        "changecase":           "./changecase"
     }
 }

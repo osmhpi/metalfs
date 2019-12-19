@@ -6,9 +6,6 @@
   "author": "Metal FS Developers",
   "license": "MIT",
   "dependencies": {
-    "@metalfs/blowfish-decrypt": "0.0.1",
-    "@metalfs/blowfish-encrypt": "0.0.1",
-    "@metalfs/colorfilter": "0.0.1",
-    "@metalfs/snappy-decompress": "0.0.1"
+    "@metalfs/colorfilter": "0.0.1"
   }
 }

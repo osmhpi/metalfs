@@ -1,5 +1,5 @@
 #! /bin/bash
 
 echo $DOCKER_PASSWORD | docker login -u rs22 --password-stdin
-docker tag  metalfs/metalfs:latest metalfs/metalfs:$TRAVIS_TAG
-docker push metalfs/metalfs:$TRAVIS_TAG
+docker tag  metalfs/runtime:latest metalfs/runtime:$TRAVIS_TAG
+docker push metalfs/runtime:$TRAVIS_TAG

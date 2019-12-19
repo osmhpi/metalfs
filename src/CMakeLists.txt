@@ -1,9 +1,6 @@
-
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-add_subdirectory(metal_filesystem)
-add_subdirectory(metal_frontend)
-add_subdirectory(metal_pipeline)
-add_subdirectory(metal_filesystem_pipeline)
+add_subdirectory(metal-filesystem)
+add_subdirectory(metal-pipeline)
+add_subdirectory(metal-filesystem-pipeline)
+add_subdirectory(metal-driver)
+add_subdirectory(metal-driver-messages)
+add_subdirectory(metal-driver-placeholder)

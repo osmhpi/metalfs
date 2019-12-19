@@ -1,6 +1,6 @@
 {
 	"name": "Metal FS",
-	"image": "metalfs/build-base:webpack",
+	"image": "metalfs/sdk-base:webpack-psl8",
 	"extensions": [
 		"ms-vscode.cpptools"
 	],
@@ -19,9 +19,5 @@
 		"apparmor=unconfined",
 		"--security-opt",
 		"seccomp=unconfined"
-	],
-	// There is a name collision with Ubuntu Snaps, which eventually results in VS Code
-	// removing the image-defined SNAP_ROOT environment variable.
-	// We can work around this by explicitly loading it from the bash profile.
-	"postCreateCommand": "echo export SNAP_ROOT=/frameworks/snap >> ~/.snap_profile"
+	]
 }

@@ -5,54 +5,54 @@ name: default
 
 steps:
 - name: software-build
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
-    - mkdir build && cd build && cmake .. && make -j4
+    - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
 
 - name: snap-action
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
     - cd example/src
     - npm install --production
-    - make hw_project
+    - bash -c "make hw_project"
 
 - name: snap-action-testbench
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
-    - cd src/metal_fpga/hw/hls/hls_action
-    - bash -c "METAL_ROOT=$DRONE_WORKSPACE make ADDITIONAL_HLS_CFLAGS='-DSTREAM_BYTES=8' test"
+    - cd example/src
+    - bash -c "make test_target"
   depends_on:
     - snap-action
 
 - name: example-test-simulation
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
     - cd example/src
-    - make model
-    - echo "$DRONE_WORKSPACE/build/example_test" > $SNAP_ROOT/hardware/sim/testlist.sh
-    - chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
-    - cd $SNAP_ROOT/hardware/sim/xsim
+    - bash -c "make model"
+    - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+    - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+    - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
     - ../run_sim -explore -list testlist.sh -noaet
   depends_on:
     - software-build
     - snap-action-testbench
 
 - name: filesystem-test
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
-    - cd build && ./metal_filesystem_test
+    - cd build && ./metal-filesystem-test
   depends_on:
     - software-build
 
 - name: pipeline-test
-  image: metalfs/build-base:webpack
+  image: metalfs/sdk-base:webpack-psl8
   commands:
-    - cd build && ./metal_pipeline_test
+    - cd build && ./metal-pipeline-test
   depends_on:
     - software-build
 
 # - name: storage-test
-#   image: metalfs/build-base:webpack
+#   image: metalfs/sdk-base:webpack-psl8
 #   commands:
 #     - cd build && ./metal_storage_test
 #   depends_on:

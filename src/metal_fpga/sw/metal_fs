@@ -1,3 +1,0 @@
-#! /bin/bash
-
-$METAL_ROOT/build/metal_fs --metadata ./metadata -s -f $1

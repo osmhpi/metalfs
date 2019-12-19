@@ -1,5 +1,23 @@
-set(
-    EXAMPLE_TEST_SOURCES
+
+#
+# External dependencies
+#
+
+#
+# Executable name and options
+#
+
+# Target name
+set(target example-test)
+message(STATUS "Test ${target}")
+
+
+#
+# Sources
+#
+
+set(sources
+    gtest_main.cpp
 
     base_test.cpp
     base_test.hpp
@@ -10,29 +28,85 @@ set(
     nvme_pipeline_test.cpp
     dram_pipeline_test.cpp
     profiling_test.cpp
-
-    gtest_main.cpp
-)
-
-set(
-    LIBRARIES
-    metal_pipeline
-    metal_filesystem_pipeline
-    gtest
-
-    ${JQ_LIBRARIES}
-    ${SNAP_LIBRARY}
-    ${CXL_LIBRARY}
 )
 
 
-include_directories(
-    ${PROJECT_SOURCE_DIR}/third_party/googletest/googletest/
+#
+# Create executable
+#
+
+# Build executable
+add_executable(${target}
+    ${sources}
+)
+
+# Create namespaced alias
+add_executable(${META_PROJECT_NAME}::${target} ALIAS ${target})
+
+
+#
+# Project options
+#
+
+set_target_properties(${target}
+    PROPERTIES
+    ${DEFAULT_PROJECT_OPTIONS}
+    FOLDER "${IDE_FOLDER}"
+)
+
+
+#
+# Include directories
+#
+
+target_include_directories(${target}
+    PRIVATE
+    ${DEFAULT_INCLUDE_DIRECTORIES}
+    ${PROJECT_BINARY_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
-    ${PROJECT_SOURCE_DIR}/src
-
-    ${SNAP_INCLUDE_DIR}
+    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
 )
 
-add_executable(example_test ${EXAMPLE_TEST_SOURCES})
-target_link_libraries(example_test ${LIBRARIES})
+
+#
+# Libraries
+#
+
+target_link_libraries(${target}
+    PRIVATE
+    ${DEFAULT_LIBRARIES}
+    ${META_PROJECT_NAME}::metal-pipeline
+    ${META_PROJECT_NAME}::metal-filesystem
+    ${META_PROJECT_NAME}::metal-filesystem-pipeline
+    gtest
+)
+
+
+#
+# Compile definitions
+#
+
+target_compile_definitions(${target}
+    PRIVATE
+    ${DEFAULT_COMPILE_DEFINITIONS}
+)
+
+
+#
+# Compile options
+#
+
+target_compile_options(${target}
+    PRIVATE
+    ${DEFAULT_COMPILE_OPTIONS}
+)
+
+
+#
+# Linker options
+#
+
+target_link_libraries(${target}
+    PRIVATE
+    ${DEFAULT_LINKER_OPTIONS}
+)

@@ -1,8 +1,0 @@
-#! /bin/bash
-
-cat > $SNAP_ROOT/hardware/sim/testlist.sh <<- EOF
-metal_fs /mnt
-EOF
-
-chmod +x $SNAP_ROOT/hardware/sim/testlist.sh
-cd $SNAP_ROOT/hardware/sim/xsim && ../run_sim -explore -list testlist.sh
