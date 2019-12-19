@@ -43,7 +43,7 @@ RUN mkdir build \
    -DCMAKE_BUILD_TYPE=Release \
    -DOPTION_BUILD_TESTS=OFF \
    .. \
- && make -C build -j8 \
+ && make -j8 \
  && make install
 
 FROM ubuntu:bionic
