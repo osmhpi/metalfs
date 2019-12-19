@@ -8,7 +8,7 @@
 #
 
 # Target name
-set(target example-test)
+set(target metal-filesystem-test)
 message(STATUS "Test ${target}")
 
 
@@ -21,13 +21,9 @@ set(sources
 
     base_test.cpp
     base_test.hpp
-    blowfish_pipeline_test.cpp
-    changecase_pipeline_test.cpp
-    colorfilter_pipeline_test.cpp
-    readwrite_pipeline_test.cpp
-    nvme_pipeline_test.cpp
-    dram_pipeline_test.cpp
-    profiling_test.cpp
+    heap_test.cpp
+    metal_test.cpp
+    extent_test.cpp
 )
 
 
@@ -64,7 +60,6 @@ target_include_directories(${target}
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
 )
 
 
@@ -75,7 +70,7 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
-    ${META_PROJECT_NAME}::metal-pipeline
+    ${META_PROJECT_NAME}::metal-filesystem
     gtest
 )
 

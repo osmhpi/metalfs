@@ -1,6 +1,6 @@
 #pragma once
 
-#include <metal_pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_registry.hpp>
 #include <gtest/gtest.h>
 
 namespace metal {

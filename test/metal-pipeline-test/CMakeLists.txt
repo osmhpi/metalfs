@@ -3,12 +3,14 @@
 # External dependencies
 #
 
+# find_package(${META_PROJECT_NAME} REQUIRED HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+
 #
 # Executable name and options
 #
 
 # Target name
-set(target example-test)
+set(target metal-pipeline-test)
 message(STATUS "Test ${target}")
 
 
@@ -19,15 +21,8 @@ message(STATUS "Test ${target}")
 set(sources
     gtest_main.cpp
 
-    base_test.cpp
-    base_test.hpp
-    blowfish_pipeline_test.cpp
-    changecase_pipeline_test.cpp
-    colorfilter_pipeline_test.cpp
-    readwrite_pipeline_test.cpp
-    nvme_pipeline_test.cpp
-    dram_pipeline_test.cpp
-    profiling_test.cpp
+    operator_registry_test.cpp
+    user_operator_test.cpp
 )
 
 
@@ -64,7 +59,6 @@ target_include_directories(${target}
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
 )
 
 

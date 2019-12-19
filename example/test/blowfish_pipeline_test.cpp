@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <malloc.h>
-#include <metal_pipeline/operator_registry.hpp>
-#include <metal_pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/data_sink.hpp>
+#include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/snap_action.hpp>
 #include <snap_action_metal.h>
-#include <metal_pipeline/data_sink.hpp>
-#include <metal_pipeline/data_source.hpp>
-#include <metal_pipeline/snap_action.hpp>
 #include "base_test.hpp"
 
 namespace metal {
@@ -27,7 +27,7 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayload) {
         GTEST_SKIP();
         return;
     }
-    
+
     auto keyBuffer = std::make_shared<std::vector<char>>(16);
     {
         std::vector<char> key ({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF });

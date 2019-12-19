@@ -1,7 +1,7 @@
 #include "base_test.hpp"
 
 extern "C" {
-#include <metal_filesystem/metal.h>
+#include <metal-filesystem/metal.h>
 #include <metal_storage/storage.h>
 }
 

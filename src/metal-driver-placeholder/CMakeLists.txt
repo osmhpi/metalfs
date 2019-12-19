@@ -3,13 +3,16 @@
 # External dependencies
 #
 
+
 #
 # Executable name and options
 #
 
 # Target name
-set(target example-test)
-message(STATUS "Test ${target}")
+set(target metal-driver-placeholder)
+
+# Exit here if required dependencies are not met
+message(STATUS "Executable ${target}")
 
 
 #
@@ -17,17 +20,7 @@ message(STATUS "Test ${target}")
 #
 
 set(sources
-    gtest_main.cpp
-
-    base_test.cpp
-    base_test.hpp
-    blowfish_pipeline_test.cpp
-    changecase_pipeline_test.cpp
-    colorfilter_pipeline_test.cpp
-    readwrite_pipeline_test.cpp
-    nvme_pipeline_test.cpp
-    dram_pipeline_test.cpp
-    profiling_test.cpp
+    operator_agent.cpp
 )
 
 
@@ -37,6 +30,7 @@ set(sources
 
 # Build executable
 add_executable(${target}
+    MACOSX_BUNDLE
     ${sources}
 )
 
@@ -62,9 +56,6 @@ set_target_properties(${target}
 target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
-    ${PROJECT_BINARY_DIR}/src/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
 )
 
 
@@ -75,8 +66,7 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
-    ${META_PROJECT_NAME}::metal-pipeline
-    gtest
+    ${META_PROJECT_NAME}::metal-driver-messages
 )
 
 
@@ -107,4 +97,15 @@ target_compile_options(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LINKER_OPTIONS}
+)
+
+
+#
+# Deployment
+#
+
+# Executable
+install(TARGETS ${target}
+    RUNTIME DESTINATION ${INSTALL_BIN} COMPONENT runtime
+    BUNDLE  DESTINATION ${INSTALL_BIN} COMPONENT runtime
 )

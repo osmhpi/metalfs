@@ -3,13 +3,17 @@
 # External dependencies
 #
 
+find_package(FUSE REQUIRED)
+
 #
 # Executable name and options
 #
 
 # Target name
-set(target example-test)
-message(STATUS "Test ${target}")
+set(target metal-driver)
+
+# Exit here if required dependencies are not met
+message(STATUS "Executable ${target}")
 
 
 #
@@ -17,17 +21,18 @@ message(STATUS "Test ${target}")
 #
 
 set(sources
-    gtest_main.cpp
-
-    base_test.cpp
-    base_test.hpp
-    blowfish_pipeline_test.cpp
-    changecase_pipeline_test.cpp
-    colorfilter_pipeline_test.cpp
-    readwrite_pipeline_test.cpp
-    nvme_pipeline_test.cpp
-    dram_pipeline_test.cpp
-    profiling_test.cpp
+    agent_pool.cpp
+    agent_pool.hpp
+    metal_fs.cpp
+    metal_fuse_operations.cpp
+    metal_fuse_operations.hpp
+    pipeline_builder.cpp
+    pipeline_builder.hpp
+    pipeline_loop.cpp
+    pipeline_loop.hpp
+    registered_agent.hpp
+    server.cpp
+    server.hpp
 )
 
 
@@ -37,6 +42,7 @@ set(sources
 
 # Build executable
 add_executable(${target}
+    MACOSX_BUNDLE
     ${sources}
 )
 
@@ -63,8 +69,9 @@ target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
+    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
     ${PROJECT_SOURCE_DIR}/third_party/spdlog
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
+    ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
 )
 
 
@@ -75,8 +82,11 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
+    ${FUSE_LIBRARIES}
     ${META_PROJECT_NAME}::metal-pipeline
-    gtest
+    ${META_PROJECT_NAME}::metal-filesystem
+    ${META_PROJECT_NAME}::metal-filesystem-pipeline
+    ${META_PROJECT_NAME}::metal-driver-messages
 )
 
 
@@ -97,6 +107,7 @@ target_compile_definitions(${target}
 target_compile_options(${target}
     PRIVATE
     ${DEFAULT_COMPILE_OPTIONS}
+    -D_FILE_OFFSET_BITS=64
 )
 
 
@@ -107,4 +118,17 @@ target_compile_options(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LINKER_OPTIONS}
+)
+
+# Build dependency on metal-driver-placeholder
+add_dependencies(${target} ${META_PROJECT_NAME}::metal-driver-placeholder)
+
+#
+# Deployment
+#
+
+# Executable
+install(TARGETS ${target}
+    RUNTIME DESTINATION ${INSTALL_BIN} COMPONENT runtime
+    BUNDLE  DESTINATION ${INSTALL_BIN} COMPONENT runtime
 )
