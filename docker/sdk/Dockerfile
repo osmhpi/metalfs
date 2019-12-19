@@ -14,8 +14,12 @@ RUN cd /src/metal_fs \
  && make && make install
 
 FROM metalfs/sdk-base:$VIVADO_EDITION-$PSL
+
 COPY --from=build /install/metal-driver /usr/local/bin/
 COPY --from=build /install/metal-driver-placeholder /usr/local/bin/
 COPY --from=build /install/lib/ /usr/local/lib/
 
 RUN ldconfig
+
+ADD . /sdk/metal_fs
+ENV METAL_ROOT=/sdk/metal_fs

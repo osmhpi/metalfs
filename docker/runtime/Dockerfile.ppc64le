@@ -18,28 +18,38 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
 
-WORKDIR /metal
+# SNAP
+RUN git clone https://github.com/open-power/snap /tmp/snap \
+ && cd /tmp/snap/software \
+ && git checkout bc58d6c \
+ && make \
+ && cp /tmp/snap/software/include/* /usr/local/include/ \
+ && cp /tmp/snap/software/lib/*.a /usr/local/lib/ \
+ && cp /tmp/snap/software/lib/*.so /usr/local/lib/ \
+ && rm -rf /tmp/snap
 
-ENV SNAP_ROOT=/metal/snap
-RUN git clone https://github.com/open-power/snap $SNAP_ROOT
-RUN cd snap && make software
+WORKDIR /metal
 
 ADD third_party/ third_party/
 ADD cmake/ cmake/
 
 ADD CMakeLists.txt .
-ADD test/ test/
 ADD src/ src/
-ADD example/ example/
 ADD targets/ targets/
 
-RUN mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
-RUN make -C build -j8
-
+RUN mkdir build \
+ && cd build \
+ && cmake \
+   -DCMAKE_BUILD_TYPE=Release \
+   -DOPTION_BUILD_TESTS=OFF \
+   .. \
+ && make -C build -j8 \
+ && make install
 
 FROM ubuntu:bionic
 COPY --from=build /metal/build/metal_fs /usr/bin/metal_fs
-COPY --from=build /metal/snap/software/lib/libsnap.so /usr/lib/libsnap.so
+COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/libsnap.so
+RUN ldconfig
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -53,4 +63,4 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
 
-ENTRYPOINT /usr/bin/metal_fs
+ENTRYPOINT /usr/bin/metal-driver
