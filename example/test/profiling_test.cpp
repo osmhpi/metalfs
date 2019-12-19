@@ -1,11 +1,11 @@
 #include <malloc.h>
-#include <include/gtest/gtest.h>
-#include <metal_pipeline/operator_registry.hpp>
-#include <metal_pipeline/data_source.hpp>
-#include <metal_pipeline/data_sink.hpp>
 #include <snap_action_metal.h>
-#include <metal_pipeline/pipeline_definition.hpp>
-#include <metal_pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/data_sink.hpp>
+#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline_runner.hpp>
+#include <gtest/gtest.h>
 #include "base_test.hpp"
 
 

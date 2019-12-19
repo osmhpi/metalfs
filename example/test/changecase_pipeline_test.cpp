@@ -3,11 +3,11 @@
 #include <gtest/gtest.h>
 
 #include <snap_action_metal.h>
-#include <metal_pipeline/operator_registry.hpp>
-#include <metal_pipeline/pipeline_definition.hpp>
-#include <metal_pipeline/data_sink.hpp>
-#include <metal_pipeline/data_source.hpp>
-#include <metal_pipeline/snap_action.hpp>
+#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/data_sink.hpp>
+#include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
 

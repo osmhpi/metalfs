@@ -76,6 +76,8 @@ target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
     ${META_PROJECT_NAME}::metal-pipeline
+    ${META_PROJECT_NAME}::metal-filesystem
+    ${META_PROJECT_NAME}::metal-filesystem-pipeline
     gtest
 )
 
