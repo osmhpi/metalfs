@@ -2,74 +2,72 @@
 
 #include <metal-pipeline/metal-pipeline_api.h>
 
-#include <utility>
 #include <memory>
-#include <vector>
 #include <metal-pipeline/pipeline_definition.hpp>
+#include <utility>
+#include <vector>
 
 namespace metal {
 
 // Runs a pipeline one or more times
-class METAL_PIPELINE_API AbstractPipelineRunner {
-public:
-    explicit AbstractPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline) : _pipeline(pipeline) {}
-    virtual uint64_t run(bool last) = 0;
+class METAL_PIPELINE_API SnapPipelineRunner {
+ public:
+  SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
+      : _pipeline(std::move(pipeline)),
+        _initialized(false),
+        _card(card) {}
+  template <typename... Ts>
+  SnapPipelineRunner(Ts... userOperators, int card)
+      : SnapPipelineRunner(std::make_shared<PipelineDefinition>({userOperators...}), card) {}
 
-protected:
-    std::shared_ptr<PipelineDefinition> _pipeline;
-};
+  uint64_t run(DataSourceRuntimeContext &dataSource, DataSinkRuntimeContext &dataSink, bool last);
 
-class METAL_PIPELINE_API SnapPipelineRunner : public AbstractPipelineRunner {
-public:
-    SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
-      : AbstractPipelineRunner(std::move(pipeline)), _initialized(false), _card(card) {}
-    uint64_t run(bool last) override;
+  static std::string readImageInfo(int card);
 
-    static std::string readImageInfo(int card);
+ protected:
+  void requireReinitialization() { _initialized = false; }
 
-protected:
-    virtual void pre_run(SnapAction &action, bool initialize);
-    virtual void post_run(SnapAction &action, bool finalize) { (void)action; (void)finalize; }
-    void requireReinitialization() { _initialized = false; }
+  virtual void pre_run(SnapAction &action, bool initialize) {};
+  virtual void post_run(SnapAction &action, bool finalize) {};
 
-    bool _initialized;
-    int _card;
+  std::shared_ptr<PipelineDefinition> _pipeline;
+  bool _initialized;
+  int _card;
 };
 
 class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
-public:
-    ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
-        : SnapPipelineRunner(std::move(pipeline), card), _results(ProfilingResults{}) {}
-    void selectOperatorForProfiling(std::shared_ptr<AbstractOperator> op);
-    std::string formatProfilingResults();
-    void resetResults() { _results = ProfilingResults{}; };
+ public:
+  ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline,
+                          int card)
+      : SnapPipelineRunner(std::move(pipeline), card),
+        _results(ProfilingResults{}) {}
+  template <typename... Ts>
+  ProfilingPipelineRunner(Ts... userOperators, int card)
+      : ProfilingPipelineRunner(std::make_shared<PipelineDefinition>({userOperators...}), card) {}
 
-protected:
-    struct ProfilingResults {
-        uint64_t global_clock_counter;
-        uint64_t input_data_byte_count;
-        uint64_t input_transfer_cycle_count;
-        uint64_t input_slave_idle_count;
-        uint64_t input_master_idle_count;
-        uint64_t output_data_byte_count;
-        uint64_t output_transfer_cycle_count;
-        uint64_t output_slave_idle_count;
-        uint64_t output_master_idle_count;
-    };
+  void selectOperatorForProfiling(const std::string &operatorId);
+  std::string formatProfilingResults();
+  void resetResults() { _results = ProfilingResults{}; };
 
-    void pre_run(SnapAction &action, bool initialize) override;
-    void post_run(SnapAction &action, bool finalize) override;
-    template<typename ... Args>
-    static std::string string_format(const std::string& format, Args ... args);
+ protected:
+  struct ProfilingResults {
+    uint64_t global_clock_counter;
+    uint64_t input_data_byte_count;
+    uint64_t input_transfer_cycle_count;
+    uint64_t input_slave_idle_count;
+    uint64_t input_master_idle_count;
+    uint64_t output_data_byte_count;
+    uint64_t output_transfer_cycle_count;
+    uint64_t output_slave_idle_count;
+    uint64_t output_master_idle_count;
+  };
 
-    std::shared_ptr<AbstractOperator> _op;
-    ProfilingResults _results;
+  void pre_run(SnapAction &action, bool initialize) override;
+  void post_run(SnapAction &action, bool finalize) override;
+  template <typename... Args>
+  static std::string string_format(const std::string &format, Args... args);
+
+  ProfilingResults _results;
 };
 
-class METAL_PIPELINE_API MockPipelineRunner : public AbstractPipelineRunner {
-public:
-    uint64_t run(bool last) override;
-
-};
-
-} // namespace metal
+}  // namespace metal

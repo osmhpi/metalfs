@@ -10,7 +10,7 @@ TEST(OperatorRegistryTest, DetectsOperatorsInJSON) {
 
     OperatorRegistry registry(json);
 
-    ASSERT_EQ(1u, registry.operators().size());
+    ASSERT_EQ(1u, registry.size());
 }
 
 } // namespace

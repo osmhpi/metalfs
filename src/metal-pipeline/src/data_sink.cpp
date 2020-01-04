@@ -1,6 +1,5 @@
 extern "C" {
 #include <unistd.h>
-#include <snap_hls_if.h>
 }
 
 #include <metal-pipeline/snap_action.hpp>

@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 #include <libsnap.h>
+#include <snap_hls_if.h>
 
 #include <snap_action_metal.h>
 
@@ -89,6 +90,10 @@ bool SnapAction::is_nvme_enabled() {
     unsigned long have_nvme = 0;
     snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
     return have_nvme != 0;
+}
+
+void* SnapAction::allocateMemory(size_t size) {
+    return snap_malloc(size);
 }
 
 std::string SnapAction::job_type_to_string(fpga::JobType job)

@@ -1,95 +1,118 @@
 extern "C" {
 #include <unistd.h>
-#include <snap_hls_if.h>
 }
 
-#include <iostream>
-#include <algorithm>
 #include <spdlog/spdlog.h>
+#include <algorithm>
+#include <iostream>
 
 #include <snap_action_metal.h>
+#include <metal-pipeline/common.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
 #include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/user_operator_specification.hpp>
 
 namespace metal {
 
-PipelineDefinition::PipelineDefinition(std::vector<std::shared_ptr<AbstractOperator>> operators)
-    : _operators(std::move(operators)), _cached_switch_configuration(false) {
-    if (_operators.size() < 2) {
-        throw std::runtime_error("Pipeline must contain at least data source and data sink operators.");
-    }
+PipelineDefinition::PipelineDefinition(std::vector<UserOperator> userOperators)
+    : _cached_switch_configuration(false) {
+  std::vector<UserOperatorRuntimeContext> contexts;
+  contexts.reserve(userOperators.size());
 
-    _dataSource = std::dynamic_pointer_cast<DataSource>(_operators.front());
-    if (_dataSource == nullptr) {
-        throw std::runtime_error("Pipeline does not start with a data source");
-    }
+  for (auto &op : userOperators) {
+    contexts.emplace_back(UserOperatorRuntimeContext(std::move(op)));
+  }
 
-    _dataSink = std::dynamic_pointer_cast<DataSink>(_operators.back());
-    if (_dataSink == nullptr) {
-        throw std::runtime_error("Pipeline does not end with a data sink");
-    }
+  _operators = std::move(contexts);
 }
 
-uint64_t PipelineDefinition::run(SnapAction &action) {
-    for (const auto &op : _operators)
-        op->configure(action);
+PipelineDefinition::PipelineDefinition(
+    std::vector<UserOperatorRuntimeContext> userOperators)
+    : _operators(std::move(userOperators)),
+      _cached_switch_configuration(false) {}
 
-    uint64_t enable_mask = 0;
+uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink, SnapAction &action) {
+    // One-off contexts for data source and data sink
 
-    for (const auto &op : _operators)
-        if (op->needs_preparation()) enable_mask |= (1u << op->internal_id());
+    DataSourceRuntimeContext source(dataSource);
+    DataSinkRuntimeContext sink(dataSink);
 
-    if (enable_mask) {
-        // At least one operator needs preparation.
-        action.execute_job(fpga::JobType::RunOperators, nullptr, {}, {}, enable_mask);
+    return run(source, sink , action);
+}
+
+uint64_t PipelineDefinition::run(DataSourceRuntimeContext &dataSource, DataSinkRuntimeContext &dataSink, SnapAction &action) {
+  for (auto &op : _operators) {
+      op.configure(action);
+  }
+
+  uint64_t enable_mask = 0;
+
+  for (const auto &op : _operators)
+    if (op.needs_preparation()) {
+        enable_mask |= (1u << op.userOperator().spec().internal_id());
     }
 
-    if (!_cached_switch_configuration)
-        configureSwitch(action, false);
+  if (enable_mask) {
+    // At least one operator needs preparation.
+    action.execute_job(fpga::JobType::RunOperators, nullptr, {}, {},
+                       enable_mask);
+  }
 
-    enable_mask = 0;
-    for (const auto &op : _operators) {
-        op->set_is_prepared();
-        enable_mask |= (1u << op->internal_id());
-    }
+  if (!_cached_switch_configuration) configureSwitch(action, false);
 
-    uint64_t output_size;
-    spdlog::debug("Running Pipeline, Read: (Address: {:x}, Size: {}, Type: {}), Write: (Address: {:x}, Size: {}, Type: {})",
-        _dataSource->address().addr, _dataSource->address().size, (uint64_t)_dataSource->address().type,
-        _dataSink->address().addr, _dataSink->address().size, (uint64_t)_dataSink->address().type);
-    action.execute_job(fpga::JobType::RunOperators, nullptr, _dataSource->address(), _dataSink->address(), enable_mask, /* perfmon_enable = */ 1, &output_size);
+  enable_mask = 0;
+  for (auto &op : _operators) {
+    op.set_is_prepared();
+    enable_mask |= (1u << op.userOperator().spec().internal_id());
+  }
 
-    for (const auto &op : _operators)
-        op->finalize(action);
+  uint64_t output_size;
+  spdlog::debug(
+      "Running Pipeline, Read: (Address: {:x}, Size: {}, Type: {}), Write: "
+      "(Address: {:x}, Size: {}, Type: {})",
+      dataSource.dataSource().address().addr, dataSource.dataSource().address().size,
+      (uint64_t)dataSource.dataSource().address().type, dataSink.dataSink().address().addr,
+      dataSink.dataSink().address().size, (uint64_t)dataSink.dataSink().address().type);
+  action.execute_job(fpga::JobType::RunOperators, nullptr,
+                     dataSource.dataSource().address(), dataSink.dataSink().address(), enable_mask,
+                     /* perfmon_enable = */ 1, &output_size);
 
-    return output_size;
+  for (auto &op : _operators) {
+      op.finalize(action);
+  }
+
+  return output_size;
 }
 
 void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
-    _cached_switch_configuration = set_cached;
+  _cached_switch_configuration = set_cached;
 
-    auto *job_struct = reinterpret_cast<uint32_t*>(snap_malloc(sizeof(uint32_t) * 8));
-    const uint32_t disable = 0x80000000;
-    for (int i = 0; i < 8; ++i)
-        job_struct[i] = htobe32(disable);
+  auto *job_struct =
+      reinterpret_cast<uint32_t *>(action.allocateMemory(sizeof(uint32_t) * 8));
+  const uint32_t disable = 0x80000000;
+  for (int i = 0; i < 8; ++i) {
+      job_struct[i] = htobe32(disable);
+  }
 
-    uint8_t previous_op_stream = !_operators.empty() ? _operators[0]->internal_id() : 0;
-    for (const auto &op : _operators) {
-        // From the perspective of the Stream Switch:
-        // Which Master port (output) should be
-        // sourced from which Slave port (input)
-        job_struct[op->internal_id()] = htobe32(previous_op_stream);
-        previous_op_stream = op->internal_id();
-    }
+  uint8_t previous_op_stream = IOStreamID;
+  for (const auto &op : _operators) {
+    // From the perspective of the Stream Switch:
+    // Which Master port (output) should be
+    // sourced from which Slave port (input)
+    job_struct[op.userOperator().spec().internal_id()] = htobe32(previous_op_stream);
+    previous_op_stream = op.userOperator().spec().internal_id();
+  }
+  job_struct[IOStreamID] = previous_op_stream;
 
-    try {
-        action.execute_job(fpga::JobType::ConfigureStreams, reinterpret_cast<char *>(job_struct));
-    } catch (std::exception &ex) {
-        free(job_struct);
-        throw ex;
-    }
-
+  try {
+    action.execute_job(fpga::JobType::ConfigureStreams,
+                       reinterpret_cast<char *>(job_struct));
+  } catch (std::exception &ex) {
     free(job_struct);
+    throw ex;
+  }
+
+  free(job_struct);
 }
 
-} // namespace metal
+}  // namespace metal

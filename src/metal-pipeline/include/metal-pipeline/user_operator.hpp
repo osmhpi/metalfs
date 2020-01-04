@@ -2,43 +2,33 @@
 
 #include <metal-pipeline/metal-pipeline_api.h>
 
-extern "C" {
-#include <jv.h>
-}
-
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
-#include "abstract_operator.hpp"
 #include "operator_argument.hpp"
 
 namespace metal {
 
-class METAL_PIPELINE_API UserOperator : public AbstractOperator {
+class UserOperatorSpecification;
+
+class METAL_PIPELINE_API UserOperator {
+    std::shared_ptr<const UserOperatorSpecification> _spec;
 
 public:
-    explicit UserOperator(std::string id, const std::string& manifest);
-    virtual ~UserOperator();
+    explicit UserOperator(std::shared_ptr<const UserOperatorSpecification> spec);
+    UserOperator(UserOperator &&other) : _spec(std::move(other._spec)), _options(std::move(other._options)) {};
+    std::string id() const;
+    std::string description() const;
 
-    void configure(SnapAction& action) override;
-    void finalize(SnapAction& action) override;
+    const std::unordered_map<std::string, std::optional<OperatorArgumentValue>> options() const { return _options; }
 
-    std::string id() const override { return _id; }
-    std::string description() const override;
-    uint8_t internal_id() const override;
-    bool needs_preparation() const override;
-    virtual void set_is_prepared() override { _is_prepared = true; }
-    bool prepare_required() const;
+    const UserOperatorSpecification &spec() const { return *_spec; }
+
+    void setOption(std::string option, OperatorArgumentValue arg);
 
 protected:
-    void initializeOptions();
-
-    jv manifest() const { return jv_copy(_manifest); }
-    jv _manifest;
-
-    std::string _id;
-    bool _is_prepared;
+    std::unordered_map<std::string, std::optional<OperatorArgumentValue>> _options;
 
 };
 

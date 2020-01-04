@@ -33,25 +33,28 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
-    ${include_path}/abstract_operator.hpp
+    ${include_path}/common.hpp
     ${include_path}/data_sink.hpp
     ${include_path}/data_source.hpp
     ${include_path}/operator_argument.hpp
     ${include_path}/operator_registry.hpp
+    ${include_path}/operator_runtime_context.hpp
     ${include_path}/pipeline_definition.hpp
     ${include_path}/pipeline_runner.hpp
     ${include_path}/snap_action.hpp
+    ${include_path}/user_operator_specification.hpp
     ${include_path}/user_operator.hpp
 )
 
 set(sources
-    ${source_path}/abstract_operator.cpp
     ${source_path}/data_sink.cpp
     ${source_path}/data_source.cpp
     ${source_path}/operator_registry.cpp
+    ${source_path}/operator_runtime_context.cpp
     ${source_path}/pipeline_definition.cpp
     ${source_path}/pipeline_runner.cpp
     ${source_path}/snap_action.cpp
+    ${source_path}/user_operator_specification.cpp
     ${source_path}/user_operator.cpp
 )
 
@@ -156,10 +159,10 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${SNAP_LIBRARY}
+    ${JQ_LIBRARIES}
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
-    ${JQ_LIBRARIES}
 
     INTERFACE
 )

@@ -4,7 +4,6 @@
 extern "C" {
 #include <metal-filesystem/metal.h>
 #include <unistd.h>
-#include <snap_hls_if.h>
 }
 
 #include <spdlog/spdlog.h>
