@@ -49,8 +49,8 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
-      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), true));
-//   std::cout << runner.formatProfilingResults();
+      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes)));
+  //   std::cout << runner.formatProfilingResults();
 }
 
 TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
@@ -90,8 +90,8 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
-      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), true));
-//   std::cout << runner.formatProfilingResults();
+      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes)));
+  //   std::cout << runner.formatProfilingResults();
 }
 
 TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
@@ -131,8 +131,8 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
-      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), true));
-//   std::cout << runner.formatProfilingResults();
+      runner.run(DataSource(src, n_bytes), DataSink(dest, n_bytes)));
+  //   std::cout << runner.formatProfilingResults();
 }
 
 TEST_F(ProfilingPipeline, BenchmarkChangecase) {
@@ -152,9 +152,8 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
 
   ProfilingPipelineRunner runner(0, std::move(changeCaseContext));
   ASSERT_NO_THROW(runner.run(DataSource(0, n_bytes, fpga::AddressType::Random),
-                             DataSink(0, n_bytes, fpga::AddressType::Null),
-                             true));
-//   std::cout << runner.formatProfilingResults();
+                             DataSink(0, n_bytes, fpga::AddressType::Null)));
+  //   std::cout << runner.formatProfilingResults();
 }
 
 }  // namespace metal

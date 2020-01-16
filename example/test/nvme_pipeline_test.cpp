@@ -7,6 +7,7 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline_runner.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
@@ -26,12 +27,10 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
   FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
                                       fpga::MapType::NVMe, file, 0, n_bytes);
 
-  DataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+  DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition();
-  ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+  SnapPipelineRunner runner(0);
+  ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(dest);
 }
@@ -42,17 +41,15 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  DataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
+  DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
 
   std::vector<mtl_file_extent> file = {
       {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
   FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
                                   file, 0, n_bytes);
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition();
-  ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+  SnapPipelineRunner runner(0);
+  ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(src);
 }
@@ -68,24 +65,22 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
-
   {  // Write
-    DataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
+    DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
     FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, 0, n_bytes);
 
-    auto pipeline = PipelineDefinition();
-    ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+    SnapPipelineRunner runner(0);
+    ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Read
     FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
                                         fpga::MapType::NVMe, file, 0, n_bytes);
-    DataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+    DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
 
-    auto pipeline = PipelineDefinition();
-    ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+    SnapPipelineRunner runner(0);
+    ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -109,34 +104,33 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   auto newBytes = reinterpret_cast<uint8_t *>(memalign(4096, newBytesSize));
   fill_payload(newBytes, newBytesSize);
 
-  SnapAction action(fpga::ActionType, 0);
-
   {  // Write
-    DataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
+    DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
     FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, 0, n_bytes);
 
-    auto pipeline = PipelineDefinition();
-    ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+    SnapPipelineRunner runner(0);
+    ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Write new bytes
-    DataSourceRuntimeContext dataSource(DataSource(newBytes, newBytesSize));
+    DefaultDataSourceRuntimeContext dataSource(
+        DataSource(newBytes, newBytesSize));
     FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, newBytesOffset,
                                     newBytesSize);
 
-    auto pipeline = PipelineDefinition();
-    ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+    SnapPipelineRunner runner(0);
+    ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Read
     FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
                                         fpga::MapType::NVMe, file, 0, n_bytes);
-    DataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+    DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
 
-    auto pipeline = PipelineDefinition();
-    ASSERT_NO_THROW(pipeline.run(dataSource, dataSink, action));
+    SnapPipelineRunner runner(0);
+    ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   EXPECT_EQ(0, memcmp(src, dest, newBytesOffset));
