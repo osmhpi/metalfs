@@ -86,7 +86,8 @@ PipelineBuilder::resolveOperatorSpecifications() {
   for (const auto &agent : _pipeline_agents) {
     if (DatagenOperator::isDatagenAgent(*agent)) {
       if (result.size() > 0)
-        throw std::runtime_error("Operator can only be used as the start of an FPGA pipeline");
+        throw std::runtime_error(
+            "Operator can only be used as the start of an FPGA pipeline");
 
       result.emplace_back(nullptr, agent);
       continue;
@@ -97,7 +98,7 @@ PipelineBuilder::resolveOperatorSpecifications() {
       throw std::runtime_error("Unknown operator was requested");
     }
 
-    if (!operatorsWithAgents.emplace(op->second).second){
+    if (!operatorsWithAgents.emplace(op->second).second) {
       throw std::runtime_error("Operator was used more than once");
     }
 
@@ -130,12 +131,14 @@ ConfiguredPipeline PipelineBuilder::configure() {
   // Establish pipeline data source and sink
   result.dataSourceAgent = orderedOperatorSpecsAndAgents.front().second;
   if (result.dataSourceAgent->internal_input_file.empty()) {
-    result.dataSourceAgent->input_buffer = Buffer::createTempFileForSharedBuffer(false);
+    result.dataSourceAgent->input_buffer =
+        Buffer::createTempFileForSharedBuffer(false);
   }
 
   result.dataSinkAgent = orderedOperatorSpecsAndAgents.back().second;
   if (result.dataSinkAgent->internal_output_file.empty()) {
-    result.dataSinkAgent->output_buffer = Buffer::createTempFileForSharedBuffer(true);
+    result.dataSinkAgent->output_buffer =
+        Buffer::createTempFileForSharedBuffer(true);
   }
 
   // Validate datagen (if necessary)

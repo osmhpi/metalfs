@@ -4,8 +4,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include <snap_action_metal.h>
 #include <metal-filesystem/metal.h>
+#include <snap_action_metal.h>
 #include <metal-filesystem-pipeline/file_data_source.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
@@ -95,7 +95,8 @@ void FileSourceRuntimeContext::finalize(SnapAction &action) {
 }
 
 bool FileSourceRuntimeContext::endOfInput() const {
-  return _dataSource.address().addr + _dataSource.address().size >= _file_length;
+  return _dataSource.address().addr + _dataSource.address().size >=
+         _file_length;
 }
 
 }  // namespace metal

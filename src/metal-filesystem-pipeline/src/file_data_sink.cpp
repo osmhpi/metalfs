@@ -95,12 +95,12 @@ void FileSinkRuntimeContext::configure(SnapAction &action, bool) {
 
 void FileSinkRuntimeContext::finalize(SnapAction &, uint64_t outputSize, bool) {
   // Advance offset
-  _dataSink = DataSink(_dataSink.address().addr + outputSize,
-                       _dataSink.address().size, _dataSink.address().type,
-                       _dataSink.address().map);
+  _dataSink =
+      DataSink(_dataSink.address().addr + outputSize, _dataSink.address().size,
+               _dataSink.address().type, _dataSink.address().map);
 
   // TODO: if (endOfInput) {
-    // mtl_truncate(...)
+  // mtl_truncate(...)
   // }
 }
 

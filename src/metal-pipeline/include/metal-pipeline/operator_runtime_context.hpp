@@ -24,7 +24,9 @@ class METAL_PIPELINE_API OperatorRuntimeContext {
   virtual void set_is_prepared() {}
   bool profiling_enabled() const { return _profilingEnabled; }
   std::string profilingResults() const { return _profilingResults; }
-  void setProfilingResults(std::string results) { _profilingResults = std::move(results); }
+  void setProfilingResults(std::string results) {
+    _profilingResults = std::move(results);
+  }
 
   void set_profiling_enabled(bool enabled) { _profilingEnabled = enabled; }
 
@@ -63,7 +65,9 @@ class METAL_PIPELINE_API DataSourceRuntimeContext {
   virtual bool endOfInput() const = 0;
   bool profilingEnabled() const { return _profilingEnabled; }
   void setProfilingEnabled(bool enabled) { _profilingEnabled = enabled; }
-  void setProfilingResults(std::string results) { _profilingResults = std::move(results); }
+  void setProfilingResults(std::string results) {
+    _profilingResults = std::move(results);
+  }
 
  protected:
   bool _profilingEnabled;

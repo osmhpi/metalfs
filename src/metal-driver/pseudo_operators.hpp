@@ -13,9 +13,9 @@ class DatagenOperator {
   static bool isDatagenAgent(const RegisteredAgent &agent);
   static void validate(RegisteredAgent &agent);
   static uint64_t datagenLength(RegisteredAgent &agent);
-  protected:
-  static cxxopts::ParseResult parseOptions(RegisteredAgent &agent);
 
+ protected:
+  static cxxopts::ParseResult parseOptions(RegisteredAgent &agent);
 };
 
 class DevNullFile {

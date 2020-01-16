@@ -5,9 +5,9 @@ extern "C" {
 }
 #include <dirent.h>
 
-#include <vector>
 #include <spdlog/spdlog.h>
 #include <metal-pipeline/user_operator_specification.hpp>
+#include <vector>
 
 namespace metal {
 

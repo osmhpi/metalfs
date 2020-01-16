@@ -19,7 +19,8 @@ class METAL_FILESYSTEM_PIPELINE_API FileSinkRuntimeContext
  public:
  protected:
   void configure(SnapAction &action, bool initial) override;
-  void finalize(SnapAction &action, uint64_t outputSize, bool endOfInput) override;
+  void finalize(SnapAction &action, uint64_t outputSize,
+                bool endOfInput) override;
 
   std::vector<mtl_file_extent> _extents;
 

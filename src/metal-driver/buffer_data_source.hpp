@@ -11,7 +11,8 @@ class FileSourceRuntimeContext;
 
 class BufferSourceRuntimeContext : public FileSourceRuntimeContext {
  public:
-  explicit BufferSourceRuntimeContext(std::shared_ptr<RegisteredAgent> agent, bool skipSendingProcessingResponse);
+  explicit BufferSourceRuntimeContext(std::shared_ptr<RegisteredAgent> agent,
+                                      bool skipSendingProcessingResponse);
 
   const DataSource dataSource() const final;
   void configure(SnapAction &action, bool initial) final;

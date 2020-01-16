@@ -21,6 +21,7 @@ BufferSourceRuntimeContext::BufferSourceRuntimeContext(
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
   } else if (!agent->internal_input_file.empty()) {
     _filename = agent->internal_input_file;
+    loadExtents();
   } else {
     throw std::runtime_error("Unknown data source");
   }

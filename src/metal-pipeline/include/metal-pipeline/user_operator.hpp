@@ -13,23 +13,27 @@ namespace metal {
 class UserOperatorSpecification;
 
 class METAL_PIPELINE_API UserOperator {
-    std::shared_ptr<const UserOperatorSpecification> _spec;
+  std::shared_ptr<const UserOperatorSpecification> _spec;
 
-public:
-    explicit UserOperator(std::shared_ptr<const UserOperatorSpecification> spec);
-    UserOperator(UserOperator &&other) : _spec(std::move(other._spec)), _options(std::move(other._options)) {};
-    std::string id() const;
-    std::string description() const;
+ public:
+  explicit UserOperator(std::shared_ptr<const UserOperatorSpecification> spec);
+  UserOperator(UserOperator &&other)
+      : _spec(std::move(other._spec)), _options(std::move(other._options)){};
+  std::string id() const;
+  std::string description() const;
 
-    const std::unordered_map<std::string, std::optional<OperatorArgumentValue>> options() const { return _options; }
+  const std::unordered_map<std::string, std::optional<OperatorArgumentValue>>
+  options() const {
+    return _options;
+  }
 
-    const UserOperatorSpecification &spec() const { return *_spec; }
+  const UserOperatorSpecification &spec() const { return *_spec; }
 
-    void setOption(std::string option, OperatorArgumentValue arg);
+  void setOption(std::string option, OperatorArgumentValue arg);
 
-protected:
-    std::unordered_map<std::string, std::optional<OperatorArgumentValue>> _options;
-
+ protected:
+  std::unordered_map<std::string, std::optional<OperatorArgumentValue>>
+      _options;
 };
 
-} // namespace metal
+}  // namespace metal

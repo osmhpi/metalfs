@@ -11,7 +11,8 @@ class FileSinkRuntimeContext;
 
 class BufferSinkRuntimeContext : public FileSinkRuntimeContext {
  public:
-  explicit BufferSinkRuntimeContext(std::shared_ptr<RegisteredAgent> agent, bool skipReceivingProcessingRequest);
+  explicit BufferSinkRuntimeContext(std::shared_ptr<RegisteredAgent> agent,
+                                    bool skipReceivingProcessingRequest);
 
   const DataSink dataSink() const final;
   void configure(SnapAction &action, bool initial) final;

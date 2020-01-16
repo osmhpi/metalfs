@@ -11,7 +11,6 @@ class UserOperator;
 class RegisteredAgent;
 
 class PipelineLoop {
-
  public:
   PipelineLoop(ConfiguredPipeline pipeline, int card)
       : _pipeline(std::move(pipeline)), _card(card) {}

@@ -4,11 +4,11 @@
 #include <functional>
 
 #include <snap_action_metal.h>
+#include <metal-filesystem-pipeline/file_data_sink.hpp>
+#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
 #include <metal-pipeline/pipeline_runner.hpp>
-#include <metal-pipeline/data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
 
 namespace metal {
 
@@ -21,21 +21,21 @@ int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
   return MTL_SUCCESS;
 }
 
-int PipelineStorage::set_active_read_extent_list(const mtl_file_extent *extents, uint64_t length) {
-
+int PipelineStorage::set_active_read_extent_list(const mtl_file_extent *extents,
+                                                 uint64_t length) {
   _read_extents = std::vector<mtl_file_extent>(extents, extents + length);
   return MTL_SUCCESS;
 }
 
-int PipelineStorage::set_active_write_extent_list(const mtl_file_extent *extents, uint64_t length) {
-
+int PipelineStorage::set_active_write_extent_list(
+    const mtl_file_extent *extents, uint64_t length) {
   _write_extents = std::vector<mtl_file_extent>(extents, extents + length);
   return MTL_SUCCESS;
 }
 
 int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
-
-  FileSourceRuntimeContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe, _read_extents, offset, length);
+  FileSourceRuntimeContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+                                  _read_extents, offset, length);
   DefaultDataSinkRuntimeContext sink(DataSink(buffer, length));
 
   SnapPipelineRunner runner({}, 0);
@@ -44,10 +44,11 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
   return MTL_SUCCESS;
 }
 
-int PipelineStorage::write(uint64_t offset, const void *buffer, uint64_t length) {
-
+int PipelineStorage::write(uint64_t offset, const void *buffer,
+                           uint64_t length) {
   DefaultDataSourceRuntimeContext source(DataSource(buffer, length));
-  FileSinkRuntimeContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe, _write_extents, offset, length);
+  FileSinkRuntimeContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+                              _write_extents, offset, length);
 
   SnapPipelineRunner runner({}, 0);
   runner.run(source, sink);
@@ -56,33 +57,36 @@ int PipelineStorage::write(uint64_t offset, const void *buffer, uint64_t length)
 }
 
 mtl_storage_backend PipelineStorage::backend() {
-  return mtl_storage_backend {
-    []() { return PipelineStorage::instance().initialize(); },
-    []() { return PipelineStorage::instance().deinitialize(); },
+  return mtl_storage_backend{
+      []() { return PipelineStorage::instance().initialize(); },
+      []() { return PipelineStorage::instance().deinitialize(); },
 
-    [](mtl_storage_metadata *metadata) { return PipelineStorage::instance().mtl_storage_get_metadata(metadata); },
+      [](mtl_storage_metadata *metadata) {
+        return PipelineStorage::instance().mtl_storage_get_metadata(metadata);
+      },
 
-    [](const mtl_file_extent *extents, uint64_t length) {
-      return PipelineStorage::instance().set_active_read_extent_list(extents, length);
-    },
-    [](const mtl_file_extent *extents, uint64_t length) {
-      return PipelineStorage::instance().set_active_write_extent_list(extents, length);
-    },
+      [](const mtl_file_extent *extents, uint64_t length) {
+        return PipelineStorage::instance().set_active_read_extent_list(extents,
+                                                                       length);
+      },
+      [](const mtl_file_extent *extents, uint64_t length) {
+        return PipelineStorage::instance().set_active_write_extent_list(extents,
+                                                                        length);
+      },
 
-    [](uint64_t offset, const void *buffer, uint64_t length) { return PipelineStorage::instance().write(offset, buffer, length); },
-    [](uint64_t offset, void *buffer, uint64_t length) { return PipelineStorage::instance().read(offset, buffer, length); }
-  };
+      [](uint64_t offset, const void *buffer, uint64_t length) {
+        return PipelineStorage::instance().write(offset, buffer, length);
+      },
+      [](uint64_t offset, void *buffer, uint64_t length) {
+        return PipelineStorage::instance().read(offset, buffer, length);
+      }};
 }
 
-int PipelineStorage::initialize() {
-  return MTL_SUCCESS;
-}
+int PipelineStorage::initialize() { return MTL_SUCCESS; }
 
-int PipelineStorage::deinitialize() {
-  return MTL_SUCCESS;
-}
+int PipelineStorage::deinitialize() { return MTL_SUCCESS; }
 
-PipelineStorage& PipelineStorage::instance() {
+PipelineStorage &PipelineStorage::instance() {
   static PipelineStorage instance;
   return instance;
 }

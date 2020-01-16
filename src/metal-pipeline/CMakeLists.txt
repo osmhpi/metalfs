@@ -47,8 +47,6 @@ set(headers
 )
 
 set(sources
-    ${source_path}/data_sink.cpp
-    ${source_path}/data_source.cpp
     ${source_path}/operator_registry.cpp
     ${source_path}/operator_runtime_context.cpp
     ${source_path}/pipeline_definition.cpp

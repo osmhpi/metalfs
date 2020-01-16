@@ -34,7 +34,7 @@ class METAL_PIPELINE_API SnapPipelineRunner {
     (void)initialize;
   };
   virtual void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
-               DataSinkRuntimeContext &dataSink, bool finalize) {
+                       DataSinkRuntimeContext &dataSink, bool finalize) {
     (void)action;
     (void)dataSource;
     (void)dataSink;
@@ -75,7 +75,7 @@ class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
 
   void preRun(SnapAction &action, bool initialize) override;
   void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
-               DataSinkRuntimeContext &dataSink,  bool finalize) override;
+               DataSinkRuntimeContext &dataSink, bool finalize) override;
   template <typename... Args>
   static std::string string_format(const std::string &format, Args... args);
 

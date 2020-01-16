@@ -17,7 +17,7 @@ std::string RegisteredAgent::resolvePath(std::string relativeOrAbsolutePath) {
   return cwd + "/" + relativeOrAbsolutePath;
 }
 
-cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options& options) {
+cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
   // Contain some C++ / C interop ugliness inside here...
 
   std::vector<char *> argsRaw;
@@ -33,6 +33,8 @@ cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options& options) {
     // processing flow
     throw ClientError(shared_from_this(), options.help());
   }
+
+  return parseResult;
 }
 
 }  // namespace metal

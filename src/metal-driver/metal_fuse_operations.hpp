@@ -5,8 +5,8 @@ extern "C" {
 #include <fuse.h>
 }
 
-#include <string>
 #include <memory>
+#include <string>
 #include <unordered_set>
 
 #include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
@@ -18,7 +18,8 @@ class OperatorRegistry;
 class Context {
  public:
   static Context &instance();
-  void initialize(bool in_memory, std::string bin_path, std::string metadata_dir, int card);
+  void initialize(bool in_memory, std::string bin_path,
+                  std::string metadata_dir, int card);
 
   int card() { return _card; }
 
@@ -52,26 +53,28 @@ class Context {
   std::string _socket_filename;
   std::string _socket_alias;
   std::unordered_set<std::string> _operators;
-
 };
 
 int fuse_chown(const char *path, uid_t uid, gid_t gid);
 int fuse_getattr(const char *path, struct stat *stbuf);
-int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi);
+int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                 off_t offset, struct fuse_file_info *fi);
 int fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi);
 int fuse_readlink(const char *path, char *buf, size_t size);
 int fuse_open(const char *path, struct fuse_file_info *fi);
-int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int fuse_read(const char *path, char *buf, size_t size, off_t offset,
+              struct fuse_file_info *fi);
 int fuse_release(const char *path, struct fuse_file_info *fi);
 int fuse_truncate(const char *path, off_t size);
-int fuse_write(const char *path, const char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
+int fuse_write(const char *path, const char *buf, size_t size, off_t offset,
+               struct fuse_file_info *fi);
 int fuse_unlink(const char *path);
 int fuse_mkdir(const char *path, mode_t mode);
 int fuse_rmdir(const char *path);
 int fuse_rename(const char *from_path, const char *to_path);
 
 constexpr struct fuse_operations metal_fuse_operations = [] {
-  struct fuse_operations ops{};
+  struct fuse_operations ops {};
   ops.create = fuse_create;
   ops.getattr = fuse_getattr;
   ops.readlink = fuse_readlink;
@@ -89,4 +92,4 @@ constexpr struct fuse_operations metal_fuse_operations = [] {
   return ops;
 }();
 
-} // namespace metal
+}  // namespace metal
