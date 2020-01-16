@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gtest/gtest.h"
 #include <lmdb.h>
+#include "gtest/gtest.h"
 
 class BaseTest : public ::testing::Test {
  protected:
@@ -14,7 +14,6 @@ class BaseTest : public ::testing::Test {
 
   MDB_env *env;
 };
-
 
 class MetalTest : public BaseTest {
  protected:

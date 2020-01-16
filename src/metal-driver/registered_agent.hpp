@@ -1,7 +1,7 @@
 #pragma once
 
-#include <metal-driver-messages/socket.hpp>
 #include <metal-driver-messages/buffer.hpp>
+#include <metal-driver-messages/socket.hpp>
 
 namespace metal {
 
@@ -9,7 +9,10 @@ namespace metal {
 
 class RegisteredAgent {
  public:
-  explicit RegisteredAgent(Socket socket) : socket(std::move(socket)), input_buffer(std::nullopt), output_buffer(std::nullopt) {}
+  explicit RegisteredAgent(Socket socket)
+      : socket(std::move(socket)),
+        input_buffer(std::nullopt),
+        output_buffer(std::nullopt) {}
 
   uint pid{};
   std::string operator_type;

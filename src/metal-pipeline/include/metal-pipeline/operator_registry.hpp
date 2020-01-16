@@ -9,14 +9,19 @@
 namespace metal {
 
 class METAL_PIPELINE_API OperatorRegistry {
-public:
-    explicit OperatorRegistry(const std::string &image_json);
+ public:
+  explicit OperatorRegistry(const std::string &image_json);
 
-    void add_operator(std::string id, std::shared_ptr<AbstractOperator> op) { _operators.emplace(std::make_pair(std::move(id), std::move(op))); }
-    const std::unordered_map<std::string, std::shared_ptr<AbstractOperator>> & operators() const { return _operators; }
+  void add_operator(std::string id, std::shared_ptr<AbstractOperator> op) {
+    _operators.emplace(std::make_pair(std::move(id), std::move(op)));
+  }
+  const std::unordered_map<std::string, std::shared_ptr<AbstractOperator>>
+      &operators() const {
+    return _operators;
+  }
 
-protected:
-    std::unordered_map<std::string, std::shared_ptr<AbstractOperator>> _operators;
+ protected:
+  std::unordered_map<std::string, std::shared_ptr<AbstractOperator>> _operators;
 };
 
-} // namespace metal
+}  // namespace metal

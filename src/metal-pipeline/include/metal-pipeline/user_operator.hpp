@@ -16,30 +16,28 @@ extern "C" {
 namespace metal {
 
 class METAL_PIPELINE_API UserOperator : public AbstractOperator {
+ public:
+  explicit UserOperator(std::string id, const std::string& manifest);
+  virtual ~UserOperator();
 
-public:
-    explicit UserOperator(std::string id, const std::string& manifest);
-    virtual ~UserOperator();
+  void configure(SnapAction& action) override;
+  void finalize(SnapAction& action) override;
 
-    void configure(SnapAction& action) override;
-    void finalize(SnapAction& action) override;
+  std::string id() const override { return _id; }
+  std::string description() const override;
+  uint8_t internal_id() const override;
+  bool needs_preparation() const override;
+  virtual void set_is_prepared() override { _is_prepared = true; }
+  bool prepare_required() const;
 
-    std::string id() const override { return _id; }
-    std::string description() const override;
-    uint8_t internal_id() const override;
-    bool needs_preparation() const override;
-    virtual void set_is_prepared() override { _is_prepared = true; }
-    bool prepare_required() const;
+ protected:
+  void initializeOptions();
 
-protected:
-    void initializeOptions();
+  jv manifest() const { return jv_copy(_manifest); }
+  jv _manifest;
 
-    jv manifest() const { return jv_copy(_manifest); }
-    jv _manifest;
-
-    std::string _id;
-    bool _is_prepared;
-
+  std::string _id;
+  bool _is_prepared;
 };
 
-} // namespace metal
+}  // namespace metal
