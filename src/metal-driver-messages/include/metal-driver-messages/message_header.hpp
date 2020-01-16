@@ -7,11 +7,11 @@
 namespace metal {
 
 enum class message_type : int {
-  AgentHello,
-  AgentPushBuffer,
+  RegistrationRequest,
+  RegistrationResponse,
 
-  ServerAcceptAgent,
-  ServerProcessedBuffer
+  ProcessingRequest,
+  ProcessingResponse
 };
 
 class METAL_DRIVER_MESSAGES_API MessageHeader {

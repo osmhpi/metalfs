@@ -24,7 +24,7 @@ public:
 
 protected:
     void startInternal(int card);
-    void process_request(int connfd, int card);
+    void processRequest(Socket socket, int card);
 
     AgentPool _agents;
     std::string _socketFileName;

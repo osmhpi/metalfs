@@ -1,15 +1,25 @@
 #pragma once
 
-#include <metal-driver-messages/socket.hpp>
+#include <memory>
+
+#include <cxxopts.hpp>
+
 #include <metal-driver-messages/buffer.hpp>
+#include <metal-driver-messages/socket.hpp>
 
 namespace metal {
 
 // TODO: Disallow copy, destroy socket and buffer objects
 
-class RegisteredAgent {
+class RegisteredAgent : public std::enable_shared_from_this<RegisteredAgent> {
  public:
-  explicit RegisteredAgent(Socket socket) : socket(std::move(socket)), input_buffer(std::nullopt), output_buffer(std::nullopt) {}
+  explicit RegisteredAgent(Socket socket)
+      : socket(std::move(socket)),
+        input_buffer(std::nullopt),
+        output_buffer(std::nullopt) {}
+
+  std::string resolvePath(std::string relativeOrAbsolutePath);
+  cxxopts::ParseResult parseOptions(cxxopts::Options& options);
 
   uint pid{};
   std::string operator_type;

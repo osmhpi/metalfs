@@ -3,6 +3,7 @@
 # External dependencies
 #
 
+
 #
 # Executable name and options
 #
@@ -78,6 +79,7 @@ target_link_libraries(${target}
     ${META_PROJECT_NAME}::metal-pipeline
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-filesystem-pipeline
+    ${SPDLOG_LIBRARIES}
     gtest
 )
 

@@ -238,21 +238,21 @@ int main(int argc, char *argv[]) {
         perror("connect() failed");
 
     // Prepare to send the program parameters
-    uint64_t argv_len[argc];
+    std::vector<uint64_t> argv_len(argc);
     uint64_t total_argv_len = 0;
     for (int i = 0; i < argc; ++i) {
         argv_len[i] = strlen(argv[i]) + 1;
         total_argv_len += argv_len[i];
     }
-    char argv_buffer[total_argv_len];
-    char *argv_cursor = (char *) argv_buffer;
+    std::vector<char> argv_buffer(total_argv_len);
+    char *argv_cursor = (char *) argv_buffer.data();
     for (int i = 0; i < argc; ++i) {
         strcpy(argv_cursor, argv[i]);
         argv_cursor[argv_len[i] - 1] = '\0';
         argv_cursor += argv_len[i];
     }
 
-    metal::ClientHello request;
+    metal::RegistrationRequest request;
     request.set_pid(getpid());
     request.set_operator_type(operator_key);
     request.set_input_pid(input.pid);
@@ -277,9 +277,9 @@ int main(int argc, char *argv[]) {
 
     metal::Socket socket(sock);
 
-    socket.send_message<metal::message_type::AgentHello>(request);
+    socket.send_message<metal::message_type::RegistrationRequest>(request);
 
-    auto response = socket.receive_message<metal::message_type::ServerAcceptAgent>();
+    auto response = socket.receiveMessage<metal::message_type::RegistrationResponse>();
 
     if (response.has_error_msg()) {
         fprintf(stderr, "%s", response.error_msg().c_str());
@@ -308,16 +308,16 @@ int main(int argc, char *argv[]) {
         input_buffer.value().swap();
     }
 
-    metal::ServerProcessedBuffer processing_response;
+    metal::ProcessingResponse processing_response;
 
     // Processing loop
     while (true) {
         if (!processing_response.eof()) {
             // Tell the server about the data (if any) and wait for it to be consumed
-            metal::ClientPushBuffer processing_request;
+            metal::ProcessingRequest processing_request;
             processing_request.set_size(bytes_read);
             processing_request.set_eof(eof);
-            socket.send_message<metal::message_type::AgentPushBuffer>(processing_request);
+            socket.send_message<metal::message_type::ProcessingRequest>(processing_request);
         }
 
         // Write output from previous iteration
@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Wait for a server response
-        processing_response = socket.receive_message<metal::message_type::ServerProcessedBuffer>();
+        processing_response = socket.receiveMessage<metal::message_type::ProcessingResponse>();
     }
 
     return 0;

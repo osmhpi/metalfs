@@ -31,25 +31,17 @@ PipelineDefinition::PipelineDefinition(
     : _operators(std::move(userOperators)),
       _cached_switch_configuration(false) {}
 
-uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink, SnapAction &action) {
-    // One-off contexts for data source and data sink
-
-    DataSourceRuntimeContext source(dataSource);
-    DataSinkRuntimeContext sink(dataSink);
-
-    return run(source, sink , action);
-}
-
-uint64_t PipelineDefinition::run(DataSourceRuntimeContext &dataSource, DataSinkRuntimeContext &dataSink, SnapAction &action) {
+uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
+                                 SnapAction &action) {
   for (auto &op : _operators) {
-      op.configure(action);
+    op.configure(action);
   }
 
   uint64_t enable_mask = 0;
 
   for (const auto &op : _operators)
     if (op.needs_preparation()) {
-        enable_mask |= (1u << op.userOperator().spec().internal_id());
+      enable_mask |= (1u << op.userOperator().spec().internal_id());
     }
 
   if (enable_mask) {
@@ -70,15 +62,15 @@ uint64_t PipelineDefinition::run(DataSourceRuntimeContext &dataSource, DataSinkR
   spdlog::debug(
       "Running Pipeline, Read: (Address: {:x}, Size: {}, Type: {}), Write: "
       "(Address: {:x}, Size: {}, Type: {})",
-      dataSource.dataSource().address().addr, dataSource.dataSource().address().size,
-      (uint64_t)dataSource.dataSource().address().type, dataSink.dataSink().address().addr,
-      dataSink.dataSink().address().size, (uint64_t)dataSink.dataSink().address().type);
-  action.execute_job(fpga::JobType::RunOperators, nullptr,
-                     dataSource.dataSource().address(), dataSink.dataSink().address(), enable_mask,
+      dataSource.address().addr, dataSource.address().size,
+      (uint64_t)dataSource.address().type, dataSink.address().addr,
+      dataSink.address().size, (uint64_t)dataSink.address().type);
+  action.execute_job(fpga::JobType::RunOperators, nullptr, dataSource.address(),
+                     dataSink.address(), enable_mask,
                      /* perfmon_enable = */ 1, &output_size);
 
   for (auto &op : _operators) {
-      op.finalize(action);
+    op.finalize(action);
   }
 
   return output_size;
@@ -91,7 +83,7 @@ void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
       reinterpret_cast<uint32_t *>(action.allocateMemory(sizeof(uint32_t) * 8));
   const uint32_t disable = 0x80000000;
   for (int i = 0; i < 8; ++i) {
-      job_struct[i] = htobe32(disable);
+    job_struct[i] = htobe32(disable);
   }
 
   uint8_t previous_op_stream = IOStreamID;
@@ -99,7 +91,8 @@ void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
     // From the perspective of the Stream Switch:
     // Which Master port (output) should be
     // sourced from which Slave port (input)
-    job_struct[op.userOperator().spec().internal_id()] = htobe32(previous_op_stream);
+    job_struct[op.userOperator().spec().internal_id()] =
+        htobe32(previous_op_stream);
     previous_op_stream = op.userOperator().spec().internal_id();
   }
   job_struct[IOStreamID] = previous_op_stream;

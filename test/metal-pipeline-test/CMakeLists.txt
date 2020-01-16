@@ -3,6 +3,7 @@
 # External dependencies
 #
 
+
 # find_package(${META_PROJECT_NAME} REQUIRED HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 
 #
@@ -69,6 +70,7 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
+    ${SPDLOG_LIBRARIES}
     ${META_PROJECT_NAME}::metal-pipeline
     gtest
 )

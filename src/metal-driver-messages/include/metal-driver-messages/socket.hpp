@@ -29,7 +29,7 @@ class METAL_DRIVER_MESSAGES_API Socket {
   void send_message(typename MessageTypeAssignment<T>::type &message);
 
   template<message_type T>
-  auto receive_message() -> typename MessageTypeAssignment<T>::type;
+  auto receiveMessage() -> typename MessageTypeAssignment<T>::type;
 
  protected:
   int _fd;
@@ -37,31 +37,31 @@ class METAL_DRIVER_MESSAGES_API Socket {
 
 template<message_type T>
 void Socket::send_message(typename Socket::MessageTypeAssignment<T>::type &message) {
-  char buf[message.ByteSize()];
-  message.SerializeToArray(buf, message.ByteSize());
+  std::vector<char> buffer(message.ByteSize());
+  message.SerializeToArray(buffer.data(), message.ByteSize());
 
   MessageHeader header(T, message.ByteSize());
   header.sendHeader(_fd);
-  send(_fd, buf, message.ByteSize(), 0);
+  send(_fd, buffer.data(), message.ByteSize(), 0);
 }
 
 template<message_type T>
-auto Socket::receive_message() -> typename Socket::MessageTypeAssignment<T>::type {
+auto Socket::receiveMessage() -> typename Socket::MessageTypeAssignment<T>::type {
   auto req = MessageHeader::receive(_fd);
   if (req.type() != T)
     throw std::runtime_error("Unexpected message");
 
-  char buffer [req.length()];
-  recv(_fd, buffer, req.length(), 0);
+  std::vector<char> buffer(req.length());
+  recv(_fd, buffer.data(), req.length(), 0);
 
   typename Socket::MessageTypeAssignment<T>::type message;
-  message.ParseFromArray(buffer, req.length());
+  message.ParseFromArray(buffer.data(), req.length());
   return message;
 }
 
-ASSIGN_MESSAGE_TYPE(message_type::AgentHello, ClientHello)
-ASSIGN_MESSAGE_TYPE(message_type::AgentPushBuffer, ClientPushBuffer)
-ASSIGN_MESSAGE_TYPE(message_type::ServerAcceptAgent, ServerAcceptAgent)
-ASSIGN_MESSAGE_TYPE(message_type::ServerProcessedBuffer, ServerProcessedBuffer)
+ASSIGN_MESSAGE_TYPE(message_type::RegistrationRequest, RegistrationRequest)
+ASSIGN_MESSAGE_TYPE(message_type::RegistrationResponse, RegistrationResponse)
+ASSIGN_MESSAGE_TYPE(message_type::ProcessingRequest, ProcessingRequest)
+ASSIGN_MESSAGE_TYPE(message_type::ProcessingResponse, ProcessingResponse)
 
 } // namespace metal

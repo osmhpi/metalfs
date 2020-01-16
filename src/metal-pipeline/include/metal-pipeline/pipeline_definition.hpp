@@ -3,10 +3,10 @@
 #include <metal-pipeline/metal-pipeline_api.h>
 
 #include <memory>
-#include <vector>
-#include <metal-pipeline/operator_runtime_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/operator_runtime_context.hpp>
+#include <vector>
 
 namespace metal {
 
@@ -15,23 +15,34 @@ class DataSink;
 class UserOperator;
 
 class METAL_PIPELINE_API PipelineDefinition {
-public:
-    explicit PipelineDefinition(std::vector<UserOperator> userOperators);
-    template<typename... Ts>
-    PipelineDefinition(Ts... userOperators) : PipelineDefinition({ userOperators... }) {}
-    explicit PipelineDefinition(std::vector<UserOperatorRuntimeContext> userOperators);
+ public:
+  explicit PipelineDefinition(std::vector<UserOperator> userOperators);
+  explicit PipelineDefinition(
+      std::vector<UserOperatorRuntimeContext> userOperators);
 
-    std::vector<UserOperatorRuntimeContext> & operators() { return _operators; }
+  PipelineDefinition()
+      : PipelineDefinition(std::vector<UserOperatorRuntimeContext>()) {}
 
-    uint64_t run(DataSource dataSource, DataSink dataSink, SnapAction &action);
-    uint64_t run(DataSourceRuntimeContext &dataSource, DataSinkRuntimeContext &dataSink, SnapAction &action);
+  template <typename T, typename... Ts>
+  PipelineDefinition(T firstOperator, Ts... rest)
+      : PipelineDefinition(std::apply(
+            [](auto &&... elems) {  // Turning the parameters into an array...
+              std::vector<T> result;
+              result.reserve(sizeof...(elems));
+              (result.emplace_back(std::forward<decltype(elems)>(elems)), ...);
+              return result;
+            },
+            std::make_tuple(std::move(firstOperator), std::move(rest)...))) {}
 
-    void configureSwitch(SnapAction &action, bool set_cached);
+  std::vector<UserOperatorRuntimeContext> &operators() { return _operators; }
 
-protected:
-    std::vector<UserOperatorRuntimeContext> _operators;
-    bool _cached_switch_configuration;
+  uint64_t run(DataSource dataSource, DataSink dataSink, SnapAction &action);
 
+  void configureSwitch(SnapAction &action, bool set_cached);
+
+ protected:
+  std::vector<UserOperatorRuntimeContext> _operators;
+  bool _cached_switch_configuration;
 };
 
-} // namespace metal
+}  // namespace metal

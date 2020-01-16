@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include "storage.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MTL_SUCCESS 0
 #define MTL_COMPLETE 1
 #define MTL_ERROR_NOENTRY 2
@@ -41,3 +45,7 @@ int mtl_load_extent_list(
         uint64_t *extents_length,
         uint64_t *file_length
 );
+
+#ifdef __cplusplus
+}
+#endif

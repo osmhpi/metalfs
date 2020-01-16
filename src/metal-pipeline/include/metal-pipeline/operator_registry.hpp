@@ -17,6 +17,7 @@ public:
 
     void add_operator(std::string id, std::shared_ptr<const UserOperatorSpecification> op) { _operators.emplace(std::make_pair(std::move(id), std::move(op))); }
     size_t size() const { return _operators.size(); }
+    std::unordered_map<std::string, std::shared_ptr<const UserOperatorSpecification>> operatorSpecifications() { return _operators; }
 
 protected:
     std::unordered_map<std::string, std::shared_ptr<const UserOperatorSpecification>> _operators;

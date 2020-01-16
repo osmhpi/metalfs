@@ -3,6 +3,7 @@
 # External dependencies
 #
 
+
 #
 # Executable name and options
 #
@@ -70,6 +71,7 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
+    ${SPDLOG_LIBRARIES}
     ${META_PROJECT_NAME}::metal-filesystem
     gtest
 )

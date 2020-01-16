@@ -5,6 +5,8 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+
+#include <unistd.h>
 #include <libsnap.h>
 #include <snap_hls_if.h>
 

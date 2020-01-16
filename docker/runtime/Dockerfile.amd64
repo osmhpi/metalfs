@@ -1,0 +1,15 @@
+FROM metalfs/runtime-base
+
+ADD third_party/ third_party/
+ADD cmake/ cmake/
+
+ADD . /src/metal_fs
+RUN cd /src/metal_fs \
+ && mkdir build \
+ && cd build \
+ && cmake \
+    -DCMAKE_INSTALL_PREFIX=/install/ \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DOPTION_BUILD_TESTS=OFF .. \
+    -DOPTION_SELF_CONTAINED=ON \
+ && make && make install

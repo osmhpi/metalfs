@@ -143,6 +143,7 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${SNAP_LIBRARY}
+    ${SPDLOG_LIBRARIES}
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-pipeline
 

@@ -7,6 +7,8 @@ extern "C" {
 
 #include <string>
 #include <memory>
+#include <unordered_set>
+
 #include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 
 namespace metal {
@@ -20,7 +22,7 @@ class Context {
 
   int card() { return _card; }
 
-  std::string agent_filepath() { return _agent_filepath; }
+  std::string placeholderExecutablePath() { return _agent_filepath; }
   const std::string &socket_alias() { return _socket_alias; }
   std::string socket_name() { return "/" + socket_alias(); }
 
@@ -38,6 +40,8 @@ class Context {
 
   std::shared_ptr<OperatorRegistry> registry() { return _registry; };
 
+  std::unordered_set<std::string> operators() { return _operators; }
+
  protected:
   int _card;
   std::shared_ptr<OperatorRegistry> _registry;
@@ -47,6 +51,7 @@ class Context {
   std::string _agent_filepath;
   std::string _socket_filename;
   std::string _socket_alias;
+  std::unordered_set<std::string> _operators;
 
 };
 

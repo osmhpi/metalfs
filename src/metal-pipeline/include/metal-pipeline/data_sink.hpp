@@ -17,6 +17,9 @@ class METAL_PIPELINE_API DataSink {
         _size(size),
         _addressType(addressType),
         _mapType(mapType) {}
+  explicit DataSink(void* address, size_t size)
+      : DataSink(reinterpret_cast<uint64_t>(address), size,
+                 fpga::AddressType::Host, fpga::MapType::None) {}
 
   virtual void prepareForTotalProcessingSize(size_t size) { (void)size; }
   virtual void setSize(size_t size) { _size = size; }

@@ -34,52 +34,84 @@ std::string SnapPipelineRunner::readImageInfo(int card) {
   return result;
 }
 
+uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
+  // One-off contexts for data source and data sink
+
+  DefaultDataSourceRuntimeContext source(dataSource);
+  DefaultDataSinkRuntimeContext sink(dataSink);
+
+  return run(source, sink);
+}
+
 uint64_t SnapPipelineRunner::run(DataSourceRuntimeContext &dataSource,
-                                 DataSinkRuntimeContext &dataSink, bool last) {
+                                 DataSinkRuntimeContext &dataSink) {
   SnapAction action = SnapAction(fpga::ActionType, _card);
 
-  if (!_initialized) {
+  auto initialize = !_initialized;
+
+  if (initialize) {
+    auto totalSize = dataSource.reportTotalSize();
+    if (totalSize > 0) {
+      dataSink.prepareForTotalSize(totalSize);
+    }
+
     _pipeline->configureSwitch(action, true);
   }
 
-  pre_run(action, !_initialized);
+  dataSource.configure(action, initialize);
+  dataSink.configure(action, initialize);
+
   _initialized = true;
 
-  uint64_t output_size = _pipeline->run(dataSource, dataSink, action);
+  preRun(action, initialize);
+  uint64_t output_size =
+      _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
+  postRun(action, dataSource, dataSink, dataSource.endOfInput());
 
-  post_run(action, last);
+  dataSource.finalize(action);
+  dataSink.finalize(action, output_size, dataSource.endOfInput());
 
   return output_size;
 }
 
-void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
+void ProfilingPipelineRunner::preRun(SnapAction &action, bool initialize) {
   if (initialize) {
-    auto operatorPosition = std::find_if(
-        _pipeline->operators().cbegin(), _pipeline->operators().cend(),
-        [](const UserOperatorRuntimeContext &ctx) {
-          return ctx.profiling_enabled();
-        });
+    auto operatorPosition = _pipeline->operators().cend();
+    for (auto it = _pipeline->operators().cbegin();
+         it != _pipeline->operators().cend(); ++it) {
+      if (it->profiling_enabled()) {
+        if (operatorPosition == _pipeline->operators().cend()) {
+          operatorPosition = it;
+        } else {
+          throw std::runtime_error(
+              "Only one operator can be selected for profiling.");
+        }
+      }
+    }
+
+    if (operatorPosition == _pipeline->operators().cend()) {
+      // No user operator selected, instead select the data source / data sink
+      _profileInputStreamId = IOStreamID;
+
+      if (_pipeline->operators().size()) {
+        // Use last operator of pipeline for output profiling
+        _profileOutputStreamId =
+            _pipeline->operators().back().userOperator().spec().internal_id();
+      } else {
+        _profileOutputStreamId = IOStreamID;  // Profile the same stream twice
+      }
+    } else {
+      _profileInputStreamId =
+          htobe64(operatorPosition->userOperator().spec().internal_id());
+      _profileOutputStreamId =
+          htobe64(operatorPosition->userOperator().spec().internal_id());
+    }
 
     auto *job_struct = reinterpret_cast<uint64_t *>(
         action.allocateMemory(sizeof(uint64_t) * 2));
 
-    if (operatorPosition == _pipeline->operators().cend()) {
-      // No user operator selected, instead select the data source / data sink
-      job_struct[0] = IOStreamID;
-
-      if (_pipeline->operators().size()) {
-        // Use last operator of pipeline for output profiling
-        job_struct[1] =
-            _pipeline->operators().back().userOperator().spec().internal_id();
-      } else {
-        job_struct[1] = IOStreamID;  // Profile the same stream twice
-      }
-    } else {
-      job_struct[0] =
-          htobe64(operatorPosition->userOperator().spec().internal_id());
-      job_struct[1] =
-          htobe64(operatorPosition->userOperator().spec().internal_id());
-    }
+    job_struct[0] = _profileInputStreamId;
+    job_struct[1] = _profileOutputStreamId;
 
     try {
       action.execute_job(fpga::JobType::ConfigurePerfmon,
@@ -94,14 +126,12 @@ void ProfilingPipelineRunner::pre_run(SnapAction &action, bool initialize) {
 
   action.execute_job(fpga::JobType::ResetPerfmon);
 
-  SnapPipelineRunner::pre_run(action, initialize);
+  SnapPipelineRunner::preRun(action, initialize);
 }
 
-void ProfilingPipelineRunner::post_run(SnapAction &action, bool finalize) {
-  // Ignore finalize, obtain partial profiling results after each pipeline
-  // invocation
-  (void)finalize;
-
+void ProfilingPipelineRunner::postRun(SnapAction &action,
+                                      DataSourceRuntimeContext &dataSource,
+                                      DataSinkRuntimeContext &, bool finalize) {
   auto *results64 =
       reinterpret_cast<uint64_t *>(action.allocateMemory(sizeof(uint64_t) * 6));
   auto *results32 = reinterpret_cast<uint32_t *>(results64 + 1);
@@ -127,26 +157,22 @@ void ProfilingPipelineRunner::post_run(SnapAction &action, bool finalize) {
   _results.output_master_idle_count += be32toh(results32[9]);
 
   free(results64);
-}
 
-void ProfilingPipelineRunner::selectOperatorForProfiling(
-    const std::string &operatorId) {
-  bool foundOperator = false;
-
-  for (auto &op : _pipeline->operators()) {
-    if (!foundOperator && op.userOperator().spec().id() == operatorId) {
-      foundOperator = true;
-      op.set_profiling_enabled(true);
+  if (finalize) {
+    if (_profileInputStreamId == IOStreamID) {
+      dataSource.setProfilingResults(formatProfilingResults());
     } else {
-      op.set_profiling_enabled(false);
+      auto op = std::find_if(_pipeline->operators().begin(),
+                             _pipeline->operators().end(),
+                             [&](UserOperatorRuntimeContext &op) {
+                               return op.userOperator().spec().internal_id() ==
+                                      _profileInputStreamId;
+                             });
+      if (op != _pipeline->operators().cend()) {
+        op->setProfilingResults(formatProfilingResults());
+      }
     }
   }
-
-  if (!foundOperator)
-    throw std::runtime_error(
-        "Operator to be profiled must be part of pipeline");
-
-  requireReinitialization();
 }
 
 std::string ProfilingPipelineRunner::formatProfilingResults() {

@@ -3,32 +3,43 @@
 #include <metal-pipeline/metal-pipeline_api.h>
 
 #include <memory>
-#include <metal-pipeline/pipeline_definition.hpp>
 #include <utility>
 #include <vector>
+
+#include <metal-pipeline/pipeline_definition.hpp>
 
 namespace metal {
 
 // Runs a pipeline one or more times
 class METAL_PIPELINE_API SnapPipelineRunner {
  public:
-  SnapPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline, int card)
-      : _pipeline(std::move(pipeline)),
-        _initialized(false),
-        _card(card) {}
+  SnapPipelineRunner(int card, std::shared_ptr<PipelineDefinition> pipeline)
+      : _pipeline(std::move(pipeline)), _initialized(false), _card(card) {}
   template <typename... Ts>
   SnapPipelineRunner(Ts... userOperators, int card)
-      : SnapPipelineRunner(std::make_shared<PipelineDefinition>({userOperators...}), card) {}
+      : SnapPipelineRunner(card, std::make_shared<PipelineDefinition>(
+                                     std::move(userOperators)...)) {}
 
-  uint64_t run(DataSourceRuntimeContext &dataSource, DataSinkRuntimeContext &dataSink, bool last);
+  uint64_t run(DataSource dataSource, DataSink dataSink);
+  uint64_t run(DataSourceRuntimeContext &dataSource,
+               DataSinkRuntimeContext &dataSink);
 
   static std::string readImageInfo(int card);
 
  protected:
   void requireReinitialization() { _initialized = false; }
 
-  virtual void pre_run(SnapAction &action, bool initialize) {};
-  virtual void post_run(SnapAction &action, bool finalize) {};
+  virtual void preRun(SnapAction &action, bool initialize) {
+    (void)action;
+    (void)initialize;
+  };
+  virtual void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
+               DataSinkRuntimeContext &dataSink, bool finalize) {
+    (void)action;
+    (void)dataSource;
+    (void)dataSink;
+    (void)finalize;
+  };
 
   std::shared_ptr<PipelineDefinition> _pipeline;
   bool _initialized;
@@ -37,15 +48,15 @@ class METAL_PIPELINE_API SnapPipelineRunner {
 
 class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
  public:
-  ProfilingPipelineRunner(std::shared_ptr<PipelineDefinition> pipeline,
-                          int card)
-      : SnapPipelineRunner(std::move(pipeline), card),
+  ProfilingPipelineRunner(int card,
+                          std::shared_ptr<PipelineDefinition> pipeline)
+      : SnapPipelineRunner(card, std::move(pipeline)),
         _results(ProfilingResults{}) {}
   template <typename... Ts>
-  ProfilingPipelineRunner(Ts... userOperators, int card)
-      : ProfilingPipelineRunner(std::make_shared<PipelineDefinition>({userOperators...}), card) {}
+  ProfilingPipelineRunner(int card, Ts... userOperators)
+      : ProfilingPipelineRunner(card, std::make_shared<PipelineDefinition>(
+                                          std::move(userOperators)...)) {}
 
-  void selectOperatorForProfiling(const std::string &operatorId);
   std::string formatProfilingResults();
   void resetResults() { _results = ProfilingResults{}; };
 
@@ -62,11 +73,14 @@ class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
     uint64_t output_master_idle_count;
   };
 
-  void pre_run(SnapAction &action, bool initialize) override;
-  void post_run(SnapAction &action, bool finalize) override;
+  void preRun(SnapAction &action, bool initialize) override;
+  void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
+               DataSinkRuntimeContext &dataSink,  bool finalize) override;
   template <typename... Args>
   static std::string string_format(const std::string &format, Args... args);
 
+  uint8_t _profileInputStreamId;
+  uint8_t _profileOutputStreamId;
   ProfilingResults _results;
 };
 

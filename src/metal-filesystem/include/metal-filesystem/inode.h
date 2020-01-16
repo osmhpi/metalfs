@@ -6,6 +6,10 @@
 
 #include <metal-filesystem/storage.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum MTL_inode_type {
     MTL_FILE = 'f',
     MTL_DIRECTORY = 'd'
@@ -45,3 +49,7 @@ int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode, const void*
 int mtl_delete_inode(MDB_txn *txn, uint64_t inode_id);
 
 int mtl_reset_inodes_db();
+
+#ifdef __cplusplus
+}
+#endif

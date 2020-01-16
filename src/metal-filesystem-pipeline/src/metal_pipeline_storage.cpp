@@ -35,27 +35,22 @@ int PipelineStorage::set_active_write_extent_list(const mtl_file_extent *extents
 
 int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
 
-  auto dataSource = std::make_shared<FileDataSource>(_read_extents, offset, length);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(buffer, length);
+  FileSourceRuntimeContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe, _read_extents, offset, length);
+  DefaultDataSinkRuntimeContext sink(DataSink(buffer, length));
 
-  auto pipeline = std::make_shared<PipelineDefinition>(std::vector<std::shared_ptr<AbstractOperator>>({ dataSource, dataSink }));
-
-  SnapPipelineRunner runner(pipeline, 0);
-  runner.run(true);
+  SnapPipelineRunner runner({}, 0);
+  runner.run(source, sink);
 
   return MTL_SUCCESS;
 }
 
 int PipelineStorage::write(uint64_t offset, const void *buffer, uint64_t length) {
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(buffer, length);
-  auto dataSink = std::make_shared<FileDataSink>(_write_extents, offset, length);
+  DefaultDataSourceRuntimeContext source(DataSource(buffer, length));
+  FileSinkRuntimeContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe, _write_extents, offset, length);
 
-  auto pipeline = std::make_shared<PipelineDefinition>(
-          std::vector<std::shared_ptr<AbstractOperator>>({dataSource, dataSink}));
-
-  SnapPipelineRunner runner(pipeline, 0);
-  runner.run(true);
+  SnapPipelineRunner runner({}, 0);
+  runner.run(source, sink);
 
   return MTL_SUCCESS;
 }
