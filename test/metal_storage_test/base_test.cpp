@@ -5,10 +5,6 @@ extern "C" {
 #include <metal_storage/storage.h>
 }
 
-void BaseTest::SetUp() {
-    ASSERT_EQ(MTL_SUCCESS, mtl_storage_initialize());
-}
+void BaseTest::SetUp() { ASSERT_EQ(MTL_SUCCESS, mtl_storage_initialize()); }
 
-void BaseTest::TearDown() {
-    mtl_storage_deinitialize();
-}
+void BaseTest::TearDown() { mtl_storage_deinitialize(); }

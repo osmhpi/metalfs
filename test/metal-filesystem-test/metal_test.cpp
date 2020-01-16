@@ -52,16 +52,20 @@ TEST_F(MetalTest, ListsDirectoryContents) {
 
   char current_filename[FILENAME_MAX];
 
-  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_readdir(dir, current_filename, sizeof(current_filename)));
   EXPECT_STREQ(".", current_filename);
 
-  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_readdir(dir, current_filename, sizeof(current_filename)));
   EXPECT_STREQ("..", current_filename);
 
-  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_readdir(dir, current_filename, sizeof(current_filename)));
   EXPECT_STREQ("foo", current_filename);
 
-  EXPECT_EQ(MTL_COMPLETE, mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_COMPLETE,
+            mtl_readdir(dir, current_filename, sizeof(current_filename)));
 
   EXPECT_EQ(MTL_SUCCESS, mtl_closedir(dir));
 }
@@ -70,17 +74,20 @@ TEST_F(MetalTest, WritesToAFile) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
+                                   test.size() + 1, 0));
 }
 
 TEST_F(MetalTest, ReadsWrittenBytes) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
+                                   test.size() + 1, 0));
 
   char output[256];
-  EXPECT_EQ(test.size() + 1, mtl_read(&in_memory_storage, inode, output, sizeof(output), 0));
+  EXPECT_EQ(test.size() + 1,
+            mtl_read(&in_memory_storage, inode, output, sizeof(output), 0));
 
   EXPECT_EQ(0, strncmp(test.c_str(), output, test.size() + 1));
 }
@@ -89,7 +96,8 @@ TEST_F(MetalTest, TruncatesAFile) {
   uint64_t inode;
   EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(), test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
+                                   test.size() + 1, 0));
 
   EXPECT_EQ(MTL_SUCCESS, mtl_truncate(inode, 0));
 }
