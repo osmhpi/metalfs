@@ -59,7 +59,6 @@ target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 )
 
 
@@ -70,8 +69,8 @@ target_include_directories(${target}
 target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
-    ${SPDLOG_LIBRARIES}
     ${META_PROJECT_NAME}::metal-pipeline
+    spdlog::spdlog
     gtest
 )
 

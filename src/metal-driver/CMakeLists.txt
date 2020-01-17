@@ -79,7 +79,6 @@ target_include_directories(${target}
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
     ${PROJECT_SOURCE_DIR}/third_party/cxxopts/include
 )
 
@@ -92,6 +91,7 @@ target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
     ${FUSE_LIBRARIES}
+    spdlog::spdlog
     ${META_PROJECT_NAME}::metal-pipeline
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-filesystem-pipeline

@@ -166,6 +166,12 @@ endif()
 # Project modules
 #
 
+set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog shared library" FORCE)
+set(SPDLOG_INSTALL ON CACHE BOOL "Install spdlog library" FORCE)
+add_subdirectory(third_party/spdlog EXCLUDE_FROM_ALL)
+# Export library for downstream projects
+export(TARGETS spdlog NAMESPACE spdlog:: FILE ${PROJECT_BINARY_DIR}/cmake/spdlog/spdlog-export.cmake)
+
 add_subdirectory(src)
 
 # Tests
@@ -177,7 +183,7 @@ if(OPTION_BUILD_TESTS AND NOT MINGW)
 endif()
 
 
-# Tests
+# Examples
 if(OPTION_BUILD_EXAMPLES AND NOT MINGW)
     set(IDE_FOLDER "Examples")
     add_subdirectory(example)

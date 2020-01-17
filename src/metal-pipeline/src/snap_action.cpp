@@ -1,14 +1,15 @@
 #include <metal-pipeline/snap_action.hpp>
 
+#include <unistd.h>
+
+#include <libsnap.h>
+#include <snap_hls_if.h>
+
 #include <iostream>
 #include <stdexcept>
 
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
-
-#include <libsnap.h>
-#include <snap_hls_if.h>
-#include <unistd.h>
 
 #include <snap_action_metal.h>
 

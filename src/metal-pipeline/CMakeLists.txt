@@ -137,7 +137,6 @@ target_include_directories(${target}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 
     PUBLIC
     ${DEFAULT_INCLUDE_DIRECTORIES}
@@ -158,6 +157,7 @@ target_link_libraries(${target}
     PRIVATE
     ${SNAP_LIBRARY}
     ${JQ_LIBRARIES}
+    spdlog::spdlog
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
