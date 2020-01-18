@@ -70,6 +70,8 @@ void SnapAction::execute_job(fpga::JobType job_type, const void *parameters,
   mjob.destination = destination;
   mjob.direct_data[0] = direct_data_0;
   mjob.direct_data[1] = direct_data_1;
+  mjob.direct_data[2] = 0;
+  mjob.direct_data[3] = 0;
 
   struct snap_job cjob {};
   snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
