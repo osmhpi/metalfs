@@ -1,7 +1,8 @@
 #include "base_test.hpp"
 
 #include <libgen.h>
-#include <metal-pipeline/pipeline_runner.hpp>
+
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 
 namespace metal {
 

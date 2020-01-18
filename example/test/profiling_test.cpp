@@ -5,7 +5,7 @@
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_registry.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/profiling_pipeline_runner.hpp>
 #include "base_test.hpp"
 
 namespace metal {

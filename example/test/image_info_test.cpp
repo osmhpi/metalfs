@@ -1,6 +1,6 @@
 #include "base_test.hpp"
 
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 
 namespace metal {
 

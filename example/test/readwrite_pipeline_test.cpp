@@ -5,8 +5,8 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
 #include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 #include "base_test.hpp"
 
 namespace metal {
