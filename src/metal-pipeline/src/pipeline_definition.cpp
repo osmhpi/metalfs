@@ -52,7 +52,7 @@ uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
 
   if (!_cached_switch_configuration) configureSwitch(action, false);
 
-  enable_mask = 0;
+  enable_mask = 1;  // This time, enable the I/O subsystem
   for (auto &op : _operators) {
     op.set_is_prepared();
     enable_mask |= (1u << op.userOperator().spec().internal_id());
