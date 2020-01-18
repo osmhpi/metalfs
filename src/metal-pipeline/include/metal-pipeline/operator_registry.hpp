@@ -20,9 +20,9 @@ class METAL_PIPELINE_API OperatorRegistry {
     _operators.emplace(std::make_pair(std::move(id), std::move(op)));
   }
   size_t size() const { return _operators.size(); }
-  std::unordered_map<std::string,
+  const std::unordered_map<std::string,
                      std::shared_ptr<const UserOperatorSpecification>>
-  operatorSpecifications() {
+      &operatorSpecifications() const {
     return _operators;
   }
 

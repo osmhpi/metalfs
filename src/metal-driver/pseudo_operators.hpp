@@ -10,6 +10,7 @@ class RegisteredAgent;
 
 class DatagenOperator {
  public:
+  static std::string id() { return "datagen"; }
   static bool isDatagenAgent(const RegisteredAgent &agent);
   static void validate(RegisteredAgent &agent);
   static uint64_t datagenLength(RegisteredAgent &agent);

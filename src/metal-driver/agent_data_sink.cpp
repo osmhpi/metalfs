@@ -12,9 +12,7 @@ BufferSinkRuntimeContext::BufferSinkRuntimeContext(
     : FileSinkRuntimeContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
                              0, 0),
       _agent(agent),
-      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {
-  _agent->socket.receiveMessage<message_type::ProcessingRequest>();
-}
+      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}
 
 const DataSink BufferSinkRuntimeContext::dataSink() const {
   // The data sink can be of three types: Agent-Buffer, Null or File
@@ -33,7 +31,7 @@ const DataSink BufferSinkRuntimeContext::dataSink() const {
 
 void BufferSinkRuntimeContext::configure(SnapAction &action, bool initial) {
   if ((!initial || _agent->output_buffer) && !_skipReceivingProcessingRequest) {
-    _agent->socket.receiveMessage<message_type::ProcessingRequest>();
+    _agent->receiveProcessingRequest();
   }
 
   if (!_filename.empty()) {
@@ -55,9 +53,8 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
     FileSinkRuntimeContext::finalize(action, outputSize, endOfInput);
   }
 
-  if (endOfInput || _agent->input_buffer) {
-    _agent->socket.send_message<message_type::ProcessingResponse>(msg);
-    spdlog::trace("ProcessingResponse({}, {})", msg.size(), msg.eof());
+  if (endOfInput || _agent->output_buffer) {
+    _agent->sendProcessingResponse(msg);
   }
 }
 

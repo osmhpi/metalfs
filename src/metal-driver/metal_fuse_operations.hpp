@@ -41,7 +41,7 @@ class Context {
 
   std::shared_ptr<OperatorRegistry> registry() { return _registry; };
 
-  std::unordered_set<std::string> operators() { return _operators; }
+  std::unordered_set<std::string>& operators() { return _operators; }
 
  protected:
   int _card;

@@ -1,5 +1,7 @@
 #include "registered_agent.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include "client_error.hpp"
 
 namespace metal {
@@ -35,6 +37,22 @@ cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
   }
 
   return parseResult;
+}
+
+void RegisteredAgent::sendRegistrationResponse(RegistrationResponse &message) {
+  spdlog::trace("RegistrationResponse()");
+  socket.send_message<message_type::RegistrationResponse>(message);
+}
+
+ProcessingRequest RegisteredAgent::receiveProcessingRequest() {
+  auto request = socket.receiveMessage<message_type::ProcessingRequest>();
+  spdlog::trace("ProcessingRequest({}, {})", request.size(), request.eof());
+  return request;
+}
+
+void RegisteredAgent::sendProcessingResponse(ProcessingResponse &message) {
+  spdlog::trace("ProcessingResponse({}, {})", message.size(), message.eof());
+  socket.send_message<message_type::ProcessingResponse>(message);
 }
 
 }  // namespace metal

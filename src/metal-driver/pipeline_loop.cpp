@@ -34,7 +34,7 @@ void PipelineLoop::run() {
   for (const auto &agent : _pipeline.operatorAgents) {
     if (agent != _pipeline.dataSourceAgent &&
         agent != _pipeline.dataSinkAgent) {
-      agent->socket.receiveMessage<message_type::ProcessingRequest>();
+      agent->receiveProcessingRequest();
     }
   }
 
@@ -56,8 +56,7 @@ void PipelineLoop::run() {
     msg.set_eof(true);
     msg.set_message(currentOperator->profilingResults());
 
-    agent->socket.send_message<message_type::ProcessingResponse>(msg);
-    spdlog::trace("ProcessingResponse({}, {})", msg.size(), msg.eof());
+    agent->sendProcessingResponse(msg);
 
     ++currentOperator;
   }

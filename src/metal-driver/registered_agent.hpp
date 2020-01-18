@@ -14,17 +14,19 @@ namespace metal {
 class RegisteredAgent : public std::enable_shared_from_this<RegisteredAgent> {
  public:
   explicit RegisteredAgent(Socket socket)
-      : socket(std::move(socket)),
-        input_buffer(std::nullopt),
-        output_buffer(std::nullopt) {}
+      : input_buffer(std::nullopt),
+        output_buffer(std::nullopt),
+        socket(std::move(socket)) {}
 
   std::string resolvePath(std::string relativeOrAbsolutePath);
-  cxxopts::ParseResult parseOptions(cxxopts::Options& options);
+  cxxopts::ParseResult parseOptions(cxxopts::Options &options);
+
+  void sendRegistrationResponse(RegistrationResponse &message);
+  ProcessingRequest receiveProcessingRequest();
+  void sendProcessingResponse(ProcessingResponse &message);
 
   uint pid{};
   std::string operator_type;
-
-  Socket socket;
 
   std::string cwd;
   std::string metal_mountpoint;
@@ -41,6 +43,9 @@ class RegisteredAgent : public std::enable_shared_from_this<RegisteredAgent> {
   std::optional<Buffer> output_buffer;
 
   std::string error;
+
+ protected:
+  Socket socket;
 };
 
 }  // namespace metal

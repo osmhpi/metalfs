@@ -121,6 +121,42 @@ std::string SnapAction::job_type_to_string(fpga::JobType job) {
   return "Unknown";
 }
 
+std::string SnapAction::address_type_to_string(fpga::AddressType addressType) {
+  switch (addressType) {
+    case fpga::AddressType::Host:
+      return "Host";
+    case fpga::AddressType::CardDRAM:
+      return "CardDRAM";
+    case fpga::AddressType::NVMe:
+      return "NVMe";
+    case fpga::AddressType::Null:
+      return "Null";
+    case fpga::AddressType::Random:
+      return "Random";
+  }
+
+  // The compiler should treat unhandled enum values as an error, so we should
+  // never end up here
+  return "Unknown";
+}
+
+std::string SnapAction::map_type_to_string(fpga::MapType mapType) {
+  switch (mapType) {
+    case fpga::MapType::None:
+      return "None";
+    case fpga::MapType::DRAM:
+      return "DRAM";
+    case fpga::MapType::NVMe:
+      return "NVMe";
+    case fpga::MapType::DRAMAndNVMe:
+      return "DRAMAndNVMe";
+  }
+
+  // The compiler should treat unhandled enum values as an error, so we should
+  // never end up here
+  return "Unknown";
+}
+
 std::string SnapAction::snap_return_code_to_string(int rc) {
   switch (rc) {
     case SNAP_OK:

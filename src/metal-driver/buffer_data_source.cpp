@@ -43,9 +43,8 @@ const DataSource BufferSourceRuntimeContext::dataSource() const {
 
 void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
   ProcessingRequest request;
-  if (!initial || _agent->output_buffer) {
-    request = _agent->socket.receiveMessage<message_type::ProcessingRequest>();
-    spdlog::trace("ProcessingRequest({}, {})", request.size(), request.eof());
+  if (!initial || _agent->input_buffer) {
+    request = _agent->receiveProcessingRequest();
   }
 
   if (_agent->input_buffer) {
@@ -72,8 +71,7 @@ void BufferSourceRuntimeContext::finalize(SnapAction &action) {
       ProcessingResponse msg;
       msg.set_eof(endOfInput());
       msg.set_message(_profilingResults);
-      _agent->socket.send_message<message_type::ProcessingResponse>(msg);
-      spdlog::trace("ProcessingResponse({}, {})", msg.size(), msg.eof());
+      _agent->sendProcessingResponse(msg);
   }
 }
 

@@ -29,8 +29,11 @@ class METAL_PIPELINE_API SnapPipelineRunner {
  protected:
   void requireReinitialization() { _initialized = false; }
 
-  virtual void preRun(SnapAction &action, bool initialize) {
+  virtual void preRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
+                      DataSinkRuntimeContext &dataSink, bool initialize) {
     (void)action;
+    (void)dataSource;
+    (void)dataSink;
     (void)initialize;
   };
   virtual void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
@@ -73,14 +76,14 @@ class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
     uint64_t output_master_idle_count;
   };
 
-  void preRun(SnapAction &action, bool initialize) override;
+  void preRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
+              DataSinkRuntimeContext &dataSink, bool initialize) override;
   void postRun(SnapAction &action, DataSourceRuntimeContext &dataSource,
                DataSinkRuntimeContext &dataSink, bool finalize) override;
   template <typename... Args>
   static std::string string_format(const std::string &format, Args... args);
 
-  uint8_t _profileInputStreamId;
-  uint8_t _profileOutputStreamId;
+  std::optional<std::pair<uint8_t, uint8_t>> _profileStreamIds;
   ProfilingResults _results;
 };
 

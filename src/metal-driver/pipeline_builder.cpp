@@ -159,8 +159,7 @@ ConfiguredPipeline PipelineBuilder::configure() {
       response.set_output_buffer_filename(
           operatorAgentPair.second->output_buffer.value().filename());
 
-    operatorAgentPair.second->socket
-        .send_message<message_type::RegistrationResponse>(response);
+    operatorAgentPair.second->sendRegistrationResponse(response);
   }
 
   return result;

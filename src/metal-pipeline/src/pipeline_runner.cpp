@@ -63,7 +63,7 @@ uint64_t SnapPipelineRunner::run(DataSourceRuntimeContext &dataSource,
 
   _initialized = true;
 
-  preRun(action, initialize);
+  preRun(action, dataSource, dataSink, initialize);
   uint64_t output_size =
       _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
   postRun(action, dataSource, dataSink, dataSource.endOfInput());
@@ -74,8 +74,13 @@ uint64_t SnapPipelineRunner::run(DataSourceRuntimeContext &dataSource,
   return output_size;
 }
 
-void ProfilingPipelineRunner::preRun(SnapAction &action, bool initialize) {
+void ProfilingPipelineRunner::preRun(SnapAction &action,
+                                     DataSourceRuntimeContext &dataSource,
+                                     DataSinkRuntimeContext &dataSink,
+                                     bool initialize) {
   if (initialize) {
+    _profileStreamIds = std::nullopt;
+
     auto operatorPosition = _pipeline->operators().cend();
     for (auto it = _pipeline->operators().cbegin();
          it != _pipeline->operators().cend(); ++it) {
@@ -89,90 +94,96 @@ void ProfilingPipelineRunner::preRun(SnapAction &action, bool initialize) {
       }
     }
 
-    if (operatorPosition == _pipeline->operators().cend()) {
-      // No user operator selected, instead select the data source / data sink
-      _profileInputStreamId = IOStreamID;
-
-      if (_pipeline->operators().size()) {
-        // Use last operator of pipeline for output profiling
-        _profileOutputStreamId =
-            _pipeline->operators().back().userOperator().spec().internal_id();
-      } else {
-        _profileOutputStreamId = IOStreamID;  // Profile the same stream twice
-      }
+    if (dataSource.profilingEnabled()) {
+      _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
     } else {
-      _profileInputStreamId =
-          htobe64(operatorPosition->userOperator().spec().internal_id());
-      _profileOutputStreamId =
-          htobe64(operatorPosition->userOperator().spec().internal_id());
+      auto inputStreamId =
+          operatorPosition->userOperator().spec().internal_id();
+
+      if (++operatorPosition == _pipeline->operators().cend()) {
+        _profileStreamIds = std::make_pair(inputStreamId, IOStreamID);
+      } else {
+        _profileStreamIds = std::make_pair(
+            inputStreamId,
+            operatorPosition->userOperator().spec().internal_id());
+      }
     }
 
-    auto *job_struct = reinterpret_cast<uint64_t *>(
-        action.allocateMemory(sizeof(uint64_t) * 2));
+    if (_profileStreamIds) {
+      auto *job_struct = reinterpret_cast<uint64_t *>(
+          action.allocateMemory(sizeof(uint64_t) * 2));
 
-    job_struct[0] = _profileInputStreamId;
-    job_struct[1] = _profileOutputStreamId;
+      job_struct[0] = htobe64(_profileStreamIds->first);
+      job_struct[1] = htobe64(_profileStreamIds->second);
 
-    try {
-      action.execute_job(fpga::JobType::ConfigurePerfmon,
-                         reinterpret_cast<char *>(job_struct));
-    } catch (std::exception &ex) {
+      try {
+        action.execute_job(fpga::JobType::ConfigurePerfmon,
+                           reinterpret_cast<char *>(job_struct));
+      } catch (std::exception &ex) {
+        free(job_struct);
+        throw ex;
+      }
+
       free(job_struct);
-      throw ex;
     }
-
-    free(job_struct);
   }
 
-  action.execute_job(fpga::JobType::ResetPerfmon);
+  if (_profileStreamIds) {
+    action.execute_job(fpga::JobType::ResetPerfmon);
+  }
 
-  SnapPipelineRunner::preRun(action, initialize);
+  SnapPipelineRunner::preRun(action, dataSource, dataSink, initialize);
 }
 
 void ProfilingPipelineRunner::postRun(SnapAction &action,
                                       DataSourceRuntimeContext &dataSource,
-                                      DataSinkRuntimeContext &, bool finalize) {
-  auto *results64 =
-      reinterpret_cast<uint64_t *>(action.allocateMemory(sizeof(uint64_t) * 6));
-  auto *results32 = reinterpret_cast<uint32_t *>(results64 + 1);
+                                      DataSinkRuntimeContext &dataSink,
+                                      bool finalize) {
+  if (_profileStreamIds) {
+    auto *results64 = reinterpret_cast<uint64_t *>(
+        action.allocateMemory(sizeof(uint64_t) * 6));
+    auto *results32 = reinterpret_cast<uint32_t *>(results64 + 1);
 
-  try {
-    action.execute_job(fpga::JobType::ReadPerfmonCounters,
-                       reinterpret_cast<char *>(results64));
-  } catch (std::exception &ex) {
+    try {
+      action.execute_job(fpga::JobType::ReadPerfmonCounters,
+                         reinterpret_cast<char *>(results64));
+    } catch (std::exception &ex) {
+      free(results64);
+      throw ex;
+    }
+
+    _results.global_clock_counter += be64toh(results64[0]);
+
+    _results.input_transfer_cycle_count += be32toh(results32[0]);
+    _results.input_data_byte_count += be32toh(results32[2]);
+    _results.input_slave_idle_count += be32toh(results32[3]);
+    _results.input_master_idle_count += be32toh(results32[4]);
+
+    _results.output_transfer_cycle_count += be32toh(results32[5]);
+    _results.output_data_byte_count += be32toh(results32[7]);
+    _results.output_slave_idle_count += be32toh(results32[8]);
+    _results.output_master_idle_count += be32toh(results32[9]);
+
     free(results64);
-    throw ex;
-  }
 
-  _results.global_clock_counter += be64toh(results64[0]);
-
-  _results.input_transfer_cycle_count += be32toh(results32[0]);
-  _results.input_data_byte_count += be32toh(results32[2]);
-  _results.input_slave_idle_count += be32toh(results32[3]);
-  _results.input_master_idle_count += be32toh(results32[4]);
-
-  _results.output_transfer_cycle_count += be32toh(results32[5]);
-  _results.output_data_byte_count += be32toh(results32[7]);
-  _results.output_slave_idle_count += be32toh(results32[8]);
-  _results.output_master_idle_count += be32toh(results32[9]);
-
-  free(results64);
-
-  if (finalize) {
-    if (_profileInputStreamId == IOStreamID) {
-      dataSource.setProfilingResults(formatProfilingResults());
-    } else {
-      auto op = std::find_if(_pipeline->operators().begin(),
-                             _pipeline->operators().end(),
-                             [&](UserOperatorRuntimeContext &op) {
-                               return op.userOperator().spec().internal_id() ==
-                                      _profileInputStreamId;
-                             });
-      if (op != _pipeline->operators().cend()) {
-        op->setProfilingResults(formatProfilingResults());
+    if (finalize) {
+      if (_profileStreamIds->first == IOStreamID) {
+        dataSource.setProfilingResults(formatProfilingResults());
+      } else {
+        auto op = std::find_if(
+            _pipeline->operators().begin(), _pipeline->operators().end(),
+            [&](UserOperatorRuntimeContext &op) {
+              return op.userOperator().spec().internal_id() ==
+                     _profileStreamIds->first;
+            });
+        if (op != _pipeline->operators().cend()) {
+          op->setProfilingResults(formatProfilingResults());
+        }
       }
     }
   }
+
+  SnapPipelineRunner::postRun(action, dataSource, dataSink, finalize);
 }
 
 std::string ProfilingPipelineRunner::formatProfilingResults() {

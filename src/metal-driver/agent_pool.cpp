@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <spdlog/spdlog.h>
+
 #include <metal-driver-messages/buffer.hpp>
 #include <metal-driver-messages/message_header.hpp>
 
@@ -104,7 +106,7 @@ void AgentPool::sendRegistrationInvalid(RegisteredAgent &agent) {
 
   accept_data.set_valid(false);
 
-  agent.socket.send_message<message_type::RegistrationResponse>(accept_data);
+  agent.sendRegistrationResponse(accept_data);
 }
 
 void AgentPool::reset() {

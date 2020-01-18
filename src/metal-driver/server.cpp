@@ -75,9 +75,11 @@ void Server::startInternal(int card) {
 void Server::processRequest(Socket socket, int card) {
   try {
     auto request = socket.receiveMessage<message_type::RegistrationRequest>();
+    spdlog::trace("RegistrationRequest({})", request.operator_type());
     _agents.registerAgent(request, std::move(socket));
   } catch (std::exception &ex) {
     // Don't know this guy -- doesn't even say hello
+    spdlog::warn(ex.what());
     return;
   }
 

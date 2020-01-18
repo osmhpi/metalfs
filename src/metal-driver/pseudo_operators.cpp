@@ -4,10 +4,8 @@
 
 namespace metal {
 
-const std::string RandomDataSourceId = "datagen";
-
 bool DatagenOperator::isDatagenAgent(const RegisteredAgent &agent) {
-  return agent.operator_type == RandomDataSourceId;
+  return agent.operator_type == id();
 }
 
 void DatagenOperator::validate(RegisteredAgent &agent) {
@@ -22,7 +20,7 @@ uint64_t DatagenOperator::datagenLength(RegisteredAgent &agent) {
 
 cxxopts::ParseResult DatagenOperator::parseOptions(RegisteredAgent &agent) {
   auto options =
-      cxxopts::Options(RandomDataSourceId,
+      cxxopts::Options(id(),
                        "Generate data on the FPGA for benchmarking operators.");
 
   options.add_option("", "h", "help", "Print help",
@@ -30,7 +28,7 @@ cxxopts::ParseResult DatagenOperator::parseOptions(RegisteredAgent &agent) {
   options.add_option("", "p", "profile", "Enable profiling",
                      cxxopts::value<bool>()->default_value("false"), "");
   options.add_option("", "l", "length",
-                     "The amount of data to generate, in bytes (default: 4096)",
+                     "The amount of data to generate, in bytes",
                      cxxopts::value<uint64_t>()->default_value("4096"), "");
 
   return agent.parseOptions(options);

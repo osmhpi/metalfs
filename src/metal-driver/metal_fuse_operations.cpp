@@ -19,6 +19,7 @@
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/pipeline_runner.hpp>
 
+#include "pseudo_operators.hpp"
 #include "server.hpp"
 
 namespace metal {
@@ -411,6 +412,11 @@ void Context::initialize(bool in_memory, std::string bin_path,
     _registry = std::make_shared<OperatorRegistry>("{\"operators\": {}}");
   }
 
+  for (const auto &op : _registry->operatorSpecifications()) {
+    _operators.emplace(op.first);
+  }
+  _operators.emplace(DatagenOperator::id());
+
   _files_dirname = "files";
   _operators_dirname = "operators";
 
@@ -430,7 +436,7 @@ void Context::initialize(bool in_memory, std::string bin_path,
   char agent_filepath[255];
   strncpy(agent_filepath, bin_path.c_str(), sizeof(agent_filepath));
   dirname(agent_filepath);
-  strncat(agent_filepath, "/metal-driver-placeholder",
+  strncat(agent_filepath, "/metal-driver-placeholderd",
           sizeof(agent_filepath) - 1);
   _agent_filepath = std::string(agent_filepath);
 

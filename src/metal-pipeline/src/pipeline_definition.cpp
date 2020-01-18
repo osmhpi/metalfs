@@ -58,16 +58,22 @@ uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
     enable_mask |= (1u << op.userOperator().spec().internal_id());
   }
 
+  auto sourceAddress = dataSource.address(),
+       destinationAddress = dataSink.address();
+
+  spdlog::debug("    Read: (Address: {:x}, Size: {}, Type: {}, Map: {})",
+                sourceAddress.addr, sourceAddress.size,
+                SnapAction::address_type_to_string(sourceAddress.type),
+                SnapAction::map_type_to_string(sourceAddress.map));
+  spdlog::debug("    Write: (Address: {:x}, Size: {}, Type: {}, Map: {})",
+                destinationAddress.addr, destinationAddress.size,
+                SnapAction::address_type_to_string(destinationAddress.type),
+                SnapAction::map_type_to_string(destinationAddress.map));
+
   uint64_t output_size;
-  spdlog::debug(
-      "Running Pipeline, Read: (Address: {:x}, Size: {}, Type: {}), Write: "
-      "(Address: {:x}, Size: {}, Type: {})",
-      dataSource.address().addr, dataSource.address().size,
-      (uint64_t)dataSource.address().type, dataSink.address().addr,
-      dataSink.address().size, (uint64_t)dataSink.address().type);
-  action.execute_job(fpga::JobType::RunOperators, nullptr, dataSource.address(),
-                     dataSink.address(), enable_mask,
-                     /* perfmon_enable = */ 1, &output_size);
+  action.execute_job(fpga::JobType::RunOperators, nullptr, sourceAddress,
+                     destinationAddress, enable_mask, /* perfmon_enable = */ 1,
+                     &output_size);
 
   for (auto &op : _operators) {
     op.finalize(action);
@@ -86,16 +92,16 @@ void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
     job_struct[i] = htobe32(disable);
   }
 
-  uint8_t previous_op_stream = IOStreamID;
+  uint8_t previousStream = IOStreamID;
   for (const auto &op : _operators) {
     // From the perspective of the Stream Switch:
     // Which Master port (output) should be
     // sourced from which Slave port (input)
-    job_struct[op.userOperator().spec().internal_id()] =
-        htobe32(previous_op_stream);
-    previous_op_stream = op.userOperator().spec().internal_id();
+    auto currentStream = op.userOperator().spec().internal_id();
+    job_struct[currentStream] = htobe32(previousStream);
+    previousStream = currentStream;
   }
-  job_struct[IOStreamID] = previous_op_stream;
+  job_struct[IOStreamID] = htobe32(previousStream);
 
   try {
     action.execute_job(fpga::JobType::ConfigureStreams,

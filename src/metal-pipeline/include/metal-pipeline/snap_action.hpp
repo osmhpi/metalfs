@@ -26,6 +26,9 @@ class METAL_PIPELINE_API SnapAction {
 
   static void *allocateMemory(size_t size);
 
+  static std::string address_type_to_string(fpga::AddressType addressType);
+  static std::string map_type_to_string(fpga::MapType mapType);
+
  protected:
   std::string job_type_to_string(fpga::JobType job);
   std::string snap_return_code_to_string(int rc);
