@@ -40,18 +40,23 @@ cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
 }
 
 void RegisteredAgent::sendRegistrationResponse(RegistrationResponse &message) {
-  spdlog::trace("RegistrationResponse()");
+  spdlog::trace(
+      "RegistrationResponse(valid={}, input_filename={}, output_filename={})",
+      message.valid(), message.has_input_buffer_filename(),
+      message.has_output_buffer_filename());
   socket.send_message<message_type::RegistrationResponse>(message);
 }
 
 ProcessingRequest RegisteredAgent::receiveProcessingRequest() {
   auto request = socket.receiveMessage<message_type::ProcessingRequest>();
-  spdlog::trace("ProcessingRequest({}, {})", request.size(), request.eof());
+  spdlog::trace("ProcessingRequest(size={}, eof={})", request.size(),
+                request.eof());
   return request;
 }
 
 void RegisteredAgent::sendProcessingResponse(ProcessingResponse &message) {
-  spdlog::trace("ProcessingResponse({}, {})", message.size(), message.eof());
+  spdlog::trace("ProcessingResponse(size={}, eof={})", message.size(),
+                message.eof());
   socket.send_message<message_type::ProcessingResponse>(message);
 }
 

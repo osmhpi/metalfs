@@ -2,7 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-pipeline/pipeline_definition.hpp>
 
 #include "pseudo_operators.hpp"
 #include "registered_agent.hpp"
@@ -10,13 +10,16 @@
 namespace metal {
 
 BufferSourceRuntimeContext::BufferSourceRuntimeContext(
-    std::shared_ptr<RegisteredAgent> agent, bool skipSendingProcessingResponse)
+    std::shared_ptr<RegisteredAgent> agent,
+    std::shared_ptr<PipelineDefinition> pipeline,
+    bool skipSendingProcessingResponse)
     : FileSourceRuntimeContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
                                0, 0),
       _agent(agent),
+      _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
   if (_agent->input_buffer) {
-    //
+    // Nothing to do
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
   } else if (!agent->internal_input_file.empty()) {
@@ -43,7 +46,7 @@ const DataSource BufferSourceRuntimeContext::dataSource() const {
 
 void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
   ProcessingRequest request;
-  if (!initial || _agent->input_buffer) {
+  if (initial || _agent->input_buffer) {
     request = _agent->receiveProcessingRequest();
   }
 
@@ -67,11 +70,12 @@ void BufferSourceRuntimeContext::finalize(SnapAction &action) {
     FileSourceRuntimeContext::finalize(action);
   }
 
-  if ((endOfInput() || _agent->input_buffer) && !_skipSendingProcessingResponse) {
-      ProcessingResponse msg;
-      msg.set_eof(endOfInput());
-      msg.set_message(_profilingResults);
-      _agent->sendProcessingResponse(msg);
+  if ((endOfInput() || _agent->input_buffer) &&
+      !_skipSendingProcessingResponse) {
+    ProcessingResponse msg;
+    msg.set_eof(endOfInput());
+    msg.set_message(_profilingResults);
+    _agent->sendProcessingResponse(msg);
   }
 }
 

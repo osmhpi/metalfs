@@ -17,7 +17,7 @@
 #include <metal-filesystem/inode.h>
 #include <metal-filesystem/metal.h>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 
 #include "pseudo_operators.hpp"
 #include "server.hpp"
@@ -436,8 +436,13 @@ void Context::initialize(bool in_memory, std::string bin_path,
   char agent_filepath[255];
   strncpy(agent_filepath, bin_path.c_str(), sizeof(agent_filepath));
   dirname(agent_filepath);
+#ifdef DEBUG
   strncat(agent_filepath, "/metal-driver-placeholderd",
           sizeof(agent_filepath) - 1);
+#else
+  strncat(agent_filepath, "/metal-driver-placeholder",
+          sizeof(agent_filepath) - 1);
+#endif
   _agent_filepath = std::string(agent_filepath);
 
   DIR *dir = opendir(metadata_dir.c_str());

@@ -40,8 +40,9 @@ set(headers
     ${include_path}/operator_registry.hpp
     ${include_path}/operator_runtime_context.hpp
     ${include_path}/pipeline_definition.hpp
-    ${include_path}/pipeline_runner.hpp
+    ${include_path}/profiling_pipeline_runner.hpp
     ${include_path}/snap_action.hpp
+    ${include_path}/snap_pipeline_runner.hpp
     ${include_path}/user_operator_specification.hpp
     ${include_path}/user_operator.hpp
 )
@@ -50,8 +51,9 @@ set(sources
     ${source_path}/operator_registry.cpp
     ${source_path}/operator_runtime_context.cpp
     ${source_path}/pipeline_definition.cpp
-    ${source_path}/pipeline_runner.cpp
+    ${source_path}/profiling_pipeline_runner.cpp
     ${source_path}/snap_action.cpp
+    ${source_path}/snap_pipeline_runner.cpp
     ${source_path}/user_operator_specification.cpp
     ${source_path}/user_operator.cpp
 )

@@ -2,16 +2,21 @@
 
 #include <spdlog/spdlog.h>
 
+#include <metal-pipeline/pipeline_definition.hpp>
+
 #include "pseudo_operators.hpp"
 #include "registered_agent.hpp"
 
 namespace metal {
 
 BufferSinkRuntimeContext::BufferSinkRuntimeContext(
-    std::shared_ptr<RegisteredAgent> agent, bool skipReceivingProcessingRequest)
+    std::shared_ptr<RegisteredAgent> agent,
+    std::shared_ptr<PipelineDefinition> pipeline,
+    bool skipReceivingProcessingRequest)
     : FileSinkRuntimeContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
                              0, 0),
       _agent(agent),
+      _pipeline(pipeline),
       _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}
 
 const DataSink BufferSinkRuntimeContext::dataSink() const {
@@ -30,7 +35,7 @@ const DataSink BufferSinkRuntimeContext::dataSink() const {
 }
 
 void BufferSinkRuntimeContext::configure(SnapAction &action, bool initial) {
-  if ((!initial || _agent->output_buffer) && !_skipReceivingProcessingRequest) {
+  if ((initial || _agent->output_buffer) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
 
@@ -43,10 +48,14 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
                                         bool endOfInput) {
   ProcessingResponse msg;
   msg.set_eof(endOfInput);
+  msg.set_message(_profilingResults);
 
   if (_agent->output_buffer) {
     _agent->output_buffer.value().swap();
     msg.set_size(outputSize);
+    if (_pipeline->operators().size()) {
+      msg.set_message(_pipeline->operators().back().profilingResults());
+    }
   } else if (DevNullFile::isNullOutput(*_agent)) {
     // Nothing to do
   } else if (!_filename.empty()) {

@@ -29,7 +29,6 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
 
 #include "agent_pool.hpp"
 #include "pipeline_builder.hpp"

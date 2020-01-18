@@ -13,6 +13,7 @@ class DatagenOperator {
   static std::string id() { return "datagen"; }
   static bool isDatagenAgent(const RegisteredAgent &agent);
   static void validate(RegisteredAgent &agent);
+  static bool isProfilingEnabled(RegisteredAgent &agent);
   static uint64_t datagenLength(RegisteredAgent &agent);
 
  protected:

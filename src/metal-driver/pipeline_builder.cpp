@@ -130,7 +130,8 @@ ConfiguredPipeline PipelineBuilder::configure() {
 
   // Establish pipeline data source and sink
   result.dataSourceAgent = orderedOperatorSpecsAndAgents.front().second;
-  if (result.dataSourceAgent->internal_input_file.empty()) {
+  if (result.dataSourceAgent->internal_input_file.empty() &&
+      !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
     result.dataSourceAgent->input_buffer =
         Buffer::createTempFileForSharedBuffer(false);
   }

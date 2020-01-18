@@ -4,7 +4,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <metal-pipeline/pipeline_runner.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include <metal-pipeline/user_operator.hpp>
 #include <metal-pipeline/user_operator_specification.hpp>

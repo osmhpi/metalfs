@@ -25,6 +25,7 @@ set(sources
     changecase_pipeline_test.cpp
     colorfilter_pipeline_test.cpp
     readwrite_pipeline_test.cpp
+    image_info_test.cpp
     nvme_pipeline_test.cpp
     dram_pipeline_test.cpp
     profiling_test.cpp

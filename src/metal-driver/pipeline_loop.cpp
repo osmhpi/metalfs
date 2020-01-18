@@ -10,7 +10,7 @@
 #include <metal-filesystem-pipeline/file_data_source.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/profiling_pipeline_runner.hpp>
 
 #include "agent_data_sink.hpp"
 #include "buffer_data_source.hpp"
@@ -25,17 +25,26 @@ void PipelineLoop::run() {
   // Establish data sources and sinks
   auto singleStagePipeline =
       _pipeline.dataSourceAgent == _pipeline.dataSinkAgent;
-  BufferSourceRuntimeContext dataSource(_pipeline.dataSourceAgent,
-                                        singleStagePipeline);
-  BufferSinkRuntimeContext dataSink(_pipeline.dataSinkAgent,
+  BufferSourceRuntimeContext dataSource(
+      _pipeline.dataSourceAgent, _pipeline.pipeline, singleStagePipeline);
+  BufferSinkRuntimeContext dataSink(_pipeline.dataSinkAgent, _pipeline.pipeline,
                                     singleStagePipeline);
+
+  if (DatagenOperator::isDatagenAgent(*_pipeline.dataSourceAgent)) {
+    auto isProfilingEnabled = DatagenOperator::isProfilingEnabled(*_pipeline.dataSourceAgent);
+    if (_pipeline.pipeline->operators().empty()) {
+      // Special handling to be able to deliver profiling results back to the agent
+      dataSink.setProfilingEnabled(isProfilingEnabled);
+    } else {
+      dataSource.setProfilingEnabled(isProfilingEnabled);
+    }
+  }
 
   // Wait until all idle clients signal ready
   for (const auto &agent : _pipeline.operatorAgents) {
-    if (agent != _pipeline.dataSourceAgent &&
-        agent != _pipeline.dataSinkAgent) {
-      agent->receiveProcessingRequest();
-    }
+    if (agent == _pipeline.dataSourceAgent || agent == _pipeline.dataSinkAgent)
+      continue;
+    agent->receiveProcessingRequest();
   }
 
   for (;;) {
@@ -47,7 +56,8 @@ void PipelineLoop::run() {
   }
 
   // Send processing responses
-  auto currentOperator = _pipeline.pipeline->operators().begin();
+  const auto &operators = _pipeline.pipeline->operators();
+  auto currentOperator = operators.begin();
   for (const auto &agent : _pipeline.operatorAgents) {
     if (agent == _pipeline.dataSourceAgent || agent == _pipeline.dataSinkAgent)
       continue;

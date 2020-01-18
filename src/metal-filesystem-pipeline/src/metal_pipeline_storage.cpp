@@ -8,7 +8,7 @@
 #include <metal-filesystem-pipeline/file_data_source.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 
 namespace metal {
 

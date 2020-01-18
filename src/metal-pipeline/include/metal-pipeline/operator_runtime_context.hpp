@@ -54,6 +54,7 @@ class METAL_PIPELINE_API UserOperatorRuntimeContext
 
 class METAL_PIPELINE_API DataSourceRuntimeContext {
  public:
+  DataSourceRuntimeContext() : _profilingEnabled(false), _profilingResults() {}
   virtual void configure(SnapAction &action, bool initial) {
     (void)action;
     (void)initial;
@@ -90,6 +91,7 @@ class METAL_PIPELINE_API DefaultDataSourceRuntimeContext
 
 class METAL_PIPELINE_API DataSinkRuntimeContext {
  public:
+  DataSinkRuntimeContext() : _profilingEnabled(false), _profilingResults() {}
   virtual const DataSink dataSink() const = 0;
   virtual void prepareForTotalSize(uint64_t size) = 0;
 
@@ -103,6 +105,16 @@ class METAL_PIPELINE_API DataSinkRuntimeContext {
     (void)outputSize;
     (void)endOfInput;
   };
+
+  bool profilingEnabled() const { return _profilingEnabled; }
+  void setProfilingEnabled(bool enabled) { _profilingEnabled = enabled; }
+  void setProfilingResults(std::string results) {
+    _profilingResults = std::move(results);
+  }
+
+ protected:
+  bool _profilingEnabled;
+  std::string _profilingResults;
 };
 
 class METAL_PIPELINE_API DefaultDataSinkRuntimeContext

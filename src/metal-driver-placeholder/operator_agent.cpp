@@ -316,6 +316,7 @@ int main(int argc, char *argv[]) {
   }
 
   metal::ProcessingResponse processing_response;
+  processing_response.set_eof(false);
 
   // Processing loop
   while (true) {

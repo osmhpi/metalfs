@@ -13,6 +13,11 @@ void DatagenOperator::validate(RegisteredAgent &agent) {
   parseOptions(agent);
 }
 
+bool DatagenOperator::isProfilingEnabled(RegisteredAgent &agent) {
+  auto optionValues = parseOptions(agent);
+  return optionValues["profile"].as<bool>();
+}
+
 uint64_t DatagenOperator::datagenLength(RegisteredAgent &agent) {
   auto optionValues = parseOptions(agent);
   return optionValues["length"].as<uint64_t>();

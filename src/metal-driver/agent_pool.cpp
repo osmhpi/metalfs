@@ -110,10 +110,6 @@ void AgentPool::sendRegistrationInvalid(RegisteredAgent &agent) {
 }
 
 void AgentPool::reset() {
-  for (const auto &agent : _pipeline_agents) {
-    sendRegistrationInvalid(*agent);
-  }
-
   _pipeline_agents.clear();
 
   sendAllAgentsInvalid(_registered_agents);

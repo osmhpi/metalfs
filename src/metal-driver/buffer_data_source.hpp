@@ -6,13 +6,16 @@
 
 namespace metal {
 
-class RegisteredAgent;
 class FileSourceRuntimeContext;
+class PipelineDefinition;
+class RegisteredAgent;
 
 class BufferSourceRuntimeContext : public FileSourceRuntimeContext {
  public:
-  explicit BufferSourceRuntimeContext(std::shared_ptr<RegisteredAgent> agent,
-                                      bool skipSendingProcessingResponse);
+  explicit BufferSourceRuntimeContext(
+      std::shared_ptr<RegisteredAgent> agent,
+      std::shared_ptr<PipelineDefinition> pipeline,
+      bool skipSendingProcessingResponse);
 
   const DataSource dataSource() const final;
   void configure(SnapAction &action, bool initial) final;
@@ -23,6 +26,7 @@ class BufferSourceRuntimeContext : public FileSourceRuntimeContext {
 
  protected:
   std::shared_ptr<RegisteredAgent> _agent;
+  std::shared_ptr<PipelineDefinition> _pipeline;
   bool _skipSendingProcessingResponse;
   uint64_t _remainingTotalSize;
   uint64_t _size;
