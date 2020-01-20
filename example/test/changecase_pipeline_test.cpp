@@ -6,7 +6,7 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
@@ -30,7 +30,7 @@ TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
   SnapAction action(fpga::ActionType, 0);
 
-  auto pipeline = PipelineDefinition(std::move(*transformer));
+  auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),
                DataSink(dest, sizeof(input) - 1), action);
 
@@ -52,7 +52,7 @@ TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
   SnapAction action(fpga::ActionType, 0);
 
-  auto pipeline = PipelineDefinition(std::move(*transformer));
+  auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),
                DataSink(dest, sizeof(input) - 1), action);
 

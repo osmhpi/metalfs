@@ -8,13 +8,13 @@
 #include <metal-driver-messages/message_header.hpp>
 
 #include "agent_pool.hpp"
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 #include "server.hpp"
 
 namespace metal {
 
 void AgentPool::registerAgent(Socket socket) {
-  auto agent = std::make_shared<RegisteredAgent>(std::move(socket));
+  auto agent = std::make_shared<OperatorAgent>(std::move(socket));
 
   for (auto &other_agent : _registered_agents) {
     if (other_agent->isOutputConnectedTo(*agent)) {
@@ -35,7 +35,7 @@ bool AgentPool::containsValidPipeline() {
 
   auto pipelineStart =
       std::find_if(_registered_agents.begin(), _registered_agents.end(),
-                   [](const std::shared_ptr<RegisteredAgent> &a) {
+                   [](const std::shared_ptr<OperatorAgent> &a) {
                      return a->isInputAgent();
                    });
 
@@ -44,7 +44,7 @@ bool AgentPool::containsValidPipeline() {
   }
 
   // Walk the pipeline until we find an agent with output_pid == 0
-  std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents;
+  std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents;
 
   auto pipeline_agent = *pipelineStart;
   while (pipeline_agent) {
@@ -71,7 +71,7 @@ void AgentPool::releaseUnusedAgents() {
 }
 
 void AgentPool::sendAllAgentsInvalid(
-    std::unordered_set<std::shared_ptr<RegisteredAgent>> &agents) {
+    std::unordered_set<std::shared_ptr<OperatorAgent>> &agents) {
   for (const auto &agent : agents) {
     sendRegistrationInvalid(*agent);
   }
@@ -79,7 +79,7 @@ void AgentPool::sendAllAgentsInvalid(
   agents.clear();
 }
 
-void AgentPool::sendRegistrationInvalid(RegisteredAgent &agent) {
+void AgentPool::sendRegistrationInvalid(OperatorAgent &agent) {
   metal::RegistrationResponse accept_data;
 
   if (!agent.error().empty()) {

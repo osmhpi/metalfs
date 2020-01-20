@@ -1,19 +1,19 @@
-#include "buffer_data_source.hpp"
+#include "agent_data_source_context.hpp"
 
 #include <spdlog/spdlog.h>
 
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 
 #include "pseudo_operators.hpp"
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
 BufferSourceRuntimeContext::BufferSourceRuntimeContext(
-    std::shared_ptr<RegisteredAgent> agent,
-    std::shared_ptr<PipelineDefinition> pipeline,
+    std::shared_ptr<OperatorAgent> agent,
+    std::shared_ptr<Pipeline> pipeline,
     bool skipSendingProcessingResponse)
-    : FileSourceRuntimeContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
+    : FileDataSourceContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
                                0, 0),
       _agent(agent),
       _pipeline(pipeline),
@@ -38,7 +38,7 @@ const DataSource BufferSourceRuntimeContext::dataSource() const {
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     return DataSource(0, _size, fpga::AddressType::Random);
   } else if (!_filename.empty()) {
-    return FileSourceRuntimeContext::dataSource();
+    return FileDataSourceContext::dataSource();
   } else {
     throw std::runtime_error("Unknown data source");
   }
@@ -57,7 +57,7 @@ void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
     _size = std::min(_remainingTotalSize, BufferSize);
     _eof = _remainingTotalSize == _size;
   } else if (!_filename.empty()) {
-    return FileSourceRuntimeContext::configure(action, initial);
+    return FileDataSourceContext::configure(action, initial);
   }
 }
 
@@ -67,7 +67,7 @@ void BufferSourceRuntimeContext::finalize(SnapAction &action) {
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize -= _size;
   } else if (!_filename.empty()) {
-    FileSourceRuntimeContext::finalize(action);
+    FileDataSourceContext::finalize(action);
   }
 
   if ((endOfInput() || _agent->inputBuffer()) &&
@@ -83,14 +83,14 @@ uint64_t BufferSourceRuntimeContext::reportTotalSize() {
   if (DatagenOperator::isDatagenAgent(*_agent)) {
     return _remainingTotalSize;
   } else if (!_filename.empty()) {
-    return FileSourceRuntimeContext::reportTotalSize();
+    return FileDataSourceContext::reportTotalSize();
   }
   return 0;
 }
 
 bool BufferSourceRuntimeContext::endOfInput() const {
   if (!_filename.empty()) {
-    return FileSourceRuntimeContext::endOfInput();
+    return FileDataSourceContext::endOfInput();
   }
   return _eof;
 }

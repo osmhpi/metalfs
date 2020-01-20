@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
@@ -16,17 +16,17 @@ class AgentPool {
   bool containsValidPipeline();
   void releaseUnusedAgents();
   void reset();
-  std::vector<std::shared_ptr<RegisteredAgent>> cachedPipeline() {
+  std::vector<std::shared_ptr<OperatorAgent>> cachedPipeline() {
     return _pipeline_agents;
   }
 
  protected:
   void sendAllAgentsInvalid(
-      std::unordered_set<std::shared_ptr<RegisteredAgent>> &agents);
-  void sendRegistrationInvalid(RegisteredAgent &agent);
+      std::unordered_set<std::shared_ptr<OperatorAgent>> &agents);
+  void sendRegistrationInvalid(OperatorAgent &agent);
 
-  std::unordered_set<std::shared_ptr<RegisteredAgent>> _registered_agents;
-  std::vector<std::shared_ptr<RegisteredAgent>> _pipeline_agents;
+  std::unordered_set<std::shared_ptr<OperatorAgent>> _registered_agents;
+  std::vector<std::shared_ptr<OperatorAgent>> _pipeline_agents;
   bool _contains_valid_pipeline_cached;
 };
 

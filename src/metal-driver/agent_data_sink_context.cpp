@@ -1,25 +1,24 @@
-#include "agent_data_sink.hpp"
+#include "agent_data_sink_context.hpp"
 
 #include <spdlog/spdlog.h>
 
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 
+#include "operator_agent.hpp"
 #include "pseudo_operators.hpp"
-#include "registered_agent.hpp"
 
 namespace metal {
 
-BufferSinkRuntimeContext::BufferSinkRuntimeContext(
-    std::shared_ptr<RegisteredAgent> agent,
-    std::shared_ptr<PipelineDefinition> pipeline,
+AgentDataSinkContext::AgentDataSinkContext(
+    std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
     bool skipReceivingProcessingRequest)
-    : FileSinkRuntimeContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
-                             0, 0),
+    : FileDataSinkContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "", 0,
+                          0),
       _agent(agent),
       _pipeline(pipeline),
       _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}
 
-const DataSink BufferSinkRuntimeContext::dataSink() const {
+const DataSink AgentDataSinkContext::dataSink() const {
   // The data sink can be of three types: Agent-Buffer, Null or File
 
   if (_agent->outputBuffer()) {
@@ -28,24 +27,24 @@ const DataSink BufferSinkRuntimeContext::dataSink() const {
   } else if (DevNullFile::isNullOutput(*_agent)) {
     return DataSink(0, 0, fpga::AddressType::Null);
   } else if (!_filename.empty()) {
-    return FileSinkRuntimeContext::dataSink();
+    return FileDataSinkContext::dataSink();
   } else {
     throw std::runtime_error("Unknown data sink");
   }
 }
 
-void BufferSinkRuntimeContext::configure(SnapAction &action, bool initial) {
+void AgentDataSinkContext::configure(SnapAction &action, bool initial) {
   if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
 
   if (!_filename.empty()) {
-    return FileSinkRuntimeContext::configure(action, initial);
+    return FileDataSinkContext::configure(action, initial);
   }
 }
 
-void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
-                                        bool endOfInput) {
+void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
+                                    bool endOfInput) {
   ProcessingResponse msg;
   msg.set_eof(endOfInput);
 
@@ -63,7 +62,7 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
   } else if (DevNullFile::isNullOutput(*_agent)) {
     // Nothing to do
   } else if (!_filename.empty()) {
-    FileSinkRuntimeContext::finalize(action, outputSize, endOfInput);
+    FileDataSinkContext::finalize(action, outputSize, endOfInput);
   }
 
   if (endOfInput || _agent->outputBuffer()) {
@@ -74,9 +73,9 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
   }
 }
 
-void BufferSinkRuntimeContext::prepareForTotalSize(uint64_t totalSize) {
+void AgentDataSinkContext::prepareForTotalSize(uint64_t totalSize) {
   if (!_filename.empty()) {
-    FileSinkRuntimeContext::prepareForTotalSize(totalSize);
+    FileDataSinkContext::prepareForTotalSize(totalSize);
   }
 }
 

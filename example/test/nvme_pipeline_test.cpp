@@ -2,11 +2,11 @@
 #include <malloc.h>
 #include <snap_action_metal.h>
 #include <memory>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include <metal-pipeline/snap_pipeline_runner.hpp>
 
@@ -24,10 +24,10 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
   // Read unwritten data
   std::vector<mtl_file_extent> file = {
       {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
-  FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
+  FileDataSourceContext dataSource(fpga::AddressType::NVMe,
                                       fpga::MapType::NVMe, file, 0, n_bytes);
 
-  DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+  DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
   SnapPipelineRunner runner(0);
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
@@ -41,11 +41,11 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
+  DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
 
   std::vector<mtl_file_extent> file = {
       {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
-  FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+  FileDataSinkContext dataSink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
                                   file, 0, n_bytes);
 
   SnapPipelineRunner runner(0);
@@ -66,8 +66,8 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
   {  // Write
-    DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
-    FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
+    DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
+    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, 0, n_bytes);
 
     SnapPipelineRunner runner(0);
@@ -75,9 +75,9 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
   }
 
   {  // Read
-    FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
+    FileDataSourceContext dataSource(fpga::AddressType::NVMe,
                                         fpga::MapType::NVMe, file, 0, n_bytes);
-    DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+    DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
     SnapPipelineRunner runner(0);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
@@ -105,8 +105,8 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   fill_payload(newBytes, newBytesSize);
 
   {  // Write
-    DefaultDataSourceRuntimeContext dataSource(DataSource(src, n_bytes));
-    FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
+    DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
+    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, 0, n_bytes);
 
     SnapPipelineRunner runner(0);
@@ -114,9 +114,9 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   }
 
   {  // Write new bytes
-    DefaultDataSourceRuntimeContext dataSource(
+    DefaultDataSourceContext dataSource(
         DataSource(newBytes, newBytesSize));
-    FileSinkRuntimeContext dataSink(fpga::AddressType::NVMe,
+    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
                                     fpga::MapType::NVMe, file, newBytesOffset,
                                     newBytesSize);
 
@@ -125,9 +125,9 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   }
 
   {  // Read
-    FileSourceRuntimeContext dataSource(fpga::AddressType::NVMe,
+    FileDataSourceContext dataSource(fpga::AddressType::NVMe,
                                         fpga::MapType::NVMe, file, 0, n_bytes);
-    DefaultDataSinkRuntimeContext dataSink(DataSink(dest, n_bytes));
+    DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
     SnapPipelineRunner runner(0);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));

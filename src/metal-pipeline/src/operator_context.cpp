@@ -1,19 +1,22 @@
-#include <metal-pipeline/operator_runtime_context.hpp>
+#include <metal-pipeline/operator_context.hpp>
 
 #include <cstring>
 
 #include <spdlog/spdlog.h>
 
 #include <metal-pipeline/snap_action.hpp>
-#include <metal-pipeline/user_operator.hpp>
-#include <metal-pipeline/user_operator_specification.hpp>
+#include <metal-pipeline/operator.hpp>
+#include <metal-pipeline/operator_specification.hpp>
 
 namespace metal {
 
-UserOperatorRuntimeContext::UserOperatorRuntimeContext(UserOperator op)
-    : _op(std::move(op)) {}
+OperatorContext::OperatorContext(Operator op)
+    : _op(std::move(op)),
+      _is_prepared(false),
+      _profilingEnabled(false),
+      _profilingResults() {}
 
-void UserOperatorRuntimeContext::configure(SnapAction &action) {
+void OperatorContext::configure(SnapAction &action) {
   // Allocate job struct memory aligned on a page boundary, hopefully 4KB is
   // sufficient
   auto job_config = reinterpret_cast<char *>(action.allocateMemory(4096));
@@ -25,7 +28,7 @@ void UserOperatorRuntimeContext::configure(SnapAction &action) {
     const auto &definition = _op.spec().optionDefinitions().at(option.first);
 
     metadata[0] = htobe32(definition.offset() / sizeof(uint32_t));  // offset
-    metadata[2] = htobe32(_op.spec().internal_id());
+    metadata[2] = htobe32(_op.spec().streamID());
     metadata[3] = htobe32(
         _op.spec().prepare_required());  // enables preparation mode for the
                                          // operator, implying that we need a
@@ -72,9 +75,9 @@ void UserOperatorRuntimeContext::configure(SnapAction &action) {
   free(job_config);
 }
 
-void UserOperatorRuntimeContext::finalize(SnapAction &action) { (void)action; }
+void OperatorContext::finalize(SnapAction &action) { (void)action; }
 
-bool UserOperatorRuntimeContext::needs_preparation() const {
+bool OperatorContext::needs_preparation() const {
   return !_is_prepared && _op.spec().prepare_required();
 }
 

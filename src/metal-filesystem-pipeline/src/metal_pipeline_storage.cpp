@@ -4,10 +4,10 @@
 #include <functional>
 
 #include <snap_action_metal.h>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_pipeline_runner.hpp>
 
 namespace metal {
@@ -34,9 +34,9 @@ int PipelineStorage::set_active_write_extent_list(
 }
 
 int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
-  FileSourceRuntimeContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+  FileDataSourceContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe,
                                   _read_extents, offset, length);
-  DefaultDataSinkRuntimeContext sink(DataSink(buffer, length));
+  DefaultDataSinkContext sink(DataSink(buffer, length));
 
   SnapPipelineRunner runner({}, 0);
   runner.run(source, sink);
@@ -46,8 +46,8 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
 
 int PipelineStorage::write(uint64_t offset, const void *buffer,
                            uint64_t length) {
-  DefaultDataSourceRuntimeContext source(DataSource(buffer, length));
-  FileSinkRuntimeContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+  DefaultDataSourceContext source(DataSource(buffer, length));
+  FileDataSinkContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
                               _write_extents, offset, length);
 
   SnapPipelineRunner runner({}, 0);

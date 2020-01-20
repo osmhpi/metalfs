@@ -10,14 +10,14 @@
 
 namespace metal {
 
-class UserOperatorSpecification;
+class OperatorSpecification;
 
-class METAL_PIPELINE_API UserOperator {
-  std::shared_ptr<const UserOperatorSpecification> _spec;
+class METAL_PIPELINE_API Operator {
+  std::shared_ptr<const OperatorSpecification> _spec;
 
  public:
-  explicit UserOperator(std::shared_ptr<const UserOperatorSpecification> spec);
-  UserOperator(UserOperator &&other)
+  explicit Operator(std::shared_ptr<const OperatorSpecification> spec);
+  Operator(Operator &&other)
       : _spec(std::move(other._spec)), _options(std::move(other._options)){};
   std::string id() const;
   std::string description() const;
@@ -27,7 +27,7 @@ class METAL_PIPELINE_API UserOperator {
     return _options;
   }
 
-  const UserOperatorSpecification &spec() const { return *_spec; }
+  const OperatorSpecification &spec() const { return *_spec; }
 
   void setOption(std::string option, OperatorArgumentValue arg);
 

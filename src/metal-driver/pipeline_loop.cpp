@@ -6,16 +6,16 @@
 
 #include <metal-driver-messages/message_header.hpp>
 #include <metal-driver-messages/messages.hpp>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/profiling_pipeline_runner.hpp>
 
-#include "agent_data_sink.hpp"
-#include "buffer_data_source.hpp"
+#include "agent_data_sink_context.hpp"
+#include "agent_data_source_context.hpp"
 #include "pseudo_operators.hpp"
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
@@ -27,13 +27,15 @@ void PipelineLoop::run() {
       _pipeline.dataSourceAgent == _pipeline.dataSinkAgent;
   BufferSourceRuntimeContext dataSource(
       _pipeline.dataSourceAgent, _pipeline.pipeline, singleStagePipeline);
-  BufferSinkRuntimeContext dataSink(_pipeline.dataSinkAgent, _pipeline.pipeline,
-                                    singleStagePipeline);
+  AgentDataSinkContext dataSink(_pipeline.dataSinkAgent, _pipeline.pipeline,
+                                singleStagePipeline);
 
   if (DatagenOperator::isDatagenAgent(*_pipeline.dataSourceAgent)) {
-    auto isProfilingEnabled = DatagenOperator::isProfilingEnabled(*_pipeline.dataSourceAgent);
+    auto isProfilingEnabled =
+        DatagenOperator::isProfilingEnabled(*_pipeline.dataSourceAgent);
     if (_pipeline.pipeline->operators().empty()) {
-      // Special handling to be able to deliver profiling results back to the agent
+      // Special handling to be able to deliver profiling results back to the
+      // agent
       dataSink.setProfilingEnabled(isProfilingEnabled);
     } else {
       dataSource.setProfilingEnabled(isProfilingEnabled);

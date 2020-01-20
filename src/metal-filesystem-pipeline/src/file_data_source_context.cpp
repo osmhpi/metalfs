@@ -6,19 +6,19 @@
 
 #include <metal-filesystem/metal.h>
 #include <snap_action_metal.h>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
-size_t FileSourceRuntimeContext::reportTotalSize() { return loadExtents(); }
+size_t FileDataSourceContext::reportTotalSize() { return loadExtents(); }
 
-FileSourceRuntimeContext::FileSourceRuntimeContext(fpga::AddressType resource,
+FileDataSourceContext::FileDataSourceContext(fpga::AddressType resource,
                                                    fpga::MapType map,
                                                    std::string filename,
                                                    uint64_t offset,
                                                    uint64_t size)
-    : DefaultDataSourceRuntimeContext(DataSource(offset, size, resource, map)),
+    : DefaultDataSourceContext(DataSource(offset, size, resource, map)),
       _filename(std::move(filename)) {
   if (size > 0) {
     if (_filename.empty()) return;
@@ -28,13 +28,13 @@ FileSourceRuntimeContext::FileSourceRuntimeContext(fpga::AddressType resource,
   }
 }
 
-FileSourceRuntimeContext::FileSourceRuntimeContext(
+FileDataSourceContext::FileDataSourceContext(
     fpga::AddressType resource, fpga::MapType map,
     std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
-    : DefaultDataSourceRuntimeContext(DataSource(offset, size, resource, map)),
+    : DefaultDataSourceContext(DataSource(offset, size, resource, map)),
       _extents(extents) {}
 
-uint64_t FileSourceRuntimeContext::loadExtents() {
+uint64_t FileDataSourceContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
   uint64_t extents_length, file_length;
   if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length,
@@ -48,7 +48,7 @@ uint64_t FileSourceRuntimeContext::loadExtents() {
   return file_length;
 }
 
-void FileSourceRuntimeContext::configure(SnapAction &action, bool) {
+void FileDataSourceContext::configure(SnapAction &action, bool) {
   if (_extents.empty())
     throw std::runtime_error("Extents were not initialized");
 
@@ -85,7 +85,7 @@ void FileSourceRuntimeContext::configure(SnapAction &action, bool) {
   free(job_struct);
 }
 
-void FileSourceRuntimeContext::finalize(SnapAction &action) {
+void FileDataSourceContext::finalize(SnapAction &action) {
   (void)action;
   // Advance offset
   _dataSource =
@@ -94,7 +94,7 @@ void FileSourceRuntimeContext::finalize(SnapAction &action) {
                  _dataSource.address().map);
 }
 
-bool FileSourceRuntimeContext::endOfInput() const {
+bool FileDataSourceContext::endOfInput() const {
   return _dataSource.address().addr + _dataSource.address().size >=
          _file_length;
 }

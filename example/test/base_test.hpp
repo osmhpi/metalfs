@@ -17,7 +17,7 @@ class BaseTest : public ::testing::Test {
 class PipelineTest : public BaseTest {
  protected:
   void _setUp() override;
-  std::optional<UserOperator> try_get_operator(const std::string &key);
+  std::optional<Operator> try_get_operator(const std::string &key);
 
   std::unique_ptr<OperatorRegistry> _registry;
 };

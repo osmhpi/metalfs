@@ -21,25 +21,25 @@ message(STATUS "Executable ${target}")
 #
 
 set(sources
-    agent_data_sink.cpp
-    agent_data_sink.hpp
+    agent_data_sink_context.cpp
+    agent_data_sink_context.hpp
+    agent_data_source_context.cpp
+    agent_data_source_context.hpp
     agent_pool.cpp
     agent_pool.hpp
-    buffer_data_source.cpp
-    buffer_data_source.hpp
     client_error.hpp
     configured_pipeline.hpp
     metal_fs.cpp
     metal_fuse_operations.cpp
     metal_fuse_operations.hpp
+    operator_agent.cpp
+    operator_agent.hpp
     pipeline_builder.cpp
     pipeline_builder.hpp
     pipeline_loop.cpp
     pipeline_loop.hpp
     pseudo_operators.cpp
     pseudo_operators.hpp
-    registered_agent.hpp
-    registered_agent.cpp
     server.cpp
     server.hpp
 )

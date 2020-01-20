@@ -1,4 +1,4 @@
-#include <metal-pipeline/user_operator_specification.hpp>
+#include <metal-pipeline/operator_specification.hpp>
 
 extern "C" {
 #include <jv.h>
@@ -37,7 +37,7 @@ class UserOperatorSpecificationParser {
     return result;
   }
 
-  uint8_t internal_id() {
+  uint8_t streamID() {
     auto jv_internal_id = jv_object_get(manifest(), jv_string("internal_id"));
     int internal_id = (int)jv_number_value(jv_internal_id);
     jv_free(jv_internal_id);
@@ -120,12 +120,12 @@ class UserOperatorSpecificationParser {
   jv _manifest;
 };
 
-UserOperatorSpecification::UserOperatorSpecification(
+OperatorSpecification::OperatorSpecification(
     std::string id, const std::string& manifest)
     : _id(std::move(id)) {
   UserOperatorSpecificationParser parser(manifest);
   _description = parser.description();
-  _internal_id = parser.internal_id();
+  _streamID = parser.streamID();
   _prepare_required = parser.prepare_required();
   _optionDefinitions = parser.optionDefinitions();
 }

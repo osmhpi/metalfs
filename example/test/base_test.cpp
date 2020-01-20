@@ -24,13 +24,13 @@ void PipelineTest::_setUp() {
   _registry = std::make_unique<OperatorRegistry>(info);
 }
 
-std::optional<UserOperator> PipelineTest::try_get_operator(
+std::optional<Operator> PipelineTest::try_get_operator(
     const std::string &key) {
   if (_registry->operatorSpecifications().find(key) ==
       _registry->operatorSpecifications().end())
     return std::nullopt;
 
-  return _registry->createUserOperator(key);
+  return _registry->createOperator(key);
 }
 
 void SimulationPipelineTest::SetUp() { _setUp(); }

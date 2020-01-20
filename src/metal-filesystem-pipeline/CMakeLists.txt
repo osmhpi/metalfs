@@ -31,14 +31,14 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
+    ${include_path}/file_data_sink_context.hpp
+    ${include_path}/file_data_source_context.hpp
     ${include_path}/metal_pipeline_storage.hpp
-    ${include_path}/file_data_sink.hpp
-    ${include_path}/file_data_source.hpp
 )
 
 set(sources
-    ${source_path}/file_data_sink.cpp
-    ${source_path}/file_data_source.cpp
+    ${source_path}/file_data_sink_context.cpp
+    ${source_path}/file_data_source_context.cpp
     ${source_path}/metal_pipeline_storage.cpp
 )
 

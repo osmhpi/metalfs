@@ -8,7 +8,7 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/profiling_pipeline_runner.hpp>
 
 namespace metal {
@@ -42,7 +42,7 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
   decrypt->setOption("key", keyBuffer);
   encrypt->setOption("key", keyBuffer);
 
-  UserOperatorRuntimeContext decryptContext(std::move(*decrypt)),
+  OperatorContext decryptContext(std::move(*decrypt)),
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
@@ -83,7 +83,7 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
   decrypt->setOption("key", keyBuffer);
   encrypt->setOption("key", keyBuffer);
 
-  UserOperatorRuntimeContext decryptContext(std::move(*decrypt)),
+  OperatorContext decryptContext(std::move(*decrypt)),
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
@@ -124,7 +124,7 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
   decrypt->setOption("key", keyBuffer);
   encrypt->setOption("key", keyBuffer);
 
-  UserOperatorRuntimeContext decryptContext(std::move(*decrypt)),
+  OperatorContext decryptContext(std::move(*decrypt)),
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
@@ -150,7 +150,7 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
 
   change_case->setOption("lowercase", false);
 
-  UserOperatorRuntimeContext changeCaseContext(std::move(*change_case));
+  OperatorContext changeCaseContext(std::move(*change_case));
   changeCaseContext.set_profiling_enabled(true);
 
   ProfilingPipelineRunner runner(0, std::move(changeCaseContext));

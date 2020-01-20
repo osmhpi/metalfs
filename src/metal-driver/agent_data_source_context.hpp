@@ -2,19 +2,19 @@
 
 #include <memory>
 
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 
 namespace metal {
 
-class FileSourceRuntimeContext;
-class PipelineDefinition;
-class RegisteredAgent;
+class FileDataSourceContext;
+class Pipeline;
+class OperatorAgent;
 
-class BufferSourceRuntimeContext : public FileSourceRuntimeContext {
+class BufferSourceRuntimeContext : public FileDataSourceContext {
  public:
   explicit BufferSourceRuntimeContext(
-      std::shared_ptr<RegisteredAgent> agent,
-      std::shared_ptr<PipelineDefinition> pipeline,
+      std::shared_ptr<OperatorAgent> agent,
+      std::shared_ptr<Pipeline> pipeline,
       bool skipSendingProcessingResponse);
 
   const DataSource dataSource() const final;
@@ -25,8 +25,8 @@ class BufferSourceRuntimeContext : public FileSourceRuntimeContext {
   bool endOfInput() const final;
 
  protected:
-  std::shared_ptr<RegisteredAgent> _agent;
-  std::shared_ptr<PipelineDefinition> _pipeline;
+  std::shared_ptr<OperatorAgent> _agent;
+  std::shared_ptr<Pipeline> _pipeline;
   bool _skipSendingProcessingResponse;
   uint64_t _remainingTotalSize;
   uint64_t _size;

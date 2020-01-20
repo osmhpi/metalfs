@@ -4,31 +4,31 @@
 
 #include <memory>
 #include <unordered_map>
-#include "user_operator.hpp"
+
+#include "operator.hpp"
 
 namespace metal {
 
-class UserOperatorSpecification;
+class OperatorSpecification;
 
 class METAL_PIPELINE_API OperatorRegistry {
  public:
   explicit OperatorRegistry(const std::string &image_json);
-  UserOperator createUserOperator(std::string id);
+  Operator createOperator(std::string id);
 
   void add_operator(std::string id,
-                    std::shared_ptr<const UserOperatorSpecification> op) {
+                    std::shared_ptr<const OperatorSpecification> op) {
     _operators.emplace(std::make_pair(std::move(id), std::move(op)));
   }
   size_t size() const { return _operators.size(); }
   const std::unordered_map<std::string,
-                     std::shared_ptr<const UserOperatorSpecification>>
+                           std::shared_ptr<const OperatorSpecification>>
       &operatorSpecifications() const {
     return _operators;
   }
 
  protected:
-  std::unordered_map<std::string,
-                     std::shared_ptr<const UserOperatorSpecification>>
+  std::unordered_map<std::string, std::shared_ptr<const OperatorSpecification>>
       _operators;
 };
 

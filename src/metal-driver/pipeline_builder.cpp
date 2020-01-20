@@ -11,12 +11,12 @@
 
 #include <metal-driver-messages/message_header.hpp>
 #include <metal-driver-messages/messages.hpp>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/user_operator_specification.hpp>
+#include <metal-pipeline/pipeline.hpp>
+#include <metal-pipeline/operator_specification.hpp>
 
 #include "pseudo_operators.hpp"
 
@@ -24,7 +24,7 @@ namespace metal {
 
 PipelineBuilder::PipelineBuilder(
     std::shared_ptr<metal::OperatorRegistry> registry,
-    std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
+    std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents)
     : _registry(std::move(registry)),
       _pipeline_agents(std::move(pipeline_agents)) {
   for (const auto &op : _registry->operatorSpecifications()) {
@@ -35,7 +35,7 @@ PipelineBuilder::PipelineBuilder(
 }
 
 cxxopts::Options PipelineBuilder::buildOperatorOptions(
-    const UserOperatorSpecification &op) {
+    const OperatorSpecification &op) {
   auto options = cxxopts::Options(op.id(), op.description());
 
   options.add_option("", "h", "help", "Print help",
@@ -70,17 +70,17 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(
   return options;
 }
 
-std::vector<std::pair<std::shared_ptr<const UserOperatorSpecification>,
-                      std::shared_ptr<RegisteredAgent>>>
+std::vector<std::pair<std::shared_ptr<const OperatorSpecification>,
+                      std::shared_ptr<OperatorAgent>>>
 PipelineBuilder::resolveOperatorSpecifications() {
   // Check if each requested operator is used only once and look up the
   // operator specification
 
-  std::vector<std::pair<std::shared_ptr<const UserOperatorSpecification>,
-                        std::shared_ptr<RegisteredAgent>>>
+  std::vector<std::pair<std::shared_ptr<const OperatorSpecification>,
+                        std::shared_ptr<OperatorAgent>>>
       result;
 
-  std::unordered_set<std::shared_ptr<const UserOperatorSpecification>>
+  std::unordered_set<std::shared_ptr<const OperatorSpecification>>
       operatorsWithAgents;
 
   for (const auto &agent : _pipeline_agents) {
@@ -115,8 +115,8 @@ ConfiguredPipeline PipelineBuilder::configure() {
   result.operatorAgents = _pipeline_agents;
 
   {
-    // Build the PipelineDefinition
-    std::vector<UserOperatorRuntimeContext> operatorContexts;
+    // Build the Pipeline
+    std::vector<OperatorContext> operatorContexts;
     for (auto &operatorAgentPair : orderedOperatorSpecsAndAgents) {
       if (operatorAgentPair.first != nullptr) {
         operatorContexts.emplace_back(instantiateOperator(
@@ -125,7 +125,7 @@ ConfiguredPipeline PipelineBuilder::configure() {
     }
 
     result.pipeline =
-        std::make_shared<PipelineDefinition>(std::move(operatorContexts));
+        std::make_shared<Pipeline>(std::move(operatorContexts));
   }
 
   // Establish pipeline data source and sink
@@ -164,13 +164,13 @@ ConfiguredPipeline PipelineBuilder::configure() {
   return result;
 }
 
-UserOperatorRuntimeContext PipelineBuilder::instantiateOperator(
-    std::shared_ptr<const UserOperatorSpecification> op,
-    std::shared_ptr<RegisteredAgent> agent) {
+OperatorContext PipelineBuilder::instantiateOperator(
+    std::shared_ptr<const OperatorSpecification> op,
+    std::shared_ptr<OperatorAgent> agent) {
   auto &options = _operatorOptions.at(op->id());
   auto parseResult = agent->parseOptions(options);
 
-  UserOperator userOperator(op);
+  Operator userOperator(op);
 
   for (const auto &optionType : op->optionDefinitions()) {
     auto result = parseResult[optionType.first];
@@ -213,7 +213,7 @@ UserOperatorRuntimeContext PipelineBuilder::instantiateOperator(
     }
   }
 
-  UserOperatorRuntimeContext runtimeContext(std::move(userOperator));
+  OperatorContext runtimeContext(std::move(userOperator));
   runtimeContext.set_profiling_enabled(parseResult["profile"].as<bool>());
   return runtimeContext;
 }

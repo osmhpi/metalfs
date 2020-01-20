@@ -6,11 +6,11 @@
 #include <cxxopts.hpp>
 
 #include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/operator_runtime_context.hpp>
+#include <metal-pipeline/operator_context.hpp>
 
 #include "client_error.hpp"
 #include "configured_pipeline.hpp"
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
@@ -18,24 +18,24 @@ class PipelineBuilder {
  public:
   explicit PipelineBuilder(
       std::shared_ptr<metal::OperatorRegistry> registry,
-      std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents);
+      std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents);
 
   ConfiguredPipeline configure();
 
  protected:
   static cxxopts::Options buildOperatorOptions(
-      const UserOperatorSpecification& spec);
+      const OperatorSpecification& spec);
 
-  std::vector<std::pair<std::shared_ptr<const UserOperatorSpecification>,
-                        std::shared_ptr<RegisteredAgent>>>
+  std::vector<std::pair<std::shared_ptr<const OperatorSpecification>,
+                        std::shared_ptr<OperatorAgent>>>
   resolveOperatorSpecifications();
 
-  UserOperatorRuntimeContext instantiateOperator(
-      std::shared_ptr<const UserOperatorSpecification> op,
-      std::shared_ptr<RegisteredAgent> agent);
+  OperatorContext instantiateOperator(
+      std::shared_ptr<const OperatorSpecification> op,
+      std::shared_ptr<OperatorAgent> agent);
 
   std::shared_ptr<metal::OperatorRegistry> _registry;
-  std::vector<std::shared_ptr<RegisteredAgent>> _pipeline_agents;
+  std::vector<std::shared_ptr<OperatorAgent>> _pipeline_agents;
   std::unordered_map<std::string, cxxopts::Options> _operatorOptions;
 };
 

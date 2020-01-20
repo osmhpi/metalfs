@@ -1,4 +1,4 @@
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -6,7 +6,7 @@
 
 namespace metal {
 
-RegisteredAgent::RegisteredAgent(Socket socket)
+OperatorAgent::OperatorAgent(Socket socket)
     : _args(),
       _inputBuffer(std::nullopt),
       _internalInputFile(),
@@ -37,7 +37,7 @@ RegisteredAgent::RegisteredAgent(Socket socket)
     _internalOutputFile = request.metal_output_filename();
 }
 
-std::string RegisteredAgent::resolvePath(std::string relativeOrAbsolutePath) {
+std::string OperatorAgent::resolvePath(std::string relativeOrAbsolutePath) {
   if (!relativeOrAbsolutePath.size()) {
     return _cwd;
   }
@@ -50,7 +50,7 @@ std::string RegisteredAgent::resolvePath(std::string relativeOrAbsolutePath) {
   return _cwd + "/" + relativeOrAbsolutePath;
 }
 
-cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
+cxxopts::ParseResult OperatorAgent::parseOptions(cxxopts::Options &options) {
   // Contain some C++ / C interop ugliness inside here...
 
   std::vector<char *> argsRaw;
@@ -70,15 +70,15 @@ cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
   return parseResult;
 }
 
-void RegisteredAgent::createInputBuffer() {
+void OperatorAgent::createInputBuffer() {
   _inputBuffer = Buffer::createTempFileForSharedBuffer(false);
 }
 
-void RegisteredAgent::createOutputBuffer() {
+void OperatorAgent::createOutputBuffer() {
   _outputBuffer = Buffer::createTempFileForSharedBuffer(true);
 }
 
-void RegisteredAgent::sendRegistrationResponse(RegistrationResponse &message) {
+void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {
   spdlog::trace(
       "RegistrationResponse(valid={}, input_filename={}, output_filename={})",
       message.valid(), message.has_input_buffer_filename(),
@@ -86,14 +86,14 @@ void RegisteredAgent::sendRegistrationResponse(RegistrationResponse &message) {
   _socket.send_message<message_type::RegistrationResponse>(message);
 }
 
-ProcessingRequest RegisteredAgent::receiveProcessingRequest() {
+ProcessingRequest OperatorAgent::receiveProcessingRequest() {
   auto request = _socket.receiveMessage<message_type::ProcessingRequest>();
   spdlog::trace("ProcessingRequest(size={}, eof={})", request.size(),
                 request.eof());
   return request;
 }
 
-void RegisteredAgent::sendProcessingResponse(ProcessingResponse &message) {
+void OperatorAgent::sendProcessingResponse(ProcessingResponse &message) {
   spdlog::trace("ProcessingResponse(size={}, eof={})", message.size(),
                 message.eof());
   _socket.send_message<message_type::ProcessingResponse>(message);

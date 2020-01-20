@@ -9,12 +9,12 @@ extern "C" {
 #include <string>
 #include <utility>
 
-#include <metal-pipeline/operator_runtime_context.hpp>
+#include <metal-pipeline/data_sink_context.hpp>
 
 namespace metal {
 
-class METAL_FILESYSTEM_PIPELINE_API FileSinkRuntimeContext
-    : public DefaultDataSinkRuntimeContext {
+class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
+    : public DefaultDataSinkContext {
   // Common API
  public:
  protected:
@@ -26,13 +26,13 @@ class METAL_FILESYSTEM_PIPELINE_API FileSinkRuntimeContext
 
   // API to be used from PipelineStorage (extent list-based)
  public:
-  explicit FileSinkRuntimeContext(fpga::AddressType resource, fpga::MapType map,
+  explicit FileDataSinkContext(fpga::AddressType resource, fpga::MapType map,
                                   std::vector<mtl_file_extent> &extents,
                                   uint64_t offset, uint64_t size);
 
   // API to be used when building file pipelines (filename-based)
  public:
-  explicit FileSinkRuntimeContext(fpga::AddressType resource, fpga::MapType map,
+  explicit FileDataSinkContext(fpga::AddressType resource, fpga::MapType map,
                                   std::string filename, uint64_t offset,
                                   uint64_t size);
 

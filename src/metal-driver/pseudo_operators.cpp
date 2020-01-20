@@ -1,29 +1,29 @@
 #include "pseudo_operators.hpp"
 
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
-bool DatagenOperator::isDatagenAgent(const RegisteredAgent &agent) {
+bool DatagenOperator::isDatagenAgent(const OperatorAgent &agent) {
   return agent.operatorType() == id();
 }
 
-void DatagenOperator::validate(RegisteredAgent &agent) {
+void DatagenOperator::validate(OperatorAgent &agent) {
   // This will throw if something is wrong
   parseOptions(agent);
 }
 
-bool DatagenOperator::isProfilingEnabled(RegisteredAgent &agent) {
+bool DatagenOperator::isProfilingEnabled(OperatorAgent &agent) {
   auto optionValues = parseOptions(agent);
   return optionValues["profile"].as<bool>();
 }
 
-uint64_t DatagenOperator::datagenLength(RegisteredAgent &agent) {
+uint64_t DatagenOperator::datagenLength(OperatorAgent &agent) {
   auto optionValues = parseOptions(agent);
   return optionValues["length"].as<uint64_t>();
 }
 
-cxxopts::ParseResult DatagenOperator::parseOptions(RegisteredAgent &agent) {
+cxxopts::ParseResult DatagenOperator::parseOptions(OperatorAgent &agent) {
   auto options =
       cxxopts::Options(id(),
                        "Generate data on the FPGA for benchmarking operators.");
@@ -39,7 +39,7 @@ cxxopts::ParseResult DatagenOperator::parseOptions(RegisteredAgent &agent) {
   return agent.parseOptions(options);
 }
 
-bool DevNullFile::isNullOutput(const RegisteredAgent &agent) {
+bool DevNullFile::isNullOutput(const OperatorAgent &agent) {
   return agent.internalOutputFile() == "$NULL";
 }
 

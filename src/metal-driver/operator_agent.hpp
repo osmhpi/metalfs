@@ -9,20 +9,18 @@
 
 namespace metal {
 
-// TODO: Disallow copy, destroy socket and buffer objects
-
-class RegisteredAgent : public std::enable_shared_from_this<RegisteredAgent> {
+class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
  public:
-  explicit RegisteredAgent(Socket socket);
+  explicit OperatorAgent(Socket socket);
 
   std::string resolvePath(std::string relativeOrAbsolutePath);
   cxxopts::ParseResult parseOptions(cxxopts::Options &options);
 
-  bool isOutputConnectedTo(const RegisteredAgent &other) {
+  bool isOutputConnectedTo(const OperatorAgent &other) {
     return other._pid == _outputAgentPid;
   }
-  std::shared_ptr<RegisteredAgent> outputAgent() { return _outputAgent; }
-  void setOutputAgent(std::shared_ptr<RegisteredAgent> outputAgent) {
+  std::shared_ptr<OperatorAgent> outputAgent() { return _outputAgent; }
+  void setOutputAgent(std::shared_ptr<OperatorAgent> outputAgent) {
     _outputAgent = outputAgent;
   }
   std::optional<Buffer> &inputBuffer() { return _inputBuffer; }
@@ -58,7 +56,7 @@ class RegisteredAgent : public std::enable_shared_from_this<RegisteredAgent> {
   std::string _internalInputFile;
   std::string _internalOutputFile;
 
-  std::shared_ptr<RegisteredAgent> _outputAgent;
+  std::shared_ptr<OperatorAgent> _outputAgent;
   uint _outputAgentPid;
   std::optional<Buffer> _outputBuffer;
 

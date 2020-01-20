@@ -3,11 +3,14 @@
 extern "C" {
 #include <jv.h>
 }
+
 #include <dirent.h>
 
-#include <spdlog/spdlog.h>
-#include <metal-pipeline/user_operator_specification.hpp>
 #include <vector>
+
+#include <spdlog/spdlog.h>
+
+#include <metal-pipeline/operator_specification.hpp>
 
 namespace metal {
 
@@ -32,7 +35,7 @@ OperatorRegistry::OperatorRegistry(const std::string &image_json)
     auto current_operator = jv_object_iter_value(operators, iter);
 
     auto operator_string = jv_dump_string(current_operator, 0);
-    auto op = std::make_unique<UserOperatorSpecification>(
+    auto op = std::make_unique<OperatorSpecification>(
         jv_string_value(key), jv_string_value(operator_string));
     jv_free(operator_string);
 
@@ -45,8 +48,8 @@ OperatorRegistry::OperatorRegistry(const std::string &image_json)
   jv_free(image);
 }
 
-UserOperator OperatorRegistry::createUserOperator(std::string id) {
-  return UserOperator(_operators.at(id));
+Operator OperatorRegistry::createOperator(std::string id) {
+  return Operator(_operators.at(id));
 }
 
 }  // namespace metal

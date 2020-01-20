@@ -5,16 +5,16 @@
 
 namespace metal {
 
-class RegisteredAgent;
-class PipelineDefinition;
+class OperatorAgent;
+class Pipeline;
 
 struct ConfiguredPipeline {
-  std::shared_ptr<PipelineDefinition> pipeline;
+  std::shared_ptr<Pipeline> pipeline;
 
-  std::shared_ptr<RegisteredAgent> dataSourceAgent;
-  std::shared_ptr<RegisteredAgent> dataSinkAgent;
+  std::shared_ptr<OperatorAgent> dataSourceAgent;
+  std::shared_ptr<OperatorAgent> dataSinkAgent;
 
-  std::vector<std::shared_ptr<RegisteredAgent>> operatorAgents;
+  std::vector<std::shared_ptr<OperatorAgent>> operatorAgents;
 };
 
 }  // namespace metal

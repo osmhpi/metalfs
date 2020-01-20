@@ -4,7 +4,7 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include "base_test.hpp"
 
@@ -39,7 +39,7 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayload) {
 
   SnapAction action(fpga::ActionType, 0);
 
-  auto pipeline = PipelineDefinition(std::move(*encrypt), std::move(*decrypt));
+  auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
   pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
 
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -80,7 +80,7 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayloadUsingDifferentKeys) {
 
   SnapAction action(fpga::ActionType, 0);
 
-  auto pipeline = PipelineDefinition(std::move(*encrypt), std::move(*decrypt));
+  auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
   pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
 
   EXPECT_NE(0, memcmp(src, dest, n_bytes));

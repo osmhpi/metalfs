@@ -11,15 +11,17 @@ extern "C" {
 
 #include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/data_sink_context.hpp>
+#include <metal-pipeline/data_source_context.hpp>
+#include <metal-pipeline/operator_specification.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
-#include <metal-pipeline/user_operator_specification.hpp>
 
 namespace metal {
 
 void ProfilingPipelineRunner::preRun(SnapAction &action,
-                                     DataSourceRuntimeContext &dataSource,
-                                     DataSinkRuntimeContext &dataSink,
+                                     DataSourceContext &dataSource,
+                                     DataSinkContext &dataSink,
                                      bool initialize) {
   if (initialize) {
     _profileStreamIds = std::nullopt;
@@ -49,15 +51,13 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     }
 
     if (operatorPosition != _pipeline->operators().cend()) {
-      auto inputStreamId =
-          operatorPosition->userOperator().spec().internal_id();
+      auto inputStreamId = operatorPosition->userOperator().spec().streamID();
 
       if (++operatorPosition == _pipeline->operators().cend()) {
         _profileStreamIds = std::make_pair(inputStreamId, IOStreamID);
       } else {
         _profileStreamIds = std::make_pair(
-            inputStreamId,
-            operatorPosition->userOperator().spec().internal_id());
+            inputStreamId, operatorPosition->userOperator().spec().streamID());
       }
     }
 
@@ -70,8 +70,8 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
         _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
       } else {
         _profileStreamIds = std::make_pair(
-            _pipeline->operators().back().userOperator().spec().internal_id(),
-            _pipeline->operators().back().userOperator().spec().internal_id());
+            _pipeline->operators().back().userOperator().spec().streamID(),
+            _pipeline->operators().back().userOperator().spec().streamID());
       }
     }
 
@@ -102,8 +102,8 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
 }  // namespace metal
 
 void ProfilingPipelineRunner::postRun(SnapAction &action,
-                                      DataSourceRuntimeContext &dataSource,
-                                      DataSinkRuntimeContext &dataSink,
+                                      DataSourceContext &dataSource,
+                                      DataSinkContext &dataSink,
                                       bool finalize) {
   if (_profileStreamIds) {
     auto *results64 = reinterpret_cast<uint64_t *>(
@@ -138,12 +138,12 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
       } else if (dataSink.profilingEnabled()) {
         dataSink.setProfilingResults(formatProfilingResults());
       } else {
-        auto op = std::find_if(
-            _pipeline->operators().begin(), _pipeline->operators().end(),
-            [&](UserOperatorRuntimeContext &op) {
-              return op.userOperator().spec().internal_id() ==
-                     _profileStreamIds->first;
-            });
+        auto op = std::find_if(_pipeline->operators().begin(),
+                               _pipeline->operators().end(),
+                               [&](OperatorContext &op) {
+                                 return op.userOperator().spec().streamID() ==
+                                        _profileStreamIds->first;
+                               });
         if (op != _pipeline->operators().cend()) {
           op->setProfilingResults(formatProfilingResults());
         }

@@ -7,16 +7,16 @@ extern "C" {
 #include <utility>
 
 #include <snap_action_metal.h>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
-FileSinkRuntimeContext::FileSinkRuntimeContext(fpga::AddressType resource,
+FileDataSinkContext::FileDataSinkContext(fpga::AddressType resource,
                                                fpga::MapType map,
                                                std::string filename,
                                                uint64_t offset, uint64_t size)
-    : DefaultDataSinkRuntimeContext(DataSink(offset, size, resource, map)),
+    : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
       _filename(std::move(filename)),
       _cached_total_size(0) {
   if (size > 0) {
@@ -26,14 +26,14 @@ FileSinkRuntimeContext::FileSinkRuntimeContext(fpga::AddressType resource,
   }
 }
 
-FileSinkRuntimeContext::FileSinkRuntimeContext(
+FileDataSinkContext::FileDataSinkContext(
     fpga::AddressType resource, fpga::MapType map,
     std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
-    : DefaultDataSinkRuntimeContext(DataSink(offset, size, resource, map)),
+    : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
       _extents(extents),
       _cached_total_size(0) {}
 
-void FileSinkRuntimeContext::prepareForTotalSize(uint64_t size) {
+void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
   if (_filename.empty()) return;
 
   if (size == _cached_total_size) return;
@@ -52,7 +52,7 @@ void FileSinkRuntimeContext::prepareForTotalSize(uint64_t size) {
   loadExtents();
 }
 
-void FileSinkRuntimeContext::configure(SnapAction &action, bool) {
+void FileDataSinkContext::configure(SnapAction &action, bool) {
   if (_extents.empty())
     throw std::runtime_error("Extents were not initialized");
 
@@ -93,7 +93,7 @@ void FileSinkRuntimeContext::configure(SnapAction &action, bool) {
   free(job_struct);
 }
 
-void FileSinkRuntimeContext::finalize(SnapAction &, uint64_t outputSize, bool) {
+void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize, bool) {
   // Advance offset
   _dataSink =
       DataSink(_dataSink.address().addr + outputSize, _dataSink.address().size,
@@ -104,16 +104,7 @@ void FileSinkRuntimeContext::finalize(SnapAction &, uint64_t outputSize, bool) {
   // }
 }
 
-// void FileSinkRuntimeContext::setSize(size_t size) {
-//   _size = size;
-
-//   // Make sure that the file is big enough
-//   if (size + _address > _cached_total_size) {
-//     prepareForTotalSize(size + _address);
-//   }
-// }
-
-void FileSinkRuntimeContext::loadExtents() {
+void FileDataSinkContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
   uint64_t extents_length, file_length;
   if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length,

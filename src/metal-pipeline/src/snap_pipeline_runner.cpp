@@ -11,9 +11,11 @@ extern "C" {
 
 #include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/data_sink_context.hpp>
+#include <metal-pipeline/data_source_context.hpp>
+#include <metal-pipeline/operator_specification.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
-#include <metal-pipeline/user_operator_specification.hpp>
 
 namespace metal {
 
@@ -37,14 +39,14 @@ std::string SnapPipelineRunner::readImageInfo(int card) {
 uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
   // One-off contexts for data source and data sink
 
-  DefaultDataSourceRuntimeContext source(dataSource);
-  DefaultDataSinkRuntimeContext sink(dataSink);
+  DefaultDataSourceContext source(dataSource);
+  DefaultDataSinkContext sink(dataSink);
 
   return run(source, sink);
 }
 
-uint64_t SnapPipelineRunner::run(DataSourceRuntimeContext &dataSource,
-                                 DataSinkRuntimeContext &dataSink) {
+uint64_t SnapPipelineRunner::run(DataSourceContext &dataSource,
+                                 DataSinkContext &dataSink) {
   SnapAction action = SnapAction(fpga::ActionType, _card);
 
   auto initialize = !_initialized;

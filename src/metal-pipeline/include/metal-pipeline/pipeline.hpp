@@ -3,29 +3,28 @@
 #include <metal-pipeline/metal-pipeline_api.h>
 
 #include <memory>
+#include <vector>
+
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_runtime_context.hpp>
-#include <vector>
+#include <metal-pipeline/operator_context.hpp>
 
 namespace metal {
 
 class DataSource;
 class DataSink;
-class UserOperator;
+class Operator;
 
-class METAL_PIPELINE_API PipelineDefinition {
+class METAL_PIPELINE_API Pipeline {
  public:
-  explicit PipelineDefinition(std::vector<UserOperator> userOperators);
-  explicit PipelineDefinition(
-      std::vector<UserOperatorRuntimeContext> userOperators);
+  explicit Pipeline(std::vector<Operator> operators);
+  explicit Pipeline(std::vector<OperatorContext> operators);
 
-  PipelineDefinition()
-      : PipelineDefinition(std::vector<UserOperatorRuntimeContext>()) {}
+  Pipeline() : Pipeline(std::vector<OperatorContext>()) {}
 
   template <typename T, typename... Ts>
-  PipelineDefinition(T firstOperator, Ts... rest)
-      : PipelineDefinition(std::apply(
+  Pipeline(T firstOperator, Ts... rest)
+      : Pipeline(std::apply(
             [](auto &&... elems) {  // Turning the parameters into an array...
               std::vector<T> result;
               result.reserve(sizeof...(elems));
@@ -34,14 +33,14 @@ class METAL_PIPELINE_API PipelineDefinition {
             },
             std::make_tuple(std::move(firstOperator), std::move(rest)...))) {}
 
-  std::vector<UserOperatorRuntimeContext> &operators() { return _operators; }
+  std::vector<OperatorContext> &operators() { return _operators; }
 
   uint64_t run(DataSource dataSource, DataSink dataSink, SnapAction &action);
 
   void configureSwitch(SnapAction &action, bool set_cached);
 
  protected:
-  std::vector<UserOperatorRuntimeContext> _operators;
+  std::vector<OperatorContext> _operators;
   bool _cached_switch_configuration;
 };
 

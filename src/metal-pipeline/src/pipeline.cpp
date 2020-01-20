@@ -8,31 +8,30 @@ extern "C" {
 
 #include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/operator_specification.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
-#include <metal-pipeline/user_operator_specification.hpp>
 
 namespace metal {
 
-PipelineDefinition::PipelineDefinition(std::vector<UserOperator> userOperators)
+Pipeline::Pipeline(std::vector<Operator> userOperators)
     : _cached_switch_configuration(false) {
-  std::vector<UserOperatorRuntimeContext> contexts;
+  std::vector<OperatorContext> contexts;
   contexts.reserve(userOperators.size());
 
   for (auto &op : userOperators) {
-    contexts.emplace_back(UserOperatorRuntimeContext(std::move(op)));
+    contexts.emplace_back(OperatorContext(std::move(op)));
   }
 
   _operators = std::move(contexts);
 }
 
-PipelineDefinition::PipelineDefinition(
-    std::vector<UserOperatorRuntimeContext> userOperators)
+Pipeline::Pipeline(std::vector<OperatorContext> userOperators)
     : _operators(std::move(userOperators)),
       _cached_switch_configuration(false) {}
 
-uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
-                                 SnapAction &action) {
+uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
+                       SnapAction &action) {
   for (auto &op : _operators) {
     op.configure(action);
   }
@@ -41,7 +40,7 @@ uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
 
   for (const auto &op : _operators)
     if (op.needs_preparation()) {
-      enable_mask |= (1u << op.userOperator().spec().internal_id());
+      enable_mask |= (1u << op.userOperator().spec().streamID());
     }
 
   if (enable_mask) {
@@ -55,7 +54,7 @@ uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
   enable_mask = 1;  // This time, enable the I/O subsystem
   for (auto &op : _operators) {
     op.set_is_prepared();
-    enable_mask |= (1u << op.userOperator().spec().internal_id());
+    enable_mask |= (1u << op.userOperator().spec().streamID());
   }
 
   auto sourceAddress = dataSource.address(),
@@ -82,7 +81,7 @@ uint64_t PipelineDefinition::run(DataSource dataSource, DataSink dataSink,
   return output_size;
 }
 
-void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
+void Pipeline::configureSwitch(SnapAction &action, bool set_cached) {
   _cached_switch_configuration = set_cached;
 
   auto *job_struct =
@@ -97,7 +96,7 @@ void PipelineDefinition::configureSwitch(SnapAction &action, bool set_cached) {
     // From the perspective of the Stream Switch:
     // Which Master port (output) should be
     // sourced from which Slave port (input)
-    auto currentStream = op.userOperator().spec().internal_id();
+    auto currentStream = op.userOperator().spec().streamID();
     job_struct[currentStream] = htobe32(previousStream);
     previousStream = currentStream;
   }

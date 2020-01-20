@@ -7,8 +7,8 @@
 
 namespace metal {
 
-class UserOperator;
-class RegisteredAgent;
+class Operator;
+class OperatorAgent;
 
 class PipelineLoop {
  public:
@@ -18,8 +18,8 @@ class PipelineLoop {
   void run();
 
  protected:
-  std::shared_ptr<RegisteredAgent> _dataSourceAgent;
-  std::shared_ptr<RegisteredAgent> _dataSinkAgent;
+  std::shared_ptr<OperatorAgent> _dataSourceAgent;
+  std::shared_ptr<OperatorAgent> _dataSinkAgent;
   ConfiguredPipeline _pipeline;
   int _card;
 };
