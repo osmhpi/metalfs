@@ -73,9 +73,7 @@ void Server::startInternal(int card) {
 
 void Server::processRequest(Socket socket, int card) {
   try {
-    auto request = socket.receiveMessage<message_type::RegistrationRequest>();
-    spdlog::trace("RegistrationRequest({})", request.operator_type());
-    _agents.registerAgent(request, std::move(socket));
+    _agents.registerAgent(std::move(socket));
   } catch (std::exception &ex) {
     // Don't know this guy -- doesn't even say hello
     spdlog::warn(ex.what());
@@ -97,7 +95,7 @@ void Server::processRequest(Socket socket, int card) {
     PipelineLoop loop(std::move(configuredPipeline), card);
     loop.run();
   } catch (ClientError &error) {
-    error.agent()->error = error.what();
+    error.agent()->setError(error.what());
   } catch (std::exception &ex) {
     // Something went wrong.
     spdlog::error("An error occurred during pipeline execution: {}", ex.what());

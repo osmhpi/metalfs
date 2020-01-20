@@ -6,9 +6,40 @@
 
 namespace metal {
 
+RegisteredAgent::RegisteredAgent(Socket socket)
+    : _args(),
+      _inputBuffer(std::nullopt),
+      _internalInputFile(),
+      _internalOutputFile(),
+      _outputAgent(nullptr),
+      _outputBuffer(std::nullopt),
+      _error(),
+      _terminated(false),
+      _socket(std::move(socket)) {
+  auto request = _socket.receiveMessage<message_type::RegistrationRequest>();
+  spdlog::trace("RegistrationRequest(operator={})", request.operator_type());
+
+  _pid = request.pid();
+  _operatorType = request.operator_type();
+  _inputAgentPid = request.input_pid();
+  _outputAgentPid = request.output_pid();
+  _args.reserve(request.args().size());
+  for (const auto &arg : request.args()) {
+    _args.emplace_back(arg);
+  }
+
+  _cwd = request.cwd();
+  _metalMountpoint = request.metal_mountpoint();
+
+  if (request.has_metal_input_filename())
+    _internalInputFile = request.metal_input_filename();
+  if (request.has_metal_output_filename())
+    _internalOutputFile = request.metal_output_filename();
+}
+
 std::string RegisteredAgent::resolvePath(std::string relativeOrAbsolutePath) {
   if (!relativeOrAbsolutePath.size()) {
-    return cwd;
+    return _cwd;
   }
 
   if (relativeOrAbsolutePath[0] == '/') {
@@ -16,17 +47,17 @@ std::string RegisteredAgent::resolvePath(std::string relativeOrAbsolutePath) {
     return relativeOrAbsolutePath;
   }
 
-  return cwd + "/" + relativeOrAbsolutePath;
+  return _cwd + "/" + relativeOrAbsolutePath;
 }
 
 cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
   // Contain some C++ / C interop ugliness inside here...
 
   std::vector<char *> argsRaw;
-  for (const auto &arg : args)
+  for (const auto &arg : _args)
     argsRaw.emplace_back(const_cast<char *>(arg.c_str()));
 
-  int argc = (int)args.size();
+  int argc = (int)_args.size();
   char **argv = argsRaw.data();
   auto parseResult = options.parse(argc, argv);
 
@@ -39,16 +70,24 @@ cxxopts::ParseResult RegisteredAgent::parseOptions(cxxopts::Options &options) {
   return parseResult;
 }
 
+void RegisteredAgent::createInputBuffer() {
+  _inputBuffer = Buffer::createTempFileForSharedBuffer(false);
+}
+
+void RegisteredAgent::createOutputBuffer() {
+  _outputBuffer = Buffer::createTempFileForSharedBuffer(true);
+}
+
 void RegisteredAgent::sendRegistrationResponse(RegistrationResponse &message) {
   spdlog::trace(
       "RegistrationResponse(valid={}, input_filename={}, output_filename={})",
       message.valid(), message.has_input_buffer_filename(),
       message.has_output_buffer_filename());
-  socket.send_message<message_type::RegistrationResponse>(message);
+  _socket.send_message<message_type::RegistrationResponse>(message);
 }
 
 ProcessingRequest RegisteredAgent::receiveProcessingRequest() {
-  auto request = socket.receiveMessage<message_type::ProcessingRequest>();
+  auto request = _socket.receiveMessage<message_type::ProcessingRequest>();
   spdlog::trace("ProcessingRequest(size={}, eof={})", request.size(),
                 request.eof());
   return request;
@@ -57,7 +96,7 @@ ProcessingRequest RegisteredAgent::receiveProcessingRequest() {
 void RegisteredAgent::sendProcessingResponse(ProcessingResponse &message) {
   spdlog::trace("ProcessingResponse(size={}, eof={})", message.size(),
                 message.eof());
-  socket.send_message<message_type::ProcessingResponse>(message);
+  _socket.send_message<message_type::ProcessingResponse>(message);
 }
 
 }  // namespace metal

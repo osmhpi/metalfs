@@ -22,9 +22,9 @@ BufferSinkRuntimeContext::BufferSinkRuntimeContext(
 const DataSink BufferSinkRuntimeContext::dataSink() const {
   // The data sink can be of three types: Agent-Buffer, Null or File
 
-  if (_agent->output_buffer) {
-    return DataSink(_agent->output_buffer->current(),
-                    _agent->output_buffer->size());
+  if (_agent->outputBuffer()) {
+    return DataSink(_agent->outputBuffer()->current(),
+                    _agent->outputBuffer()->size());
   } else if (DevNullFile::isNullOutput(*_agent)) {
     return DataSink(0, 0, fpga::AddressType::Null);
   } else if (!_filename.empty()) {
@@ -35,7 +35,7 @@ const DataSink BufferSinkRuntimeContext::dataSink() const {
 }
 
 void BufferSinkRuntimeContext::configure(SnapAction &action, bool initial) {
-  if ((initial || _agent->output_buffer) && !_skipReceivingProcessingRequest) {
+  if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
 
@@ -50,8 +50,8 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
   msg.set_eof(endOfInput);
   msg.set_message(_profilingResults);
 
-  if (_agent->output_buffer) {
-    _agent->output_buffer.value().swap();
+  if (_agent->outputBuffer()) {
+    _agent->outputBuffer()->swap();
     msg.set_size(outputSize);
     if (_pipeline->operators().size()) {
       msg.set_message(_pipeline->operators().back().profilingResults());
@@ -62,8 +62,11 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
     FileSinkRuntimeContext::finalize(action, outputSize, endOfInput);
   }
 
-  if (endOfInput || _agent->output_buffer) {
+  if (endOfInput || _agent->outputBuffer()) {
     _agent->sendProcessingResponse(msg);
+    if (endOfInput) {
+      _agent->setTerminated();
+    }
   }
 }
 

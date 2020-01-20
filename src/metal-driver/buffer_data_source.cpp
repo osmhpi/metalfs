@@ -18,12 +18,12 @@ BufferSourceRuntimeContext::BufferSourceRuntimeContext(
       _agent(agent),
       _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
-  if (_agent->input_buffer) {
+  if (_agent->inputBuffer()) {
     // Nothing to do
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
-  } else if (!agent->internal_input_file.empty()) {
-    _filename = agent->internal_input_file;
+  } else if (!agent->internalInputFile().empty()) {
+    _filename = agent->internalInputFile();
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data source");
@@ -33,8 +33,8 @@ BufferSourceRuntimeContext::BufferSourceRuntimeContext(
 const DataSource BufferSourceRuntimeContext::dataSource() const {
   // The data source can be of three types: Agent-Buffer, Random or File
 
-  if (_agent->input_buffer) {
-    return DataSource(_agent->input_buffer->current(), _size);
+  if (_agent->inputBuffer()) {
+    return DataSource(_agent->inputBuffer()->current(), _size);
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     return DataSource(0, _size, fpga::AddressType::Random);
   } else if (!_filename.empty()) {
@@ -46,11 +46,11 @@ const DataSource BufferSourceRuntimeContext::dataSource() const {
 
 void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
   ProcessingRequest request;
-  if (initial || _agent->input_buffer) {
+  if (initial || _agent->inputBuffer()) {
     request = _agent->receiveProcessingRequest();
   }
 
-  if (_agent->input_buffer) {
+  if (_agent->inputBuffer()) {
     _size = request.size();
     _eof = request.eof();
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
@@ -62,15 +62,15 @@ void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
 }
 
 void BufferSourceRuntimeContext::finalize(SnapAction &action) {
-  if (_agent->input_buffer) {
-    _agent->input_buffer.value().swap();
+  if (_agent->inputBuffer()) {
+    _agent->inputBuffer()->swap();
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize -= _size;
   } else if (!_filename.empty()) {
     FileSourceRuntimeContext::finalize(action);
   }
 
-  if ((endOfInput() || _agent->input_buffer) &&
+  if ((endOfInput() || _agent->inputBuffer()) &&
       !_skipSendingProcessingResponse) {
     ProcessingResponse msg;
     msg.set_eof(endOfInput());

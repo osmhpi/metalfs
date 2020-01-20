@@ -5,7 +5,7 @@
 namespace metal {
 
 bool DatagenOperator::isDatagenAgent(const RegisteredAgent &agent) {
-  return agent.operator_type == id();
+  return agent.operatorType() == id();
 }
 
 void DatagenOperator::validate(RegisteredAgent &agent) {
@@ -40,7 +40,7 @@ cxxopts::ParseResult DatagenOperator::parseOptions(RegisteredAgent &agent) {
 }
 
 bool DevNullFile::isNullOutput(const RegisteredAgent &agent) {
-  return agent.internal_output_file == "$NULL";
+  return agent.internalOutputFile() == "$NULL";
 }
 
 }  // namespace metal

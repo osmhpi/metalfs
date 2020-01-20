@@ -93,7 +93,7 @@ PipelineBuilder::resolveOperatorSpecifications() {
       continue;
     }
 
-    auto op = _registry->operatorSpecifications().find(agent->operator_type);
+    auto op = _registry->operatorSpecifications().find(agent->operatorType());
     if (op == _registry->operatorSpecifications().end()) {
       throw std::runtime_error("Unknown operator was requested");
     }
@@ -130,16 +130,14 @@ ConfiguredPipeline PipelineBuilder::configure() {
 
   // Establish pipeline data source and sink
   result.dataSourceAgent = orderedOperatorSpecsAndAgents.front().second;
-  if (result.dataSourceAgent->internal_input_file.empty() &&
+  if (result.dataSourceAgent->internalInputFile().empty() &&
       !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
-    result.dataSourceAgent->input_buffer =
-        Buffer::createTempFileForSharedBuffer(false);
+    result.dataSourceAgent->createInputBuffer();
   }
 
   result.dataSinkAgent = orderedOperatorSpecsAndAgents.back().second;
-  if (result.dataSinkAgent->internal_output_file.empty()) {
-    result.dataSinkAgent->output_buffer =
-        Buffer::createTempFileForSharedBuffer(true);
+  if (result.dataSinkAgent->internalOutputFile().empty()) {
+    result.dataSinkAgent->createOutputBuffer();
   }
 
   // Validate datagen (if necessary)
@@ -153,12 +151,12 @@ ConfiguredPipeline PipelineBuilder::configure() {
 
     response.set_valid(true);
 
-    if (operatorAgentPair.second->input_buffer != std::nullopt)
+    if (operatorAgentPair.second->inputBuffer() != std::nullopt)
       response.set_input_buffer_filename(
-          operatorAgentPair.second->input_buffer.value().filename());
-    if (operatorAgentPair.second->output_buffer != std::nullopt)
+          operatorAgentPair.second->inputBuffer()->filename());
+    if (operatorAgentPair.second->outputBuffer() != std::nullopt)
       response.set_output_buffer_filename(
-          operatorAgentPair.second->output_buffer.value().filename());
+          operatorAgentPair.second->outputBuffer()->filename());
 
     operatorAgentPair.second->sendRegistrationResponse(response);
   }

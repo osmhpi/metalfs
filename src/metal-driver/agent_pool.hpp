@@ -12,7 +12,7 @@ class RegistrationRequest;
 
 class AgentPool {
  public:
-  void registerAgent(RegistrationRequest &hello, Socket socket);
+  void registerAgent(Socket socket);
   bool containsValidPipeline();
   void releaseUnusedAgents();
   void reset();
