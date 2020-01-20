@@ -48,14 +48,18 @@ void BufferSinkRuntimeContext::finalize(SnapAction &action, uint64_t outputSize,
                                         bool endOfInput) {
   ProcessingResponse msg;
   msg.set_eof(endOfInput);
-  msg.set_message(_profilingResults);
+
+  if (_pipeline->operators().size()) {
+    msg.set_message(_pipeline->operators().back().profilingResults());
+  } else {
+    // As there is no pseudo-operator for data sinks, this should only be set
+    // in exceptional cases (e.g. pipeline consisting only of `datagen -p`).
+    msg.set_message(_profilingResults);
+  }
 
   if (_agent->outputBuffer()) {
     _agent->outputBuffer()->swap();
     msg.set_size(outputSize);
-    if (_pipeline->operators().size()) {
-      msg.set_message(_pipeline->operators().back().profilingResults());
-    }
   } else if (DevNullFile::isNullOutput(*_agent)) {
     // Nothing to do
   } else if (!_filename.empty()) {
