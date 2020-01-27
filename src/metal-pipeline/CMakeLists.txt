@@ -4,7 +4,6 @@
 #
 
 find_package(jq REQUIRED)
-find_package(snap REQUIRED)
 
 #
 # Library name and options
@@ -144,7 +143,6 @@ target_include_directories(${target}
 
     PUBLIC
     ${DEFAULT_INCLUDE_DIRECTORIES}
-    ${SNAP_INCLUDE_DIR}
 
     INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -159,12 +157,12 @@ target_include_directories(${target}
 
 target_link_libraries(${target}
     PRIVATE
-    ${SNAP_LIBRARY}
     ${JQ_LIBRARIES}
     spdlog::spdlog
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
+    snap::snap
 
     INTERFACE
 )

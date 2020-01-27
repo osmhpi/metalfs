@@ -1,0 +1,5 @@
+include(cxxopts.cmake)
+include(googletest.cmake)
+include(pslse.cmake)
+include(snap.cmake)
+include(spdlog.cmake)

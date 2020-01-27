@@ -122,7 +122,6 @@ target_include_directories(${target}
     ${PROJECT_BINARY_DIR}/src/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
-    ${SNAP_INCLUDE_DIR}
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 
     PUBLIC
@@ -141,7 +140,7 @@ target_include_directories(${target}
 
 target_link_libraries(${target}
     PRIVATE
-    ${SNAP_LIBRARY}
+    # snap::snap
     spdlog::spdlog
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-pipeline
