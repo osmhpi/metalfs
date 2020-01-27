@@ -38,7 +38,7 @@ Buffer Buffer::createTempFileForSharedBuffer(bool writable) {
   return Buffer(std::string(output_file_name), file, buffer);
 }
 
-Buffer Buffer::map_shared_buffer(std::string file_name, bool writable) {
+Buffer Buffer::mapSharedBuffer(std::string file_name, bool writable) {
   int file = open(file_name.c_str(), writable ? O_RDWR : O_RDONLY);
   if (file == -1) {
     throw std::runtime_error("Failed to open file");

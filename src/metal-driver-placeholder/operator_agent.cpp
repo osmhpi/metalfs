@@ -281,10 +281,10 @@ int main(int argc, char *argv[]) {
 
   metal::Socket socket(sock);
 
-  socket.send_message<metal::message_type::RegistrationRequest>(request);
+  socket.sendMessage<metal::MessageType::RegistrationRequest>(request);
 
   auto response =
-      socket.receiveMessage<metal::message_type::RegistrationResponse>();
+      socket.receiveMessage<metal::MessageType::RegistrationResponse>();
 
   if (response.has_error_msg()) {
     fprintf(stderr, "%s", response.error_msg().c_str());
@@ -296,11 +296,11 @@ int main(int argc, char *argv[]) {
   std::optional<metal::Buffer> output_buffer;
 
   if (response.has_input_buffer_filename()) {
-    input_buffer = metal::Buffer::map_shared_buffer(
+    input_buffer = metal::Buffer::mapSharedBuffer(
         response.input_buffer_filename(), true);
   }
   if (response.has_output_buffer_filename()) {
-    output_buffer = metal::Buffer::map_shared_buffer(
+    output_buffer = metal::Buffer::mapSharedBuffer(
         response.output_buffer_filename(), false);
   }
 
@@ -325,7 +325,7 @@ int main(int argc, char *argv[]) {
       metal::ProcessingRequest processing_request;
       processing_request.set_size(bytes_read);
       processing_request.set_eof(eof);
-      socket.send_message<metal::message_type::ProcessingRequest>(
+      socket.sendMessage<metal::MessageType::ProcessingRequest>(
           processing_request);
     }
 
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
 
     // Wait for a server response
     processing_response =
-        socket.receiveMessage<metal::message_type::ProcessingResponse>();
+        socket.receiveMessage<metal::MessageType::ProcessingResponse>();
   }
 
   return 0;

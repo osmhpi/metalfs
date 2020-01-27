@@ -22,21 +22,21 @@ class METAL_DRIVER_MESSAGES_API Socket {
   Socket(const Socket &other) = delete;
   Socket(Socket &&other) noexcept : _fd(other._fd) { other._fd = 0; }
 
-  template <message_type T>
+  template <MessageType T>
   struct MessageTypeAssignment;
 
-  template <message_type T>
-  void send_message(typename MessageTypeAssignment<T>::type &message);
+  template <MessageType T>
+  void sendMessage(typename MessageTypeAssignment<T>::type &message);
 
-  template <message_type T>
+  template <MessageType T>
   auto receiveMessage() -> typename MessageTypeAssignment<T>::type;
 
  protected:
   int _fd;
 };
 
-template <message_type T>
-void Socket::send_message(
+template <MessageType T>
+void Socket::sendMessage(
     typename Socket::MessageTypeAssignment<T>::type &message) {
   std::vector<char> buffer(message.ByteSize());
   message.SerializeToArray(buffer.data(), message.ByteSize());
@@ -46,7 +46,7 @@ void Socket::send_message(
   send(_fd, buffer.data(), message.ByteSize(), 0);
 }
 
-template <message_type T>
+template <MessageType T>
 auto Socket::receiveMessage() ->
     typename Socket::MessageTypeAssignment<T>::type {
   auto req = MessageHeader::receive(_fd);
@@ -60,9 +60,9 @@ auto Socket::receiveMessage() ->
   return message;
 }
 
-ASSIGN_MESSAGE_TYPE(message_type::RegistrationRequest, RegistrationRequest)
-ASSIGN_MESSAGE_TYPE(message_type::RegistrationResponse, RegistrationResponse)
-ASSIGN_MESSAGE_TYPE(message_type::ProcessingRequest, ProcessingRequest)
-ASSIGN_MESSAGE_TYPE(message_type::ProcessingResponse, ProcessingResponse)
+ASSIGN_MESSAGE_TYPE(MessageType::RegistrationRequest, RegistrationRequest)
+ASSIGN_MESSAGE_TYPE(MessageType::RegistrationResponse, RegistrationResponse)
+ASSIGN_MESSAGE_TYPE(MessageType::ProcessingRequest, ProcessingRequest)
+ASSIGN_MESSAGE_TYPE(MessageType::ProcessingResponse, ProcessingResponse)
 
 }  // namespace metal

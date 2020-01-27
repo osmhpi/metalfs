@@ -25,7 +25,7 @@ class METAL_DRIVER_MESSAGES_API Buffer {
   Buffer &operator=(Buffer &&other) = default;
 
   static Buffer createTempFileForSharedBuffer(bool writable);
-  static Buffer map_shared_buffer(std::string file_name, bool writable);
+  static Buffer mapSharedBuffer(std::string file_name, bool writable);
 
   virtual ~Buffer();
 

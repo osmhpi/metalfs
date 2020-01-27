@@ -16,7 +16,7 @@ OperatorAgent::OperatorAgent(Socket socket)
       _error(),
       _terminated(false),
       _socket(std::move(socket)) {
-  auto request = _socket.receiveMessage<message_type::RegistrationRequest>();
+  auto request = _socket.receiveMessage<MessageType::RegistrationRequest>();
   spdlog::trace("RegistrationRequest(operator={})", request.operator_type());
 
   _pid = request.pid();
@@ -83,11 +83,11 @@ void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {
       "RegistrationResponse(valid={}, input_filename={}, output_filename={})",
       message.valid(), message.has_input_buffer_filename(),
       message.has_output_buffer_filename());
-  _socket.send_message<message_type::RegistrationResponse>(message);
+  _socket.sendMessage<MessageType::RegistrationResponse>(message);
 }
 
 ProcessingRequest OperatorAgent::receiveProcessingRequest() {
-  auto request = _socket.receiveMessage<message_type::ProcessingRequest>();
+  auto request = _socket.receiveMessage<MessageType::ProcessingRequest>();
   spdlog::trace("ProcessingRequest(size={}, eof={})", request.size(),
                 request.eof());
   return request;
@@ -96,7 +96,7 @@ ProcessingRequest OperatorAgent::receiveProcessingRequest() {
 void OperatorAgent::sendProcessingResponse(ProcessingResponse &message) {
   spdlog::trace("ProcessingResponse(size={}, eof={})", message.size(),
                 message.eof());
-  _socket.send_message<message_type::ProcessingResponse>(message);
+  _socket.sendMessage<MessageType::ProcessingResponse>(message);
 }
 
 }  // namespace metal

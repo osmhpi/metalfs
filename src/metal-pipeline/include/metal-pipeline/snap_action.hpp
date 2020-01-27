@@ -17,11 +17,11 @@ class METAL_PIPELINE_API SnapAction {
   SnapAction(SnapAction &&other) noexcept;
   virtual ~SnapAction();
 
-  void executeJob(fpga::JobType job_type, const void *parameters = nullptr,
+  void executeJob(fpga::JobType jobType, const void *parameters = nullptr,
                   fpga::Address source = {}, fpga::Address destination = {},
-                  uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0,
-                  uint64_t *direct_data_out_0 = nullptr,
-                  uint64_t *direct_data_out_1 = nullptr);
+                  uint64_t directData0 = 0, uint64_t directData1 = 0,
+                  uint64_t *directDataOut0 = nullptr,
+                  uint64_t *directDataOut1 = nullptr);
   bool isNVMeEnabled();
 
   static void *allocateMemory(size_t size);

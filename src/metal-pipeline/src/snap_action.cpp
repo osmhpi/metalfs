@@ -56,20 +56,20 @@ SnapAction::~SnapAction() {
   }
 }
 
-void SnapAction::executeJob(fpga::JobType job_type, const void *parameters,
-                             fpga::Address source, fpga::Address destination,
-                             uint64_t direct_data_0, uint64_t direct_data_1,
-                             uint64_t *direct_data_out_0,
-                             uint64_t *direct_data_out_1) {
-  spdlog::debug("Starting job {}...", jobTypeToString(job_type));
+void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
+                            fpga::Address source, fpga::Address destination,
+                            uint64_t directData0, uint64_t directData1,
+                            uint64_t *directDataOut0,
+                            uint64_t *directDataOut1) {
+  spdlog::debug("Starting job {}...", jobTypeToString(jobType));
 
   fpga::Job mjob;
-  mjob.job_type = job_type;
+  mjob.job_type = jobType;
   mjob.job_address = reinterpret_cast<uint64_t>(parameters);
   mjob.source = source;
   mjob.destination = destination;
-  mjob.direct_data[0] = direct_data_0;
-  mjob.direct_data[1] = direct_data_1;
+  mjob.direct_data[0] = directData0;
+  mjob.direct_data[1] = directData1;
   mjob.direct_data[2] = 0;
   mjob.direct_data[3] = 0;
 
@@ -86,14 +86,14 @@ void SnapAction::executeJob(fpga::JobType job_type, const void *parameters,
   if (cjob.retc != SNAP_RETC_SUCCESS)
     throw std::runtime_error("Job was unsuccessful");
 
-  if (direct_data_out_0) *direct_data_out_0 = mjob.direct_data[2];
-  if (direct_data_out_1) *direct_data_out_1 = mjob.direct_data[3];
+  if (directDataOut0) *directDataOut0 = mjob.direct_data[2];
+  if (directDataOut1) *directDataOut1 = mjob.direct_data[3];
 }
 
 bool SnapAction::isNVMeEnabled() {
-  unsigned long have_nvme = 0;
-  snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
-  return have_nvme != 0;
+  unsigned long haveNVMe = 0;
+  snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&haveNVMe);
+  return haveNVMe != 0;
 }
 
 void *SnapAction::allocateMemory(size_t size) { return snap_malloc(size); }
