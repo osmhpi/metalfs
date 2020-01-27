@@ -1,14 +1,11 @@
 #include <metal-pipeline/operator_factory.hpp>
 
-extern "C" {
-#include <jv.h>
-}
-
 #include <dirent.h>
 
 #include <vector>
 
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 
 #include <snap_action_metal.h>
 #include <metal-pipeline/operator_specification.hpp>
@@ -21,7 +18,7 @@ OperatorFactory OperatorFactory::fromFPGA(SnapAction &snapAction) {
   auto json = snapAction.allocateMemory(4096);
   try {
     snapAction.executeJob(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
-                           &json_len);
+                          &json_len);
   } catch (std::exception &ex) {
     free(json);
     throw ex;
@@ -38,41 +35,29 @@ OperatorFactory OperatorFactory::fromManifestString(
   return OperatorFactory(manifest);
 }
 
-OperatorFactory::OperatorFactory(const std::string &image_json) : _operators() {
-  auto image = jv_parse(image_json.c_str());
+OperatorFactory::OperatorFactory(const std::string &imageJson)
+    : _operatorSpecifications() {
+  auto image = nlohmann::json::parse(imageJson);
 
-  if (!jv_is_valid(image)) {
-    jv_free(image);
-    throw std::runtime_error("Error loading operator manifest");
-  }
-
-  if (jv_get_kind(image) != JV_KIND_OBJECT) {
-    jv_free(image);
+  if (!image.is_object()) {
     throw std::runtime_error("Unexpected input");
   }
 
-  auto operators = jv_object_get(jv_copy(image), jv_string("operators"));
-  auto iter = jv_object_iter(operators);
-  while (jv_object_iter_valid(operators, iter)) {
-    auto key = jv_object_iter_key(operators, iter);
-    auto current_operator = jv_object_iter_value(operators, iter);
+  for (const auto &operatorEntry : image["operators"].items()) {
+    auto &key = operatorEntry.key();
+    auto &currentOperator = operatorEntry.value();
 
-    auto operator_string = jv_dump_string(current_operator, 0);
-    auto op = std::make_unique<OperatorSpecification>(
-        jv_string_value(key), jv_string_value(operator_string));
-    jv_free(operator_string);
+    auto operatorSpec =
+        std::make_unique<OperatorSpecification>(key, currentOperator.dump());
 
-    spdlog::info("Found operator {}", op->id());
-    _operators.emplace(std::make_pair(op->id(), std::move(op)));
-
-    iter = jv_object_iter_next(operators, iter);
+    spdlog::info("Found operator {}", operatorSpec->id());
+    _operatorSpecifications.emplace(
+        std::make_pair(operatorSpec->id(), std::move(operatorSpec)));
   }
-
-  jv_free(image);
 }
 
 Operator OperatorFactory::createOperator(std::string id) {
-  return Operator(_operators.at(id));
+  return Operator(_operatorSpecifications.at(id));
 }
 
 }  // namespace metal

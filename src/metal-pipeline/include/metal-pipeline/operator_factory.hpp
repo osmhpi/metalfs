@@ -19,17 +19,17 @@ class METAL_PIPELINE_API OperatorFactory {
 
   Operator createOperator(std::string id);
 
-  size_t size() const { return _operators.size(); }
+  size_t size() const { return _operatorSpecifications.size(); }
   const std::unordered_map<std::string,
                            std::shared_ptr<const OperatorSpecification>>
       &operatorSpecifications() const {
-    return _operators;
+    return _operatorSpecifications;
   }
 
  protected:
   explicit OperatorFactory(const std::string &image_json);
   std::unordered_map<std::string, std::shared_ptr<const OperatorSpecification>>
-      _operators;
+      _operatorSpecifications;
 };
 
 }  // namespace metal

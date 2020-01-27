@@ -9,10 +9,13 @@ using ImageInfo = SimulationTest;
 
 TEST_F(ImageInfo, ReadsImageInfo) {
   SnapAction action;
-  ASSERT_NO_THROW({
+
+  auto createFactory = [&]() {
     auto factory = OperatorFactory::fromFPGA(action);
     ASSERT_GT(factory.operatorSpecifications().size(), 0);
-  });
+  };
+
+  ASSERT_NO_THROW(createFactory());
 }
 
 }  // namespace metal

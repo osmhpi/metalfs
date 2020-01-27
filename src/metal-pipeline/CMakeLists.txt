@@ -3,8 +3,6 @@
 # External dependencies
 #
 
-find_package(jq REQUIRED)
-
 #
 # Library name and options
 #
@@ -157,7 +155,7 @@ target_include_directories(${target}
 
 target_link_libraries(${target}
     PRIVATE
-    ${JQ_LIBRARIES}
+    nlohmann_json::nlohmann_json
     spdlog::spdlog
 
     PUBLIC

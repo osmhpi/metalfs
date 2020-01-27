@@ -22,8 +22,8 @@ message(STATUS "Test ${target}")
 set(sources
     gtest_main.cpp
 
-    operator_registry_test.cpp
-    user_operator_test.cpp
+    operator_factory_test.cpp
+    operator_test.cpp
 )
 
 
