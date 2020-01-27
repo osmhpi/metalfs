@@ -5,7 +5,7 @@
 
 #include <cxxopts.hpp>
 
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/operator_context.hpp>
 
 #include "client_error.hpp"
@@ -17,7 +17,7 @@ namespace metal {
 class PipelineBuilder {
  public:
   explicit PipelineBuilder(
-      std::shared_ptr<metal::OperatorRegistry> registry,
+      std::shared_ptr<metal::OperatorFactory> registry,
       std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents);
 
   ConfiguredPipeline configure();
@@ -34,7 +34,7 @@ class PipelineBuilder {
       std::shared_ptr<const OperatorSpecification> op,
       std::shared_ptr<OperatorAgent> agent);
 
-  std::shared_ptr<metal::OperatorRegistry> _registry;
+  std::shared_ptr<metal::OperatorFactory> _registry;
   std::vector<std::shared_ptr<OperatorAgent>> _pipeline_agents;
   std::unordered_map<std::string, cxxopts::Options> _operatorOptions;
 };

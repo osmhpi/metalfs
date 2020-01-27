@@ -2,7 +2,7 @@
 
 #include <libgen.h>
 
-#include <metal-pipeline/snap_pipeline_runner.hpp>
+#include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
@@ -20,8 +20,8 @@ void BaseTest::SetUp() {
 }
 
 void PipelineTest::_setUp() {
-  auto info = SnapPipelineRunner::readImageInfo(0);
-  _registry = std::make_unique<OperatorRegistry>(info);
+  SnapAction action;
+  _registry = std::make_unique<OperatorFactory>(OperatorFactory::fromFPGA(action));
 }
 
 std::optional<Operator> PipelineTest::try_get_operator(

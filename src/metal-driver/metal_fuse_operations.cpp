@@ -17,7 +17,7 @@
 #include <metal-filesystem/inode.h>
 #include <metal-filesystem/metal.h>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/snap_pipeline_runner.hpp>
+#include <metal-pipeline/snap_action.hpp>
 
 #include "pseudo_operators.hpp"
 #include "server.hpp"
@@ -406,10 +406,12 @@ void Context::initialize(bool in_memory, std::string bin_path,
   _card = card;
 
   if (!in_memory) {
-    auto image_info = SnapPipelineRunner::readImageInfo(_card);
-    _registry = std::make_shared<OperatorRegistry>(image_info);
+    SnapAction action(card);
+    _registry =
+        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(action));
   } else {
-    _registry = std::make_shared<OperatorRegistry>("{\"operators\": {}}");
+    _registry = std::make_shared<OperatorFactory>(
+        OperatorFactory::fromManifestString("{\"operators\": {}}"));
   }
 
   for (const auto &op : _registry->operatorSpecifications()) {

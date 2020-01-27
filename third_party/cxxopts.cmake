@@ -7,8 +7,5 @@ if ((NOT CXXOPTS_INCLUDE_DIR) OR (NOT EXISTS ${CXXOPTS_INCLUDE_DIR}))
     execute_process(COMMAND git submodule update --init -- cxxopts
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-    # set(CXL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl
-    #     CACHE PATH "pslse (libcxl) include directory" FORCE)
-
     add_subdirectory(cxxopts EXCLUDE_FROM_ALL)
 endif()

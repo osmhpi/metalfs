@@ -20,7 +20,7 @@ TEST_F(DRAMPipeline, TransferBlockToDRAM) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   ASSERT_NO_THROW(pipeline.run(
@@ -38,7 +38,7 @@ TEST_F(DRAMPipeline, WriteAndReadBlock) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   {  // Write
     auto pipeline = Pipeline();

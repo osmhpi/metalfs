@@ -5,7 +5,7 @@
 #include <snap_action_metal.h>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
@@ -33,7 +33,7 @@ TEST_F(ColorfilterPipeline, PreservesHeaderData) {
     return;
   }
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline(std::move(*filter));
   pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);

@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 
 namespace metal {

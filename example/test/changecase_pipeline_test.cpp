@@ -5,7 +5,7 @@
 #include <snap_action_metal.h>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
@@ -28,7 +28,7 @@ TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
   transformer->setOption("lowercase", false);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),
@@ -50,7 +50,7 @@ TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
   transformer->setOption("lowercase", true);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),

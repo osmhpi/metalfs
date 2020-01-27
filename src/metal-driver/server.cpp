@@ -28,7 +28,7 @@
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 
 #include "agent_pool.hpp"
 #include "pipeline_builder.hpp"
@@ -38,7 +38,7 @@
 namespace metal {
 
 Server::Server(std::string socketFileName,
-               std::shared_ptr<OperatorRegistry> registry)
+               std::shared_ptr<OperatorFactory> registry)
     : _socketFileName(std::move(socketFileName)),
       _registry(std::move(registry)),
       _listenfd(0) {}
@@ -46,7 +46,7 @@ Server::Server(std::string socketFileName,
 Server::~Server() { close(_listenfd); }
 
 void Server::start(const std::string &socket_file_name,
-                   std::shared_ptr<OperatorRegistry> registry, int card) {
+                   std::shared_ptr<OperatorFactory> registry, int card) {
   Server server(socket_file_name, std::move(registry));
   server.startInternal(card);
 }

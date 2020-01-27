@@ -19,23 +19,6 @@ extern "C" {
 
 namespace metal {
 
-std::string SnapPipelineRunner::readImageInfo(int card) {
-  SnapAction action(fpga::ActionType, card);
-  uint64_t json_len = 0;
-  auto json = action.allocateMemory(4096);
-  try {
-    action.execute_job(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
-                       &json_len);
-  } catch (std::exception &ex) {
-    free(json);
-    throw ex;
-  }
-
-  std::string result(reinterpret_cast<const char *>(json), json_len);
-  free(json);
-  return result;
-}
-
 uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
   // One-off contexts for data source and data sink
 
@@ -47,7 +30,7 @@ uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
 
 uint64_t SnapPipelineRunner::run(DataSourceContext &dataSource,
                                  DataSinkContext &dataSink) {
-  SnapAction action = SnapAction(fpga::ActionType, _card);
+  SnapAction action = SnapAction(_card);
 
   auto initialize = !_initialized;
 

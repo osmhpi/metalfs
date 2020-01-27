@@ -1,4 +1,4 @@
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 
 extern "C" {
 #include <jv.h>
@@ -10,12 +10,35 @@ extern "C" {
 
 #include <spdlog/spdlog.h>
 
+#include <snap_action_metal.h>
 #include <metal-pipeline/operator_specification.hpp>
+#include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
-OperatorRegistry::OperatorRegistry(const std::string &image_json)
-    : _operators() {
+OperatorFactory OperatorFactory::fromFPGA(SnapAction &snapAction) {
+  uint64_t json_len = 0;
+  auto json = snapAction.allocateMemory(4096);
+  try {
+    snapAction.execute_job(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
+                           &json_len);
+  } catch (std::exception &ex) {
+    free(json);
+    throw ex;
+  }
+
+  std::string info(reinterpret_cast<const char *>(json), json_len);
+  free(json);
+
+  return OperatorFactory(info);
+}
+
+OperatorFactory OperatorFactory::fromManifestString(
+    const std::string &manifest) {
+  return OperatorFactory(manifest);
+}
+
+OperatorFactory::OperatorFactory(const std::string &image_json) : _operators() {
   auto image = jv_parse(image_json.c_str());
 
   if (!jv_is_valid(image)) {
@@ -48,7 +71,7 @@ OperatorRegistry::OperatorRegistry(const std::string &image_json)
   jv_free(image);
 }
 
-Operator OperatorRegistry::createOperator(std::string id) {
+Operator OperatorFactory::createOperator(std::string id) {
   return Operator(_operators.at(id));
 }
 

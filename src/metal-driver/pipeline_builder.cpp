@@ -23,7 +23,7 @@
 namespace metal {
 
 PipelineBuilder::PipelineBuilder(
-    std::shared_ptr<metal::OperatorRegistry> registry,
+    std::shared_ptr<metal::OperatorFactory> registry,
     std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents)
     : _registry(std::move(registry)),
       _pipeline_agents(std::move(pipeline_agents)) {

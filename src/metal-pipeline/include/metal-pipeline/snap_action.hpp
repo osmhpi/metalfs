@@ -12,7 +12,7 @@ namespace metal {
 
 class METAL_PIPELINE_API SnapAction {
  public:
-  explicit SnapAction(snap_action_type_t action_type, int card_no);
+  explicit SnapAction(int card = 0);
   SnapAction(const SnapAction &other) = delete;
   SnapAction(SnapAction &&other) noexcept;
   virtual ~SnapAction();

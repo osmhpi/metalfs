@@ -3,7 +3,7 @@
 #include <snap_action_metal.h>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include "base_test.hpp"
@@ -37,7 +37,7 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayload) {
   encrypt->setOption("key", keyBuffer);
   decrypt->setOption("key", keyBuffer);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
   pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
@@ -78,7 +78,7 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayloadUsingDifferentKeys) {
   encrypt->setOption("key", encryptKeyBuffer);
   decrypt->setOption("key", decryptKeyBuffer);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
   pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);

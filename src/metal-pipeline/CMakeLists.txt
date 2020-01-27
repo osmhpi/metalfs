@@ -39,7 +39,7 @@ set(headers
     ${include_path}/data_source.hpp
     ${include_path}/operator_argument.hpp
     ${include_path}/operator_context.hpp
-    ${include_path}/operator_registry.hpp
+    ${include_path}/operator_factory.hpp
     ${include_path}/operator_specification.hpp
     ${include_path}/operator.hpp
     ${include_path}/pipeline.hpp
@@ -49,14 +49,14 @@ set(headers
 )
 
 set(sources
-    ${source_path}/operator_registry.cpp
     ${source_path}/operator_context.cpp
+    ${source_path}/operator_factory.cpp
+    ${source_path}/operator_specification.cpp
+    ${source_path}/operator.cpp
     ${source_path}/pipeline.cpp
     ${source_path}/profiling_pipeline_runner.cpp
     ${source_path}/snap_action.cpp
     ${source_path}/snap_pipeline_runner.cpp
-    ${source_path}/operator_specification.cpp
-    ${source_path}/operator.cpp
 )
 
 # Group source files

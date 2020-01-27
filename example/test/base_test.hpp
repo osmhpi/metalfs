@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 
 namespace metal {
 
@@ -19,7 +19,7 @@ class PipelineTest : public BaseTest {
   void _setUp() override;
   std::optional<Operator> try_get_operator(const std::string &key);
 
-  std::unique_ptr<OperatorRegistry> _registry;
+  std::unique_ptr<OperatorFactory> _registry;
 };
 
 class SimulationTest : public BaseTest {

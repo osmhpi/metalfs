@@ -13,7 +13,7 @@ extern "C" {
 
 namespace metal {
 
-class OperatorRegistry;
+class OperatorFactory;
 
 class Context {
  public:
@@ -39,13 +39,13 @@ class Context {
   std::string operators_dir() { return "/" + operators_dirname(); }
   std::string operators_prefix() { return operators_dir() + "/"; }
 
-  std::shared_ptr<OperatorRegistry> registry() { return _registry; };
+  std::shared_ptr<OperatorFactory> registry() { return _registry; };
 
   std::unordered_set<std::string>& operators() { return _operators; }
 
  protected:
   int _card;
-  std::shared_ptr<OperatorRegistry> _registry;
+  std::shared_ptr<OperatorFactory> _registry;
   std::string _files_dirname;
   std::string _operators_dirname;
   mtl_storage_backend _storage;

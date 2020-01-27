@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include <metal-pipeline/operator_registry.hpp>
+#include <metal-pipeline/operator_factory.hpp>
 
 namespace metal {
 
@@ -12,7 +12,7 @@ TEST(OperatorRegistryTest, DetectsOperatorsInJSON) {
       "\"type\": \"bool\", \"description\": \"Transform to lowercase\", "
       "\"offset\": 256 } } } } }";
 
-  OperatorRegistry registry(json);
+  OperatorFactory registry = OperatorFactory::fromManifestString(json);
 
   ASSERT_EQ(1u, registry.size());
 }

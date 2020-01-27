@@ -10,16 +10,15 @@
 namespace metal {
 
 class OperatorSpecification;
+class SnapAction;
 
-class METAL_PIPELINE_API OperatorRegistry {
+class METAL_PIPELINE_API OperatorFactory {
  public:
-  explicit OperatorRegistry(const std::string &image_json);
+  static OperatorFactory fromFPGA(SnapAction &snapAction);
+  static OperatorFactory fromManifestString(const std::string &manifest);
+
   Operator createOperator(std::string id);
 
-  void add_operator(std::string id,
-                    std::shared_ptr<const OperatorSpecification> op) {
-    _operators.emplace(std::make_pair(std::move(id), std::move(op)));
-  }
   size_t size() const { return _operators.size(); }
   const std::unordered_map<std::string,
                            std::shared_ptr<const OperatorSpecification>>
@@ -28,6 +27,7 @@ class METAL_PIPELINE_API OperatorRegistry {
   }
 
  protected:
+  explicit OperatorFactory(const std::string &image_json);
   std::unordered_map<std::string, std::shared_ptr<const OperatorSpecification>>
       _operators;
 };

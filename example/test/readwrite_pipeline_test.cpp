@@ -20,7 +20,7 @@ TEST_F(ReadWritePipeline, TransfersSmallBuffer) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   uint64_t size;
@@ -42,7 +42,7 @@ TEST_F(ReadWritePipeline, ToleratesTooLargeOutputBuffer) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, 2 * 4096));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   uint64_t size;
@@ -60,7 +60,7 @@ TEST_F(ReadWritePipeline, TransfersEntirePage) {
   uint64_t n_pages = 1;
   uint64_t n_bytes = n_pages * 4096;
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto *src = reinterpret_cast<uint8_t *>(action.allocateMemory(n_bytes));
   fill_payload(src, n_bytes);
@@ -85,7 +85,7 @@ TEST_F(ReadWritePipeline, TransfersEntirePageToInternalSink) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   ASSERT_NO_THROW(pipeline.run(DataSource(src, n_bytes),
@@ -101,7 +101,7 @@ TEST_F(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   uint64_t size;
@@ -119,7 +119,7 @@ TEST_F(ReadWritePipeline,
   uint64_t n_pages = 1;
   uint64_t n_bytes = n_pages * 4096;
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   ASSERT_NO_THROW(
@@ -142,7 +142,7 @@ TEST_F(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
   uint64_t dest_bytes = dest_pages * 4096;
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, dest_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   auto pipeline = Pipeline();
   uint64_t size;
