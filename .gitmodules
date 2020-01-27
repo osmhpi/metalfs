@@ -11,3 +11,6 @@
 [submodule "third_party/cxxopts"]
 	path = third_party/cxxopts
 	url = https://github.com/jarro2783/cxxopts
+[submodule "third_party/pslse"]
+	path = third_party/pslse
+	url = https://github.com/ibm-capi/pslse
