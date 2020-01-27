@@ -27,8 +27,10 @@ namespace metal {
 int fuse_chown(const char *path, uid_t uid, gid_t gid) {
   spdlog::trace("fuse_chown {}", path);
   auto &c = Context::instance();
-  if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) != 0)
+  if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) != 0) {
+    spdlog::warn("FUSE: function fuse_chown not implemented");
     return -ENOSYS;
+  }
 
   return mtl_chown(path + c.files_prefix().size(), uid, gid);
 }
@@ -189,6 +191,7 @@ int fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_create not implemented");
   return -ENOSYS;
 }
 
@@ -223,6 +226,7 @@ int fuse_open(const char *path, struct fuse_file_info *fi) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_open not implemented");
   return -ENOSYS;
 }
 
@@ -270,6 +274,7 @@ int fuse_read(const char *path, char *buf, size_t size, off_t offset,
     }
   }
 
+  spdlog::warn("FUSE: function fuse_read not implemented");
   return -ENOSYS;
 }
 
@@ -300,6 +305,7 @@ int fuse_truncate(const char *path, off_t size) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_truncate not implemented");
   return -ENOSYS;
 }
 
@@ -319,6 +325,7 @@ int fuse_write(const char *path, const char *buf, size_t size, off_t offset,
     return size;
   }
 
+  spdlog::warn("FUSE: function fuse_write not implemented");
   return -ENOSYS;
 }
 
@@ -337,6 +344,7 @@ int fuse_unlink(const char *path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_unlink not implemented");
   return -ENOSYS;
 }
 
@@ -356,6 +364,7 @@ int fuse_mkdir(const char *path, mode_t mode) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_mkdir not implemented");
   return -ENOSYS;
 }
 
@@ -373,6 +382,7 @@ int fuse_rmdir(const char *path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_rmdir not implemented");
   return -ENOSYS;
 }
 
@@ -393,6 +403,7 @@ int fuse_rename(const char *from_path, const char *to_path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_rename not implemented");
   return -ENOSYS;
 }
 
