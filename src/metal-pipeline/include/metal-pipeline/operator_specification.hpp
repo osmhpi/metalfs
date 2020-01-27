@@ -16,7 +16,7 @@ class METAL_PIPELINE_API OperatorSpecification {
   std::string id() const { return _id; }
   std::string description() const { return _description; }
   uint8_t streamID() const { return _streamID; }
-  bool prepare_required() const { return _prepare_required; }
+  bool prepareRequired() const { return _prepareRequired; }
   const std::unordered_map<std::string, OperatorOptionDefinition>
   optionDefinitions() const {
     return _optionDefinitions;
@@ -26,7 +26,7 @@ class METAL_PIPELINE_API OperatorSpecification {
   std::string _id;
   std::string _description;
   uint8_t _streamID;
-  bool _prepare_required;
+  bool _prepareRequired;
   std::unordered_map<std::string, OperatorOptionDefinition> _optionDefinitions;
 };
 

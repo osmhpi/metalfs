@@ -46,7 +46,7 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
-  decryptContext.set_profiling_enabled(true);
+  decryptContext.setProfilingEnabled(true);
 
   ProfilingPipelineRunner runner(0, std::move(decryptContext),
                                  std::move(changeCaseContext),
@@ -87,7 +87,7 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
-  changeCaseContext.set_profiling_enabled(true);
+  changeCaseContext.setProfilingEnabled(true);
 
   ProfilingPipelineRunner runner(0, std::move(decryptContext),
                                  std::move(changeCaseContext),
@@ -128,7 +128,7 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
       changeCaseContext(std::move(*change_case)),
       encryptContext(std::move(*encrypt));
 
-  encryptContext.set_profiling_enabled(true);
+  encryptContext.setProfilingEnabled(true);
 
   ProfilingPipelineRunner runner(0, std::move(decryptContext),
                                  std::move(changeCaseContext),
@@ -151,7 +151,7 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
   change_case->setOption("lowercase", false);
 
   OperatorContext changeCaseContext(std::move(*change_case));
-  changeCaseContext.set_profiling_enabled(true);
+  changeCaseContext.setProfilingEnabled(true);
 
   ProfilingPipelineRunner runner(0, std::move(changeCaseContext));
   ASSERT_NO_THROW(runner.run(DataSource(0, n_bytes, fpga::AddressType::Random),

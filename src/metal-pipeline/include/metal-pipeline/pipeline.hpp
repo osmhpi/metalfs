@@ -41,7 +41,7 @@ class METAL_PIPELINE_API Pipeline {
 
  protected:
   std::vector<OperatorContext> _operators;
-  bool _cached_switch_configuration;
+  bool _cachedSwitchConfiguration;
 };
 
 }  // namespace metal

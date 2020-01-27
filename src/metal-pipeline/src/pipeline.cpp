@@ -15,7 +15,7 @@ extern "C" {
 namespace metal {
 
 Pipeline::Pipeline(std::vector<Operator> userOperators)
-    : _cached_switch_configuration(false) {
+    : _cachedSwitchConfiguration(false) {
   std::vector<OperatorContext> contexts;
   contexts.reserve(userOperators.size());
 
@@ -28,7 +28,7 @@ Pipeline::Pipeline(std::vector<Operator> userOperators)
 
 Pipeline::Pipeline(std::vector<OperatorContext> userOperators)
     : _operators(std::move(userOperators)),
-      _cached_switch_configuration(false) {}
+      _cachedSwitchConfiguration(false) {}
 
 uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
                        SnapAction &action) {
@@ -45,11 +45,11 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
 
   if (enable_mask) {
     // At least one operator needs preparation.
-    action.execute_job(fpga::JobType::RunOperators, nullptr, {}, {},
+    action.executeJob(fpga::JobType::RunOperators, nullptr, {}, {},
                        enable_mask);
   }
 
-  if (!_cached_switch_configuration) configureSwitch(action, false);
+  if (!_cachedSwitchConfiguration) configureSwitch(action, false);
 
   enable_mask = 1;  // This time, enable the I/O subsystem
   for (auto &op : _operators) {
@@ -62,15 +62,15 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
 
   spdlog::debug("    Read: (Address: {:x}, Size: {}, Type: {}, Map: {})",
                 sourceAddress.addr, sourceAddress.size,
-                SnapAction::address_type_to_string(sourceAddress.type),
-                SnapAction::map_type_to_string(sourceAddress.map));
+                SnapAction::addressTypeToString(sourceAddress.type),
+                SnapAction::mapTypeToString(sourceAddress.map));
   spdlog::debug("    Write: (Address: {:x}, Size: {}, Type: {}, Map: {})",
                 destinationAddress.addr, destinationAddress.size,
-                SnapAction::address_type_to_string(destinationAddress.type),
-                SnapAction::map_type_to_string(destinationAddress.map));
+                SnapAction::addressTypeToString(destinationAddress.type),
+                SnapAction::mapTypeToString(destinationAddress.map));
 
   uint64_t output_size;
-  action.execute_job(fpga::JobType::RunOperators, nullptr, sourceAddress,
+  action.executeJob(fpga::JobType::RunOperators, nullptr, sourceAddress,
                      destinationAddress, enable_mask, /* perfmon_enable = */ 1,
                      &output_size);
 
@@ -82,7 +82,7 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
 }
 
 void Pipeline::configureSwitch(SnapAction &action, bool set_cached) {
-  _cached_switch_configuration = set_cached;
+  _cachedSwitchConfiguration = set_cached;
 
   auto *job_struct =
       reinterpret_cast<uint32_t *>(action.allocateMemory(sizeof(uint32_t) * 8));
@@ -103,7 +103,7 @@ void Pipeline::configureSwitch(SnapAction &action, bool set_cached) {
   job_struct[IOStreamID] = htobe32(previousStream);
 
   try {
-    action.execute_job(fpga::JobType::ConfigureStreams,
+    action.executeJob(fpga::JobType::ConfigureStreams,
                        reinterpret_cast<char *>(job_struct));
   } catch (std::exception &ex) {
     free(job_struct);

@@ -214,7 +214,7 @@ OperatorContext PipelineBuilder::instantiateOperator(
   }
 
   OperatorContext runtimeContext(std::move(userOperator));
-  runtimeContext.set_profiling_enabled(parseResult["profile"].as<bool>());
+  runtimeContext.setProfilingEnabled(parseResult["profile"].as<bool>());
   return runtimeContext;
 }
 

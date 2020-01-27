@@ -17,21 +17,21 @@ class METAL_PIPELINE_API SnapAction {
   SnapAction(SnapAction &&other) noexcept;
   virtual ~SnapAction();
 
-  void execute_job(fpga::JobType job_type, const void *parameters = nullptr,
-                   fpga::Address source = {}, fpga::Address destination = {},
-                   uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0,
-                   uint64_t *direct_data_out_0 = nullptr,
-                   uint64_t *direct_data_out_1 = nullptr);
-  bool is_nvme_enabled();
+  void executeJob(fpga::JobType job_type, const void *parameters = nullptr,
+                  fpga::Address source = {}, fpga::Address destination = {},
+                  uint64_t direct_data_0 = 0, uint64_t direct_data_1 = 0,
+                  uint64_t *direct_data_out_0 = nullptr,
+                  uint64_t *direct_data_out_1 = nullptr);
+  bool isNVMeEnabled();
 
   static void *allocateMemory(size_t size);
 
-  static std::string address_type_to_string(fpga::AddressType addressType);
-  static std::string map_type_to_string(fpga::MapType mapType);
+  static std::string addressTypeToString(fpga::AddressType addressType);
+  static std::string mapTypeToString(fpga::MapType mapType);
 
  protected:
-  std::string job_type_to_string(fpga::JobType job);
-  std::string snap_return_code_to_string(int rc);
+  std::string jobTypeToString(fpga::JobType job);
+  std::string snapReturnCodeToString(int rc);
 
   struct snap_action *_action;
   struct snap_card *_card;

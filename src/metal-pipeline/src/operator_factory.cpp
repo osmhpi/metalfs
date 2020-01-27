@@ -20,7 +20,7 @@ OperatorFactory OperatorFactory::fromFPGA(SnapAction &snapAction) {
   uint64_t json_len = 0;
   auto json = snapAction.allocateMemory(4096);
   try {
-    snapAction.execute_job(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
+    snapAction.executeJob(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
                            &json_len);
   } catch (std::exception &ex) {
     free(json);

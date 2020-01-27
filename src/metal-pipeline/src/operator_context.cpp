@@ -30,7 +30,7 @@ void OperatorContext::configure(SnapAction &action) {
     metadata[0] = htobe32(definition.offset() / sizeof(uint32_t));  // offset
     metadata[2] = htobe32(_op.spec().streamID());
     metadata[3] = htobe32(
-        _op.spec().prepare_required());  // enables preparation mode for the
+        _op.spec().prepareRequired());  // enables preparation mode for the
                                          // operator, implying that we need a
                                          // preparation run of the operator(s)
     const int configuration_data_offset = 4 * sizeof(uint32_t);  // bytes
@@ -65,7 +65,7 @@ void OperatorContext::configure(SnapAction &action) {
     _is_prepared = false;
 
     try {
-      action.execute_job(fpga::JobType::ConfigureOperator, job_config);
+      action.executeJob(fpga::JobType::ConfigureOperator, job_config);
     } catch (std::exception &ex) {
       // Something went wrong...
       spdlog::warn("Could not configure operator: {}", ex.what());
@@ -78,7 +78,7 @@ void OperatorContext::configure(SnapAction &action) {
 void OperatorContext::finalize(SnapAction &action) { (void)action; }
 
 bool OperatorContext::needs_preparation() const {
-  return !_is_prepared && _op.spec().prepare_required();
+  return !_is_prepared && _op.spec().prepareRequired();
 }
 
 }  // namespace metal

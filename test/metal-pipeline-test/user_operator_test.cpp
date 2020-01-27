@@ -14,7 +14,7 @@ TEST(UserOperatorTest, UserOperatorSpec_Parses_Specification) {
   ASSERT_EQ(spec.id(), "blowfish_encrypt");
   ASSERT_EQ(spec.streamID(), 4);
   ASSERT_EQ(spec.description(), "Encrypt data with the blowfish cipher");
-  ASSERT_EQ(spec.prepare_required(), true);
+  ASSERT_EQ(spec.prepareRequired(), true);
 }
 
 TEST(UserOperatorTest, UserOperator_AllowsToSetOptions) {

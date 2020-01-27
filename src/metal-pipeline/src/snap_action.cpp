@@ -56,12 +56,12 @@ SnapAction::~SnapAction() {
   }
 }
 
-void SnapAction::execute_job(fpga::JobType job_type, const void *parameters,
+void SnapAction::executeJob(fpga::JobType job_type, const void *parameters,
                              fpga::Address source, fpga::Address destination,
                              uint64_t direct_data_0, uint64_t direct_data_1,
                              uint64_t *direct_data_out_0,
                              uint64_t *direct_data_out_1) {
-  spdlog::debug("Starting job {}...", job_type_to_string(job_type));
+  spdlog::debug("Starting job {}...", jobTypeToString(job_type));
 
   fpga::Job mjob;
   mjob.job_type = job_type;
@@ -81,7 +81,7 @@ void SnapAction::execute_job(fpga::JobType job_type, const void *parameters,
 
   if (rc != 0)
     throw std::runtime_error("Error starting job: " +
-                             snap_return_code_to_string(rc));
+                             snapReturnCodeToString(rc));
 
   if (cjob.retc != SNAP_RETC_SUCCESS)
     throw std::runtime_error("Job was unsuccessful");
@@ -90,7 +90,7 @@ void SnapAction::execute_job(fpga::JobType job_type, const void *parameters,
   if (direct_data_out_1) *direct_data_out_1 = mjob.direct_data[3];
 }
 
-bool SnapAction::is_nvme_enabled() {
+bool SnapAction::isNVMeEnabled() {
   unsigned long have_nvme = 0;
   snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&have_nvme);
   return have_nvme != 0;
@@ -98,7 +98,7 @@ bool SnapAction::is_nvme_enabled() {
 
 void *SnapAction::allocateMemory(size_t size) { return snap_malloc(size); }
 
-std::string SnapAction::job_type_to_string(fpga::JobType job) {
+std::string SnapAction::jobTypeToString(fpga::JobType job) {
   switch (job) {
     case fpga::JobType::ReadImageInfo:
       return "ReadImageInfo";
@@ -123,7 +123,7 @@ std::string SnapAction::job_type_to_string(fpga::JobType job) {
   return "Unknown";
 }
 
-std::string SnapAction::address_type_to_string(fpga::AddressType addressType) {
+std::string SnapAction::addressTypeToString(fpga::AddressType addressType) {
   switch (addressType) {
     case fpga::AddressType::Host:
       return "Host";
@@ -142,7 +142,7 @@ std::string SnapAction::address_type_to_string(fpga::AddressType addressType) {
   return "Unknown";
 }
 
-std::string SnapAction::map_type_to_string(fpga::MapType mapType) {
+std::string SnapAction::mapTypeToString(fpga::MapType mapType) {
   switch (mapType) {
     case fpga::MapType::None:
       return "None";
@@ -159,7 +159,7 @@ std::string SnapAction::map_type_to_string(fpga::MapType mapType) {
   return "Unknown";
 }
 
-std::string SnapAction::snap_return_code_to_string(int rc) {
+std::string SnapAction::snapReturnCodeToString(int rc) {
   switch (rc) {
     case SNAP_OK:
       return "";

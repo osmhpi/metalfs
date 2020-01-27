@@ -44,7 +44,7 @@ class UserOperatorSpecificationParser {
     return internal_id;
   }
 
-  bool prepare_required() {
+  bool prepareRequired() {
     auto prepare = jv_object_get(manifest(), jv_string("prepare_required"));
     if (!jv_is_valid(prepare)) return false;
 
@@ -126,7 +126,7 @@ OperatorSpecification::OperatorSpecification(
   UserOperatorSpecificationParser parser(manifest);
   _description = parser.description();
   _streamID = parser.streamID();
-  _prepare_required = parser.prepare_required();
+  _prepareRequired = parser.prepareRequired();
   _optionDefinitions = parser.optionDefinitions();
 }
 

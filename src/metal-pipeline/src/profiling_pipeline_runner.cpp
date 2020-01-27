@@ -29,7 +29,7 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     auto operatorPosition = _pipeline->operators().cend();
     for (auto it = _pipeline->operators().cbegin();
          it != _pipeline->operators().cend(); ++it) {
-      if (it->profiling_enabled()) {
+      if (it->profilingEnabled()) {
         if (operatorPosition == _pipeline->operators().cend()) {
           operatorPosition = it;
         } else {
@@ -83,8 +83,8 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
       job_struct[1] = htobe64(_profileStreamIds->second);
 
       try {
-        action.execute_job(fpga::JobType::ConfigurePerfmon,
-                           reinterpret_cast<char *>(job_struct));
+        action.executeJob(fpga::JobType::ConfigurePerfmon,
+                          reinterpret_cast<char *>(job_struct));
       } catch (std::exception &ex) {
         free(job_struct);
         throw ex;
@@ -95,7 +95,7 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
   }
 
   if (_profileStreamIds) {
-    action.execute_job(fpga::JobType::ResetPerfmon);
+    action.executeJob(fpga::JobType::ResetPerfmon);
   }
 
   SnapPipelineRunner::preRun(action, dataSource, dataSink, initialize);
@@ -111,24 +111,24 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
     auto *results32 = reinterpret_cast<uint32_t *>(results64 + 1);
 
     try {
-      action.execute_job(fpga::JobType::ReadPerfmonCounters,
-                         reinterpret_cast<char *>(results64));
+      action.executeJob(fpga::JobType::ReadPerfmonCounters,
+                        reinterpret_cast<char *>(results64));
     } catch (std::exception &ex) {
       free(results64);
       throw ex;
     }
 
-    _results.global_clock_counter += be64toh(results64[0]);
+    _results.globalClockCounter += be64toh(results64[0]);
 
-    _results.input_transfer_cycle_count += be32toh(results32[0]);
-    _results.input_data_byte_count += be32toh(results32[2]);
-    _results.input_slave_idle_count += be32toh(results32[3]);
-    _results.input_master_idle_count += be32toh(results32[4]);
+    _results.inputTransferCycleCount += be32toh(results32[0]);
+    _results.inputDataByteCount += be32toh(results32[2]);
+    _results.inputSlaveIdleCount += be32toh(results32[3]);
+    _results.inputMasterIdleCount += be32toh(results32[4]);
 
-    _results.output_transfer_cycle_count += be32toh(results32[5]);
-    _results.output_data_byte_count += be32toh(results32[7]);
-    _results.output_slave_idle_count += be32toh(results32[8]);
-    _results.output_master_idle_count += be32toh(results32[9]);
+    _results.outputTransferCycleCount += be32toh(results32[5]);
+    _results.outputDataByteCount += be32toh(results32[7]);
+    _results.outputSlaveIdleCount += be32toh(results32[8]);
+    _results.outputMasterIdleCount += be32toh(results32[9]);
 
     free(results64);
 
@@ -158,26 +158,25 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
   const double freq = 250;
   const double onehundred = 100;
 
-  double input_transfer_cycle_percent = _results.input_transfer_cycle_count *
+  double input_transfer_cycle_percent = _results.inputTransferCycleCount *
                                         onehundred /
-                                        _results.global_clock_counter;
-  double input_slave_idle_percent = _results.input_slave_idle_count *
-                                    onehundred / _results.global_clock_counter;
-  double input_master_idle_percent = _results.input_master_idle_count *
-                                     onehundred / _results.global_clock_counter;
-  double input_mbps = (_results.input_data_byte_count * freq) /
-                      (double)_results.global_clock_counter;
+                                        _results.globalClockCounter;
+  double input_slave_idle_percent =
+      _results.inputSlaveIdleCount * onehundred / _results.globalClockCounter;
+  double input_master_idle_percent =
+      _results.inputMasterIdleCount * onehundred / _results.globalClockCounter;
+  double input_mbps = (_results.inputDataByteCount * freq) /
+                      (double)_results.globalClockCounter;
 
-  double output_transfer_cycle_percent = _results.output_transfer_cycle_count *
+  double output_transfer_cycle_percent = _results.outputTransferCycleCount *
                                          onehundred /
-                                         _results.global_clock_counter;
-  double output_slave_idle_percent = _results.output_slave_idle_count *
-                                     onehundred / _results.global_clock_counter;
-  double output_master_idle_percent = _results.output_master_idle_count *
-                                      onehundred /
-                                      _results.global_clock_counter;
-  double output_mbps = (_results.output_data_byte_count * freq) /
-                       (double)_results.global_clock_counter;
+                                         _results.globalClockCounter;
+  double output_slave_idle_percent =
+      _results.outputSlaveIdleCount * onehundred / _results.globalClockCounter;
+  double output_master_idle_percent =
+      _results.outputMasterIdleCount * onehundred / _results.globalClockCounter;
+  double output_mbps = (_results.outputDataByteCount * freq) /
+                       (double)_results.globalClockCounter;
 
   std::stringstream result;
 
@@ -188,23 +187,21 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
   result << string_format(
                 "input\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
                 "%-12lu  %-4.2f",
-                _results.input_data_byte_count,
-                _results.input_transfer_cycle_count,
-                input_transfer_cycle_percent, _results.input_master_idle_count,
-                input_master_idle_percent, _results.input_slave_idle_count,
-                input_slave_idle_percent, _results.global_clock_counter,
+                _results.inputDataByteCount, _results.inputTransferCycleCount,
+                input_transfer_cycle_percent, _results.inputMasterIdleCount,
+                input_master_idle_percent, _results.inputSlaveIdleCount,
+                input_slave_idle_percent, _results.globalClockCounter,
                 input_mbps)
          << std::endl;
 
   result << string_format(
                 "output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
                 "%-12lu  %-4.2f",
-                _results.output_data_byte_count,
-                _results.output_transfer_cycle_count,
-                output_transfer_cycle_percent,
-                _results.output_master_idle_count, output_master_idle_percent,
-                _results.output_slave_idle_count, output_slave_idle_percent,
-                _results.global_clock_counter, output_mbps)
+                _results.outputDataByteCount, _results.outputTransferCycleCount,
+                output_transfer_cycle_percent, _results.outputMasterIdleCount,
+                output_master_idle_percent, _results.outputSlaveIdleCount,
+                output_slave_idle_percent, _results.globalClockCounter,
+                output_mbps)
          << std::endl;
 
   return result.str();

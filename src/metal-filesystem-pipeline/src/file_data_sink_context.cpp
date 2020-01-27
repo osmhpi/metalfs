@@ -83,7 +83,7 @@ void FileDataSinkContext::configure(SnapAction &action, bool) {
   }
 
   try {
-    action.execute_job(fpga::JobType::Map,
+    action.executeJob(fpga::JobType::Map,
                        reinterpret_cast<char *>(job_struct));
   } catch (std::exception &ex) {
     free(job_struct);

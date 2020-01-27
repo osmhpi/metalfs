@@ -26,8 +26,8 @@ class METAL_PIPELINE_API OperatorContext {
   void set_is_prepared() { _is_prepared = true; }
   const Operator &userOperator() const { return _op; }
 
-  bool profiling_enabled() const { return _profilingEnabled; }
-  void set_profiling_enabled(bool enabled) { _profilingEnabled = enabled; }
+  bool profilingEnabled() const { return _profilingEnabled; }
+  void setProfilingEnabled(bool enabled) { _profilingEnabled = enabled; }
   std::string profilingResults() const { return _profilingResults; }
   void setProfilingResults(std::string results) {
     _profilingResults = std::move(results);

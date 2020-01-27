@@ -8,29 +8,28 @@ namespace metal {
 
 class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
  public:
-  ProfilingPipelineRunner(int card,
-                          std::shared_ptr<Pipeline> pipeline)
+  ProfilingPipelineRunner(int card, std::shared_ptr<Pipeline> pipeline)
       : SnapPipelineRunner(card, std::move(pipeline)),
         _results(ProfilingResults{}) {}
   template <typename... Ts>
   ProfilingPipelineRunner(int card, Ts... userOperators)
-      : ProfilingPipelineRunner(card, std::make_shared<Pipeline>(
-                                          std::move(userOperators)...)) {}
+      : ProfilingPipelineRunner(
+            card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
   std::string formatProfilingResults();
   void resetResults() { _results = ProfilingResults{}; };
 
  protected:
   struct ProfilingResults {
-    uint64_t global_clock_counter;
-    uint64_t input_data_byte_count;
-    uint64_t input_transfer_cycle_count;
-    uint64_t input_slave_idle_count;
-    uint64_t input_master_idle_count;
-    uint64_t output_data_byte_count;
-    uint64_t output_transfer_cycle_count;
-    uint64_t output_slave_idle_count;
-    uint64_t output_master_idle_count;
+    uint64_t globalClockCounter;
+    uint64_t inputDataByteCount;
+    uint64_t inputTransferCycleCount;
+    uint64_t inputSlaveIdleCount;
+    uint64_t inputMasterIdleCount;
+    uint64_t outputDataByteCount;
+    uint64_t outputTransferCycleCount;
+    uint64_t outputSlaveIdleCount;
+    uint64_t outputMasterIdleCount;
   };
 
   void preRun(SnapAction &action, DataSourceContext &dataSource,
