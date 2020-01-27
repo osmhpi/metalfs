@@ -36,7 +36,6 @@ FROM ubuntu:bionic
 COPY --from=build /install/metal-driver /usr/local/bin/
 COPY --from=build /install/metal-driver-placeholder /usr/local/bin/
 COPY --from=build /install/lib/ /usr/local/lib/
-COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/libsnap.so
 RUN ldconfig
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -50,4 +49,4 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
 
-ENTRYPOINT /usr/bin/metal-driver
+CMD ["metal-driver"]
