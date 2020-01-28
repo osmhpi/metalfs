@@ -24,6 +24,10 @@
 
 namespace metal {
 
+uint8_t PlaceholderBinary[] = {
+  #include "metal-driver-placeholder.hex"
+};
+
 int fuse_chown(const char *path, uid_t uid, gid_t gid) {
   spdlog::trace("fuse_chown {}", path);
   auto &c = Context::instance();
@@ -107,8 +111,11 @@ int fuse_getattr(const char *path, struct stat *stbuf) {
       continue;
     }
 
-    res = lstat(c.placeholderExecutablePath().c_str(), stbuf);
-    if (res == -1) return -errno;
+    stbuf->st_mode = S_IFREG | 0004;
+    stbuf->st_nlink = 1;
+    stbuf->st_uid = 0;
+    stbuf->st_gid = 0;
+    stbuf->st_size = sizeof(PlaceholderBinary);
 
     return 0;
   }
@@ -258,19 +265,9 @@ int fuse_read(const char *path, char *buf, size_t size, off_t offset,
         continue;
       }
 
-      int fd;
-      int res;
+      memcpy(buf, PlaceholderBinary + offset, size);
 
-      fd = open(c.placeholderExecutablePath().c_str(), O_RDONLY);
-
-      if (fd == -1) return -errno;
-
-      res = pread(fd, buf, size, offset);
-      if (res == -1) res = -errno;
-
-      close(fd);
-
-      return res;
+      return 0;
     }
   }
 
@@ -412,8 +409,7 @@ Context &Context::instance() {
   return _instance;
 }
 
-void Context::initialize(bool in_memory, std::string bin_path,
-                         std::string metadata_dir, int card) {
+void Context::initialize(bool in_memory, std::string metadata_dir, int card) {
   _card = card;
 
   if (!in_memory) {
@@ -444,19 +440,6 @@ void Context::initialize(bool in_memory, std::string bin_path,
   auto socket_file = std::string(socket_dir) + "/metal.sock";
   strncpy(socket_filename, socket_file.c_str(), 255);
   _socket_filename = std::string(socket_filename);
-
-  // Determine the path to the metal-driver-placeholder executable
-  char agent_filepath[255];
-  strncpy(agent_filepath, bin_path.c_str(), sizeof(agent_filepath));
-  dirname(agent_filepath);
-#ifdef DEBUG
-  strncat(agent_filepath, "/metal-driver-placeholderd",
-          sizeof(agent_filepath) - 1);
-#else
-  strncat(agent_filepath, "/metal-driver-placeholder",
-          sizeof(agent_filepath) - 1);
-#endif
-  _agent_filepath = std::string(agent_filepath);
 
   DIR *dir = opendir(metadata_dir.c_str());
   if (dir) {

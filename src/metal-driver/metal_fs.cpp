@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   auto &c = metal::Context::instance();
 
-  c.initialize(static_cast<bool>(conf.in_memory), std::string(argv[0]),
+  c.initialize(static_cast<bool>(conf.in_memory),
                std::string(conf.metadata_dir), conf.card);
 
   auto server = std::thread(metal::Server::start, c.socket_filename(),

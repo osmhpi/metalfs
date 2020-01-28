@@ -18,12 +18,10 @@ class OperatorFactory;
 class Context {
  public:
   static Context &instance();
-  void initialize(bool in_memory, std::string bin_path,
-                  std::string metadata_dir, int card);
+  void initialize(bool in_memory, std::string metadata_dir, int card);
 
   int card() { return _card; }
 
-  std::string placeholderExecutablePath() { return _agent_filepath; }
   const std::string &socket_alias() { return _socket_alias; }
   std::string socket_name() { return "/" + socket_alias(); }
 
@@ -41,7 +39,7 @@ class Context {
 
   std::shared_ptr<OperatorFactory> registry() { return _registry; };
 
-  std::unordered_set<std::string>& operators() { return _operators; }
+  std::unordered_set<std::string> &operators() { return _operators; }
 
  protected:
   int _card;
@@ -49,7 +47,6 @@ class Context {
   std::string _files_dirname;
   std::string _operators_dirname;
   mtl_storage_backend _storage;
-  std::string _agent_filepath;
   std::string _socket_filename;
   std::string _socket_alias;
   std::unordered_set<std::string> _operators;

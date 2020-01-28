@@ -15,12 +15,18 @@ set(target metal-driver)
 # Exit here if required dependencies are not met
 message(STATUS "Executable ${target}")
 
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/metal-driver-placeholder.hex
+    COMMAND cat $<TARGET_FILE:${META_PROJECT_NAME}::metal-driver-placeholder> | xxd -i - ${CMAKE_CURRENT_BINARY_DIR}/metal-driver-placeholder.hex
+    COMMENT "Generating binary include from ${META_PROJECT_NAME}::metal-driver-placeholder"
+)
 
 #
 # Sources
 #
 
 set(sources
+    ${CMAKE_CURRENT_BINARY_DIR}/metal-driver-placeholder.hex
     agent_data_sink_context.cpp
     agent_data_sink_context.hpp
     agent_data_source_context.cpp
@@ -77,6 +83,7 @@ set_target_properties(${target}
 target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
+    ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_BINARY_DIR}/src/include
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 )
