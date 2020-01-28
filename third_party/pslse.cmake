@@ -49,9 +49,9 @@ if (${BUILD_PSLSE})
 
     # CMake config
     install(EXPORT cxl-export
-    NAMESPACE   cxl::
-    DESTINATION ${INSTALL_CMAKE}/cxl
-    COMPONENT   dev
+        NAMESPACE   cxl::
+        DESTINATION ${INSTALL_CMAKE}/cxl
+        COMPONENT   dev
     )
 
     # Export library for downstream projects

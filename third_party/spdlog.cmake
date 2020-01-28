@@ -9,8 +9,7 @@ if ((NOT SPDLOG_LIBRARY) OR (NOT EXISTS ${SPDLOG_LIBRARY}))
 
     set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog shared library" FORCE)
     set(SPDLOG_INSTALL ON CACHE BOOL "Install spdlog library" FORCE)
-    add_subdirectory(spdlog EXCLUDE_FROM_ALL)
+    add_subdirectory(spdlog)
     # Export library for downstream projects
     export(TARGETS spdlog NAMESPACE spdlog:: FILE ${PROJECT_BINARY_DIR}/cmake/spdlog/spdlog-export.cmake)
 endif()
-

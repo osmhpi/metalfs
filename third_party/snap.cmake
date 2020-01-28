@@ -16,7 +16,6 @@ target_include_directories(snap
     ${CMAKE_CURRENT_SOURCE_DIR}/snap/software/include
     ${CXL_INCLUDE_DIR}
 
-
     INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/snap/software/include>
     $<INSTALL_INTERFACE:include>
