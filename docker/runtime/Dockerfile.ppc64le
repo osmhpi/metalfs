@@ -9,6 +9,7 @@ RUN apt-get update \
     ca-certificates \
     build-essential \
     cmake \
+    xxd \
     libcxl-dev \
     libfuse-dev \
     liblmdb-dev \
