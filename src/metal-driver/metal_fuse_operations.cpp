@@ -111,8 +111,7 @@ int fuse_getattr(const char *path, struct stat *stbuf) {
       continue;
     }
 
-    stbuf->st_mode = S_IFREG | 0004;
-    stbuf->st_nlink = 1;
+    stbuf->st_mode = S_IFREG | 0111;
     stbuf->st_uid = 0;
     stbuf->st_gid = 0;
     stbuf->st_size = sizeof(PlaceholderBinary);
@@ -233,6 +232,17 @@ int fuse_open(const char *path, struct fuse_file_info *fi) {
     return 0;
   }
 
+  if (strncmp(path, c.operators_dir().c_str(), c.operators_dir().size()) == 0) {
+    auto basename = std::string(path + c.operators_prefix().size());
+    for (const auto &op : c.operators()) {
+      if (basename != op) {
+        continue;
+      }
+
+      return 0;
+    }
+  }
+
   spdlog::warn("FUSE: function fuse_open not implemented");
   return -ENOSYS;
 }
@@ -265,9 +275,10 @@ int fuse_read(const char *path, char *buf, size_t size, off_t offset,
         continue;
       }
 
-      memcpy(buf, PlaceholderBinary + offset, size);
+      auto readLength = std::min(size, sizeof(PlaceholderBinary) - offset);
+      memcpy(buf, PlaceholderBinary + offset, readLength);
 
-      return 0;
+      return readLength;
     }
   }
 
