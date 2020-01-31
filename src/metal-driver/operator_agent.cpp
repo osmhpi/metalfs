@@ -17,7 +17,10 @@ OperatorAgent::OperatorAgent(Socket socket)
       _terminated(false),
       _socket(std::move(socket)) {
   auto request = _socket.receiveMessage<MessageType::RegistrationRequest>();
-  spdlog::trace("RegistrationRequest(operator={})", request.operator_type());
+
+  auto logInput = request.has_metal_input_filename() ? request.metal_input_filename() : ("pid/" + std::to_string(request.input_pid()));
+  auto logOutput = request.has_metal_output_filename() ? request.metal_output_filename() : ("pid/" + std::to_string(request.output_pid()));
+  spdlog::trace("RegistrationRequest(operator={}, input={}, output={})", request.operator_type(), logInput, logOutput);
 
   _pid = request.pid();
   _operatorType = request.operator_type();

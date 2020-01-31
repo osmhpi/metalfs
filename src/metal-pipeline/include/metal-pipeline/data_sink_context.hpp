@@ -21,8 +21,9 @@ class METAL_PIPELINE_API DataSinkContext {
   virtual const DataSink dataSink() const = 0;
   virtual void prepareForTotalSize(uint64_t size) = 0;
 
-  virtual void configure(SnapAction &action, bool initial) {
+  virtual void configure(SnapAction &action, uint64_t inputSize, bool initial) {
     (void)action;
+    (void)inputSize;
     (void)initial;
   };
   virtual void finalize(SnapAction &action, uint64_t outputSize,

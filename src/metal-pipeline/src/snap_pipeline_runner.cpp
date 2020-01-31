@@ -44,7 +44,7 @@ uint64_t SnapPipelineRunner::run(DataSourceContext &dataSource,
   }
 
   dataSource.configure(action, initialize);
-  dataSink.configure(action, initialize);
+  dataSink.configure(action, dataSource.dataSource().address().size, initialize);
 
   _initialized = true;
 

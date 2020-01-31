@@ -14,6 +14,8 @@ namespace metal {
 
 int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
   if (metadata) {
+    // TODO: The number of blocks per NVMe stick can be obtained through the
+    // SNAP MMIO interface
     metadata->num_blocks = 64 * 1024 * 1024;
     metadata->block_size = fpga::StorageBlockSize;
   }
@@ -35,10 +37,10 @@ int PipelineStorage::set_active_write_extent_list(
 
 int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
   FileDataSourceContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe,
-                                  _read_extents, offset, length);
+                               _read_extents, offset, length);
   DefaultDataSinkContext sink(DataSink(buffer, length));
 
-  SnapPipelineRunner runner({}, 0);
+  SnapPipelineRunner runner(0);
   runner.run(source, sink);
 
   return MTL_SUCCESS;
@@ -48,9 +50,9 @@ int PipelineStorage::write(uint64_t offset, const void *buffer,
                            uint64_t length) {
   DefaultDataSourceContext source(DataSource(buffer, length));
   FileDataSinkContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
-                              _write_extents, offset, length);
+                           _write_extents, offset, length);
 
-  SnapPipelineRunner runner({}, 0);
+  SnapPipelineRunner runner(0);
   runner.run(source, sink);
 
   return MTL_SUCCESS;

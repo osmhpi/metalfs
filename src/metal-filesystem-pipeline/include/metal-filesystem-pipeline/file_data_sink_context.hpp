@@ -18,7 +18,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
   // Common API
  public:
  protected:
-  void configure(SnapAction &action, bool initial) override;
+  void configure(SnapAction &action, uint64_t inputSize, bool initial) override;
   void finalize(SnapAction &action, uint64_t outputSize,
                 bool endOfInput) override;
 
@@ -42,7 +42,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
   void loadExtents();
 
   std::string _filename;
-  uint64_t _cached_total_size;
+  uint64_t _cachedTotalSize;
 };
 
 }  // namespace metal

@@ -18,7 +18,7 @@ FileDataSinkContext::FileDataSinkContext(fpga::AddressType resource,
                                                uint64_t offset, uint64_t size)
     : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
       _filename(std::move(filename)),
-      _cached_total_size(0) {
+      _cachedTotalSize(0) {
   if (size > 0) {
     prepareForTotalSize(offset + size);
   } else {
@@ -31,12 +31,12 @@ FileDataSinkContext::FileDataSinkContext(
     std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
     : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
       _extents(extents),
-      _cached_total_size(0) {}
+      _cachedTotalSize(0) {}
 
 void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
   if (_filename.empty()) return;
 
-  if (size == _cached_total_size) return;
+  if (size == _cachedTotalSize) return;
 
   int res;
 
@@ -52,9 +52,14 @@ void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
   loadExtents();
 }
 
-void FileDataSinkContext::configure(SnapAction &action, bool) {
-  if (_extents.empty())
-    throw std::runtime_error("Extents were not initialized");
+void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool) {
+  _dataSink =
+      DataSink(_dataSink.address().addr, inputSize,
+               _dataSink.address().type, _dataSink.address().map);
+
+  if (_dataSink.address().addr + _dataSink.address().size > _cachedTotalSize) {
+    prepareForTotalSize(_dataSink.address().addr + _dataSink.address().size);
+  }
 
   // TODO: There is a potential race condition when the file metadata was
   // modified between obtaining the extent list and calling configure()
@@ -114,7 +119,7 @@ void FileDataSinkContext::loadExtents() {
   extents.resize(extents_length);
 
   _extents = extents;
-  _cached_total_size = file_length;
+  _cachedTotalSize = file_length;
 }
 
 }  // namespace metal

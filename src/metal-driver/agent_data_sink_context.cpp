@@ -9,14 +9,24 @@
 
 namespace metal {
 
-AgentDataSinkContext::AgentDataSinkContext(
-    std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
-    bool skipReceivingProcessingRequest)
+AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
+                                           std::shared_ptr<Pipeline> pipeline,
+                                           bool skipReceivingProcessingRequest)
     : FileDataSinkContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "", 0,
                           0),
       _agent(agent),
       _pipeline(pipeline),
-      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}
+      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {
+  if (_agent->outputBuffer()) {
+    // Nothing to do
+  } else if (DevNullFile::isNullOutput(*_agent)) {
+    // Nothing to do
+  } else if (!agent->internalOutputFile().empty()) {
+    _filename = agent->internalOutputFile();
+  } else {
+    throw std::runtime_error("Unknown data source");
+  }
+}
 
 const DataSink AgentDataSinkContext::dataSink() const {
   // The data sink can be of three types: Agent-Buffer, Null or File
@@ -33,13 +43,13 @@ const DataSink AgentDataSinkContext::dataSink() const {
   }
 }
 
-void AgentDataSinkContext::configure(SnapAction &action, bool initial) {
+void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool initial) {
   if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
 
   if (!_filename.empty()) {
-    return FileDataSinkContext::configure(action, initial);
+    return FileDataSinkContext::configure(action, inputSize, initial);
   }
 }
 
