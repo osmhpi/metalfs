@@ -296,8 +296,8 @@ int main(int argc, char *argv[]) {
   std::optional<metal::Buffer> output_buffer;
 
   if (response.has_input_buffer_filename()) {
-    input_buffer = metal::Buffer::mapSharedBuffer(
-        response.input_buffer_filename(), true);
+    input_buffer =
+        metal::Buffer::mapSharedBuffer(response.input_buffer_filename(), true);
   }
   if (response.has_output_buffer_filename()) {
     output_buffer = metal::Buffer::mapSharedBuffer(
@@ -351,8 +351,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Wait for a server response
-    processing_response =
-        socket.receiveMessage<metal::MessageType::ProcessingResponse>();
+    try {
+      processing_response =
+          socket.receiveMessage<metal::MessageType::ProcessingResponse>();
+    } catch (std::exception &ex) {
+      fprintf(stderr,
+              "An error occurred during pipeline execution. Please check the "
+              "filesystem driver logs.\n");
+    }
   }
 
   return 0;

@@ -23,8 +23,10 @@ AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
     // Nothing to do
   } else if (!agent->internalOutputFile().empty()) {
     _filename = agent->internalOutputFile();
+    _dataSink = DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    loadExtents();
   } else {
-    throw std::runtime_error("Unknown data source");
+    throw std::runtime_error("Unknown data sink");
   }
 }
 

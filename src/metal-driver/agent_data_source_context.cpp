@@ -24,6 +24,7 @@ BufferSourceRuntimeContext::BufferSourceRuntimeContext(
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
   } else if (!agent->internalInputFile().empty()) {
     _filename = agent->internalInputFile();
+    _dataSource = DataSource(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data source");
