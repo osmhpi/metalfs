@@ -35,7 +35,6 @@ RUN mkdir build \
 FROM ubuntu:bionic
 
 COPY --from=build /install/metal-driver /usr/local/bin/
-COPY --from=build /install/metal-driver-placeholder /usr/local/bin/
 COPY --from=build /install/lib/ /usr/local/lib/
 RUN ldconfig
 
