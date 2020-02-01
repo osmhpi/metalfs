@@ -15,8 +15,8 @@
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/operator_specification.hpp>
+#include <metal-pipeline/pipeline.hpp>
 
 #include "pseudo_operators.hpp"
 
@@ -42,6 +42,8 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(
                      cxxopts::value<bool>()->default_value("false"), "");
   options.add_option("", "p", "profile", "Enable profiling",
                      cxxopts::value<bool>()->default_value("false"), "");
+  options.add_option("", "", "input", "Input",
+                     cxxopts::value<std::string>()->default_value(""), "");
 
   for (const auto &keyOptionPair : op.optionDefinitions()) {
     const auto &option = keyOptionPair.second;
@@ -67,6 +69,8 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(
     }
   }
 
+  options.parse_positional({"input"});
+
   return options;
 }
 
@@ -84,7 +88,8 @@ PipelineBuilder::resolveOperatorSpecifications() {
       operatorsWithAgents;
 
   for (const auto &agent : _pipeline_agents) {
-    if (DatagenOperator::isDatagenAgent(*agent)) {
+    if (DatagenOperator::isDatagenAgent(*agent) ||
+        MetalCatOperator::isMetalCatAgent(*agent)) {
       if (result.size() > 0)
         throw std::runtime_error(
             "Operator can only be used as the start of an FPGA pipeline");
@@ -117,15 +122,13 @@ ConfiguredPipeline PipelineBuilder::configure() {
   {
     // Build the Pipeline
     std::vector<OperatorContext> operatorContexts;
-    for (auto &operatorAgentPair : orderedOperatorSpecsAndAgents) {
-      if (operatorAgentPair.first != nullptr) {
-        operatorContexts.emplace_back(instantiateOperator(
-            operatorAgentPair.first, operatorAgentPair.second));
+    for (auto &[op, agent] : orderedOperatorSpecsAndAgents) {
+      if (op != nullptr) {
+        operatorContexts.emplace_back(instantiateOperator(op, agent));
       }
     }
 
-    result.pipeline =
-        std::make_shared<Pipeline>(std::move(operatorContexts));
+    result.pipeline = std::make_shared<Pipeline>(std::move(operatorContexts));
   }
 
   // Establish pipeline data source and sink
@@ -140,25 +143,32 @@ ConfiguredPipeline PipelineBuilder::configure() {
     result.dataSinkAgent->createOutputBuffer();
   }
 
-  // Validate datagen (if necessary)
+  // Validate datagen and metal_cat (if necessary)
   if (DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
     DatagenOperator::validate(*result.dataSourceAgent);
+    DatagenOperator::setInputFile(*result.dataSourceAgent);
+  } else if (MetalCatOperator::isMetalCatAgent(*result.dataSourceAgent)) {
+    MetalCatOperator::validate(*result.dataSourceAgent);
+    MetalCatOperator::setInputFile(*result.dataSourceAgent);
   }
 
   // Tell agents that they're accepted
-  for (auto &operatorAgentPair : orderedOperatorSpecsAndAgents) {
+  for (auto &[op, agent] : orderedOperatorSpecsAndAgents) {
+    (void)op;
+
     RegistrationResponse response;
 
     response.set_valid(true);
 
-    if (operatorAgentPair.second->inputBuffer() != std::nullopt)
-      response.set_input_buffer_filename(
-          operatorAgentPair.second->inputBuffer()->filename());
-    if (operatorAgentPair.second->outputBuffer() != std::nullopt)
-      response.set_output_buffer_filename(
-          operatorAgentPair.second->outputBuffer()->filename());
+    if (agent->inputBuffer() != std::nullopt)
+      response.set_input_buffer_filename(agent->inputBuffer()->filename());
+    if (agent->outputBuffer() != std::nullopt)
+      response.set_output_buffer_filename(agent->outputBuffer()->filename());
 
-    operatorAgentPair.second->sendRegistrationResponse(response);
+    if (agent->agentLoadFile().size())
+      response.set_agent_read_filename(agent->agentLoadFile());
+
+    agent->sendRegistrationResponse(response);
   }
 
   return result;
@@ -213,8 +223,14 @@ OperatorContext PipelineBuilder::instantiateOperator(
     }
   }
 
+  auto input = parseResult["input"].as<std::string>();
+  if (input.size()) {
+    agent->setInputFile(input);
+  }
+
   OperatorContext runtimeContext(std::move(userOperator));
   runtimeContext.setProfilingEnabled(parseResult["profile"].as<bool>());
+
   return runtimeContext;
 }
 

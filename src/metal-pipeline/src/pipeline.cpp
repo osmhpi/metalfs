@@ -57,6 +57,8 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
     enable_mask |= (1u << op.userOperator().spec().streamID());
   }
 
+  spdlog::debug("Running Pipeline");
+
   auto sourceAddress = dataSource.address(),
        destinationAddress = dataSink.address();
 

@@ -1,5 +1,7 @@
 #include "operator_agent.hpp"
 
+#include <limits.h>
+
 #include <spdlog/spdlog.h>
 
 #include "client_error.hpp"
@@ -18,9 +20,14 @@ OperatorAgent::OperatorAgent(Socket socket)
       _socket(std::move(socket)) {
   auto request = _socket.receiveMessage<MessageType::RegistrationRequest>();
 
-  auto logInput = request.has_metal_input_filename() ? request.metal_input_filename() : ("pid/" + std::to_string(request.input_pid()));
-  auto logOutput = request.has_metal_output_filename() ? request.metal_output_filename() : ("pid/" + std::to_string(request.output_pid()));
-  spdlog::trace("RegistrationRequest(operator={}, input={}, output={})", request.operator_type(), logInput, logOutput);
+  auto logInput = request.has_metal_input_filename()
+                      ? request.metal_input_filename()
+                      : ("pid/" + std::to_string(request.input_pid()));
+  auto logOutput = request.has_metal_output_filename()
+                       ? request.metal_output_filename()
+                       : ("pid/" + std::to_string(request.output_pid()));
+  spdlog::trace("RegistrationRequest(operator={}, input={}, output={})",
+                request.operator_type(), logInput, logOutput);
 
   _pid = request.pid();
   _operatorType = request.operator_type();
@@ -81,11 +88,36 @@ void OperatorAgent::createOutputBuffer() {
   _outputBuffer = Buffer::createTempFileForSharedBuffer(true);
 }
 
+void OperatorAgent::setInputFile(const std::string &input) {
+  auto absPath = resolvePath(input);
+
+  char actualpath[PATH_MAX + 1];
+  char *ptr;
+  ptr = realpath(absPath.c_str(), actualpath);
+
+  if (ptr == nullptr) {
+    throw ClientError(shared_from_this(), "Could not find input file.");
+  }
+
+  std::string realPath(ptr);
+  auto filesPrefix = _metalMountpoint + "/files/";
+  if (realPath.rfind(filesPrefix, 0) == 0) {
+    if (_internalInputFile.empty()) {
+      // TODO: Before we go ahead and read the file for the user, we should
+      // check access permissions
+      _internalInputFile = "/" + realPath.substr(filesPrefix.size());
+    }
+  } else {
+    _agentLoadFile = realPath;
+  }
+}
+
 void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {
   spdlog::trace(
-      "RegistrationResponse(valid={}, input_filename={}, output_filename={})",
+      "RegistrationResponse(valid={}, mapInputBuffer={}, mapOutputBuffer={}, "
+      "loadInputFile={})",
       message.valid(), message.has_input_buffer_filename(),
-      message.has_output_buffer_filename());
+      message.has_output_buffer_filename(), message.agent_read_filename());
   _socket.sendMessage<MessageType::RegistrationResponse>(message);
 }
 

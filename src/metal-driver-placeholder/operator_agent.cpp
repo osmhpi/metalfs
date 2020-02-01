@@ -91,7 +91,7 @@ ConnectedFile get_process_connected_to_std_fd(int fd_no) {
   return result;
 }
 
-ConnectedFile determine_process_or_file_connected_to_std_fd(
+ConnectedFile determineProcessOrFileConnectedToStandardFileDescriptor(
     int fd_no, const std::string metal_mountpoint) {
   char procfs_fd_file[256];
   snprintf(procfs_fd_file, sizeof(procfs_fd_file), "/proc/self/fd/%d", fd_no);
@@ -156,7 +156,7 @@ ConnectedFile determine_process_or_file_connected_to_std_fd(
   return ConnectedFile{};
 }
 
-std::string get_mount_point_of_filesystem(std::string path) {
+std::string getMountPointOfFilesystem(std::string path) {
   struct mntent *ent;
   FILE *mountsFile;
 
@@ -193,7 +193,7 @@ std::string get_mount_point_of_filesystem(std::string path) {
   return result;
 }
 
-std::string own_file_name() {
+std::string selfExecutableFilename() {
   // Find out our own filename and fs mount point
   char result[255];
   auto len = readlink("/proc/self/exe", result, sizeof(result) - 1);
@@ -201,14 +201,13 @@ std::string own_file_name() {
   return std::string(result);
 }
 
-std::string determine_op_key() {
+std::string determineOperatorName() {
   // Find out our own filename and fs mount point
-  char own_file_name[255];
-  auto len =
-      readlink("/proc/self/exe", own_file_name, sizeof(own_file_name) - 1);
-  own_file_name[len] = '\0';
+  char ownFileName[255];
+  auto len = readlink("/proc/self/exe", ownFileName, sizeof(ownFileName) - 1);
+  ownFileName[len] = '\0';
 
-  char *base = basename(own_file_name);
+  char *base = basename(ownFileName);
 
   return std::string(base);
 }
@@ -216,51 +215,55 @@ std::string determine_op_key() {
 }  // namespace metal
 
 int main(int argc, char *argv[]) {
-  std::string operator_key = metal::determine_op_key();
+  std::string operatorName = metal::determineOperatorName();
 
-  std::string own_fs_mount_point =
-      metal::get_mount_point_of_filesystem(metal::own_file_name());
+  std::string ownFSMountPoint =
+      metal::getMountPointOfFilesystem(metal::selfExecutableFilename());
 
   // Determine the file connected to stdin
-  auto input = metal::determine_process_or_file_connected_to_std_fd(
-      0, own_fs_mount_point);
+  auto input = metal::determineProcessOrFileConnectedToStandardFileDescriptor(
+      0, ownFSMountPoint);
 
   // Determine the file connected to stdout
-  auto output = metal::determine_process_or_file_connected_to_std_fd(
-      1, own_fs_mount_point);
+  auto output = metal::determineProcessOrFileConnectedToStandardFileDescriptor(
+      1, ownFSMountPoint);
 
   // Say hello to the filesystem!
-  char socket_filename[FILENAME_MAX];
-  sprintf(socket_filename, "%s/.hello", own_fs_mount_point.c_str());
+  char socketFileName[FILENAME_MAX];
+  sprintf(socketFileName, "%s/.hello", ownFSMountPoint.c_str());
 
   int sock = 0;
-  struct sockaddr_un serv_addr {};
-  serv_addr.sun_family = AF_UNIX;
-  strcpy(serv_addr.sun_path, socket_filename);
+  struct sockaddr_un serverAddress {};
+  serverAddress.sun_family = AF_UNIX;
+  strcpy(serverAddress.sun_path, socketFileName);
 
-  if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) perror("socket() failed");
+  if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+    perror("socket() failed");
+  }
 
-  if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+  if (connect(sock, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) <
+      0) {
     perror("connect() failed");
+  }
 
   // Prepare to send the program parameters
-  std::vector<uint64_t> argv_len(argc);
+  std::vector<uint64_t> argvLength(argc);
   uint64_t total_argv_len = 0;
   for (int i = 0; i < argc; ++i) {
-    argv_len[i] = strlen(argv[i]) + 1;
-    total_argv_len += argv_len[i];
+    argvLength[i] = strlen(argv[i]) + 1;
+    total_argv_len += argvLength[i];
   }
   std::vector<char> argv_buffer(total_argv_len);
   char *argv_cursor = (char *)argv_buffer.data();
   for (int i = 0; i < argc; ++i) {
     strcpy(argv_cursor, argv[i]);
-    argv_cursor[argv_len[i] - 1] = '\0';
-    argv_cursor += argv_len[i];
+    argv_cursor[argvLength[i] - 1] = '\0';
+    argv_cursor += argvLength[i];
   }
 
   metal::RegistrationRequest request;
   request.set_pid(getpid());
-  request.set_operator_type(operator_key);
+  request.set_operator_type(operatorName);
   request.set_input_pid(input.pid);
   request.set_output_pid(output.pid);
 
@@ -277,7 +280,7 @@ int main(int argc, char *argv[]) {
     throw std::runtime_error("Could not determine working directory.");
   }
   request.set_cwd(std::string(cwd_buff));
-  request.set_metal_mountpoint(own_fs_mount_point);
+  request.set_metal_mountpoint(ownFSMountPoint);
 
   metal::Socket socket(sock);
 
@@ -290,75 +293,89 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "%s", response.error_msg().c_str());
   }
 
-  if (!response.valid()) return 1;
+  if (!response.valid()) {
+    return 1;
+  }
 
-  std::optional<metal::Buffer> input_buffer;
-  std::optional<metal::Buffer> output_buffer;
+  FILE *infd = stdin;
+
+  std::optional<metal::Buffer> inputBuffer;
+  std::optional<metal::Buffer> outputBuffer;
 
   if (response.has_input_buffer_filename()) {
-    input_buffer =
+    inputBuffer =
         metal::Buffer::mapSharedBuffer(response.input_buffer_filename(), true);
+    if (response.has_agent_read_filename()) {
+      infd = fopen(response.agent_read_filename().c_str(), "rb");
+      // TODO: Better check for errors here...
+    }
   }
   if (response.has_output_buffer_filename()) {
-    output_buffer = metal::Buffer::mapSharedBuffer(
+    outputBuffer = metal::Buffer::mapSharedBuffer(
         response.output_buffer_filename(), false);
   }
 
-  size_t bytes_read = 0;
+  uint64_t bytesRead = 0;
   bool eof = false;
 
   // Read the first input
-  if (input_buffer != std::nullopt) {
-    bytes_read = fread(input_buffer.value().current(), sizeof(char),
-                       input_buffer.value().size(), stdin);
-    eof = feof(stdin) != 0;
-    input_buffer.value().swap();
+  if (inputBuffer != std::nullopt) {
+    bytesRead = fread(inputBuffer.value().current(), sizeof(char),
+                       inputBuffer.value().size(), infd);
+    eof = feof(infd) != 0;
+    inputBuffer.value().swap();
   }
 
-  metal::ProcessingResponse processing_response;
-  processing_response.set_eof(false);
+  metal::ProcessingResponse processingResponse;
+  processingResponse.set_eof(false);
 
   // Processing loop
   while (true) {
-    if (!processing_response.eof()) {
+    if (!processingResponse.eof()) {
       // Tell the server about the data (if any) and wait for it to be consumed
-      metal::ProcessingRequest processing_request;
-      processing_request.set_size(bytes_read);
-      processing_request.set_eof(eof);
+      metal::ProcessingRequest processingRequest;
+      processingRequest.set_size(bytesRead);
+      processingRequest.set_eof(eof);
       socket.sendMessage<metal::MessageType::ProcessingRequest>(
-          processing_request);
+          processingRequest);
     }
 
     // Write output from previous iteration
-    if (processing_response.size() && output_buffer != std::nullopt) {
-      fwrite(output_buffer.value().current(), sizeof(char),
-             processing_response.size(), stdout);
-      output_buffer.value().swap();
+    if (processingResponse.size() && outputBuffer != std::nullopt) {
+      fwrite(outputBuffer.value().current(), sizeof(char),
+             processingResponse.size(), stdout);
+      outputBuffer.value().swap();
     }
 
-    if (processing_response.has_message()) {
-      fprintf(stderr, "%s", processing_response.message().c_str());
+    if (processingResponse.has_message()) {
+      fprintf(stderr, "%s", processingResponse.message().c_str());
     }
 
-    if (processing_response.eof()) break;
+    if (processingResponse.eof()) {
+      break;
+    }
 
     // Read the next input
-    if (input_buffer != std::nullopt && !eof) {
-      bytes_read = fread(input_buffer.value().current(), sizeof(char),
-                         input_buffer.value().size(), stdin);
-      eof = feof(stdin) != 0;
-      input_buffer.value().swap();
+    if (inputBuffer != std::nullopt && !eof) {
+      bytesRead = fread(inputBuffer.value().current(), sizeof(char),
+                         inputBuffer.value().size(), infd);
+      eof = feof(infd) != 0;
+      inputBuffer.value().swap();
     }
 
     // Wait for a server response
     try {
-      processing_response =
+      processingResponse =
           socket.receiveMessage<metal::MessageType::ProcessingResponse>();
     } catch (std::exception &ex) {
       fprintf(stderr,
               "An error occurred during pipeline execution. Please check the "
               "filesystem driver logs.\n");
     }
+  }
+
+  if (infd != stdin) {
+    fclose(infd);
   }
 
   return 0;

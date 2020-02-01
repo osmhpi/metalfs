@@ -31,12 +31,14 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
   void setError(const std::string &error) { _error = error; }
   const std::string &internalInputFile() const { return _internalInputFile; }
   const std::string &internalOutputFile() const { return _internalOutputFile; }
+  const std::string &agentLoadFile() const { return _agentLoadFile; }
   const std::string &operatorType() const { return _operatorType; }
   bool terminated() const { return _terminated; }
   void setTerminated() { _terminated = true; }
 
   void createInputBuffer();
   void createOutputBuffer();
+  void setInputFile(const std::string &input);
 
   void sendRegistrationResponse(RegistrationResponse &message);
   ProcessingRequest receiveProcessingRequest();
@@ -55,6 +57,7 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   std::string _internalInputFile;
   std::string _internalOutputFile;
+  std::string _agentLoadFile;
 
   std::shared_ptr<OperatorAgent> _outputAgent;
   uint _outputAgentPid;

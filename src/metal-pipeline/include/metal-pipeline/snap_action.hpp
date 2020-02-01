@@ -30,8 +30,8 @@ class METAL_PIPELINE_API SnapAction {
   static std::string mapTypeToString(fpga::MapType mapType);
 
  protected:
-  std::string jobTypeToString(fpga::JobType job);
-  std::string snapReturnCodeToString(int rc);
+  static std::string jobTypeToString(fpga::JobType job);
+  static std::string snapReturnCodeToString(int rc);
 
   struct snap_action *_action;
   struct snap_card *_card;

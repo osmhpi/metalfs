@@ -436,6 +436,7 @@ void Context::initialize(bool in_memory, std::string metadata_dir, int card) {
     _operators.emplace(op.first);
   }
   _operators.emplace(DatagenOperator::id());
+  _operators.emplace(MetalCatOperator::id());
 
   _files_dirname = "files";
   _operators_dirname = "operators";

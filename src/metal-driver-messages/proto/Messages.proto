@@ -24,6 +24,8 @@ message RegistrationResponse {
 
   optional string input_buffer_filename = 3;
   optional string output_buffer_filename = 4;
+
+  optional string agent_read_filename = 5;
 }
 
 message ProcessingRequest {
