@@ -46,7 +46,7 @@ set(DEFAULT_LIBRARIES)
 
 set(DEFAULT_COMPILE_DEFINITIONS
     SYSTEM_${SYSTEM_NAME_UPPER}
-    GLM_ENABLE_EXPERIMENTAL
+    $<$<CONFIG:DEBUG>:DEBUG>
 )
 
 # MSVC compiler options
@@ -109,7 +109,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCH
         -Wmissing-braces
         -Wreturn-type
         -Wswitch
-        -Wswitch-default
         -Wuninitialized
         -Wmissing-field-initializers
 

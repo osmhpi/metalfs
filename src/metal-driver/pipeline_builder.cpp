@@ -1,45 +1,49 @@
-#include <utility>
-
 #include "pipeline_builder.hpp"
 
 #include <dirent.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
+#include <utility>
+
 #include <cxxopts.hpp>
+
 #include <metal-driver-messages/message_header.hpp>
 #include <metal-driver-messages/messages.hpp>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
+#include <metal-pipeline/operator_specification.hpp>
+
+#include "pseudo_operators.hpp"
 
 namespace metal {
 
 PipelineBuilder::PipelineBuilder(
-    std::shared_ptr<metal::OperatorRegistry> registry,
-    std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents)
+    std::shared_ptr<metal::OperatorFactory> registry,
+    std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents)
     : _registry(std::move(registry)),
       _pipeline_agents(std::move(pipeline_agents)) {
-  for (const auto &op : _registry->operators()) {
+  for (const auto &op : _registry->operatorSpecifications()) {
     // TODO: Don't do this every time a pipeline starts
     _operatorOptions.insert(
-        std::make_pair(op.first, buildOperatorOptions(op.second)));
+        std::make_pair(op.first, buildOperatorOptions(*op.second)));
   }
 }
 
 cxxopts::Options PipelineBuilder::buildOperatorOptions(
-    const std::shared_ptr<AbstractOperator> &op) {
-  auto options = cxxopts::Options(op->id(), op->description());
+    const OperatorSpecification &op) {
+  auto options = cxxopts::Options(op.id(), op.description());
 
   options.add_option("", "h", "help", "Print help",
                      cxxopts::value<bool>()->default_value("false"), "");
   options.add_option("", "p", "profile", "Enable profiling",
                      cxxopts::value<bool>()->default_value("false"), "");
 
-  for (const auto &keyOptionPair : op->optionDefinitions()) {
+  for (const auto &keyOptionPair : op.optionDefinitions()) {
     const auto &option = keyOptionPair.second;
     switch (option.type()) {
       case OptionType::Bool: {
@@ -66,26 +70,37 @@ cxxopts::Options PipelineBuilder::buildOperatorOptions(
   return options;
 }
 
-std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                      std::shared_ptr<RegisteredAgent>>>
-PipelineBuilder::resolve_operators() {
+std::vector<std::pair<std::shared_ptr<const OperatorSpecification>,
+                      std::shared_ptr<OperatorAgent>>>
+PipelineBuilder::resolveOperatorSpecifications() {
   // Check if each requested operator is used only once and look up the
   // operator specification
 
-  std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                        std::shared_ptr<RegisteredAgent>>>
+  std::vector<std::pair<std::shared_ptr<const OperatorSpecification>,
+                        std::shared_ptr<OperatorAgent>>>
       result;
 
-  std::unordered_set<std::shared_ptr<AbstractOperator>> operators_with_agents;
+  std::unordered_set<std::shared_ptr<const OperatorSpecification>>
+      operatorsWithAgents;
 
   for (const auto &agent : _pipeline_agents) {
-    auto op = _registry->operators().find(agent->operator_type);
-    if (op == _registry->operators().end()) {
+    if (DatagenOperator::isDatagenAgent(*agent)) {
+      if (result.size() > 0)
+        throw std::runtime_error(
+            "Operator can only be used as the start of an FPGA pipeline");
+
+      result.emplace_back(nullptr, agent);
+      continue;
+    }
+
+    auto op = _registry->operatorSpecifications().find(agent->operatorType());
+    if (op == _registry->operatorSpecifications().end()) {
       throw std::runtime_error("Unknown operator was requested");
     }
 
-    if (!operators_with_agents.emplace(op->second).second)
+    if (!operatorsWithAgents.emplace(op->second).second) {
       throw std::runtime_error("Operator was used more than once");
+    }
 
     result.emplace_back(std::make_pair(op->second, agent));
   }
@@ -93,128 +108,87 @@ PipelineBuilder::resolve_operators() {
   return result;
 }
 
-std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                      std::shared_ptr<RegisteredAgent>>>
-PipelineBuilder::configure() {
-  auto operators = resolve_operators();
+ConfiguredPipeline PipelineBuilder::configure() {
+  auto orderedOperatorSpecsAndAgents = resolveOperatorSpecifications();
 
-  for (auto &operatorAgentPair : operators) {
-    set_operator_options_from_agent_request(operatorAgentPair.first,
-                                            operatorAgentPair.second);
+  ConfiguredPipeline result;
+  result.operatorAgents = _pipeline_agents;
+
+  {
+    // Build the Pipeline
+    std::vector<OperatorContext> operatorContexts;
+    for (auto &operatorAgentPair : orderedOperatorSpecsAndAgents) {
+      if (operatorAgentPair.first != nullptr) {
+        operatorContexts.emplace_back(instantiateOperator(
+            operatorAgentPair.first, operatorAgentPair.second));
+      }
+    }
+
+    result.pipeline =
+        std::make_shared<Pipeline>(std::move(operatorContexts));
   }
 
   // Establish pipeline data source and sink
-  std::deque<std::pair<std::shared_ptr<AbstractOperator>,
-                       std::shared_ptr<RegisteredAgent>>>
-      pipeline_operators;
-
-  for (const auto &operatorAgentPair : operators)
-    pipeline_operators.emplace_back(operatorAgentPair);
-
-  auto dataSource =
-      std::dynamic_pointer_cast<DataSource>(pipeline_operators.front().first);
-  if (dataSource == nullptr) {
-    auto dataSourceAgent = operators.front().second;
-    if (!dataSourceAgent->internal_input_file.empty()) {
-      dataSource = std::make_shared<FileDataSource>(
-          dataSourceAgent->internal_input_file, 0, 0);
-    } else {
-      dataSourceAgent->input_buffer =
-          Buffer::create_temp_file_for_shared_buffer(false);
-      dataSource = std::make_shared<HostMemoryDataSource>(
-          nullptr, 0);  // TODO: Address and size are set later
-    }
-    pipeline_operators.emplace_front(std::make_pair(dataSource, nullptr));
+  result.dataSourceAgent = orderedOperatorSpecsAndAgents.front().second;
+  if (result.dataSourceAgent->internalInputFile().empty() &&
+      !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
+    result.dataSourceAgent->createInputBuffer();
   }
 
-  auto dataSink =
-      std::dynamic_pointer_cast<DataSink>(pipeline_operators.back().first);
-  if (dataSink == nullptr) {  // To my knowledge, there are no user-accessible
-                              // data sinks, so always true
-    auto dataSinkAgent = operators.back().second;
-    if (!dataSinkAgent->internal_output_file.empty()) {
-      if (dataSinkAgent->internal_output_file == "$NULL") {
-        dataSink = std::make_shared<NullDataSink>(0);
-      } else {
-        dataSink = std::make_shared<FileDataSink>(
-            dataSinkAgent->internal_output_file, 0, 0);
-      }
-    } else {
-      dataSinkAgent->output_buffer =
-          Buffer::create_temp_file_for_shared_buffer(true);
-      dataSink = std::make_shared<HostMemoryDataSink>(
-          nullptr, 0);  // TODO: Address and size are set later
-    }
-    pipeline_operators.emplace_back(std::make_pair(dataSink, nullptr));
+  result.dataSinkAgent = orderedOperatorSpecsAndAgents.back().second;
+  if (result.dataSinkAgent->internalOutputFile().empty()) {
+    result.dataSinkAgent->createOutputBuffer();
+  }
+
+  // Validate datagen (if necessary)
+  if (DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
+    DatagenOperator::validate(*result.dataSourceAgent);
   }
 
   // Tell agents that they're accepted
-  for (auto &operatorAgentPair : operators) {
-    ServerAcceptAgent response;
+  for (auto &operatorAgentPair : orderedOperatorSpecsAndAgents) {
+    RegistrationResponse response;
 
     response.set_valid(true);
 
-    if (operatorAgentPair.second->input_buffer != std::nullopt)
+    if (operatorAgentPair.second->inputBuffer() != std::nullopt)
       response.set_input_buffer_filename(
-          operatorAgentPair.second->input_buffer.value().filename());
-    if (operatorAgentPair.second->output_buffer != std::nullopt)
+          operatorAgentPair.second->inputBuffer()->filename());
+    if (operatorAgentPair.second->outputBuffer() != std::nullopt)
       response.set_output_buffer_filename(
-          operatorAgentPair.second->output_buffer.value().filename());
+          operatorAgentPair.second->outputBuffer()->filename());
 
-    operatorAgentPair.second->socket
-        .send_message<message_type::ServerAcceptAgent>(response);
+    operatorAgentPair.second->sendRegistrationResponse(response);
   }
-
-  std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                        std::shared_ptr<RegisteredAgent>>>
-      result;
-  result.reserve(pipeline_operators.size());
-
-  for (const auto &op : pipeline_operators) result.emplace_back(op);
 
   return result;
 }
 
-void PipelineBuilder::set_operator_options_from_agent_request(
-    std::shared_ptr<AbstractOperator> op,
-    std::shared_ptr<RegisteredAgent> agent) {
+OperatorContext PipelineBuilder::instantiateOperator(
+    std::shared_ptr<const OperatorSpecification> op,
+    std::shared_ptr<OperatorAgent> agent) {
   auto &options = _operatorOptions.at(op->id());
+  auto parseResult = agent->parseOptions(options);
 
-  // Contain some C++ / C interop ugliness inside here...
-
-  std::vector<char *> argsRaw;
-  for (const auto &arg : agent->args)
-    argsRaw.emplace_back(const_cast<char *>(arg.c_str()));
-
-  int argc = (int)agent->args.size();
-  char **argv = argsRaw.data();
-  auto parseResult = options.parse(argc, argv);
-
-  if (parseResult["help"].as<bool>()) {
-    // Not really an exception, but the fastest way how we can exit the
-    // processing flow
-    throw ClientError(agent, options.help());
-  }
-
-  op->set_profiling_enabled(parseResult["profile"].as<bool>());
+  Operator userOperator(op);
 
   for (const auto &optionType : op->optionDefinitions()) {
     auto result = parseResult[optionType.first];
 
     switch (optionType.second.type()) {
       case OptionType::Uint: {
-        op->setOption(optionType.first, result.as<uint32_t>());
+        userOperator.setOption(optionType.first, result.as<uint32_t>());
         break;
       }
       case OptionType::Bool: {
-        op->setOption(optionType.first, result.as<bool>());
+        userOperator.setOption(optionType.first, result.as<bool>());
         break;
       }
       case OptionType::Buffer: {
         if (!optionType.second.bufferSize().has_value())
           throw std::runtime_error("File option metadata not found");
 
-        auto filePath = resolvePath(result.as<std::string>(), agent->cwd);
+        auto filePath = agent->resolvePath(result.as<std::string>());
 
         // TODO: Detect if path points to FPGA file
 
@@ -234,20 +208,14 @@ void PipelineBuilder::set_operator_options_from_agent_request(
 
         fclose(fp);
 
-        op->setOption(optionType.first, std::move(buffer));
+        userOperator.setOption(optionType.first, std::move(buffer));
       }
     }
   }
-}
 
-std::string PipelineBuilder::resolvePath(std::string relative_or_absolute_path,
-                                         std::string working_dir) {
-  if (relative_or_absolute_path.size() && relative_or_absolute_path[0] == '/') {
-    // is absolute
-    return relative_or_absolute_path;
-  }
-
-  return working_dir + "/" + relative_or_absolute_path;
+  OperatorContext runtimeContext(std::move(userOperator));
+  runtimeContext.setProfilingEnabled(parseResult["profile"].as<bool>());
+  return runtimeContext;
 }
 
 }  // namespace metal

@@ -1,7 +1,7 @@
 ARG VIVADO_EDITION=webpack
-ARG PSL=psl8
+ARG PSL=PSL8
 
-FROM metalfs/sdk-base:$VIVADO_EDITION-$PSL AS build
+FROM metalfs/sdk-base:$VIVADO_EDITION AS build
 
 ADD . /src/metal_fs
 RUN cd /src/metal_fs \
@@ -11,9 +11,10 @@ RUN cd /src/metal_fs \
     -DCMAKE_INSTALL_PREFIX=/install/ \
     -DCMAKE_BUILD_TYPE=Release \
     -DOPTION_BUILD_TESTS=OFF .. \
+    -DPSL_VERSION=$PSL
  && make && make install
 
-FROM metalfs/sdk-base:$VIVADO_EDITION-$PSL
+FROM metalfs/sdk-base:$VIVADO_EDITION
 
 COPY --from=build /install/metal-driver /usr/local/bin/
 COPY --from=build /install/metal-driver-placeholder /usr/local/bin/

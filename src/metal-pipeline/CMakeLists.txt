@@ -3,9 +3,6 @@
 # External dependencies
 #
 
-find_package(jq REQUIRED)
-find_package(snap REQUIRED)
-
 #
 # Library name and options
 #
@@ -33,26 +30,31 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
-    ${include_path}/abstract_operator.hpp
+    ${include_path}/common.hpp
+    ${include_path}/data_sink_context.hpp
     ${include_path}/data_sink.hpp
+    ${include_path}/data_source_context.hpp
     ${include_path}/data_source.hpp
     ${include_path}/operator_argument.hpp
-    ${include_path}/operator_registry.hpp
-    ${include_path}/pipeline_definition.hpp
-    ${include_path}/pipeline_runner.hpp
+    ${include_path}/operator_context.hpp
+    ${include_path}/operator_factory.hpp
+    ${include_path}/operator_specification.hpp
+    ${include_path}/operator.hpp
+    ${include_path}/pipeline.hpp
+    ${include_path}/profiling_pipeline_runner.hpp
     ${include_path}/snap_action.hpp
-    ${include_path}/user_operator.hpp
+    ${include_path}/snap_pipeline_runner.hpp
 )
 
 set(sources
-    ${source_path}/abstract_operator.cpp
-    ${source_path}/data_sink.cpp
-    ${source_path}/data_source.cpp
-    ${source_path}/operator_registry.cpp
-    ${source_path}/pipeline_definition.cpp
-    ${source_path}/pipeline_runner.cpp
+    ${source_path}/operator_context.cpp
+    ${source_path}/operator_factory.cpp
+    ${source_path}/operator_specification.cpp
+    ${source_path}/operator.cpp
+    ${source_path}/pipeline.cpp
+    ${source_path}/profiling_pipeline_runner.cpp
     ${source_path}/snap_action.cpp
-    ${source_path}/user_operator.cpp
+    ${source_path}/snap_pipeline_runner.cpp
 )
 
 # Group source files
@@ -136,11 +138,9 @@ target_include_directories(${target}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 
     PUBLIC
     ${DEFAULT_INCLUDE_DIRECTORIES}
-    ${SNAP_INCLUDE_DIR}
 
     INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -155,11 +155,12 @@ target_include_directories(${target}
 
 target_link_libraries(${target}
     PRIVATE
-    ${SNAP_LIBRARY}
+    nlohmann_json::nlohmann_json
+    spdlog::spdlog
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
-    ${JQ_LIBRARIES}
+    snap::snap
 
     INTERFACE
 )

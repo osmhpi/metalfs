@@ -1,7 +1,8 @@
 #include "base_test.hpp"
 
 #include <libgen.h>
-#include <metal-pipeline/pipeline_runner.hpp>
+
+#include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
@@ -19,17 +20,17 @@ void BaseTest::SetUp() {
 }
 
 void PipelineTest::_setUp() {
-  auto info = SnapPipelineRunner::readImageInfo(0);
-  _registry = std::make_unique<OperatorRegistry>(info);
+  SnapAction action;
+  _registry = std::make_unique<OperatorFactory>(OperatorFactory::fromFPGA(action));
 }
 
-std::shared_ptr<AbstractOperator> PipelineTest::try_get_operator(
+std::optional<Operator> PipelineTest::try_get_operator(
     const std::string &key) {
-  auto op = _registry->operators().find(key);
-  if (op == _registry->operators().end()) {
-    return nullptr;
-  }
-  return op->second;
+  if (_registry->operatorSpecifications().find(key) ==
+      _registry->operatorSpecifications().end())
+    return std::nullopt;
+
+  return _registry->createOperator(key);
 }
 
 void SimulationPipelineTest::SetUp() { _setUp(); }

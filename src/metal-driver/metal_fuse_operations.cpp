@@ -10,26 +10,31 @@
 
 #include <pthread.h>
 
-extern "C" {
-#include <metal-filesystem/inode.h>
-#include <metal-filesystem/metal.h>
-};
-
 #include <spdlog/spdlog.h>
 #include <cxxopts.hpp>
 #include <thread>
 
+#include <metal-filesystem/inode.h>
+#include <metal-filesystem/metal.h>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/snap_action.hpp>
+
+#include "pseudo_operators.hpp"
 #include "server.hpp"
 
 namespace metal {
 
+uint8_t PlaceholderBinary[] = {
+  #include "metal-driver-placeholder.hex"
+};
+
 int fuse_chown(const char *path, uid_t uid, gid_t gid) {
   spdlog::trace("fuse_chown {}", path);
   auto &c = Context::instance();
-  if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) != 0)
+  if (strncmp(path, c.files_prefix().c_str(), c.files_prefix().size()) != 0) {
+    spdlog::warn("FUSE: function fuse_chown not implemented");
     return -ENOSYS;
+  }
 
   return mtl_chown(path + c.files_prefix().size(), uid, gid);
 }
@@ -100,14 +105,16 @@ int fuse_getattr(const char *path, struct stat *stbuf) {
     return 0;
   }
 
-  for (const auto &op : c.registry()->operators()) {
-    auto operator_filename = c.operators_prefix() + op.first;
+  for (const auto &op : c.operators()) {
+    auto operator_filename = c.operators_prefix() + op;
     if (strcmp(path, operator_filename.c_str()) != 0) {
       continue;
     }
 
-    res = lstat(c.agent_filepath().c_str(), stbuf);
-    if (res == -1) return -errno;
+    stbuf->st_mode = S_IFREG | 0111;
+    stbuf->st_uid = 0;
+    stbuf->st_gid = 0;
+    stbuf->st_size = sizeof(PlaceholderBinary);
 
     return 0;
   }
@@ -137,8 +144,8 @@ int fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
 
-    for (const auto &op : c.registry()->operators()) {
-      filler(buf, op.first.c_str(), NULL, 0);
+    for (const auto &op : c.operators()) {
+      filler(buf, op.c_str(), NULL, 0);
     }
 
     return 0;
@@ -190,6 +197,7 @@ int fuse_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_create not implemented");
   return -ENOSYS;
 }
 
@@ -224,6 +232,18 @@ int fuse_open(const char *path, struct fuse_file_info *fi) {
     return 0;
   }
 
+  if (strncmp(path, c.operators_dir().c_str(), c.operators_dir().size()) == 0) {
+    auto basename = std::string(path + c.operators_prefix().size());
+    for (const auto &op : c.operators()) {
+      if (basename != op) {
+        continue;
+      }
+
+      return 0;
+    }
+  }
+
+  spdlog::warn("FUSE: function fuse_open not implemented");
   return -ENOSYS;
 }
 
@@ -250,27 +270,19 @@ int fuse_read(const char *path, char *buf, size_t size, off_t offset,
 
   if (strncmp(path, c.operators_dir().c_str(), c.operators_dir().size()) == 0) {
     auto basename = std::string(path + c.operators_prefix().size());
-    for (const auto &op : c.registry()->operators()) {
-      if (basename != op.first) {
+    for (const auto &op : c.operators()) {
+      if (basename != op) {
         continue;
       }
 
-      int fd;
-      int res;
+      auto readLength = std::min(size, sizeof(PlaceholderBinary) - offset);
+      memcpy(buf, PlaceholderBinary + offset, readLength);
 
-      fd = open(c.agent_filepath().c_str(), O_RDONLY);
-
-      if (fd == -1) return -errno;
-
-      res = pread(fd, buf, size, offset);
-      if (res == -1) res = -errno;
-
-      close(fd);
-
-      return res;
+      return readLength;
     }
   }
 
+  spdlog::warn("FUSE: function fuse_read not implemented");
   return -ENOSYS;
 }
 
@@ -301,6 +313,7 @@ int fuse_truncate(const char *path, off_t size) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_truncate not implemented");
   return -ENOSYS;
 }
 
@@ -320,6 +333,7 @@ int fuse_write(const char *path, const char *buf, size_t size, off_t offset,
     return size;
   }
 
+  spdlog::warn("FUSE: function fuse_write not implemented");
   return -ENOSYS;
 }
 
@@ -338,6 +352,7 @@ int fuse_unlink(const char *path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_unlink not implemented");
   return -ENOSYS;
 }
 
@@ -357,6 +372,7 @@ int fuse_mkdir(const char *path, mode_t mode) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_mkdir not implemented");
   return -ENOSYS;
 }
 
@@ -374,6 +390,7 @@ int fuse_rmdir(const char *path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_rmdir not implemented");
   return -ENOSYS;
 }
 
@@ -394,6 +411,7 @@ int fuse_rename(const char *from_path, const char *to_path) {
     return 0;
   }
 
+  spdlog::warn("FUSE: function fuse_rename not implemented");
   return -ENOSYS;
 }
 
@@ -402,20 +420,22 @@ Context &Context::instance() {
   return _instance;
 }
 
-void Context::initialize(bool in_memory, std::string bin_path,
-                         std::string metadata_dir, int card) {
+void Context::initialize(bool in_memory, std::string metadata_dir, int card) {
   _card = card;
 
   if (!in_memory) {
-    auto image_info = SnapPipelineRunner::readImageInfo(_card);
-    _registry = std::make_shared<OperatorRegistry>(image_info);
+    SnapAction action(card);
+    _registry =
+        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(action));
   } else {
-    _registry = std::make_shared<OperatorRegistry>("{\"operators\": {}}");
+    _registry = std::make_shared<OperatorFactory>(
+        OperatorFactory::fromManifestString("{\"operators\": {}}"));
   }
 
-  // Add the random data source operator
-  auto datagen = std::make_shared<RandomDataSource>();
-  _registry->add_operator(datagen->id(), datagen);
+  for (const auto &op : _registry->operatorSpecifications()) {
+    _operators.emplace(op.first);
+  }
+  _operators.emplace(DatagenOperator::id());
 
   _files_dirname = "files";
   _operators_dirname = "operators";
@@ -431,14 +451,6 @@ void Context::initialize(bool in_memory, std::string bin_path,
   auto socket_file = std::string(socket_dir) + "/metal.sock";
   strncpy(socket_filename, socket_file.c_str(), 255);
   _socket_filename = std::string(socket_filename);
-
-  // Determine the path to the metal-driver-placeholder executable
-  char agent_filepath[255];
-  strncpy(agent_filepath, bin_path.c_str(), sizeof(agent_filepath));
-  dirname(agent_filepath);
-  strncat(agent_filepath, "/metal-driver-placeholder",
-          sizeof(agent_filepath) - 1);
-  _agent_filepath = std::string(agent_filepath);
 
   DIR *dir = opendir(metadata_dir.c_str());
   if (dir) {

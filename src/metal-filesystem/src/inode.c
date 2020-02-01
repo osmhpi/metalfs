@@ -1,10 +1,10 @@
+#include <metal-filesystem/inode.h>
+
 #include <stddef.h>
 #include <string.h>
 
 #include <metal-filesystem/metal.h>
 #include "meta.h"
-
-#include <metal-filesystem/inode.h>
 
 #define INODES_DB_NAME "inodes"
 

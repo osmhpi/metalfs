@@ -11,9 +11,10 @@ RUN apt-get update \
     curl ca-certificates \
     build-essential \
     git \
+    jq \
  && rm -rf /var/lib/apt/lists/*
 
-# Metal FS Libraries
+# Metal FS Dependencies
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     libfuse-dev \
@@ -28,12 +29,6 @@ RUN mkdir /tmp/cmake \
  && cp -rf /tmp/cmake/bin /usr/ \
  && cp -rf /tmp/cmake/share /usr/ \
  && rm -rf /tmp/cmake
-
-# libjq
-RUN curl -sL https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz --output /tmp/jq-1.5.tar.gz \
- && (cd /tmp && tar -xzf jq-1.5.tar.gz && rm jq-1.5.tar.gz) \
- && (cd /tmp/jq-1.5 && ./configure --with-oniguruma=builtin --disable-maintainer-mode && mkdir -p builtin/lib && make && make install) \
- && rm -rf /tmp/jq-1.5
 
 # GCC 7
 RUN apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 60C317803A41BA51845E371A1E9377A2BA9EF27F \
@@ -69,22 +64,3 @@ ENV BASH_ENV=/root/.metal_profile
 
 # Load .metal_profile for interactive bash shells
 RUN echo ". ~/.metal_profile" >> ~/.bashrc
-
-
-# PSLSE
-ARG PSLVER=8
-ENV PSLSE_ROOT=/frameworks/pslse
-RUN mkdir -p /frameworks/pslse \
- && curl -sL https://github.com/ibm-capi/pslse/archive/v4.1.tar.gz | tar xvz -C /frameworks/pslse --strip 1 \
- && cd /frameworks/pslse/libcxl \
- && PSLVER=$PSLVER make
-
-# SNAP
-RUN git clone https://github.com/open-power/snap /tmp/snap \
- && cd /tmp/snap/software \
- && git checkout bc58d6c \
- && make \
- && cp /tmp/snap/software/include/* /usr/local/include/ \
- && cp /tmp/snap/software/lib/*.a /usr/local/lib/ \
- && cp /tmp/snap/software/lib/*.so /usr/local/lib/ \
- && rm -rf /tmp/snap

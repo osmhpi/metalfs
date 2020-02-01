@@ -5,8 +5,8 @@
 #include <snap_action_metal.h>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/operator_factory.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
@@ -19,10 +19,8 @@ TEST_F(ChangecasePipeline, TransformsToUppercase) {
   const char input[] = "Hello World";
   char dest[20] = {0};
 
-  std::shared_ptr<AbstractOperator> transformer;
-  try {
-    transformer = _registry->operators().at("changecase");
-  } catch (std::exception &e) {
+  auto transformer = try_get_operator("changecase");
+  if (!transformer) {
     // Could not find operator
     GTEST_SKIP();
     return;
@@ -30,14 +28,11 @@ TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
   transformer->setOption("lowercase", false);
 
-  auto dataSource =
-      std::make_shared<HostMemoryDataSource>(input, sizeof(input) - 1);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, sizeof(input) - 1);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, transformer, dataSink});
-  pipeline.run(action);
+  auto pipeline = Pipeline(std::move(*transformer));
+  pipeline.run(DataSource(input, sizeof(input) - 1),
+               DataSink(dest, sizeof(input) - 1), action);
 
   EXPECT_EQ("HELLO WORLD", std::string(dest));
 }
@@ -46,10 +41,8 @@ TEST_F(ChangecasePipeline, TransformsToLowercase) {
   const char input[] = "Hello World";
   char dest[20] = {0};
 
-  std::shared_ptr<AbstractOperator> transformer;
-  try {
-    transformer = _registry->operators().at("changecase");
-  } catch (std::exception &e) {
+  auto transformer = try_get_operator("changecase");
+  if (!transformer) {
     // Could not find operator
     GTEST_SKIP();
     return;
@@ -57,14 +50,11 @@ TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
   transformer->setOption("lowercase", true);
 
-  auto dataSource =
-      std::make_shared<HostMemoryDataSource>(input, sizeof(input) - 1);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, sizeof(input) - 1);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, transformer, dataSink});
-  pipeline.run(action);
+  auto pipeline = Pipeline(std::move(*transformer));
+  pipeline.run(DataSource(input, sizeof(input) - 1),
+               DataSink(dest, sizeof(input) - 1), action);
 
   EXPECT_EQ("hello world", std::string(dest));
 }

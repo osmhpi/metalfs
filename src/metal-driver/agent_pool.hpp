@@ -4,29 +4,29 @@
 #include <unordered_set>
 #include <vector>
 
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 
 namespace metal {
 
-class ClientHello;
+class RegistrationRequest;
 
 class AgentPool {
  public:
-  void register_agent(ClientHello &hello, int socket);
-  bool contains_valid_pipeline();
-  void release_unused_agents();
+  void registerAgent(Socket socket);
+  bool containsValidPipeline();
+  void releaseUnusedAgents();
   void reset();
-  std::vector<std::shared_ptr<RegisteredAgent>> cached_pipeline_agents() {
+  std::vector<std::shared_ptr<OperatorAgent>> cachedPipeline() {
     return _pipeline_agents;
   }
 
  protected:
-  void send_all_agents_invalid(
-      std::unordered_set<std::shared_ptr<RegisteredAgent>> &agents);
-  void send_agent_invalid(RegisteredAgent &agent);
+  void sendAllAgentsInvalid(
+      std::unordered_set<std::shared_ptr<OperatorAgent>> &agents);
+  void sendRegistrationInvalid(OperatorAgent &agent);
 
-  std::unordered_set<std::shared_ptr<RegisteredAgent>> _registered_agents;
-  std::vector<std::shared_ptr<RegisteredAgent>> _pipeline_agents;
+  std::unordered_set<std::shared_ptr<OperatorAgent>> _registered_agents;
+  std::vector<std::shared_ptr<OperatorAgent>> _pipeline_agents;
   bool _contains_valid_pipeline_cached;
 };
 

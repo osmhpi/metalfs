@@ -3,6 +3,7 @@
 # External dependencies
 #
 
+
 #
 # Executable name and options
 #
@@ -59,7 +60,6 @@ target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 )
 
 
@@ -71,6 +71,7 @@ target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
     ${META_PROJECT_NAME}::metal-filesystem
+    spdlog::spdlog
     gtest
 )
 

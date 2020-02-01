@@ -4,16 +4,18 @@
 #include <functional>
 
 #include <snap_action_metal.h>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/pipeline.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 
 namespace metal {
 
 int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
   if (metadata) {
+    // TODO: The number of blocks per NVMe stick can be obtained through the
+    // SNAP MMIO interface
     metadata->num_blocks = 64 * 1024 * 1024;
     metadata->block_size = fpga::StorageBlockSize;
   }
@@ -34,30 +36,24 @@ int PipelineStorage::set_active_write_extent_list(
 }
 
 int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
-  auto dataSource =
-      std::make_shared<FileDataSource>(_read_extents, offset, length);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(buffer, length);
+  FileDataSourceContext source(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+                               _read_extents, offset, length);
+  DefaultDataSinkContext sink(DataSink(buffer, length));
 
-  auto pipeline = std::make_shared<PipelineDefinition>(
-      std::vector<std::shared_ptr<AbstractOperator>>({dataSource, dataSink}));
-
-  SnapPipelineRunner runner(pipeline, 0);
-  runner.run(true);
+  SnapPipelineRunner runner(0);
+  runner.run(source, sink);
 
   return MTL_SUCCESS;
 }
 
 int PipelineStorage::write(uint64_t offset, const void *buffer,
                            uint64_t length) {
-  auto dataSource = std::make_shared<HostMemoryDataSource>(buffer, length);
-  auto dataSink =
-      std::make_shared<FileDataSink>(_write_extents, offset, length);
+  DefaultDataSourceContext source(DataSource(buffer, length));
+  FileDataSinkContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
+                           _write_extents, offset, length);
 
-  auto pipeline = std::make_shared<PipelineDefinition>(
-      std::vector<std::shared_ptr<AbstractOperator>>({dataSource, dataSink}));
-
-  SnapPipelineRunner runner(pipeline, 0);
-  runner.run(true);
+  SnapPipelineRunner runner(0);
+  runner.run(source, sink);
 
   return MTL_SUCCESS;
 }

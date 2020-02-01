@@ -9,24 +9,14 @@ RUN apt-get update \
     ca-certificates \
     build-essential \
     cmake \
+    xxd \
     libcxl-dev \
     libfuse-dev \
     liblmdb-dev \
     libprotobuf-dev \
     protobuf-compiler \
-    libjq-dev \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
-
-# SNAP
-RUN git clone https://github.com/open-power/snap /tmp/snap \
- && cd /tmp/snap/software \
- && git checkout bc58d6c \
- && make \
- && cp /tmp/snap/software/include/* /usr/local/include/ \
- && cp /tmp/snap/software/lib/*.a /usr/local/lib/ \
- && cp /tmp/snap/software/lib/*.so /usr/local/lib/ \
- && rm -rf /tmp/snap
 
 WORKDIR /metal
 
@@ -47,7 +37,6 @@ FROM ubuntu:bionic
 COPY --from=build /install/metal-driver /usr/local/bin/
 COPY --from=build /install/metal-driver-placeholder /usr/local/bin/
 COPY --from=build /install/lib/ /usr/local/lib/
-COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/libsnap.so
 RUN ldconfig
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -56,10 +45,9 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
     fuse \
     liblmdb0 \
-    libjq1 \
     libprotobuf10 \
     libcxl1 \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
 
-ENTRYPOINT /usr/bin/metal-driver
+CMD metal-driver

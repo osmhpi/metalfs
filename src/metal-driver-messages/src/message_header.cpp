@@ -9,14 +9,14 @@ MessageHeader MessageHeader::receive(int socket) {
   MessageHeader incoming_message;
   recv(socket, &incoming_message, sizeof(incoming_message), 0);
 
-  return MessageHeader(static_cast<message_type>(ntohl(
+  return MessageHeader(static_cast<MessageType>(ntohl(
                            static_cast<uint32_t>(incoming_message._type))),
                        ntohl(static_cast<uint32_t>(incoming_message._length)));
 }
 
 void MessageHeader::sendHeader(int socket) {
   MessageHeader outgoing_message(
-      static_cast<message_type>(htonl(static_cast<uint32_t>(_type))),
+      static_cast<MessageType>(htonl(static_cast<uint32_t>(_type))),
       htonl(static_cast<uint32_t>(_length)));
 
   send(socket, &outgoing_message, sizeof(outgoing_message), 0);

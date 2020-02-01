@@ -1,71 +1,61 @@
 #include <unistd.h>
+
 #include <algorithm>
+
+#include <spdlog/spdlog.h>
+
 #include <metal-driver-messages/buffer.hpp>
 #include <metal-driver-messages/message_header.hpp>
 
 #include "agent_pool.hpp"
-#include "registered_agent.hpp"
+#include "operator_agent.hpp"
 #include "server.hpp"
 
 namespace metal {
 
-void AgentPool::register_agent(ClientHello &hello, int socket) {
-  auto agent = std::make_shared<RegisteredAgent>(Socket(socket));
-
-  agent->pid = hello.pid();
-  agent->operator_type = hello.operator_type();
-  agent->input_agent_pid = hello.input_pid();
-  agent->output_agent_pid = hello.output_pid();
-  agent->args.reserve(hello.args().size());
-  for (const auto &arg : hello.args()) agent->args.emplace_back(arg);
-
-  agent->cwd = hello.cwd();
-  agent->metal_mountpoint = hello.metal_mountpoint();
-
-  if (hello.has_metal_input_filename())
-    agent->internal_input_file = hello.metal_input_filename();
-  if (hello.has_metal_output_filename())
-    agent->internal_output_file = hello.metal_output_filename();
+void AgentPool::registerAgent(Socket socket) {
+  auto agent = std::make_shared<OperatorAgent>(std::move(socket));
 
   for (auto &other_agent : _registered_agents) {
-    if (other_agent->output_agent_pid == agent->pid) {
-      other_agent->output_agent = agent;
-    } else if (other_agent->pid == agent->output_agent_pid) {
-      agent->output_agent = other_agent;
+    if (other_agent->isOutputConnectedTo(*agent)) {
+      other_agent->setOutputAgent(agent);
+    } else if (agent->isOutputConnectedTo(*other_agent)) {
+      agent->setOutputAgent(other_agent);
     }
   }
-
   _registered_agents.emplace(agent);
 
   _contains_valid_pipeline_cached = false;
 }
 
-bool AgentPool::contains_valid_pipeline() {
+bool AgentPool::containsValidPipeline() {
   if (_contains_valid_pipeline_cached) return true;
 
   _contains_valid_pipeline_cached = false;
 
   auto pipelineStart =
-      *std::find_if(_registered_agents.begin(), _registered_agents.end(),
-                    [](const std::shared_ptr<RegisteredAgent> &a) {
-                      return a->input_agent_pid == 0;
-                    });
+      std::find_if(_registered_agents.begin(), _registered_agents.end(),
+                   [](const std::shared_ptr<OperatorAgent> &a) {
+                     return a->isInputAgent();
+                   });
 
-  if (!pipelineStart) return false;
+  if (pipelineStart == _registered_agents.end()) {
+    return false;
+  }
 
   // Walk the pipeline until we find an agent with output_pid == 0
-  std::vector<std::shared_ptr<RegisteredAgent>> pipeline_agents;
+  std::vector<std::shared_ptr<OperatorAgent>> pipeline_agents;
 
-  auto pipeline_agent = pipelineStart;
+  auto pipeline_agent = *pipelineStart;
   while (pipeline_agent) {
     pipeline_agents.emplace_back(pipeline_agent);
 
-    if (pipeline_agent->output_agent_pid == 0) break;
+    if (pipeline_agent->isOutputAgent()) break;
 
-    pipeline_agent = pipeline_agent->output_agent;
+    pipeline_agent = pipeline_agent->outputAgent();
   }
 
-  if (pipeline_agents.back()->output_agent_pid == 0) {
+  if (pipeline_agents.back()->isOutputAgent()) {
     _contains_valid_pipeline_cached = true;
     _pipeline_agents = std::move(pipeline_agents);
     for (const auto &agent : _pipeline_agents) {
@@ -76,41 +66,44 @@ bool AgentPool::contains_valid_pipeline() {
   return _contains_valid_pipeline_cached;
 }
 
-void AgentPool::release_unused_agents() {
-  send_all_agents_invalid(_registered_agents);
+void AgentPool::releaseUnusedAgents() {
+  sendAllAgentsInvalid(_registered_agents);
 }
 
-void AgentPool::send_all_agents_invalid(
-    std::unordered_set<std::shared_ptr<RegisteredAgent>> &agents) {
+void AgentPool::sendAllAgentsInvalid(
+    std::unordered_set<std::shared_ptr<OperatorAgent>> &agents) {
   for (const auto &agent : agents) {
-    send_agent_invalid(*agent);
+    sendRegistrationInvalid(*agent);
   }
 
   agents.clear();
 }
 
-void AgentPool::send_agent_invalid(RegisteredAgent &agent) {
-  metal::ServerAcceptAgent accept_data;
+void AgentPool::sendRegistrationInvalid(OperatorAgent &agent) {
+  metal::RegistrationResponse accept_data;
 
-  if (!agent.error.empty()) {
-    accept_data.set_error_msg(agent.error);
+  if (!agent.error().empty()) {
+    accept_data.set_error_msg(agent.error());
   } else {
     accept_data.set_error_msg("An invalid operator chain was specified.\n");
   }
 
   accept_data.set_valid(false);
 
-  agent.socket.send_message<message_type::ServerAcceptAgent>(accept_data);
+  agent.sendRegistrationResponse(accept_data);
+  agent.setTerminated();
 }
 
 void AgentPool::reset() {
   for (const auto &agent : _pipeline_agents) {
-    send_agent_invalid(*agent);
+    if (!agent->terminated()) {
+      sendRegistrationInvalid(*agent);
+    }
   }
 
   _pipeline_agents.clear();
 
-  send_all_agents_invalid(_registered_agents);
+  sendAllAgentsInvalid(_registered_agents);
 }
 
 }  // namespace metal

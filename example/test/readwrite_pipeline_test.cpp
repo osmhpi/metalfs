@@ -4,9 +4,9 @@
 #include <memory>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
-#include <metal-pipeline/pipeline_runner.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/snap_pipeline_runner.hpp>
 #include "base_test.hpp"
 
 namespace metal {
@@ -20,14 +20,12 @@ TEST_F(ReadWritePipeline, TransfersSmallBuffer) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
+  auto pipeline = Pipeline();
   uint64_t size;
-  ASSERT_NO_THROW(size = pipeline.run(action));
+  ASSERT_NO_THROW(size = pipeline.run(DataSource(src, n_bytes),
+                                      DataSink(dest, n_bytes), action));
 
   EXPECT_EQ(n_bytes, size);
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -44,14 +42,12 @@ TEST_F(ReadWritePipeline, ToleratesTooLargeOutputBuffer) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, 2 * 4096));
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, 2 * 4096);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
+  auto pipeline = Pipeline();
   uint64_t size;
-  ASSERT_NO_THROW(size = pipeline.run(action));
+  ASSERT_NO_THROW(size = pipeline.run(DataSource(src, n_bytes),
+                                      DataSink(dest, 2 * 4096), action));
 
   EXPECT_EQ(n_bytes, size);
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -63,19 +59,18 @@ TEST_F(ReadWritePipeline, ToleratesTooLargeOutputBuffer) {
 TEST_F(ReadWritePipeline, TransfersEntirePage) {
   uint64_t n_pages = 1;
   uint64_t n_bytes = n_pages * 4096;
-  auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
+
+  SnapAction action;
+
+  auto *src = reinterpret_cast<uint8_t *>(action.allocateMemory(n_bytes));
   fill_payload(src, n_bytes);
 
-  auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
+  auto *dest = reinterpret_cast<uint8_t *>(action.allocateMemory(n_bytes));
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
-
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
+  auto pipeline = Pipeline();
   uint64_t size;
-  ASSERT_NO_THROW(size = pipeline.run(action));
+  ASSERT_NO_THROW(size = pipeline.run(DataSource(src, n_bytes),
+                                      DataSink(dest, n_bytes), action));
 
   EXPECT_EQ(n_bytes, size);
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
@@ -90,13 +85,12 @@ TEST_F(ReadWritePipeline, TransfersEntirePageToInternalSink) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-  auto dataSink = std::make_shared<NullDataSink>(n_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
-  ASSERT_NO_THROW(pipeline.run(action));
+  auto pipeline = Pipeline();
+  ASSERT_NO_THROW(pipeline.run(DataSource(src, n_bytes),
+                               DataSink(0, n_bytes, fpga::AddressType::Null),
+                               action));
 
   free(src);
 }
@@ -107,14 +101,13 @@ TEST_F(ReadWritePipeline, TransfersEntirePageFromInternalDataGenerator) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
+  auto pipeline = Pipeline();
   uint64_t size;
-  ASSERT_NO_THROW(size = pipeline.run(action));
+  ASSERT_NO_THROW(
+      size = pipeline.run(DataSource(0, n_bytes, fpga::AddressType::Random),
+                          DataSink(dest, n_bytes), action));
 
   EXPECT_EQ(n_bytes, size);
 
@@ -126,13 +119,12 @@ TEST_F(ReadWritePipeline,
   uint64_t n_pages = 1;
   uint64_t n_bytes = n_pages * 4096;
 
-  auto dataSource = std::make_shared<RandomDataSource>(n_bytes);
-  auto dataSink = std::make_shared<NullDataSink>(n_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
-  ASSERT_NO_THROW(pipeline.run(action));
+  auto pipeline = Pipeline();
+  ASSERT_NO_THROW(
+      pipeline.run(DataSource(0, n_bytes, fpga::AddressType::Random),
+                   DataSink(0, n_bytes, fpga::AddressType::Null), action));
 }
 
 TEST_F(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
@@ -150,16 +142,13 @@ TEST_F(ReadWritePipeline, TransfersUnalignedDataSpanningMultiplePages) {
   uint64_t dest_bytes = dest_pages * 4096;
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, dest_bytes));
 
-  auto dataSource =
-      std::make_shared<HostMemoryDataSource>(src + src_offset, payload_bytes);
-  auto dataSink =
-      std::make_shared<HostMemoryDataSink>(dest + dest_offset, payload_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
+  auto pipeline = Pipeline();
   uint64_t size;
-  ASSERT_NO_THROW(size = pipeline.run(action));
+  ASSERT_NO_THROW(
+      size = pipeline.run(DataSource(src + src_offset, payload_bytes),
+                          DataSink(dest + dest_offset, payload_bytes), action));
 
   EXPECT_EQ(payload_bytes, size);
   EXPECT_EQ(0, memcmp(src + src_offset, dest + dest_offset, payload_bytes));

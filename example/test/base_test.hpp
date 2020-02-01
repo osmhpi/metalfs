@@ -1,7 +1,8 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include <metal-pipeline/operator_registry.hpp>
+
+#include <metal-pipeline/operator_factory.hpp>
 
 namespace metal {
 
@@ -16,9 +17,9 @@ class BaseTest : public ::testing::Test {
 class PipelineTest : public BaseTest {
  protected:
   void _setUp() override;
-  std::shared_ptr<AbstractOperator> try_get_operator(const std::string &key);
+  std::optional<Operator> try_get_operator(const std::string &key);
 
-  std::unique_ptr<OperatorRegistry> _registry;
+  std::unique_ptr<OperatorFactory> _registry;
 };
 
 class SimulationTest : public BaseTest {

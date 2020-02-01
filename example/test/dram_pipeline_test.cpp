@@ -2,11 +2,11 @@
 #include <malloc.h>
 #include <snap_action_metal.h>
 #include <memory>
-#include <metal-filesystem-pipeline/file_data_sink.hpp>
-#include <metal-filesystem-pipeline/file_data_source.hpp>
+#include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include "base_test.hpp"
 
@@ -20,14 +20,12 @@ TEST_F(DRAMPipeline, TransferBlockToDRAM) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
+  SnapAction action;
 
-  auto dataSink = std::make_shared<CardMemoryDataSink>(1ul << 31, n_bytes);
-
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, dataSink});
-  ASSERT_NO_THROW(pipeline.run(action));
+  auto pipeline = Pipeline();
+  ASSERT_NO_THROW(pipeline.run(
+      DataSource(src, n_bytes),
+      DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), action));
 
   free(src);
 }
@@ -40,25 +38,20 @@ TEST_F(DRAMPipeline, WriteAndReadBlock) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action(fpga::ActionType, 0);
+  SnapAction action;
 
   {  // Write
-    auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-
-    auto dataSink = std::make_shared<CardMemoryDataSink>(1ul << 31, n_bytes);
-
-    auto pipeline = PipelineDefinition({dataSource, dataSink});
-    ASSERT_NO_THROW(pipeline.run(action));
+    auto pipeline = Pipeline();
+    ASSERT_NO_THROW(pipeline.run(
+        DataSource(src, n_bytes),
+        DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), action));
   }
 
   {  // Read
-    auto dataSource =
-        std::make_shared<CardMemoryDataSource>(1ul << 31, n_bytes);
-
-    auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
-
-    auto pipeline = PipelineDefinition({dataSource, dataSink});
-    ASSERT_NO_THROW(pipeline.run(action));
+    auto pipeline = Pipeline();
+    ASSERT_NO_THROW(pipeline.run(
+        DataSource(1ul << 31, n_bytes, fpga::AddressType::CardDRAM),
+        DataSink(src, n_bytes), action));
   }
 
   free(src);

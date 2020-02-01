@@ -166,18 +166,19 @@ endif()
 # Project modules
 #
 
+# External libraries
+add_subdirectory(third_party)
+
 add_subdirectory(src)
 
 # Tests
 if(OPTION_BUILD_TESTS AND NOT MINGW)
     set(IDE_FOLDER "Tests")
     add_subdirectory(test)
-    add_subdirectory(third_party/googletest)
-    set(INSTALL_GTEST OFF)
 endif()
 
 
-# Tests
+# Examples
 if(OPTION_BUILD_EXAMPLES AND NOT MINGW)
     set(IDE_FOLDER "Examples")
     add_subdirectory(example)

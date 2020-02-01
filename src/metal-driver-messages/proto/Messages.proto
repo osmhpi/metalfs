@@ -2,7 +2,7 @@ syntax = "proto2";
 
 package metal;
 
-message ClientHello {
+message RegistrationRequest {
   optional uint64 pid = 1;
   optional string cwd = 2;
   optional string metal_mountpoint = 3;
@@ -17,12 +17,8 @@ message ClientHello {
   optional string metal_output_filename = 9;
 }
 
-message ClientPushBuffer {
-  optional uint64 size = 1;
-  optional bool eof = 2;
-}
 
-message ServerAcceptAgent {
+message RegistrationResponse {
   optional string error_msg = 1;
   optional bool valid = 2;
 
@@ -30,7 +26,12 @@ message ServerAcceptAgent {
   optional string output_buffer_filename = 4;
 }
 
-message ServerProcessedBuffer {
+message ProcessingRequest {
+  optional uint64 size = 1;
+  optional bool eof = 2;
+}
+
+message ProcessingResponse {
   optional uint64 size = 1;
   optional bool eof = 2;
   optional string message = 3;

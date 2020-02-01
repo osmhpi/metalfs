@@ -3,6 +3,7 @@
 # External dependencies
 #
 
+
 # find_package(${META_PROJECT_NAME} REQUIRED HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 
 #
@@ -21,8 +22,8 @@ message(STATUS "Test ${target}")
 set(sources
     gtest_main.cpp
 
-    operator_registry_test.cpp
-    user_operator_test.cpp
+    operator_factory_test.cpp
+    operator_test.cpp
 )
 
 
@@ -58,7 +59,6 @@ target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
 )
 
 
@@ -70,6 +70,7 @@ target_link_libraries(${target}
     PRIVATE
     ${DEFAULT_LIBRARIES}
     ${META_PROJECT_NAME}::metal-pipeline
+    spdlog::spdlog
     gtest
 )
 

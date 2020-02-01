@@ -25,6 +25,7 @@ set(sources
     changecase_pipeline_test.cpp
     colorfilter_pipeline_test.cpp
     readwrite_pipeline_test.cpp
+    image_info_test.cpp
     nvme_pipeline_test.cpp
     dram_pipeline_test.cpp
     profiling_test.cpp
@@ -63,7 +64,6 @@ target_include_directories(${target}
     PRIVATE
     ${DEFAULT_INCLUDE_DIRECTORIES}
     ${PROJECT_BINARY_DIR}/src/include
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include # todo: this does not belong here, should be public include from metal-pipeline
 )
 
@@ -78,6 +78,7 @@ target_link_libraries(${target}
     ${META_PROJECT_NAME}::metal-pipeline
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-filesystem-pipeline
+    spdlog::spdlog
     gtest
 )
 

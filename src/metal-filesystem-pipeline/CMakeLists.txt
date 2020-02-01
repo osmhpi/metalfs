@@ -31,14 +31,14 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
+    ${include_path}/file_data_sink_context.hpp
+    ${include_path}/file_data_source_context.hpp
     ${include_path}/metal_pipeline_storage.hpp
-    ${include_path}/file_data_sink.hpp
-    ${include_path}/file_data_source.hpp
 )
 
 set(sources
-    ${source_path}/file_data_sink.cpp
-    ${source_path}/file_data_source.cpp
+    ${source_path}/file_data_sink_context.cpp
+    ${source_path}/file_data_source_context.cpp
     ${source_path}/metal_pipeline_storage.cpp
 )
 
@@ -122,8 +122,6 @@ target_include_directories(${target}
     ${PROJECT_BINARY_DIR}/src/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
-    ${SNAP_INCLUDE_DIR}
-    ${PROJECT_SOURCE_DIR}/third_party/spdlog
     ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 
     PUBLIC
@@ -142,7 +140,7 @@ target_include_directories(${target}
 
 target_link_libraries(${target}
     PRIVATE
-    ${SNAP_LIBRARY}
+    spdlog::spdlog
     ${META_PROJECT_NAME}::metal-filesystem
     ${META_PROJECT_NAME}::metal-pipeline
 

@@ -5,8 +5,8 @@
 #include <snap_action_metal.h>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
-#include <metal-pipeline/operator_registry.hpp>
-#include <metal-pipeline/pipeline_definition.hpp>
+#include <metal-pipeline/operator_factory.hpp>
+#include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
@@ -33,13 +33,10 @@ TEST_F(ColorfilterPipeline, PreservesHeaderData) {
     return;
   }
 
-  auto dataSource = std::make_shared<HostMemoryDataSource>(src, n_bytes);
-  auto dataSink = std::make_shared<HostMemoryDataSink>(dest, n_bytes);
+  SnapAction action;
 
-  SnapAction action(fpga::ActionType, 0);
-
-  auto pipeline = PipelineDefinition({dataSource, filter, dataSink});
-  pipeline.run(action);
+  auto pipeline = Pipeline(std::move(*filter));
+  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
 
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 

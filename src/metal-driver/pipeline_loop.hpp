@@ -1,28 +1,26 @@
 #pragma once
 
-#include <utility>
-#include <vector>
 #include <memory>
+#include <vector>
+
+#include "configured_pipeline.hpp"
 
 namespace metal {
 
-class AbstractOperator;
-class RegisteredAgent;
+class Operator;
+class OperatorAgent;
 
 class PipelineLoop {
  public:
-  PipelineLoop(std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                                     std::shared_ptr<RegisteredAgent>>>
-                   pipeline,
-               int card)
+  PipelineLoop(ConfiguredPipeline pipeline, int card)
       : _pipeline(std::move(pipeline)), _card(card) {}
 
   void run();
 
  protected:
-  std::vector<std::pair<std::shared_ptr<AbstractOperator>,
-                        std::shared_ptr<RegisteredAgent>>>
-      _pipeline;
+  std::shared_ptr<OperatorAgent> _dataSourceAgent;
+  std::shared_ptr<OperatorAgent> _dataSinkAgent;
+  ConfiguredPipeline _pipeline;
   int _card;
 };
 
