@@ -181,7 +181,7 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
   std::stringstream result;
 
   result << "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER "
-            "WAIT  TOTAL CYCLES  MB/s"
+            "WAIT  TOTAL CYCLES  MiB/s"
          << std::endl;
 
   result << string_format(

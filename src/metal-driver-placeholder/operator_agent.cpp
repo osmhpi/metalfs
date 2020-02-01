@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
       socket.receiveMessage<metal::MessageType::RegistrationResponse>();
 
   if (response.has_error_msg()) {
-    fprintf(stderr, "%s", response.error_msg().c_str());
+    std::cerr << response.error_msg();
   }
 
   if (!response.valid()) {
@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
   // Read the first input
   if (inputBuffer != std::nullopt) {
     bytesRead = fread(inputBuffer.value().current(), sizeof(char),
-                       inputBuffer.value().size(), infd);
+                      inputBuffer.value().size(), infd);
     eof = feof(infd) != 0;
     inputBuffer.value().swap();
   }
@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (processingResponse.has_message()) {
-      fprintf(stderr, "%s", processingResponse.message().c_str());
+      std::cerr << processingResponse.message();
     }
 
     if (processingResponse.eof()) {
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
     // Read the next input
     if (inputBuffer != std::nullopt && !eof) {
       bytesRead = fread(inputBuffer.value().current(), sizeof(char),
-                         inputBuffer.value().size(), infd);
+                        inputBuffer.value().size(), infd);
       eof = feof(infd) != 0;
       inputBuffer.value().swap();
     }
@@ -368,9 +368,10 @@ int main(int argc, char *argv[]) {
       processingResponse =
           socket.receiveMessage<metal::MessageType::ProcessingResponse>();
     } catch (std::exception &ex) {
-      fprintf(stderr,
-              "An error occurred during pipeline execution. Please check the "
-              "filesystem driver logs.\n");
+      std::cerr
+          << "An error occurred during pipeline execution. Please check the "
+             "filesystem driver logs."
+          << std::endl;
     }
   }
 

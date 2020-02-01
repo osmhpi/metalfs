@@ -45,11 +45,16 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
   }
 
   dataSource.configure(action, initialize);
-  dataSink.configure(action, dataSource.dataSource().address().size,
-                     initialize);
+
+  auto size = dataSource.dataSource().address().size;
+  auto endOfInput = dataSource.endOfInput();
+  if (size == 0) {
+    return std::make_pair(0, endOfInput);
+  }
+
+  dataSink.configure(action, size, initialize);
 
   _initialized = true;
-  auto endOfInput = dataSource.endOfInput();
 
   preRun(action, dataSource, dataSink, initialize);
   auto outputSize =
