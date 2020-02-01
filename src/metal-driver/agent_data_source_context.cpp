@@ -63,6 +63,9 @@ void AgentDataSourceContext::configure(SnapAction &action, bool initial) {
 }
 
 void AgentDataSourceContext::finalize(SnapAction &action) {
+  // Check for end-of-input *before* advancing any read offsets
+  auto eof = endOfInput();
+
   if (_agent->inputBuffer()) {
     _agent->inputBuffer()->swap();
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
@@ -71,11 +74,17 @@ void AgentDataSourceContext::finalize(SnapAction &action) {
     FileDataSourceContext::finalize(action);
   }
 
-  if ((endOfInput() || _agent->inputBuffer()) &&
-      !_skipSendingProcessingResponse) {
+  if ((eof || _agent->inputBuffer()) && !_skipSendingProcessingResponse) {
     ProcessingResponse msg;
-    msg.set_eof(endOfInput());
-    msg.set_message(_profilingResults);
+    msg.set_eof(eof);
+
+    if (DatagenOperator::isDatagenAgent(*_agent) ||
+        MetalCatOperator::isMetalCatAgent(*_agent)) {
+      msg.set_message(_profilingResults);
+    } else if (_pipeline->operators().size()) {
+      msg.set_message(_pipeline->operators().front().profilingResults());
+    }
+
     _agent->sendProcessingResponse(msg);
   }
 }
