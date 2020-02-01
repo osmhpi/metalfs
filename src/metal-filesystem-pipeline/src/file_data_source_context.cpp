@@ -57,9 +57,10 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
   // Transfer extent list
 
   auto *job_struct = reinterpret_cast<uint64_t *>(action.allocateMemory(
-      sizeof(uint64_t) * (8                        // words for the prefix
-                          + (2 * _extents.size())  // two words for each extent
-                          )));
+      sizeof(uint64_t) *
+      (8                                // words for the prefix
+       + (2 * fpga::MaxExtentsPerFile)  // two words for each extent
+       )));
   job_struct[0] = htobe64(
       static_cast<uint64_t>(fpga::ExtmapSlot::NVMeRead));  // slot number
   job_struct[1] = htobe64(1);                              // map (vs unmap)
