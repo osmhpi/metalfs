@@ -10,12 +10,11 @@ class FileDataSourceContext;
 class Pipeline;
 class OperatorAgent;
 
-class BufferSourceRuntimeContext : public FileDataSourceContext {
+class AgentDataSourceContext : public FileDataSourceContext {
  public:
-  explicit BufferSourceRuntimeContext(
-      std::shared_ptr<OperatorAgent> agent,
-      std::shared_ptr<Pipeline> pipeline,
-      bool skipSendingProcessingResponse);
+  explicit AgentDataSourceContext(std::shared_ptr<OperatorAgent> agent,
+                                  std::shared_ptr<Pipeline> pipeline,
+                                  bool skipSendingProcessingResponse);
 
   const DataSource dataSource() const final;
   void configure(SnapAction &action, bool initial) final;

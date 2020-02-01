@@ -14,10 +14,9 @@ namespace metal {
 size_t FileDataSourceContext::reportTotalSize() { return loadExtents(); }
 
 FileDataSourceContext::FileDataSourceContext(fpga::AddressType resource,
-                                                   fpga::MapType map,
-                                                   std::string filename,
-                                                   uint64_t offset,
-                                                   uint64_t size)
+                                             fpga::MapType map,
+                                             std::string filename,
+                                             uint64_t offset, uint64_t size)
     : DefaultDataSourceContext(DataSource(offset, size, resource, map)),
       _filename(std::move(filename)) {
   if (size > 0) {
@@ -36,16 +35,16 @@ FileDataSourceContext::FileDataSourceContext(
 
 uint64_t FileDataSourceContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
-  uint64_t extents_length, file_length;
+  uint64_t extents_length, fileLength;
   if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length,
-                           &file_length) != MTL_SUCCESS)
+                           &fileLength) != MTL_SUCCESS)
     throw std::runtime_error("Unable to load extents");
 
   extents.resize(extents_length);
 
   _extents = std::move(extents);
-  _file_length = file_length;
-  return file_length;
+  _fileLength = fileLength;
+  return fileLength;
 }
 
 void FileDataSourceContext::configure(SnapAction &action, bool) {
@@ -67,16 +66,20 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
   job_struct[2] = htobe64(_extents.size());                // extent count
   spdlog::trace("Mapping {} extents for reading", _extents.size());
 
-  for (uint64_t i = 0; i < _extents.size(); ++i) {
-    job_struct[8 + 2 * i + 0] = htobe64(_extents[i].offset);
-    job_struct[8 + 2 * i + 1] = htobe64(_extents[i].length);
-    spdlog::trace("  Offset {}  Length {}", _extents[i].offset,
-                  _extents[i].length);
+  for (uint64_t i = 0; i < fpga::MaxExtentsPerFile; ++i) {
+    if (i < _extents.size()) {
+      job_struct[8 + 2 * i + 0] = htobe64(_extents[i].offset);
+      job_struct[8 + 2 * i + 1] = htobe64(_extents[i].length);
+      spdlog::trace("  Offset {}  Length {}", _extents[i].offset,
+                    _extents[i].length);
+    } else {
+      job_struct[8 + 2 * i + 0] = 0;
+      job_struct[8 + 2 * i + 1] = 0;
+    }
   }
 
   try {
-    action.executeJob(fpga::JobType::Map,
-                       reinterpret_cast<char *>(job_struct));
+    action.executeJob(fpga::JobType::Map, reinterpret_cast<char *>(job_struct));
   } catch (std::exception &ex) {
     free(job_struct);
     throw ex;
@@ -95,8 +98,7 @@ void FileDataSourceContext::finalize(SnapAction &action) {
 }
 
 bool FileDataSourceContext::endOfInput() const {
-  return _dataSource.address().addr + _dataSource.address().size >=
-         _file_length;
+  return _dataSource.address().addr + _dataSource.address().size >= _fileLength;
 }
 
 }  // namespace metal

@@ -19,7 +19,8 @@ extern "C" {
 
 namespace metal {
 
-uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
+std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSource dataSource,
+                                                  DataSink dataSink) {
   // One-off contexts for data source and data sink
 
   DefaultDataSourceContext source(dataSource);
@@ -28,8 +29,8 @@ uint64_t SnapPipelineRunner::run(DataSource dataSource, DataSink dataSink) {
   return run(source, sink);
 }
 
-uint64_t SnapPipelineRunner::run(DataSourceContext &dataSource,
-                                 DataSinkContext &dataSink) {
+std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
+                                                  DataSinkContext &dataSink) {
   SnapAction action = SnapAction(_card);
 
   auto initialize = !_initialized;
@@ -44,19 +45,21 @@ uint64_t SnapPipelineRunner::run(DataSourceContext &dataSource,
   }
 
   dataSource.configure(action, initialize);
-  dataSink.configure(action, dataSource.dataSource().address().size, initialize);
+  dataSink.configure(action, dataSource.dataSource().address().size,
+                     initialize);
 
   _initialized = true;
+  auto endOfInput = dataSource.endOfInput();
 
   preRun(action, dataSource, dataSink, initialize);
-  uint64_t output_size =
+  auto outputSize =
       _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
-  postRun(action, dataSource, dataSink, dataSource.endOfInput());
+  postRun(action, dataSource, dataSink, endOfInput);
 
   dataSource.finalize(action);
-  dataSink.finalize(action, output_size, dataSource.endOfInput());
+  dataSink.finalize(action, outputSize, endOfInput);
 
-  return output_size;
+  return std::make_pair(outputSize, endOfInput);
 }
 
 }  // namespace metal

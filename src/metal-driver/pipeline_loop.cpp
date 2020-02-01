@@ -14,8 +14,8 @@
 
 #include "agent_data_sink_context.hpp"
 #include "agent_data_source_context.hpp"
-#include "pseudo_operators.hpp"
 #include "operator_agent.hpp"
+#include "pseudo_operators.hpp"
 
 namespace metal {
 
@@ -25,8 +25,8 @@ void PipelineLoop::run() {
   // Establish data sources and sinks
   auto singleStagePipeline =
       _pipeline.dataSourceAgent == _pipeline.dataSinkAgent;
-  BufferSourceRuntimeContext dataSource(
-      _pipeline.dataSourceAgent, _pipeline.pipeline, singleStagePipeline);
+  AgentDataSourceContext dataSource(_pipeline.dataSourceAgent,
+                                    _pipeline.pipeline, singleStagePipeline);
   AgentDataSinkContext dataSink(_pipeline.dataSinkAgent, _pipeline.pipeline,
                                 singleStagePipeline);
 
@@ -50,9 +50,10 @@ void PipelineLoop::run() {
   }
 
   for (;;) {
-    runner.run(dataSource, dataSink);
+    auto [outputSize, endOfInput ] = runner.run(dataSource, dataSink);
+    (void)outputSize;
 
-    if (dataSource.endOfInput()) {
+    if (endOfInput) {
       break;
     }
   }

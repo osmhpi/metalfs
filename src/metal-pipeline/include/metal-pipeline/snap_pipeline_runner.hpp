@@ -20,12 +20,12 @@ class METAL_PIPELINE_API SnapPipelineRunner {
       : _pipeline(std::move(pipeline)), _initialized(false), _card(card) {}
   template <typename... Ts>
   SnapPipelineRunner(Ts... userOperators, int card)
-      : SnapPipelineRunner(card, std::make_shared<Pipeline>(
-                                     std::move(userOperators)...)) {}
+      : SnapPipelineRunner(
+            card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
-  uint64_t run(DataSource dataSource, DataSink dataSink);
-  uint64_t run(DataSourceContext &dataSource,
-               DataSinkContext &dataSink);
+  std::pair<uint64_t, bool> run(DataSource dataSource, DataSink dataSink);
+  std::pair<uint64_t, bool> run(DataSourceContext &dataSource,
+                                DataSinkContext &dataSink);
 
   static std::string readImageInfo(int card);
 

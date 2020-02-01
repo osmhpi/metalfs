@@ -17,7 +17,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
   void configure(SnapAction &action, bool initial) override;
   void finalize(SnapAction &action) override;
 
-  uint64_t _file_length;
+  uint64_t _fileLength;
   std::vector<mtl_file_extent> _extents;
 
   // API to be used from PipelineStorage (extent list-based)

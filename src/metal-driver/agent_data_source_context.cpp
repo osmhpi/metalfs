@@ -4,17 +4,16 @@
 
 #include <metal-pipeline/pipeline.hpp>
 
-#include "pseudo_operators.hpp"
 #include "operator_agent.hpp"
+#include "pseudo_operators.hpp"
 
 namespace metal {
 
-BufferSourceRuntimeContext::BufferSourceRuntimeContext(
-    std::shared_ptr<OperatorAgent> agent,
-    std::shared_ptr<Pipeline> pipeline,
+AgentDataSourceContext::AgentDataSourceContext(
+    std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
     bool skipSendingProcessingResponse)
-    : FileDataSourceContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "",
-                               0, 0),
+    : FileDataSourceContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "", 0,
+                            0),
       _agent(agent),
       _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
@@ -24,14 +23,15 @@ BufferSourceRuntimeContext::BufferSourceRuntimeContext(
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
   } else if (!agent->internalInputFile().empty()) {
     _filename = agent->internalInputFile();
-    _dataSource = DataSource(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    _dataSource =
+        DataSource(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data source");
   }
 }
 
-const DataSource BufferSourceRuntimeContext::dataSource() const {
+const DataSource AgentDataSourceContext::dataSource() const {
   // The data source can be of three types: Agent-Buffer, Random or File
 
   if (_agent->inputBuffer()) {
@@ -45,7 +45,7 @@ const DataSource BufferSourceRuntimeContext::dataSource() const {
   }
 }
 
-void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
+void AgentDataSourceContext::configure(SnapAction &action, bool initial) {
   ProcessingRequest request;
   if (initial || _agent->inputBuffer()) {
     request = _agent->receiveProcessingRequest();
@@ -62,7 +62,7 @@ void BufferSourceRuntimeContext::configure(SnapAction &action, bool initial) {
   }
 }
 
-void BufferSourceRuntimeContext::finalize(SnapAction &action) {
+void AgentDataSourceContext::finalize(SnapAction &action) {
   if (_agent->inputBuffer()) {
     _agent->inputBuffer()->swap();
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
@@ -80,7 +80,7 @@ void BufferSourceRuntimeContext::finalize(SnapAction &action) {
   }
 }
 
-uint64_t BufferSourceRuntimeContext::reportTotalSize() {
+uint64_t AgentDataSourceContext::reportTotalSize() {
   if (DatagenOperator::isDatagenAgent(*_agent)) {
     return _remainingTotalSize;
   } else if (!_filename.empty()) {
@@ -89,7 +89,7 @@ uint64_t BufferSourceRuntimeContext::reportTotalSize() {
   return 0;
 }
 
-bool BufferSourceRuntimeContext::endOfInput() const {
+bool AgentDataSourceContext::endOfInput() const {
   if (!_filename.empty()) {
     return FileDataSourceContext::endOfInput();
   }
