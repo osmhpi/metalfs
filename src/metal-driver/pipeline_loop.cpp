@@ -40,6 +40,16 @@ void PipelineLoop::run() {
     } else {
       dataSource.setProfilingEnabled(isProfilingEnabled);
     }
+  } else if (MetalCatOperator::isMetalCatAgent(*_pipeline.dataSourceAgent)) {
+    auto isProfilingEnabled =
+        MetalCatOperator::isProfilingEnabled(*_pipeline.dataSourceAgent);
+    if (_pipeline.pipeline->operators().empty()) {
+      // Special handling to be able to deliver profiling results back to the
+      // agent
+      dataSink.setProfilingEnabled(isProfilingEnabled);
+    } else {
+      dataSource.setProfilingEnabled(isProfilingEnabled);
+    }
   }
 
   // Wait until all idle clients signal ready
@@ -50,7 +60,7 @@ void PipelineLoop::run() {
   }
 
   for (;;) {
-    auto [outputSize, endOfInput ] = runner.run(dataSource, dataSink);
+    auto [outputSize, endOfInput] = runner.run(dataSource, dataSink);
     (void)outputSize;
 
     if (endOfInput) {

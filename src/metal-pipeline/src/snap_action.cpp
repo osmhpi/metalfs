@@ -63,7 +63,7 @@ void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
                             uint64_t *directDataOut1) {
   spdlog::debug("Starting job {}...", jobTypeToString(jobType));
 
-  fpga::Job mjob;
+  fpga::Job mjob{};
   mjob.job_type = jobType;
   mjob.job_address = reinterpret_cast<uint64_t>(parameters);
   mjob.source = source;

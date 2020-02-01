@@ -17,6 +17,7 @@ message(STATUS "Executable ${target}")
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/metal-driver-placeholder.hex
+    DEPENDS $<TARGET_FILE:${META_PROJECT_NAME}::metal-driver-placeholder>
     COMMAND cat $<TARGET_FILE:${META_PROJECT_NAME}::metal-driver-placeholder> | xxd -i - ${CMAKE_CURRENT_BINARY_DIR}/metal-driver-placeholder.hex
     COMMENT "Generating binary include from ${META_PROJECT_NAME}::metal-driver-placeholder"
 )
