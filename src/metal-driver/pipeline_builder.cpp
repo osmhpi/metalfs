@@ -133,15 +133,7 @@ ConfiguredPipeline PipelineBuilder::configure() {
 
   // Establish pipeline data source and sink
   result.dataSourceAgent = orderedOperatorSpecsAndAgents.front().second;
-  if (result.dataSourceAgent->internalInputFile().empty() &&
-      !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
-    result.dataSourceAgent->createInputBuffer();
-  }
-
   result.dataSinkAgent = orderedOperatorSpecsAndAgents.back().second;
-  if (result.dataSinkAgent->internalOutputFile().empty()) {
-    result.dataSinkAgent->createOutputBuffer();
-  }
 
   // Validate datagen and metal_cat (if necessary)
   if (DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
@@ -150,6 +142,15 @@ ConfiguredPipeline PipelineBuilder::configure() {
   } else if (MetalCatOperator::isMetalCatAgent(*result.dataSourceAgent)) {
     MetalCatOperator::validate(*result.dataSourceAgent);
     MetalCatOperator::setInputFile(*result.dataSourceAgent);
+  }
+
+  // Create memory-mapped buffers if necessary
+  if (result.dataSourceAgent->internalInputFile().empty() &&
+      !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
+    result.dataSourceAgent->createInputBuffer();
+  }
+  if (result.dataSinkAgent->internalOutputFile().empty()) {
+    result.dataSinkAgent->createOutputBuffer();
   }
 
   // Tell agents that they're accepted

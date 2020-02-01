@@ -91,7 +91,7 @@ void OperatorAgent::createOutputBuffer() {
 void OperatorAgent::setInputFile(const std::string &input) {
   auto absPath = resolvePath(input);
 
-  char actualpath[PATH_MAX + 1];
+  char actualpath[PATH_MAX];
   char *ptr;
   ptr = realpath(absPath.c_str(), actualpath);
 
