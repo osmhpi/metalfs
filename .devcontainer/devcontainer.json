@@ -1,23 +1,11 @@
 {
-	"name": "Metal FS",
-	"image": "metalfs/sdk-base:webpack-psl8",
-	"extensions": [
-		"ms-vscode.cpptools"
-	],
-	"runArgs": [
-		"-e",
-		"DISPLAY=${env:DISPLAY}",
-		"-v",
-		"/tmp/.X11-unix:/tmp/.X11-unix",
-		"--device",
-		"/dev/fuse",
-		"--cap-add",
-		"SYS_ADMIN",
-		"--cap-add",
-		"SYS_PTRACE",
-		"--security-opt",
-		"apparmor=unconfined",
-		"--security-opt",
-		"seccomp=unconfined"
-	]
+    "name": "Metal FS",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "metalfs-dev",
+    "workspaceFolder": "/workspace",
+    "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "twxs.cmake"
+    ]
 }

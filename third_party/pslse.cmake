@@ -1,6 +1,6 @@
 # Depending on the platform (amd64 - Simulation, or ppc64le - Runtime),
 # libcxl may come from the OS or from pslse
-find_package(cxl)
+find_package(cxl QUIET)
 
 if ((NOT CXL_INCLUDE_DIR) OR (NOT EXISTS ${CXL_INCLUDE_DIR}))
     message("Unable to find libcxl. Building pslse from source.")

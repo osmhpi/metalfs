@@ -64,3 +64,5 @@ ENV BASH_ENV=/root/.metal_profile
 
 # Load .metal_profile for interactive bash shells
 RUN echo ". ~/.metal_profile" >> ~/.bashrc
+
+ENTRYPOINT []
