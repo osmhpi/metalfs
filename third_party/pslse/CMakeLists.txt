@@ -16,6 +16,8 @@ if ((NOT CXL_INCLUDE_DIR) OR (NOT EXISTS ${CXL_INCLUDE_DIR}))
 endif()
 
 if (${BUILD_PSLSE})
+    project(cxl)
+
     set(PSL_VERSIONS PSL8 PSL9)
     set(PSL_VERSION PSL8 CACHE STRING "Target version of PSL")
     set_property(CACHE PSL_VERSION PROPERTY STRINGS ${PSL_VERSIONS})
@@ -45,15 +47,18 @@ if (${BUILD_PSLSE})
     add_library(cxl::cxl ALIAS cxl)
 
     # need to export target as well
-    install(TARGETS cxl EXPORT cxl-export DESTINATION ${INSTALL_SHARED})
+    install(TARGETS cxl EXPORT cxl-export DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
     # CMake config
     install(EXPORT cxl-export
         NAMESPACE   cxl::
-        DESTINATION ${INSTALL_CMAKE}/cxl
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/cxl
         COMPONENT   dev
     )
 
     # Export library for downstream projects
     export(TARGETS cxl NAMESPACE cxl:: FILE ${PROJECT_BINARY_DIR}/cmake/cxl/cxl-export.cmake)
+
+    # Install cmake find script for the project
+    install(FILES cxl-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev)
 endif()

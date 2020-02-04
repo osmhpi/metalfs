@@ -1,6 +1,7 @@
 include(cxxopts.cmake)
 include(googletest.cmake)
 include(json.cmake)
-include(pslse.cmake)
-include(snap.cmake)
 include(spdlog.cmake)
+
+add_subdirectory(snap)
+add_subdirectory(pslse)

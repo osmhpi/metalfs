@@ -1,5 +1,5 @@
 [submodule "third_party/snap"]
-	path = third_party/snap
+	path = third_party/snap/snap
 	url = https://github.com/open-power/snap
 	branch = master
 [submodule "third_party/spdlog"]
@@ -12,7 +12,7 @@
 	path = third_party/cxxopts
 	url = https://github.com/jarro2783/cxxopts
 [submodule "third_party/pslse"]
-	path = third_party/pslse
+	path = third_party/pslse/pslse
 	url = https://github.com/ibm-capi/pslse
 [submodule "third_party/json"]
 	path = third_party/json
