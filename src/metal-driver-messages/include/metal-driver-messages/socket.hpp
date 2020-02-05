@@ -5,7 +5,9 @@
 #include <sys/socket.h>
 
 #include <exception>
+
 #include <metal-driver-messages/messages.hpp>
+
 #include "message_header.hpp"
 
 #define ASSIGN_MESSAGE_TYPE(Type, Message)     \

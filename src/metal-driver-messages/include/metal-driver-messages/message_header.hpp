@@ -21,7 +21,7 @@ class METAL_DRIVER_MESSAGES_API MessageHeader {
       : _type(static_cast<int>(type)), _length(length) {}
 
   MessageType type() { return static_cast<MessageType>(_type); }
-  size_t length() { return static_cast<size_t>(_length); }
+  uint64_t length() { return static_cast<uint64_t>(_length); }
 
   static MessageHeader receive(int socket);
   void sendHeader(int socket);

@@ -57,7 +57,7 @@ void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize, boo
 
 void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
                                     bool endOfInput) {
-  ProcessingResponse msg;
+  ProcessingResponse msg{};
   msg.set_eof(endOfInput);
 
   if (_pipeline->operators().size()) {
@@ -77,7 +77,7 @@ void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
     FileDataSinkContext::finalize(action, outputSize, endOfInput);
   }
 
-  if (endOfInput || _agent->outputBuffer()) {
+  if (endOfInput || _agent->outputBuffer() || _agent->inputBuffer()) {
     _agent->sendProcessingResponse(msg);
     if (endOfInput) {
       _agent->setTerminated();
@@ -90,5 +90,17 @@ void AgentDataSinkContext::prepareForTotalSize(uint64_t totalSize) {
     FileDataSinkContext::prepareForTotalSize(totalSize);
   }
 }
+
+// AgentDataSinkContext::~AgentDataSinkContext() {
+//   if (!_agent->terminated()) {
+//     // Sometimes, finalize is not called with endOfInput==true
+//     // This can happen if the DataSource size is zero
+//     // In this case, terminate the agent now
+//     ProcessingResponse msg{};
+//     msg.set_eof(true);
+//     _agent->sendProcessingResponse(msg);
+//     _agent->setTerminated();
+//   }
+// }
 
 }  // namespace metal

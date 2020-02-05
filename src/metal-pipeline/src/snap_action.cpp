@@ -46,11 +46,13 @@ SnapAction::SnapAction(SnapAction &&other) noexcept
 
 SnapAction::~SnapAction() {
   if (_action) {
+    spdlog::trace("Detaching action...");
     snap_detach_action(_action);
     _action = nullptr;
   }
 
   if (_card) {
+    spdlog::trace("Deallocating CXL device...");
     snap_card_free(_card);
     _card = nullptr;
   }
@@ -76,7 +78,7 @@ void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
   struct snap_job cjob {};
   snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
 
-  const unsigned long timeout = 30;
+  const unsigned long timeout = 10;
   int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
 
   if (rc != 0)

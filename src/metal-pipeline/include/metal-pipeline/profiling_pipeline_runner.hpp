@@ -16,7 +16,7 @@ class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
       : ProfilingPipelineRunner(
             card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
-  std::string formatProfilingResults();
+  std::string formatProfilingResults(bool dataSource, bool dataSink);
   void resetResults() { _results = ProfilingResults{}; };
 
  protected:

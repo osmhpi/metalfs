@@ -104,9 +104,19 @@ void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize, bool) {
       DataSink(_dataSink.address().addr + outputSize, _dataSink.address().size,
                _dataSink.address().type, _dataSink.address().map);
 
-  // TODO: if (endOfInput) {
-  // mtl_truncate(...)
-  // }
+   // if (endOfInput) {
+   //     if (_dataSink.address().addr < _cachedTotalSize && _filename.size()) {
+   //        int res;    
+   //        uint64_t inode_id;
+   //        res = mtl_open(_filename.c_str(), &inode_id);
+
+   //        if (res != MTL_SUCCESS) throw std::runtime_error("File does not exist.");
+
+   //        res = mtl_truncate(inode_id, _dataSink.address().addr);
+   //        if (res != MTL_SUCCESS)
+   //          throw std::runtime_error("Unable to update file length");
+   //     }
+   // }
 }
 
 void FileDataSinkContext::loadExtents() {

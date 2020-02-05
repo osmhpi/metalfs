@@ -16,6 +16,7 @@ class AgentDataSinkContext : public FileDataSinkContext {
       std::shared_ptr<OperatorAgent> agent,
       std::shared_ptr<Pipeline> pipeline,
       bool skipReceivingProcessingRequest);
+  // virtual ~AgentDataSinkContext();
 
   const DataSink dataSink() const final;
   void configure(SnapAction &action, uint64_t inputSize, bool initial) final;
