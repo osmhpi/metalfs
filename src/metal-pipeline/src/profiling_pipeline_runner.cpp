@@ -9,6 +9,8 @@ extern "C" {
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/data_sink_context.hpp>
@@ -66,8 +68,8 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
         _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
       } else {
         _profileStreamIds = std::make_pair(
-            _pipeline->operators().back().userOperator().spec().streamID(),
-            _pipeline->operators().back().userOperator().spec().streamID());
+            _pipeline->operators().front().userOperator().spec().streamID(),
+            _pipeline->operators().front().userOperator().spec().streamID());
       }
     }
 
@@ -76,6 +78,7 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     }
 
     if (_profileStreamIds) {
+      spdlog::debug("Selecting streams {} and {} for profiling.", _profileStreamIds->first, _profileStreamIds->second);
       auto *job_struct = reinterpret_cast<uint64_t *>(
           action.allocateMemory(sizeof(uint64_t) * 2));
 
