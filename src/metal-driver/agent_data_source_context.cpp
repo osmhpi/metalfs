@@ -24,8 +24,8 @@ AgentDataSourceContext::AgentDataSourceContext(
   } else if (!agent->internalInputFile().empty()) {
     _filename = agent->internalInputFile();
     loadExtents();
-    _dataSource =
-        DataSource(0, std::min(BufferSize, _fileLength), fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    _dataSource = DataSource(0, std::min(BufferSize, _fileLength),
+                             fpga::AddressType::NVMe, fpga::MapType::NVMe);
   } else {
     throw std::runtime_error("Unknown data source");
   }

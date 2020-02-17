@@ -12,7 +12,7 @@ MessageHeader MessageHeader::receive(int socket) {
   auto bytes = recv(socket, &incoming_message, sizeof(incoming_message), 0);
 
   if (bytes != sizeof(incoming_message)) {
-	throw std::runtime_error("Could not read message header from socket");
+    throw std::runtime_error("Could not read message header from socket");
   }
 
   return MessageHeader(static_cast<MessageType>(ntohl(

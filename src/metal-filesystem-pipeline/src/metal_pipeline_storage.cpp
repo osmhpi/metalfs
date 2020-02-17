@@ -40,11 +40,14 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
                                _read_extents, offset, length);
   DefaultDataSinkContext sink(DataSink(buffer, length));
 
-  // TODO: Surround with try/catch
-  SnapPipelineRunner runner(0);
-  runner.run(source, sink);
-
-  return MTL_SUCCESS;
+  try {
+    SnapPipelineRunner runner(0);
+    runner.run(source, sink);
+    return MTL_SUCCESS;
+  } catch (std::exception &e) {
+    // For lack of a better error type
+    return MTL_ERROR_INVALID_ARGUMENT;
+  }
 }
 
 int PipelineStorage::write(uint64_t offset, const void *buffer,
@@ -53,11 +56,13 @@ int PipelineStorage::write(uint64_t offset, const void *buffer,
   FileDataSinkContext sink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
                            _write_extents, offset, length);
 
-  // TODO: Surround with try/catch
-  SnapPipelineRunner runner(0);
-  runner.run(source, sink);
-
-  return MTL_SUCCESS;
+  try {
+    SnapPipelineRunner runner(0);
+    runner.run(source, sink);
+    return MTL_SUCCESS;
+  } catch (std::exception &e) {
+    return MTL_ERROR_INVALID_ARGUMENT;
+  }
 }
 
 mtl_storage_backend PipelineStorage::backend() {

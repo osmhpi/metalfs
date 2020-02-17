@@ -23,7 +23,8 @@ AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
     // Nothing to do
   } else if (!agent->internalOutputFile().empty()) {
     _filename = agent->internalOutputFile();
-    _dataSink = DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    _dataSink =
+        DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data sink");
@@ -45,7 +46,8 @@ const DataSink AgentDataSinkContext::dataSink() const {
   }
 }
 
-void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool initial) {
+void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
+                                     bool initial) {
   if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
@@ -90,17 +92,5 @@ void AgentDataSinkContext::prepareForTotalSize(uint64_t totalSize) {
     FileDataSinkContext::prepareForTotalSize(totalSize);
   }
 }
-
-// AgentDataSinkContext::~AgentDataSinkContext() {
-//   if (!_agent->terminated()) {
-//     // Sometimes, finalize is not called with endOfInput==true
-//     // This can happen if the DataSource size is zero
-//     // In this case, terminate the agent now
-//     ProcessingResponse msg{};
-//     msg.set_eof(true);
-//     _agent->sendProcessingResponse(msg);
-//     _agent->setTerminated();
-//   }
-// }
 
 }  // namespace metal
