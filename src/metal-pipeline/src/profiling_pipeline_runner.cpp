@@ -9,6 +9,8 @@ extern "C" {
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/data_sink_context.hpp>
@@ -62,20 +64,21 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     }
 
     if (dataSource.profilingEnabled()) {
-      _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
-    }
-
-    if (dataSink.profilingEnabled()) {
       if (_pipeline->operators().empty()) {
         _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
       } else {
         _profileStreamIds = std::make_pair(
-            _pipeline->operators().back().userOperator().spec().streamID(),
-            _pipeline->operators().back().userOperator().spec().streamID());
+            _pipeline->operators().front().userOperator().spec().streamID(),
+            _pipeline->operators().front().userOperator().spec().streamID());
       }
     }
 
+    if (dataSink.profilingEnabled()) {
+      _profileStreamIds = std::make_pair(IOStreamID, IOStreamID);
+    }
+
     if (_profileStreamIds) {
+      spdlog::debug("Selecting streams {} and {} for profiling.", _profileStreamIds->first, _profileStreamIds->second);
       auto *job_struct = reinterpret_cast<uint64_t *>(
           action.allocateMemory(sizeof(uint64_t) * 2));
 
@@ -134,9 +137,9 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
 
     if (finalize) {
       if (dataSource.profilingEnabled()) {
-        dataSource.setProfilingResults(formatProfilingResults());
+        dataSource.setProfilingResults(formatProfilingResults(true, false));
       } else if (dataSink.profilingEnabled()) {
-        dataSink.setProfilingResults(formatProfilingResults());
+        dataSink.setProfilingResults(formatProfilingResults(false, true));
       } else {
         auto op = std::find_if(_pipeline->operators().begin(),
                                _pipeline->operators().end(),
@@ -145,7 +148,7 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
                                         _profileStreamIds->first;
                                });
         if (op != _pipeline->operators().cend()) {
-          op->setProfilingResults(formatProfilingResults());
+          op->setProfilingResults(formatProfilingResults(false, false));
         }
       }
     }
@@ -154,7 +157,7 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
   SnapPipelineRunner::postRun(action, dataSource, dataSink, finalize);
 }
 
-std::string ProfilingPipelineRunner::formatProfilingResults() {
+std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource, bool dataSink) {
   const double freq = 250;
   const double onehundred = 100;
 
@@ -184,16 +187,19 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
             "WAIT  TOTAL CYCLES  MiB/s"
          << std::endl;
 
-  result << string_format(
-                "input\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
-                "%-12lu  %-4.2f",
-                _results.inputDataByteCount, _results.inputTransferCycleCount,
-                input_transfer_cycle_percent, _results.inputMasterIdleCount,
-                input_master_idle_percent, _results.inputSlaveIdleCount,
-                input_slave_idle_percent, _results.globalClockCounter,
-                input_mbps)
-         << std::endl;
+  if (!dataSource) {
+    result << string_format(
+                  "input\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
+                  "%-12lu  %-4.2f",
+                  _results.inputDataByteCount, _results.inputTransferCycleCount,
+                  input_transfer_cycle_percent, _results.inputMasterIdleCount,
+                  input_master_idle_percent, _results.inputSlaveIdleCount,
+                  input_slave_idle_percent, _results.globalClockCounter,
+                  input_mbps)
+           << std::endl;
+   }
 
+   if (!dataSink) {
   result << string_format(
                 "output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
                 "%-12lu  %-4.2f",
@@ -203,6 +209,7 @@ std::string ProfilingPipelineRunner::formatProfilingResults() {
                 output_slave_idle_percent, _results.globalClockCounter,
                 output_mbps)
          << std::endl;
+   }
 
   return result.str();
 }

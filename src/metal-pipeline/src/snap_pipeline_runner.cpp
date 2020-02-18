@@ -48,17 +48,17 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
 
   auto size = dataSource.dataSource().address().size;
   auto endOfInput = dataSource.endOfInput();
-  if (size == 0) {
-    return std::make_pair(0, endOfInput);
-  }
-
   dataSink.configure(action, size, initialize);
 
   _initialized = true;
 
   preRun(action, dataSource, dataSink, initialize);
-  auto outputSize =
-      _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
+
+  uint64_t outputSize = 0;
+  if (size > 0) {
+    outputSize = _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
+  }
+  
   postRun(action, dataSource, dataSink, endOfInput);
 
   dataSource.finalize(action);

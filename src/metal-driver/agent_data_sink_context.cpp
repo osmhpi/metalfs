@@ -23,7 +23,8 @@ AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
     // Nothing to do
   } else if (!agent->internalOutputFile().empty()) {
     _filename = agent->internalOutputFile();
-    _dataSink = DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    _dataSink =
+        DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data sink");
@@ -45,7 +46,8 @@ const DataSink AgentDataSinkContext::dataSink() const {
   }
 }
 
-void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool initial) {
+void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
+                                     bool initial) {
   if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
   }
@@ -57,7 +59,7 @@ void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize, boo
 
 void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
                                     bool endOfInput) {
-  ProcessingResponse msg;
+  ProcessingResponse msg{};
   msg.set_eof(endOfInput);
 
   if (_pipeline->operators().size()) {
@@ -77,7 +79,7 @@ void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
     FileDataSinkContext::finalize(action, outputSize, endOfInput);
   }
 
-  if (endOfInput || _agent->outputBuffer()) {
+  if (endOfInput || _agent->outputBuffer() || _agent->inputBuffer()) {
     _agent->sendProcessingResponse(msg);
     if (endOfInput) {
       _agent->setTerminated();
