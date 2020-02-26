@@ -39,6 +39,15 @@ if (${BUILD_PSLSE})
         ${PSL_VERSION}
     )
 
+    target_include_directories(cxl
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl
+
+        INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl>
+        $<INSTALL_INTERFACE:include>
+    )
+
     target_link_options(cxl
         PRIVATE
         -Wl,--version-script ${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl/symver.map
@@ -57,8 +66,8 @@ if (${BUILD_PSLSE})
     )
 
     # Export library for downstream projects
-    export(TARGETS cxl NAMESPACE cxl:: FILE ${PROJECT_BINARY_DIR}/cmake/cxl/cxl-export.cmake)
+    export(TARGETS cxl NAMESPACE cxl:: FILE share/cxl/cmake/cxl/cxl-export.cmake)
 
     # Install cmake find script for the project
-    install(FILES cxl-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev)
+    install(FILES cxl-config.cmake DESTINATION share/cxl COMPONENT dev)
 endif()

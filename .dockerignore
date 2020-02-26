@@ -3,6 +3,6 @@ docker
 third_party/cxxopts
 third_party/googletest
 third_party/json
-third_party/pslse
-third_party/snap
+third_party/pslse/pslse
+third_party/snap/snap
 third_party/spdlog

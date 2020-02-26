@@ -52,7 +52,7 @@ install(EXPORT snap-export
 )
 
 # Export library for downstream projects
-export(TARGETS snap NAMESPACE snap:: FILE ${PROJECT_BINARY_DIR}/cmake/snap/snap-export.cmake)
+export(TARGETS snap NAMESPACE snap:: FILE share/snap/cmake/snap/snap-export.cmake)
 
 # Install cmake find script for the project
-install(FILES snap-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev)
+install(FILES snap-config.cmake DESTINATION share/snap COMPONENT dev)
