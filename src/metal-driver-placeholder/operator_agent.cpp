@@ -316,7 +316,7 @@ int main(int argc, char *argv[]) {
   }
 
   uint64_t bytesRead = 0;
-  bool eof = false;
+  auto eof = false;
 
   // Read the first input
   if (inputBuffer != std::nullopt) {
@@ -326,13 +326,12 @@ int main(int argc, char *argv[]) {
     inputBuffer.value().swap();
   }
 
-  metal::ProcessingResponse processingResponse;
-  processingResponse.set_eof(false);
+  metal::ProcessingResponse processingResponse{};
 
   // Processing loop
   while (true) {
     if (!processingResponse.eof()) {
-      // Tell the server about the data (if any) and wait for it to be consumed
+      // Tell the server about the data (if any)
       metal::ProcessingRequest processingRequest;
       processingRequest.set_size(bytesRead);
       processingRequest.set_eof(eof);
@@ -372,6 +371,7 @@ int main(int argc, char *argv[]) {
           << "An error occurred during pipeline execution. Please check the "
              "filesystem driver logs."
           << std::endl;
+      return 1;
     }
   }
 
