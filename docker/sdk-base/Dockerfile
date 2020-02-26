@@ -10,7 +10,7 @@ RUN apt-get update \
     vim \
     curl ca-certificates \
     build-essential \
-    git \
+    git openssh-client \
     jq \
  && rm -rf /var/lib/apt/lists/*
 
@@ -64,3 +64,5 @@ ENV BASH_ENV=/root/.metal_profile
 
 # Load .metal_profile for interactive bash shells
 RUN echo ". ~/.metal_profile" >> ~/.bashrc
+
+ENTRYPOINT []

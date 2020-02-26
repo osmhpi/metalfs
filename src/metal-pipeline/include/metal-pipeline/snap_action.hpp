@@ -2,11 +2,12 @@
 
 #include <metal-pipeline/metal-pipeline_api.h>
 
-#include <libsnap.h>
-
 #include <string>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
+
+struct snap_action;
+struct snap_card;
 
 namespace metal {
 

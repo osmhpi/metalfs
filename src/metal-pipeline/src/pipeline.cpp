@@ -6,7 +6,7 @@ extern "C" {
 #include <algorithm>
 #include <iostream>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>

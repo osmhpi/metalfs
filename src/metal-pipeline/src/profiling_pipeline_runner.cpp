@@ -11,10 +11,10 @@ extern "C" {
 
 #include <spdlog/spdlog.h>
 
-#include <snap_action_metal.h>
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/data_sink_context.hpp>
 #include <metal-pipeline/data_source_context.hpp>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
@@ -78,7 +78,8 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     }
 
     if (_profileStreamIds) {
-      spdlog::debug("Selecting streams {} and {} for profiling.", _profileStreamIds->first, _profileStreamIds->second);
+      spdlog::debug("Selecting streams {} and {} for profiling.",
+                    _profileStreamIds->first, _profileStreamIds->second);
       auto *job_struct = reinterpret_cast<uint64_t *>(
           action.allocateMemory(sizeof(uint64_t) * 2));
 
@@ -157,7 +158,8 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
   SnapPipelineRunner::postRun(action, dataSource, dataSink, finalize);
 }
 
-std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource, bool dataSink) {
+std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource,
+                                                            bool dataSink) {
   const double freq = 250;
   const double onehundred = 100;
 
@@ -197,19 +199,20 @@ std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource, boo
                   input_slave_idle_percent, _results.globalClockCounter,
                   input_mbps)
            << std::endl;
-   }
+  }
 
-   if (!dataSink) {
-  result << string_format(
-                "output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
-                "%-12lu  %-4.2f",
-                _results.outputDataByteCount, _results.outputTransferCycleCount,
-                output_transfer_cycle_percent, _results.outputMasterIdleCount,
-                output_master_idle_percent, _results.outputSlaveIdleCount,
-                output_slave_idle_percent, _results.globalClockCounter,
-                output_mbps)
-         << std::endl;
-   }
+  if (!dataSink) {
+    result << string_format(
+                  "output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
+                  "%-12lu  %-4.2f",
+                  _results.outputDataByteCount,
+                  _results.outputTransferCycleCount,
+                  output_transfer_cycle_percent, _results.outputMasterIdleCount,
+                  output_master_idle_percent, _results.outputSlaveIdleCount,
+                  output_slave_idle_percent, _results.globalClockCounter,
+                  output_mbps)
+           << std::endl;
+  }
 
   return result.str();
 }

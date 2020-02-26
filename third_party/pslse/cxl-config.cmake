@@ -10,9 +10,7 @@ include(CMakeFindDependencyMacro)
 
 # List of modules
 set(MODULE_NAMES
-    metal-filesystem
-    metal-filesystem-pipeline
-    metal-pipeline
+    cxl
 )
 
 

@@ -4,7 +4,7 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
 #include <stdexcept>

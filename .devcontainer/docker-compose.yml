@@ -1,14 +1,16 @@
 version: '3.7'
 
 services:
-  dev:
-    image: metalfs/operator-base:webpack
+  metalfs-dev:
+    image: metalfs/sdk-base:webpack
+    init: true
+    command: tail -f /dev/null
+    working_dir: /workspace
     environment:
       - DISPLAY=$DISPLAY
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - $PWD:/workspace
-    mac_address: 00:0C:29:51:2F:45
+      - ..:/workspace
     devices:
       - /dev/fuse
     cap_add:
@@ -17,6 +19,4 @@ services:
     security_opt:
       - apparmor:unconfined
       - seccomp:unconfined
-    working_dir: /workspace
-    command: tail -f /dev/null
-    init: true
+    # mac_address: XX:XX:XX:XX:XX:XX

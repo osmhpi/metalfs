@@ -1,5 +1,7 @@
 # SNAP is always built from third_party, we don't rely on external 'SNAP_ROOT's
 
+project(snap)
+
 if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/snap/software/include/libsnap.h)
     # We have a submodule for snap. Clone it now.
     execute_process(COMMAND git submodule update --init -- snap
@@ -40,14 +42,23 @@ target_compile_definitions(snap
 
 add_library(snap::snap ALIAS snap)
 
-install(TARGETS snap EXPORT snap-export DESTINATION ${INSTALL_SHARED})
+install(TARGETS snap EXPORT snap-export DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+
+# Header files
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/snap/software/include/ DESTINATION ${INSTALL_INCLUDE}
+    COMPONENT dev
+)
 
 # CMake config
 install(EXPORT snap-export
     NAMESPACE   snap::
-    DESTINATION ${INSTALL_CMAKE}/snap
+    DESTINATION share/snap/cmake/snap
     COMPONENT   dev
 )
 
 # Export library for downstream projects
-export(TARGETS snap NAMESPACE snap:: FILE ${PROJECT_BINARY_DIR}/cmake/snap/snap-export.cmake)
+export(TARGETS snap NAMESPACE snap:: FILE share/snap/cmake/snap/snap-export.cmake)
+
+# Install cmake find script for the project
+install(FILES snap-config.cmake DESTINATION share/snap COMPONENT dev)

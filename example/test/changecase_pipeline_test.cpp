@@ -2,7 +2,7 @@
 
 #include <gtest/gtest.h>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_factory.hpp>

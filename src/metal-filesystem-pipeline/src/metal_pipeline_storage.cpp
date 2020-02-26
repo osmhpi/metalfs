@@ -3,7 +3,7 @@
 #include <cstring>
 #include <functional>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-pipeline/data_sink.hpp>
