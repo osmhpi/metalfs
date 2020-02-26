@@ -18,11 +18,10 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=
 
-WORKDIR /metal
+ADD . /src/metal_fs
 
-ADD . ./
-
-RUN mkdir build \
+RUN cd /src/metal_fs \
+ && mkdir build \
  && cd build \
  && cmake \
    -DCMAKE_BUILD_TYPE=Release \
@@ -32,6 +31,10 @@ RUN mkdir build \
  && make install
 
 FROM ubuntu:bionic
+
+COPY --from=build /usr/local/bin/metal-driver /usr/local/bin/
+
+COPY --from=build /usr/local/include/ /usr/local/include/
 
 COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/
 COPY --from=build /usr/local/lib/libspdlog.so.1.5.0 /usr/local/lib/
