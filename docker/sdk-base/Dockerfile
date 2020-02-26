@@ -10,7 +10,7 @@ RUN apt-get update \
     vim \
     curl ca-certificates \
     build-essential \
-    git \
+    git openssh-client \
     jq \
  && rm -rf /var/lib/apt/lists/*
 
