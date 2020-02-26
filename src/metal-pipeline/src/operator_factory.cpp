@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/snap_action.hpp>
 

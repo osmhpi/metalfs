@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <malloc.h>
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <memory>
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>

@@ -9,7 +9,7 @@ extern "C" {
 #include <iostream>
 #include <sstream>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/data_sink_context.hpp>
 #include <metal-pipeline/data_source_context.hpp>

@@ -6,7 +6,7 @@ extern "C" {
 #include <spdlog/spdlog.h>
 #include <utility>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-pipeline/snap_action.hpp>
 

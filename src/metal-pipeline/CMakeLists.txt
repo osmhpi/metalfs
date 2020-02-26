@@ -35,6 +35,7 @@ set(headers
     ${include_path}/data_sink.hpp
     ${include_path}/data_source_context.hpp
     ${include_path}/data_source.hpp
+    ${include_path}/fpga_interface.hpp
     ${include_path}/operator_argument.hpp
     ${include_path}/operator_context.hpp
     ${include_path}/operator_factory.hpp
@@ -137,7 +138,6 @@ target_include_directories(${target}
     ${PROJECT_BINARY_DIR}/src/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_BINARY_DIR}/include
-    ${PROJECT_SOURCE_DIR}/targets/SNAP/_internal/include
 
     PUBLIC
     ${DEFAULT_INCLUDE_DIRECTORIES}
@@ -160,7 +160,7 @@ target_link_libraries(${target}
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
-    snap::snap
+    snap
 
     INTERFACE
 )

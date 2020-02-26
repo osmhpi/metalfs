@@ -11,7 +11,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 
 namespace metal {
 

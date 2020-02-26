@@ -44,10 +44,16 @@ add_library(snap::snap ALIAS snap)
 
 install(TARGETS snap EXPORT snap-export DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
+# Header files
+install(DIRECTORY
+    ${CMAKE_CURRENT_SOURCE_DIR}/snap/software/include/ DESTINATION ${INSTALL_INCLUDE}
+    COMPONENT dev
+)
+
 # CMake config
 install(EXPORT snap-export
     NAMESPACE   snap::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/snap
+    DESTINATION share/snap/cmake/snap
     COMPONENT   dev
 )
 

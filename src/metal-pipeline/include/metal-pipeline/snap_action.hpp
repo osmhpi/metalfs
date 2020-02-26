@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <snap_action_metal.h>
+#include <metal-pipeline/fpga_interface.hpp>
 
 namespace metal {
 
