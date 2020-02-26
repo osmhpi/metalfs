@@ -157,10 +157,10 @@ target_link_libraries(${target}
     PRIVATE
     nlohmann_json::nlohmann_json
     spdlog::spdlog
+    snap
 
     PUBLIC
     ${DEFAULT_LIBRARIES}
-    snap
 
     INTERFACE
 )
