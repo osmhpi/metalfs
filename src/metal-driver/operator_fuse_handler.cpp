@@ -26,12 +26,25 @@ int OperatorFuseHandler::fuse_chown(const std::string path, uid_t uid,
 
 int OperatorFuseHandler::fuse_getattr(const std::string path,
                                       struct stat *stbuf) {
-  memset(stbuf, 0, sizeof(struct stat));
-  stbuf->st_mode = S_IFREG | 0111;
-  stbuf->st_uid = 0;
-  stbuf->st_gid = 0;
-  stbuf->st_size = sizeof(PlaceholderBinary);
-  return 0;
+  if (path.empty()) {
+    stbuf->st_mode = S_IFDIR | 0755;
+    stbuf->st_nlink = 2;
+    return 0;
+  }
+
+  assert(path.size() > 1 && path[0] == '/');
+  auto basename = path.substr(1);
+
+  if (_operators.find(basename) != _operators.cend()) {
+    memset(stbuf, 0, sizeof(struct stat));
+    stbuf->st_mode = S_IFREG | 0111;
+    stbuf->st_uid = 0;
+    stbuf->st_gid = 0;
+    stbuf->st_size = sizeof(PlaceholderBinary);
+    return 0;
+  }
+
+  return -ENOENT;
 }
 
 int OperatorFuseHandler::fuse_readdir(const std::string path, void *buf,

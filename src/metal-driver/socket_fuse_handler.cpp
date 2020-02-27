@@ -5,19 +5,8 @@
 
 namespace metal {
 
-SocketFuseHandler::SocketFuseHandler() {
-  // Set a file name for the server socket
-  _socket_alias = ".hello";
-
-  char socket_filename[255];
-  char socket_dir[] = "/tmp/metal-socket-XXXXXX";
-  if (mkdtemp(socket_dir) == nullptr) {
-    throw std::runtime_error("Could not create temporary directory.");
-  }
-  auto socket_file = std::string(socket_dir) + "/metal.sock";
-  strncpy(socket_filename, socket_file.c_str(), 255);
-  _socket_name = std::string(socket_filename);
-}
+SocketFuseHandler::SocketFuseHandler(std::string socketPath)
+    : _socket_name(socketPath) {}
 
 int SocketFuseHandler::fuse_chown(const std::string path, uid_t uid,
                                   gid_t gid) {
@@ -30,7 +19,7 @@ int SocketFuseHandler::fuse_chown(const std::string path, uid_t uid,
 int SocketFuseHandler::fuse_getattr(const std::string path,
                                     struct stat *stbuf) {
   memset(stbuf, 0, sizeof(struct stat));
-  if (path == _socket_name) {
+  if (path.empty()) {
     stbuf->st_mode = S_IFLNK | 0777;
     stbuf->st_nlink = 1;
     stbuf->st_size = strlen(_socket_name.c_str());
@@ -42,12 +31,7 @@ int SocketFuseHandler::fuse_getattr(const std::string path,
 int SocketFuseHandler::fuse_readdir(const std::string path, void *buf,
                                     fuse_fill_dir_t filler, off_t offset,
                                     struct fuse_file_info *fi) {
-  filler(buf, ".", NULL, 0);
-  filler(buf, "..", NULL, 0);
-
-  filler(buf, _socket_alias.c_str(), NULL, 0);
-
-  return 0;
+  return -ENOSYS;
 }
 
 int SocketFuseHandler::fuse_create(const std::string path, mode_t mode,
@@ -57,7 +41,7 @@ int SocketFuseHandler::fuse_create(const std::string path, mode_t mode,
 
 int SocketFuseHandler::fuse_readlink(const std::string path, char *buf,
                                      size_t size) {
-  if (path == "/" + _socket_alias) {
+  if (path.empty()) {
     strncpy(buf, _socket_name.c_str(), size);
     return 0;
   }

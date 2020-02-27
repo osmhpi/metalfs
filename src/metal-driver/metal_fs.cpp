@@ -107,45 +107,62 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
+  auto metadataDir = std::string(conf.metadata_dir);
+  DIR *dir = opendir(metadataDir.c_str());
+  if (dir) {
+    closedir(dir);
+  } else if (ENOENT == errno) {
+    mkdir(metadataDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  }
+
+  auto metadataDirDRAM = metadataDir + "_tmp";
+  dir = opendir(metadataDirDRAM.c_str());
+  if (dir) {
+    closedir(dir);
+  } else if (ENOENT == errno) {
+    mkdir(metadataDirDRAM.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  }
+
   if (!conf.in_memory) {
     SnapAction fpga(conf.card);
-    auto factory = OperatorFactory::fromFPGA(fpga);
-    std::set<std::string> operators;
+    auto factory =
+        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(fpga));
 
-    for (const auto &op : factory.operatorSpecifications()) {
+    std::set<std::string> operators;
+    for (const auto &op : factory->operatorSpecifications()) {
       operators.emplace(op.first);
     }
 
     operators.emplace(DatagenOperator::id());
     operators.emplace(MetalCatOperator::id());
 
-    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>());
+    Server server(factory);
+
+    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>(server.socketFilename()));
     Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
                                           std::move(operators)));
 
-    auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
-                                                fpga::MapType::DRAM>();
-    auto dramFilesystem = std::make_shared<FilesystemContext>(
-        std::string(conf.metadata_dir) + "_tmp", &dramStorage);
-    Context::addHandler(
-        "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
+    // auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
+    //                                             fpga::MapType::DRAM>();
+    // auto dramFilesystem =
+    //     std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage);
+    // Context::addHandler(
+    //     "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
     auto nvmeStorage = PipelineStorage::backend<fpga::AddressType::NVMe,
                                                 fpga::MapType::DRAMAndNVMe>();
-    auto nvmeFilesystem = std::make_shared<FilesystemContext>(
-        std::string(conf.metadata_dir), &nvmeStorage);
+    auto nvmeFilesystem =
+        std::make_shared<FilesystemContext>(metadataDir, &nvmeStorage);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
+
+    auto serverThread = std::thread(&Server::start, server, conf.card);
   } else {
-    auto inMemoryFilesystem = std::make_shared<FilesystemContext>(
-        std::string(conf.metadata_dir), &in_memory_storage);
+    auto inMemoryFilesystem =
+        std::make_shared<FilesystemContext>(metadataDir, &in_memory_storage);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(inMemoryFilesystem));
   }
-
-  // auto server =
-  //     std::thread(Server::start, c.socket_filename(), c.registry(),
-  //     c.card());
 
   spdlog::info("Starting FUSE driver...");
   auto retc =

@@ -16,12 +16,12 @@ class MessageHeader;
 
 class Server {
  public:
-  explicit Server(std::string socketFileName,
-                  std::shared_ptr<OperatorFactory> registry);
+  explicit Server(std::shared_ptr<OperatorFactory> registry);
   virtual ~Server();
 
-  static void start(const std::string& socket_file_name,
-                    std::shared_ptr<OperatorFactory> registry, int card);
+  void start(int card);
+
+  const std::string &socketFilename() { return _socketFileName; }
 
  protected:
   void startInternal(int card);

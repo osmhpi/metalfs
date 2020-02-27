@@ -8,7 +8,7 @@ namespace metal {
 
 class SocketFuseHandler : public FuseHandler {
  public:
-  SocketFuseHandler();
+  SocketFuseHandler(std::string socketPath);
   int fuse_chown(const std::string path, uid_t uid, gid_t gid) override;
   int fuse_getattr(const std::string path, struct stat *stbuf) override;
   int fuse_readdir(const std::string path, void *buf, fuse_fill_dir_t filler,
@@ -30,7 +30,6 @@ class SocketFuseHandler : public FuseHandler {
                   const std::string to_path) override;
 
  protected:
-  std::string _socket_alias;
   std::string _socket_name;
 };
 

@@ -31,27 +31,27 @@
 #include <metal-pipeline/operator_factory.hpp>
 
 #include "agent_pool.hpp"
+#include "operator_agent.hpp"
 #include "pipeline_builder.hpp"
 #include "pipeline_loop.hpp"
-#include "operator_agent.hpp"
 
 namespace metal {
 
-Server::Server(std::string socketFileName,
-               std::shared_ptr<OperatorFactory> registry)
-    : _socketFileName(std::move(socketFileName)),
-      _registry(std::move(registry)),
-      _listenfd(0) {}
+Server::Server(std::shared_ptr<OperatorFactory> registry)
+    : _socketFileName(), _registry(std::move(registry)), _listenfd(0) {
+  char socket_filename[255];
+  char socket_dir[] = "/tmp/metal-socket-XXXXXX";
+  if (mkdtemp(socket_dir) == nullptr) {
+    throw std::runtime_error("Could not create temporary directory.");
+  }
+  auto socket_file = std::string(socket_dir) + "/metal.sock";
+  strncpy(socket_filename, socket_file.c_str(), 255);
+  _socketFileName = std::string(socket_filename);
+}
 
 Server::~Server() { close(_listenfd); }
 
-void Server::start(const std::string &socket_file_name,
-                   std::shared_ptr<OperatorFactory> registry, int card) {
-  Server server(socket_file_name, std::move(registry));
-  server.startInternal(card);
-}
-
-void Server::startInternal(int card) {
+void Server::start(int card) {
   _listenfd = 0;
   int connfd = 0;
   struct sockaddr_un serv_addr {};
