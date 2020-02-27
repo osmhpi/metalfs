@@ -6,18 +6,20 @@ extern "C" {
 #include <spdlog/spdlog.h>
 #include <utility>
 
-#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
-FileDataSinkContext::FileDataSinkContext(fpga::AddressType resource,
-                                               fpga::MapType map,
-                                               std::string filename,
-                                               uint64_t offset, uint64_t size)
-    : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
+FileDataSinkContext::FileDataSinkContext(
+    std::shared_ptr<FilesystemContext> filesystem, std::string filename,
+    uint64_t offset, uint64_t size)
+    : DefaultDataSinkContext(
+          DataSink(offset, size, filesystem->type(), filesystem->map())),
       _filename(std::move(filename)),
+      _filesystem(filesystem),
       _cachedTotalSize(0) {
   if (size > 0) {
     prepareForTotalSize(offset + size);
@@ -26,36 +28,41 @@ FileDataSinkContext::FileDataSinkContext(fpga::AddressType resource,
   }
 }
 
-FileDataSinkContext::FileDataSinkContext(
-    fpga::AddressType resource, fpga::MapType map,
-    std::vector<mtl_file_extent> &extents, uint64_t offset, uint64_t size)
+FileDataSinkContext::FileDataSinkContext(fpga::AddressType resource,
+                                         fpga::MapType map,
+                                         std::vector<mtl_file_extent> &extents,
+                                         uint64_t offset, uint64_t size)
     : DefaultDataSinkContext(DataSink(offset, size, resource, map)),
       _extents(extents),
       _cachedTotalSize(0) {}
 
 void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
-  if (_filename.empty()) return;
+  if (_filename.empty() || _filesystem == nullptr) {
+    return;
+  }
 
-  if (size == _cachedTotalSize) return;
+  if (size == _cachedTotalSize) {
+    return;
+  }
 
   int res;
 
   uint64_t inode_id;
-  res = mtl_open(_filename.c_str(), &inode_id);
+  res = mtl_open(_filesystem->context(), _filename.c_str(), &inode_id);
 
   if (res != MTL_SUCCESS) throw std::runtime_error("File does not exist.");
 
-  res = mtl_truncate(inode_id, size);
+  res = mtl_truncate(_filesystem->context(), inode_id, size);
   if (res != MTL_SUCCESS)
     throw std::runtime_error("Unable to update file length");
 
   loadExtents();
 }
 
-void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool) {
-  _dataSink =
-      DataSink(_dataSink.address().addr, inputSize,
-               _dataSink.address().type, _dataSink.address().map);
+void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
+                                    bool) {
+  _dataSink = DataSink(_dataSink.address().addr, inputSize,
+                       _dataSink.address().type, _dataSink.address().map);
 
   if (_dataSink.address().addr + _dataSink.address().size > _cachedTotalSize) {
     prepareForTotalSize(_dataSink.address().addr + _dataSink.address().size);
@@ -88,8 +95,7 @@ void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize, bool
   }
 
   try {
-    action.executeJob(fpga::JobType::Map,
-                       reinterpret_cast<char *>(job_struct));
+    action.executeJob(fpga::JobType::Map, reinterpret_cast<char *>(job_struct));
   } catch (std::exception &ex) {
     free(job_struct);
     throw ex;
@@ -104,25 +110,27 @@ void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize, bool) {
       DataSink(_dataSink.address().addr + outputSize, _dataSink.address().size,
                _dataSink.address().type, _dataSink.address().map);
 
-   // if (endOfInput) {
-   //     if (_dataSink.address().addr < _cachedTotalSize && _filename.size()) {
-   //        int res;    
-   //        uint64_t inode_id;
-   //        res = mtl_open(_filename.c_str(), &inode_id);
+  // if (endOfInput) {
+  //     if (_dataSink.address().addr < _cachedTotalSize && _filename.size()) {
+  //        int res;
+  //        uint64_t inode_id;
+  //        res = mtl_open(_filename.c_str(), &inode_id);
 
-   //        if (res != MTL_SUCCESS) throw std::runtime_error("File does not exist.");
+  //        if (res != MTL_SUCCESS) throw std::runtime_error("File does not
+  //        exist.");
 
-   //        res = mtl_truncate(inode_id, _dataSink.address().addr);
-   //        if (res != MTL_SUCCESS)
-   //          throw std::runtime_error("Unable to update file length");
-   //     }
-   // }
+  //        res = mtl_truncate(inode_id, _dataSink.address().addr);
+  //        if (res != MTL_SUCCESS)
+  //          throw std::runtime_error("Unable to update file length");
+  //     }
+  // }
 }
 
 void FileDataSinkContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
   uint64_t extents_length, file_length;
-  if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length,
+  if (mtl_load_extent_list(_filesystem->context(), _filename.c_str(),
+                           extents.data(), &extents_length,
                            &file_length) != MTL_SUCCESS)
     throw std::runtime_error("Unable to load extents");
 

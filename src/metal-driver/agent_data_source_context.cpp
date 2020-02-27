@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
 #include "operator_agent.hpp"
@@ -10,10 +11,10 @@
 namespace metal {
 
 AgentDataSourceContext::AgentDataSourceContext(
+    std::shared_ptr<FilesystemContext> filesystem,
     std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
     bool skipSendingProcessingResponse)
-    : FileDataSourceContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "", 0,
-                            0),
+    : FileDataSourceContext(filesystem, "", 0, 0),
       _agent(agent),
       _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
@@ -25,7 +26,7 @@ AgentDataSourceContext::AgentDataSourceContext(
     _filename = agent->internalInputFile();
     loadExtents();
     _dataSource = DataSource(0, std::min(BufferSize, _fileLength),
-                             fpga::AddressType::NVMe, fpga::MapType::NVMe);
+                             filesystem->type(), filesystem->map());
   } else {
     throw std::runtime_error("Unknown data source");
   }

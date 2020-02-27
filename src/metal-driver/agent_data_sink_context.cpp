@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
 #include "operator_agent.hpp"
@@ -9,11 +10,11 @@
 
 namespace metal {
 
-AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
-                                           std::shared_ptr<Pipeline> pipeline,
-                                           bool skipReceivingProcessingRequest)
-    : FileDataSinkContext(fpga::AddressType::NVMe, fpga::MapType::NVMe, "", 0,
-                          0),
+AgentDataSinkContext::AgentDataSinkContext(
+    std::shared_ptr<FilesystemContext> filesystem,
+    std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
+    bool skipReceivingProcessingRequest)
+    : FileDataSinkContext(filesystem, "", 0, 0),
       _agent(agent),
       _pipeline(pipeline),
       _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {
@@ -23,8 +24,7 @@ AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
     // Nothing to do
   } else if (!agent->internalOutputFile().empty()) {
     _filename = agent->internalOutputFile();
-    _dataSink =
-        DataSink(0, BufferSize, fpga::AddressType::NVMe, fpga::MapType::NVMe);
+    _dataSink = DataSink(0, BufferSize, filesystem->type(), filesystem->map());
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data sink");

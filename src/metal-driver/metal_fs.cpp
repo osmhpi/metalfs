@@ -8,8 +8,18 @@ extern "C" {
 #include <spdlog/spdlog.h>
 #include <cxxopts.hpp>
 
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-pipeline/operator_factory.hpp>
+#include <metal-pipeline/snap_action.hpp>
+
+#include "filesystem_fuse_handler.hpp"
 #include "metal_fuse_operations.hpp"
+#include "operator_fuse_handler.hpp"
+#include "pseudo_operators.hpp"
 #include "server.hpp"
+#include "socket_fuse_handler.hpp"
+
+using namespace metal;
 
 struct metal_config {
   int card;
@@ -64,16 +74,16 @@ static int metal_opt_proc(void *data, const char *arg, int key,
               "    --in-memory=(true|false)\n",
               outargs->argv[0]);
       fuse_opt_add_arg(outargs, "-h");
-      fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations,
-                NULL);
+      fuse_main(outargs->argc, outargs->argv, &Context::fuseOperations(), NULL);
       exit(1);
+      break;
 
     case KEY_VERSION:
       fprintf(stderr, "metal_fs version %s\n", "0.0.1");
       fuse_opt_add_arg(outargs, "--version");
-      fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations,
-                NULL);
+      fuse_main(outargs->argc, outargs->argv, &Context::fuseOperations(), NULL);
       exit(0);
+      break;
   }
   return 1;
 }
@@ -97,21 +107,53 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
-  auto &c = metal::Context::instance();
+  if (!conf.in_memory) {
+    SnapAction fpga(conf.card);
+    auto factory = OperatorFactory::fromFPGA(fpga);
+    std::set<std::string> operators;
 
-  c.initialize(static_cast<bool>(conf.in_memory),
-               std::string(conf.metadata_dir), conf.card);
+    for (const auto &op : factory.operatorSpecifications()) {
+      operators.emplace(op.first);
+    }
 
-  auto server = std::thread(metal::Server::start, c.socket_filename(),
-                            c.registry(), c.card());
+    operators.emplace(DatagenOperator::id());
+    operators.emplace(MetalCatOperator::id());
+
+    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>());
+    Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
+                                          std::move(operators)));
+
+    auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
+                                                fpga::MapType::DRAM>();
+    auto dramFilesystem = std::make_shared<FilesystemContext>(
+        std::string(conf.metadata_dir) + "_tmp", &dramStorage);
+    Context::addHandler(
+        "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
+
+    auto nvmeStorage = PipelineStorage::backend<fpga::AddressType::NVMe,
+                                                fpga::MapType::DRAMAndNVMe>();
+    auto nvmeFilesystem = std::make_shared<FilesystemContext>(
+        std::string(conf.metadata_dir), &nvmeStorage);
+    Context::addHandler(
+        "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
+  } else {
+    auto inMemoryFilesystem = std::make_shared<FilesystemContext>(
+        std::string(conf.metadata_dir), &in_memory_storage);
+    Context::addHandler(
+        "/files", std::make_unique<FilesystemFuseHandler>(inMemoryFilesystem));
+  }
+
+  // auto server =
+  //     std::thread(Server::start, c.socket_filename(), c.registry(),
+  //     c.card());
 
   spdlog::info("Starting FUSE driver...");
   auto retc =
-      fuse_main(args.argc, args.argv, &metal::metal_fuse_operations, nullptr);
+      fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
 
   // This de-allocates the action/card, so this must be called every time we
   // exit
-  mtl_deinitialize(metal::Context::instance().storage());
+  // mtl_deinitialize(Context::instance().storage());
 
   return retc;
 }

@@ -5,19 +5,20 @@
 #include <spdlog/spdlog.h>
 
 #include <metal-filesystem/metal.h>
-#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
 size_t FileDataSourceContext::reportTotalSize() { return loadExtents(); }
 
-FileDataSourceContext::FileDataSourceContext(fpga::AddressType resource,
-                                             fpga::MapType map,
-                                             std::string filename,
-                                             uint64_t offset, uint64_t size)
-    : DefaultDataSourceContext(DataSource(offset, size, resource, map)),
+FileDataSourceContext::FileDataSourceContext(
+    std::shared_ptr<FilesystemContext> filesystem, std::string filename,
+    uint64_t offset, uint64_t size)
+    : DefaultDataSourceContext(
+          DataSource(offset, size, filesystem->type(), filesystem->map())),
       _filename(std::move(filename)) {
   if (size > 0) {
     if (_filename.empty()) return;
@@ -36,7 +37,8 @@ FileDataSourceContext::FileDataSourceContext(
 uint64_t FileDataSourceContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
   uint64_t extents_length, fileLength;
-  if (mtl_load_extent_list(_filename.c_str(), extents.data(), &extents_length,
+  if (mtl_load_extent_list(_filesystem->context(), _filename.c_str(),
+                           extents.data(), &extents_length,
                            &fileLength) != MTL_SUCCESS)
     throw std::runtime_error("Unable to load extents");
 

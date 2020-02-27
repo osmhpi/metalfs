@@ -22,13 +22,15 @@ namespace metal {
 void PipelineLoop::run() {
   ProfilingPipelineRunner runner(_card, _pipeline.pipeline);
 
+  // TODO: Resolve filesystem handles for data source and sink
+
   // Establish data sources and sinks
   auto singleStagePipeline =
       _pipeline.dataSourceAgent == _pipeline.dataSinkAgent;
-  AgentDataSourceContext dataSource(_pipeline.dataSourceAgent,
+  AgentDataSourceContext dataSource(nullptr, _pipeline.dataSourceAgent,
                                     _pipeline.pipeline, singleStagePipeline);
-  AgentDataSinkContext dataSink(_pipeline.dataSinkAgent, _pipeline.pipeline,
-                                singleStagePipeline);
+  AgentDataSinkContext dataSink(nullptr, _pipeline.dataSinkAgent,
+                                _pipeline.pipeline, singleStagePipeline);
 
   if (DatagenOperator::isDatagenAgent(*_pipeline.dataSourceAgent)) {
     auto isProfilingEnabled =

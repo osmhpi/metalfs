@@ -13,6 +13,8 @@ extern "C" {
 
 namespace metal {
 
+class FilesystemContext;
+
 class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
     : public DefaultDataSinkContext {
   // Common API
@@ -32,7 +34,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
 
   // API to be used when building file pipelines (filename-based)
  public:
-  explicit FileDataSinkContext(fpga::AddressType resource, fpga::MapType map,
+  explicit FileDataSinkContext(std::shared_ptr<FilesystemContext> filesystem,
                                   std::string filename, uint64_t offset,
                                   uint64_t size);
 
@@ -41,7 +43,8 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
  protected:
   void loadExtents();
 
-  std::string _filename;
+  std::string _filename; 
+  std::shared_ptr<FilesystemContext> _filesystem;
   uint64_t _cachedTotalSize;
 };
 

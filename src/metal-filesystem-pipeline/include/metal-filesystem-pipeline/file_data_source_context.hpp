@@ -7,6 +7,8 @@
 
 namespace metal {
 
+class FilesystemContext;
+
 class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
     : public DefaultDataSourceContext {
   // Common API
@@ -28,7 +30,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
 
   // API to be used when building file pipelines (filename-based)
  public:
-  explicit FileDataSourceContext(fpga::AddressType resource, fpga::MapType map,
+  explicit FileDataSourceContext(std::shared_ptr<FilesystemContext> filesystem,
                                  std::string filename, uint64_t offset,
                                  uint64_t size = 0);
   uint64_t reportTotalSize();
@@ -37,6 +39,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
   uint64_t loadExtents();
 
   std::string _filename;
+  std::shared_ptr<FilesystemContext> _filesystem;
 };
 
 }  // namespace metal
