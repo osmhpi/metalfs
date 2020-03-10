@@ -39,14 +39,11 @@ namespace metal {
 
 Server::Server(std::shared_ptr<OperatorFactory> registry)
     : _socketFileName(), _registry(std::move(registry)), _listenfd(0) {
-  char socket_filename[255];
   char socket_dir[] = "/tmp/metal-socket-XXXXXX";
   if (mkdtemp(socket_dir) == nullptr) {
     throw std::runtime_error("Could not create temporary directory.");
   }
-  auto socket_file = std::string(socket_dir) + "/metal.sock";
-  strncpy(socket_filename, socket_file.c_str(), 255);
-  _socketFileName = std::string(socket_filename);
+  _socketFileName = std::string(socket_dir) + "/metal.sock";
 }
 
 Server::~Server() { close(_listenfd); }

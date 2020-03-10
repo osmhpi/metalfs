@@ -24,7 +24,6 @@ class Server {
   const std::string &socketFilename() { return _socketFileName; }
 
  protected:
-  void startInternal(int card);
   void processRequest(Socket socket, int card);
 
   AgentPool _agents;

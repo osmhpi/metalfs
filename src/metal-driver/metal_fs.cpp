@@ -123,6 +123,8 @@ int main(int argc, char *argv[]) {
     mkdir(metadataDirDRAM.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   }
 
+  std::unique_ptr<Server> server = nullptr;
+
   if (!conf.in_memory) {
     SnapAction fpga(conf.card);
     auto factory =
@@ -130,15 +132,17 @@ int main(int argc, char *argv[]) {
 
     std::set<std::string> operators;
     for (const auto &op : factory->operatorSpecifications()) {
+      spdlog::info("Found operator {}", op.first);
       operators.emplace(op.first);
     }
 
     operators.emplace(DatagenOperator::id());
     operators.emplace(MetalCatOperator::id());
 
-    Server server(factory);
+    server = std::make_unique<Server>(factory);
 
-    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>(server.socketFilename()));
+    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>(
+                                       server->socketFilename()));
     Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
                                           std::move(operators)));
 
@@ -155,8 +159,6 @@ int main(int argc, char *argv[]) {
         std::make_shared<FilesystemContext>(metadataDir, &nvmeStorage);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
-
-    auto serverThread = std::thread(&Server::start, server, conf.card);
   } else {
     auto inMemoryFilesystem =
         std::make_shared<FilesystemContext>(metadataDir, &in_memory_storage);
@@ -165,8 +167,15 @@ int main(int argc, char *argv[]) {
   }
 
   spdlog::info("Starting FUSE driver...");
-  auto retc =
-      fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
+  int retc;
+
+  if (server != nullptr) {
+    std::thread serverThread(&Server::start, server.get(), conf.card);
+    retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
+    serverThread.join();
+  } else {
+    retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
+  }
 
   // This de-allocates the action/card, so this must be called every time we
   // exit
