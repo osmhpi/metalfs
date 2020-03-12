@@ -70,11 +70,6 @@ int mtl_initialize(mtl_context **context, const char *metadata_store,
 int mtl_deinitialize(mtl_context *context) {
   context->storage->deinitialize();
 
-  mtl_reset_extents_db();
-  mtl_reset_inodes_db();
-  mtl_reset_meta_db();
-  mtl_reset_heap_db();
-
   mdb_env_close(context->env);
 
   free(context);

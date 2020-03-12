@@ -146,12 +146,12 @@ int main(int argc, char *argv[]) {
     Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
                                           std::move(operators)));
 
-    // auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
-    //                                             fpga::MapType::DRAM>();
-    // auto dramFilesystem =
-    //     std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage);
-    // Context::addHandler(
-    //     "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
+    auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
+                                                fpga::MapType::DRAM>();
+    auto dramFilesystem =
+        std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage);
+    Context::addHandler(
+        "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
     auto nvmeStorage = PipelineStorage::backend<fpga::AddressType::NVMe,
                                                 fpga::MapType::DRAMAndNVMe>();
