@@ -5,16 +5,16 @@
 #include <metal-filesystem-pipeline/filesystem_context.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
+#include "filesystem_fuse_handler.hpp"
 #include "operator_agent.hpp"
 #include "pseudo_operators.hpp"
 
 namespace metal {
 
-AgentDataSinkContext::AgentDataSinkContext(
-    std::shared_ptr<FilesystemContext> filesystem,
-    std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
-    bool skipReceivingProcessingRequest)
-    : FileDataSinkContext(filesystem, "", 0, 0),
+AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
+                                           std::shared_ptr<Pipeline> pipeline,
+                                           bool skipReceivingProcessingRequest)
+    : FileDataSinkContext(agent->internalOutputFile().second, "", 0, 0),
       _agent(agent),
       _pipeline(pipeline),
       _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {
@@ -22,9 +22,11 @@ AgentDataSinkContext::AgentDataSinkContext(
     // Nothing to do
   } else if (DevNullFile::isNullOutput(*_agent)) {
     // Nothing to do
-  } else if (!agent->internalOutputFile().empty()) {
-    _filename = agent->internalOutputFile();
-    _dataSink = DataSink(0, BufferSize, filesystem->type(), filesystem->map());
+  } else if (!agent->internalOutputFile().first.empty()) {
+    _filename = agent->internalOutputFile().first;
+    _dataSink =
+        DataSink(0, BufferSize, agent->internalOutputFile().second->type(),
+                 agent->internalOutputFile().second->map());
     loadExtents();
   } else {
     throw std::runtime_error("Unknown data sink");

@@ -210,4 +210,14 @@ void CombinedFuseHandler::addHandler(std::string prefix,
   _handlers.emplace(std::make_pair(prefix, std::move(handler)));
 }
 
+std::pair<std::string, std::shared_ptr<FuseHandler>> CombinedFuseHandler::resolveHandler(const std::string &path) {
+  for (const auto &handler : _handlers) {
+    if (path.rfind(handler.first, 0) != 0) continue;
+
+    return handler;
+  }
+
+  return std::make_pair("", nullptr);
+}
+
 }  // namespace metal

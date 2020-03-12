@@ -19,6 +19,7 @@ class Context {
   static void addHandler(std::string prefix,
                          std::unique_ptr<FuseHandler> handler);
   static struct fuse_operations& fuseOperations();
+  static std::pair<std::string, std::shared_ptr<FuseHandler>> resolveHandler(const std::string &path);
   protected:
   static void createHandler();
 };

@@ -50,6 +50,8 @@ int PipelineStorage::read(fpga::AddressType addressType, fpga::MapType map,
   DefaultDataSinkContext sink(DataSink(buffer, length));
 
   try {
+    // TODO: card = 0 should not be hardcoded, better add opaque 'backend
+    // handle' to method signature
     SnapPipelineRunner runner(0);
     runner.run(source, sink);
     return MTL_SUCCESS;
@@ -66,7 +68,8 @@ int PipelineStorage::write(fpga::AddressType addressType, fpga::MapType map,
   FileDataSinkContext sink(addressType, map,
                            _write_extents[std::make_pair(addressType, map)],
                            offset, length);
-
+  // TODO: card = 0 should not be hardcoded, better add opaque 'backend
+  // handle' to method signature
   try {
     SnapPipelineRunner runner(0);
     runner.run(source, sink);

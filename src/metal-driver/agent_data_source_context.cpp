@@ -5,16 +5,16 @@
 #include <metal-filesystem-pipeline/filesystem_context.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
+#include "filesystem_fuse_handler.hpp"
 #include "operator_agent.hpp"
 #include "pseudo_operators.hpp"
 
 namespace metal {
 
 AgentDataSourceContext::AgentDataSourceContext(
-    std::shared_ptr<FilesystemContext> filesystem,
     std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
     bool skipSendingProcessingResponse)
-    : FileDataSourceContext(filesystem, "", 0, 0),
+    : FileDataSourceContext(agent->internalInputFile().second, "", 0, 0),
       _agent(agent),
       _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
@@ -22,11 +22,12 @@ AgentDataSourceContext::AgentDataSourceContext(
     // Nothing to do
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
-  } else if (!agent->internalInputFile().empty()) {
-    _filename = agent->internalInputFile();
+  } else if (!agent->internalInputFile().first.empty()) {
+    _filename = agent->internalInputFile().first;
     loadExtents();
     _dataSource = DataSource(0, std::min(BufferSize, _fileLength),
-                             filesystem->type(), filesystem->map());
+                             agent->internalInputFile().second->type(),
+                             agent->internalInputFile().second->map());
   } else {
     throw std::runtime_error("Unknown data source");
   }

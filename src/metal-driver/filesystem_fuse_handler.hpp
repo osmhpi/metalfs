@@ -35,6 +35,8 @@ class FilesystemFuseHandler : public FuseHandler {
   int fuse_rename(const std::string from_path,
                   const std::string to_path) override;
 
+  std::shared_ptr<FilesystemContext> filesystem() const { return _filesystem; }
+
  protected:
   std::shared_ptr<FilesystemContext> _filesystem;
 };

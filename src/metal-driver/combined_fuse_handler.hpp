@@ -31,9 +31,10 @@ class CombinedFuseHandler : public FuseHandler {
                   const std::string to_path) override;
 
   void addHandler(std::string prefix, std::unique_ptr<FuseHandler> handler);
+  std::pair<std::string, std::shared_ptr<FuseHandler>> resolveHandler(const std::string &path);
 
  protected:
-  std::map<std::string, std::unique_ptr<FuseHandler>> _handlers;
+  std::map<std::string, std::shared_ptr<FuseHandler>> _handlers;
 };
 
 }  // namespace metal

@@ -2,7 +2,6 @@ extern "C" {
 #include <metal-filesystem/metal.h>
 }
 
-#include <dirent.h>
 #include <thread>
 
 #include <spdlog/spdlog.h>
@@ -108,20 +107,7 @@ int main(int argc, char *argv[]) {
   }
 
   auto metadataDir = std::string(conf.metadata_dir);
-  DIR *dir = opendir(metadataDir.c_str());
-  if (dir) {
-    closedir(dir);
-  } else if (ENOENT == errno) {
-    mkdir(metadataDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  }
-
   auto metadataDirDRAM = metadataDir + "_tmp";
-  dir = opendir(metadataDirDRAM.c_str());
-  if (dir) {
-    closedir(dir);
-  } else if (ENOENT == errno) {
-    mkdir(metadataDirDRAM.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  }
 
   std::unique_ptr<Server> server = nullptr;
 
@@ -149,7 +135,7 @@ int main(int argc, char *argv[]) {
     auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
                                                 fpga::MapType::DRAM>();
     auto dramFilesystem =
-        std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage);
+        std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage, true);
     Context::addHandler(
         "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
@@ -161,7 +147,7 @@ int main(int argc, char *argv[]) {
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
   } else {
     auto inMemoryFilesystem =
-        std::make_shared<FilesystemContext>(metadataDir, &in_memory_storage);
+        std::make_shared<FilesystemContext>(metadataDir, &in_memory_storage, true);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(inMemoryFilesystem));
   }

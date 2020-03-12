@@ -105,7 +105,7 @@ ConnectedFile determineProcessOrFileConnectedToStandardFileDescriptor(
   if (access(fd_file, F_OK) == 0) {
     // Check if it's an FPGA file
     char files_prefix[FILENAME_MAX];  // TODO: Use format constant
-    snprintf(files_prefix, FILENAME_MAX, "%s/files/", metal_mountpoint.c_str());
+    snprintf(files_prefix, FILENAME_MAX, "%s/", metal_mountpoint.c_str());
     auto files_prefix_len = strlen(files_prefix);
 
     char internal_filename[FILENAME_MAX] = {0};

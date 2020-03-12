@@ -13,8 +13,7 @@ class Pipeline;
 
 class AgentDataSinkContext : public FileDataSinkContext {
  public:
-  explicit AgentDataSinkContext(std::shared_ptr<FilesystemContext> filesystem,
-                                std::shared_ptr<OperatorAgent> agent,
+  explicit AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
                                 std::shared_ptr<Pipeline> pipeline,
                                 bool skipReceivingProcessingRequest);
 

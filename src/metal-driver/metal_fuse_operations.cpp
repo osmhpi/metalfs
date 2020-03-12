@@ -94,4 +94,12 @@ void Context::addHandler(std::string prefix, std::unique_ptr<FuseHandler> h) {
   handler->addHandler(prefix, std::move(h));
 }
 
+std::pair<std::string, std::shared_ptr<FuseHandler>> Context::resolveHandler(const std::string &path) {
+  if (handler == nullptr) {
+    return std::make_pair("", nullptr);
+  }
+
+  return handler->resolveHandler(path);
+}
+
 }  // namespace metal

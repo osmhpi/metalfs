@@ -18,6 +18,8 @@
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
+#include "filesystem_fuse_handler.hpp"
+#include "metal_fuse_operations.hpp"
 #include "pseudo_operators.hpp"
 
 namespace metal {
@@ -140,17 +142,25 @@ ConfiguredPipeline PipelineBuilder::configure() {
     DatagenOperator::validate(*result.dataSourceAgent);
     DatagenOperator::setInputFile(*result.dataSourceAgent);
   } else if (MetalCatOperator::isMetalCatAgent(*result.dataSourceAgent)) {
-    MetalCatOperator::validate(*result.dataSourceAgent);
+    MetalCatOperator::validate(
+        *result.dataSourceAgent);  // TODO: validate is only called if metal_cat
+                                   // is first agent
     MetalCatOperator::setInputFile(*result.dataSourceAgent);
   }
 
-  // Create memory-mapped buffers if necessary
-  if (result.dataSourceAgent->internalInputFile().empty() &&
+  // Create memory-mapped buffers if necessary, or establish file system context
+  if (result.dataSourceAgent->internalInputFilename().empty() &&
       !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
     result.dataSourceAgent->createInputBuffer();
+  } else {
+    result.dataSourceAgent->setInternalInputFile(
+        result.dataSourceAgent->internalInputFilename());
   }
-  if (result.dataSinkAgent->internalOutputFile().empty()) {
+  if (result.dataSinkAgent->internalOutputFilename().empty()) {
     result.dataSinkAgent->createOutputBuffer();
+  } else {
+    result.dataSinkAgent->setInternalOutputFile(
+        result.dataSinkAgent->internalOutputFilename());
   }
 
   // Tell agents that they're accepted

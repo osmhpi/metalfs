@@ -13,8 +13,7 @@ class Pipeline;
 
 class AgentDataSourceContext : public FileDataSourceContext {
  public:
-  explicit AgentDataSourceContext(std::shared_ptr<FilesystemContext> filesystem,
-                                  std::shared_ptr<OperatorAgent> agent,
+  explicit AgentDataSourceContext(std::shared_ptr<OperatorAgent> agent,
                                   std::shared_ptr<Pipeline> pipeline,
                                   bool skipSendingProcessingResponse);
 

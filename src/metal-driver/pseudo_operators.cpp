@@ -88,7 +88,7 @@ cxxopts::ParseResult MetalCatOperator::parseOptions(OperatorAgent &agent) {
 }
 
 bool DevNullFile::isNullOutput(const OperatorAgent &agent) {
-  return agent.internalOutputFile() == "$NULL";
+  return agent.internalOutputFilename() == "$NULL";
 }
 
 }  // namespace metal

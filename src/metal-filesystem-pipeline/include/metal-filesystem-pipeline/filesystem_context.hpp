@@ -11,7 +11,8 @@ namespace metal {
 
 class METAL_FILESYSTEM_PIPELINE_API FilesystemContext {
  public:
-  FilesystemContext(std::string metadataDir, mtl_storage_backend *storage);
+  FilesystemContext(std::string metadataDir, mtl_storage_backend *storage,
+                    bool deleteMetadataIfExists = false);
 
   mtl_context *context() { return _context; }
   fpga::AddressType type() const { return _type; };
