@@ -5,16 +5,14 @@
 #define META_DB_NAME "meta"
 
 const char next_inode_id_key[] = "next_inode";
-MDB_dbi meta_db = 0;
 
-int mtl_ensure_meta_db_open(MDB_txn *txn) {
-  if (meta_db == 0) mdb_dbi_open(txn, META_DB_NAME, MDB_CREATE, &meta_db);
-
-  return MTL_SUCCESS;
+int mtl_ensure_meta_db_open(MDB_txn *txn, MDB_dbi *db) {
+  return mdb_dbi_open(txn, META_DB_NAME, MDB_CREATE, db);
 }
 
 uint64_t mtl_next_id(MDB_txn *txn, MDB_val *key) {
-  mtl_ensure_meta_db_open(txn);
+  MDB_dbi meta_db;
+  mtl_ensure_meta_db_open(txn, &meta_db);
 
   uint64_t result;
   MDB_val next_key_value;
@@ -37,9 +35,4 @@ uint64_t mtl_next_inode_id(MDB_txn *txn) {
   MDB_val key = {.mv_size = sizeof(next_inode_id_key),
                  .mv_data = (void *)&next_inode_id_key};
   return mtl_next_id(txn, &key);
-}
-
-int mtl_reset_meta_db() {
-  meta_db = 0;
-  return MTL_SUCCESS;
 }

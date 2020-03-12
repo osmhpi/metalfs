@@ -8,17 +8,14 @@
 
 #define INODES_DB_NAME "inodes"
 
-MDB_dbi inodes_db = 0;
-
-int mtl_ensure_inodes_db_open(MDB_txn *txn) {
-  if (inodes_db == 0) mdb_dbi_open(txn, INODES_DB_NAME, MDB_CREATE, &inodes_db);
-
-  return MTL_SUCCESS;
+int mtl_ensure_inodes_db_open(MDB_txn *txn, MDB_dbi *inodes_db) {
+  return mdb_dbi_open(txn, INODES_DB_NAME, MDB_CREATE, inodes_db);
 }
 
 int mtl_load_inode(MDB_txn *txn, uint64_t inode_id, const mtl_inode **inode,
                    const void **data, uint64_t *data_length) {
-  mtl_ensure_inodes_db_open(txn);
+  MDB_dbi inodes_db;
+  mtl_ensure_inodes_db_open(txn, &inodes_db);
 
   MDB_val inode_key = {.mv_size = sizeof(inode_id), .mv_data = &inode_id};
   MDB_val inode_value;
@@ -110,7 +107,8 @@ int mtl_resolve_inode_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
 
 int mtl_put_inode(MDB_txn *txn, uint64_t inode_id, mtl_inode *inode,
                   const void *data, uint64_t data_length) {
-  mtl_ensure_inodes_db_open(txn);
+  MDB_dbi inodes_db;
+  mtl_ensure_inodes_db_open(txn, &inodes_db);
 
   uint64_t inode_data_length = sizeof(*inode) + data_length;
   char inode_data[inode_data_length];
@@ -316,7 +314,8 @@ int mtl_remove_directory(MDB_txn *txn, uint64_t dir_inode_id) {
 }
 
 int mtl_create_root_directory(MDB_txn *txn) {
-  mtl_ensure_inodes_db_open(txn);
+  MDB_dbi inodes_db;
+  mtl_ensure_inodes_db_open(txn, &inodes_db);
 
   // Check if a root directory already exists
   // TODO: We should start counting inodes at 2
@@ -406,14 +405,10 @@ int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
 }
 
 int mtl_delete_inode(MDB_txn *txn, uint64_t inode_id) {
-  mtl_ensure_inodes_db_open(txn);
+  MDB_dbi inodes_db;
+  mtl_ensure_inodes_db_open(txn, &inodes_db);
 
   MDB_val inode_key = {.mv_size = sizeof(inode_id), .mv_data = &inode_id};
   mdb_del(txn, inodes_db, &inode_key, NULL);
-  return MTL_SUCCESS;
-}
-
-int mtl_reset_inodes_db() {
-  inodes_db = 0;
   return MTL_SUCCESS;
 }
