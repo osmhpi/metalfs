@@ -7,7 +7,7 @@
 
 namespace metal {
 
-class FilesystemContext;
+class PipelineStorage;
 
 class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
     : public DefaultDataSourceContext {
@@ -30,7 +30,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
 
   // API to be used when building file pipelines (filename-based)
  public:
-  explicit FileDataSourceContext(std::shared_ptr<FilesystemContext> filesystem,
+  explicit FileDataSourceContext(std::shared_ptr<PipelineStorage> filesystem,
                                  std::string filename, uint64_t offset,
                                  uint64_t size = 0);
   uint64_t reportTotalSize();
@@ -39,7 +39,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
   uint64_t loadExtents();
 
   std::string _filename;
-  std::shared_ptr<FilesystemContext> _filesystem;
+  std::shared_ptr<PipelineStorage> _filesystem;
 };
 
 }  // namespace metal

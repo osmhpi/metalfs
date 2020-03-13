@@ -108,7 +108,7 @@ void OperatorAgent::setInputFile(const std::string &filename) {
   if (realPath.rfind(_metalMountpoint, 0) == 0) {
     // TODO: Before we go ahead and read the file for the user, we should
     // check access permissions
-    setInternalInputFile("/" + realPath.substr(_metalMountpoint.size()));
+    setInternalInputFile(realPath.substr(_metalMountpoint.size()));
   } else {
     _agentLoadFile = realPath;
   }
@@ -123,7 +123,12 @@ void OperatorAgent::setInternalInputFile(const std::string &filename) {
     throw std::runtime_error("An invalid input file path was provided.");
   }
 
-  _internalInputFile = std::make_pair("/" + filename.substr(prefix.size()), filesystemHandler->filesystem());
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(filesystemHandler->filesystem());
+  if (fpgaFilesystem == nullptr) {
+    throw std::runtime_error("An invalid input file path was provided.");
+  }
+
+  _internalInputFile = std::make_pair("/" + filename.substr(prefix.size()), fpgaFilesystem);
 }
 
 void OperatorAgent::setInternalOutputFile(const std::string &filename) {
@@ -135,7 +140,12 @@ void OperatorAgent::setInternalOutputFile(const std::string &filename) {
     throw std::runtime_error("An invalid output file path was provided.");
   }
 
-  _internalOutputFile = std::make_pair("/" + filename.substr(prefix.size()), filesystemHandler->filesystem());
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(filesystemHandler->filesystem());
+  if (fpgaFilesystem == nullptr) {
+    throw std::runtime_error("An invalid output file path was provided.");
+  }
+
+  _internalOutputFile = std::make_pair("/" + filename.substr(prefix.size()), fpgaFilesystem);
 }
 
 void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {

@@ -7,14 +7,14 @@ extern "C" {
 #include <utility>
 
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
-#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
 namespace metal {
 
 FileDataSinkContext::FileDataSinkContext(
-    std::shared_ptr<FilesystemContext> filesystem, std::string filename,
+    std::shared_ptr<PipelineStorage> filesystem, std::string filename,
     uint64_t offset, uint64_t size)
     : DefaultDataSinkContext(
           DataSink(offset, size, filesystem->type(), filesystem->map())),

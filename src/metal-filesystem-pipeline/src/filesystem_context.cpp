@@ -5,9 +5,10 @@
 
 namespace metal {
 
-FilesystemContext::FilesystemContext(std::string metadataDir,
-                                     mtl_storage_backend *storage,
-                                     bool deleteMetadataIfExists) {
+FilesystemContext::FilesystemContext(
+                                     std::string metadataDir,
+                                     bool deleteMetadataIfExists)
+    :  _context(nullptr) {
   DIR *dir = opendir(metadataDir.c_str());
   if (dir) {
     if (deleteMetadataIfExists) {
@@ -20,8 +21,6 @@ FilesystemContext::FilesystemContext(std::string metadataDir,
   } else if (errno == ENOENT) {
     mkdir(metadataDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
   }
-
-  mtl_initialize(&_context, metadataDir.c_str(), storage);
 }
 
 }  // namespace metal

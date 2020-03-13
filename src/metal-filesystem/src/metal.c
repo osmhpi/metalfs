@@ -34,7 +34,7 @@ int mtl_initialize(mtl_context **context, const char *metadata_store,
   mtl_context *ctx = (mtl_context *)malloc(sizeof(mtl_context));
   ctx->storage = storage;
 
-  int res = ctx->storage->initialize();
+  int res = ctx->storage->initialize(ctx->storage->context);
   if (res != MTL_SUCCESS) {
     return MTL_ERROR_INVALID_ARGUMENT;
   }
@@ -53,7 +53,7 @@ int mtl_initialize(mtl_context **context, const char *metadata_store,
   mtl_create_root_directory(txn);
 
   // Query storage metadata
-  storage->get_metadata(&ctx->metadata);
+  storage->get_metadata(ctx->storage->context, &ctx->metadata);
 
   // Create a single extent spanning the entire storage (if necessary)
   mtl_initialize_extents(txn, ctx->metadata.num_blocks);
@@ -68,7 +68,7 @@ int mtl_initialize(mtl_context **context, const char *metadata_store,
 }
 
 int mtl_deinitialize(mtl_context *context) {
-  context->storage->deinitialize();
+  context->storage->deinitialize(context->storage->context);
 
   mdb_env_close(context->env);
 
@@ -491,11 +491,12 @@ int mtl_write(mtl_context *context, uint64_t inode_id, const char *buffer,
 
   mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
   mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
-  context->storage->set_active_write_extent_list(extents, extents_length);
+  context->storage->set_active_write_extent_list(context->storage->context,
+                                                 extents, extents_length);
   mdb_txn_abort(txn);
 
   // Copy the actual data to storage
-  context->storage->write(offset, buffer, size);
+  context->storage->write(context->storage->context, offset, buffer, size);
 
   return MTL_SUCCESS;
 }
@@ -519,13 +520,14 @@ uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,
     read_len -= (offset + size) - inode->length;
   }
 
-  context->storage->set_active_read_extent_list(extents, extents_length);
+  context->storage->set_active_read_extent_list(context->storage->context,
+                                                extents, extents_length);
 
   mdb_txn_abort(txn);
 
   if (read_len > 0)
     // Copy the actual data from storage
-    context->storage->read(offset, buffer, read_len);
+    context->storage->read(context->storage->context, offset, buffer, read_len);
 
   return read_len;
 }

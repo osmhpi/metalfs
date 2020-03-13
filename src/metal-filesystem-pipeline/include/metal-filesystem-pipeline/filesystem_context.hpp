@@ -11,17 +11,14 @@ namespace metal {
 
 class METAL_FILESYSTEM_PIPELINE_API FilesystemContext {
  public:
-  FilesystemContext(std::string metadataDir, mtl_storage_backend *storage,
+  FilesystemContext(std::string metadataDir,
                     bool deleteMetadataIfExists = false);
+  virtual ~FilesystemContext() = default;
 
   mtl_context *context() { return _context; }
-  fpga::AddressType type() const { return _type; };
-  fpga::MapType map() const { return _map; };
 
  protected:
   mtl_context *_context;
-  fpga::AddressType _type;
-  fpga::MapType _map;
 };
 
 }  // namespace metal

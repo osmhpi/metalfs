@@ -87,6 +87,15 @@ static int metal_opt_proc(void *data, const char *arg, int key,
   return 1;
 }
 
+class InMemoryFilesystem : public FilesystemContext {
+ public:
+  InMemoryFilesystem(std::string metadataDir,
+                     bool deleteMetadataIfExists = false)
+      : FilesystemContext(metadataDir, deleteMetadataIfExists) {
+    mtl_initialize(&_context, metadataDir.c_str(), &in_memory_storage);
+  }
+};
+
 int main(int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   struct metal_config conf;
@@ -132,22 +141,19 @@ int main(int argc, char *argv[]) {
     Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
                                           std::move(operators)));
 
-    auto dramStorage = PipelineStorage::backend<fpga::AddressType::CardDRAM,
-                                                fpga::MapType::DRAM>();
-    auto dramFilesystem =
-        std::make_shared<FilesystemContext>(metadataDirDRAM, &dramStorage, true);
+    auto dramFilesystem = std::make_shared<PipelineStorage>(
+        fpga::AddressType::CardDRAM, fpga::MapType::DRAM, metadataDirDRAM,
+        true);
     Context::addHandler(
         "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
-    auto nvmeStorage = PipelineStorage::backend<fpga::AddressType::NVMe,
-                                                fpga::MapType::DRAMAndNVMe>();
-    auto nvmeFilesystem =
-        std::make_shared<FilesystemContext>(metadataDir, &nvmeStorage);
+    auto nvmeFilesystem = std::make_shared<PipelineStorage>(
+        fpga::AddressType::NVMe, fpga::MapType::DRAMAndNVMe, metadataDir);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
   } else {
     auto inMemoryFilesystem =
-        std::make_shared<FilesystemContext>(metadataDir, &in_memory_storage, true);
+        std::make_shared<InMemoryFilesystem>(metadataDir, true);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(inMemoryFilesystem));
   }
@@ -162,10 +168,6 @@ int main(int argc, char *argv[]) {
   } else {
     retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
   }
-
-  // This de-allocates the action/card, so this must be called every time we
-  // exit
-  // mtl_deinitialize(Context::instance().storage());
 
   return retc;
 }

@@ -19,7 +19,7 @@ class METAL_PIPELINE_API SnapPipelineRunner {
   SnapPipelineRunner(int card, std::shared_ptr<Pipeline> pipeline)
       : _pipeline(std::move(pipeline)), _initialized(false), _card(card) {}
   template <typename... Ts>
-  SnapPipelineRunner(Ts... userOperators, int card)
+  SnapPipelineRunner(int card, Ts... userOperators)
       : SnapPipelineRunner(
             card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 

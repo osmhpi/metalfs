@@ -2,7 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
 #include "filesystem_fuse_handler.hpp"

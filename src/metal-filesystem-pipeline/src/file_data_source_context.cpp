@@ -6,7 +6,7 @@
 
 #include <metal-filesystem/metal.h>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
-#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/snap_action.hpp>
 
@@ -15,7 +15,7 @@ namespace metal {
 size_t FileDataSourceContext::reportTotalSize() { return loadExtents(); }
 
 FileDataSourceContext::FileDataSourceContext(
-    std::shared_ptr<FilesystemContext> filesystem, std::string filename,
+    std::shared_ptr<PipelineStorage> filesystem, std::string filename,
     uint64_t offset, uint64_t size)
     : DefaultDataSourceContext(
           DataSource(offset, size, filesystem->type(), filesystem->map())),

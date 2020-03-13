@@ -11,26 +11,31 @@ typedef struct mtl_file_extent {
 } mtl_file_extent;
 
 typedef struct mtl_storage_backend {
+  int (*initialize)(void *storage_context);
+  int (*deinitialize)(void *storage_context);
 
-  int (*initialize)();
-  int (*deinitialize)();
+  int (*get_metadata)(void *storage_context, mtl_storage_metadata *metadata);
 
-  int (*get_metadata)(mtl_storage_metadata *metadata);
+  int (*set_active_read_extent_list)(void *storage_context,
+                                     const mtl_file_extent *extents,
+                                     uint64_t length);
+  int (*set_active_write_extent_list)(void *storage_context,
+                                      const mtl_file_extent *extents,
+                                      uint64_t length);
 
-  int (*set_active_read_extent_list)(const mtl_file_extent *extents, uint64_t length);
-  int (*set_active_write_extent_list)(const mtl_file_extent *extents, uint64_t length);
-
-  int (*write)(
-        uint64_t offset,     // The target file offset in bytes
-        const void *buffer,  // The source buffer
-        uint64_t length      // Number of bytes
+  int (*write)(void *storage_context,
+               uint64_t offset,     // The target file offset in bytes
+               const void *buffer,  // The source buffer
+               uint64_t length      // Number of bytes
   );
 
-  int (*read)(
-        uint64_t offset, // The source file offset in bytes
-        void *buffer,    // The target buffer
-        uint64_t length  // Number of bytes
+  int (*read)(void *storage_context,
+              uint64_t offset,  // The source file offset in bytes
+              void *buffer,     // The target buffer
+              uint64_t length   // Number of bytes
   );
+
+  void *context;
 
 } mtl_storage_backend;
 

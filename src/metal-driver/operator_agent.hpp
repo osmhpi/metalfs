@@ -9,7 +9,7 @@
 
 namespace metal {
 
-class FilesystemContext;
+class PipelineStorage;
 
 class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
  public:
@@ -44,11 +44,11 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   void createInputBuffer();
   void createOutputBuffer();
-  const std::pair<std::string, std::shared_ptr<FilesystemContext>>
+  const std::pair<std::string, std::shared_ptr<PipelineStorage>>
       &internalInputFile() const {
     return _internalInputFile;
   }
-  const std::pair<std::string, std::shared_ptr<FilesystemContext>>
+  const std::pair<std::string, std::shared_ptr<PipelineStorage>>
       &internalOutputFile() const {
     return _internalOutputFile;
   }
@@ -73,9 +73,8 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   std::string _internalInputFilename;
   std::string _internalOutputFilename;
-  std::pair<std::string, std::shared_ptr<FilesystemContext>> _internalInputFile;
-  std::pair<std::string, std::shared_ptr<FilesystemContext>>
-      _internalOutputFile;
+  std::pair<std::string, std::shared_ptr<PipelineStorage>> _internalInputFile;
+  std::pair<std::string, std::shared_ptr<PipelineStorage>> _internalOutputFile;
   std::string _agentLoadFile;
 
   std::shared_ptr<OperatorAgent> _outputAgent;
