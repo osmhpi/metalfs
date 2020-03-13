@@ -31,7 +31,7 @@ FileDataSinkContext::FileDataSinkContext(
 }
 
 void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
-  if (size == _cachedTotalSize) {
+  if (size <= _cachedTotalSize) {
     return;
   }
 
@@ -72,7 +72,7 @@ void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
 
       std::vector<mtl_file_extent> pagefileExtents(MTL_MAX_EXTENTS);
       uint64_t extents_length, file_length;
-      if (mtl_load_extent_list(_filesystem->context(), pagefileInode,
+      if (mtl_load_extent_list(dramFilesystem->context(), pagefileInode,
                                pagefileExtents.data(), &extents_length,
                                &file_length) != MTL_SUCCESS) {
         throw std::runtime_error("Unable to load pagefile extents.");
@@ -118,16 +118,16 @@ void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize, bool) {
 
 void FileDataSinkContext::loadExtents() {
   std::vector<mtl_file_extent> extents(MTL_MAX_EXTENTS);
-  uint64_t extents_length, file_length;
+  uint64_t extentsLength, fileLength;
   if (mtl_load_extent_list(_filesystem->context(), _inode_id, extents.data(),
-                           &extents_length, &file_length) != MTL_SUCCESS) {
+                           &extentsLength, &fileLength) != MTL_SUCCESS) {
     throw std::runtime_error("Unable to load extents");
   }
 
-  extents.resize(extents_length);
+  extents.resize(extentsLength);
 
   _extents = extents;
-  _cachedTotalSize = file_length;
+  _cachedTotalSize = fileLength;
 }
 
 void FileDataSinkContext::mapExtents(SnapAction &action, fpga::ExtmapSlot slot,

@@ -52,7 +52,6 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
   // modified between obtaining the extent list and calling configure()
 
   // Transfer extent list
-  // Transfer extent list
   switch (_dataSource.address().map) {
     case fpga::MapType::DRAMAndNVMe: {
       auto dramFilesystem = _filesystem->dramPipelineStorage();
@@ -69,7 +68,7 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
 
       std::vector<mtl_file_extent> pagefileExtents(MTL_MAX_EXTENTS);
       uint64_t extents_length, file_length;
-      if (mtl_load_extent_list(_filesystem->context(), pagefileInode,
+      if (mtl_load_extent_list(dramFilesystem->context(), pagefileInode,
                                pagefileExtents.data(), &extents_length,
                                &file_length) != MTL_SUCCESS) {
         throw std::runtime_error("Unable to load pagefile extents.");
