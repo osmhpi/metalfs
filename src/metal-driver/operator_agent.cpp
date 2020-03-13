@@ -91,7 +91,7 @@ void OperatorAgent::createOutputBuffer() {
 }
 
 void OperatorAgent::setInputFile(const std::string &filename) {
-  if (!_internalInputFile.first.empty()) {
+  if (!_internalInputFile.first != 0) {
     return;
   }
 
@@ -123,12 +123,20 @@ void OperatorAgent::setInternalInputFile(const std::string &filename) {
     throw std::runtime_error("An invalid input file path was provided.");
   }
 
-  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(filesystemHandler->filesystem());
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(
+      filesystemHandler->filesystem());
   if (fpgaFilesystem == nullptr) {
     throw std::runtime_error("An invalid input file path was provided.");
   }
 
-  _internalInputFile = std::make_pair("/" + filename.substr(prefix.size()), fpgaFilesystem);
+  auto internalFilename = "/" + filename.substr(prefix.size());
+  uint64_t inode_id;
+  if (mtl_open(fpgaFilesystem->context(), internalFilename.c_str(),
+               &inode_id) != MTL_SUCCESS) {
+    throw std::runtime_error("An invalid input file path was provided.");
+  }
+
+  _internalInputFile = std::make_pair(inode_id, fpgaFilesystem);
 }
 
 void OperatorAgent::setInternalOutputFile(const std::string &filename) {
@@ -140,12 +148,20 @@ void OperatorAgent::setInternalOutputFile(const std::string &filename) {
     throw std::runtime_error("An invalid output file path was provided.");
   }
 
-  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(filesystemHandler->filesystem());
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(
+      filesystemHandler->filesystem());
   if (fpgaFilesystem == nullptr) {
     throw std::runtime_error("An invalid output file path was provided.");
   }
 
-  _internalOutputFile = std::make_pair("/" + filename.substr(prefix.size()), fpgaFilesystem);
+  auto internalFilename = "/" + filename.substr(prefix.size());
+  uint64_t inode_id;
+  if (mtl_open(fpgaFilesystem->context(), internalFilename.c_str(),
+               &inode_id) != MTL_SUCCESS) {
+    throw std::runtime_error("An invalid output file path was provided.");
+  }
+
+  _internalOutputFile = std::make_pair(inode_id, fpgaFilesystem);
 }
 
 void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {

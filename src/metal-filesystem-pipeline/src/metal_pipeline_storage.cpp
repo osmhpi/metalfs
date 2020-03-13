@@ -13,10 +13,15 @@
 
 namespace metal {
 
-PipelineStorage::PipelineStorage(fpga::AddressType type, fpga::MapType map,
-                                 std::string metadataDir,
-                                 bool deleteMetadataIfExists)
-    : FilesystemContext(metadataDir, deleteMetadataIfExists), _type(type), _map(map) {
+PipelineStorage::PipelineStorage(
+    int card, fpga::AddressType type, fpga::MapType map,
+    std::string metadataDir, bool deleteMetadataIfExists,
+    std::shared_ptr<PipelineStorage> dramPipelineStorage)
+    : FilesystemContext(metadataDir, deleteMetadataIfExists),
+      _card(card),
+      _type(type),
+      _map(map),
+      _dramPipelineStorage(dramPipelineStorage) {
   _backend = mtl_storage_backend{
       [](void *storage_context) {
         auto This = reinterpret_cast<PipelineStorage *>(storage_context);
@@ -32,29 +37,49 @@ PipelineStorage::PipelineStorage(fpga::AddressType type, fpga::MapType map,
         return This->mtl_storage_get_metadata(metadata);
       },
 
-      [](void *storage_context, const mtl_file_extent *extents,
-         uint64_t length) {
+      [](void *storage_context, uint64_t inode_id, uint64_t offset,
+         const void *buffer, uint64_t length) {
         auto This = reinterpret_cast<PipelineStorage *>(storage_context);
-        return This->set_active_read_extent_list(extents, length);
+        return This->write(inode_id, offset, buffer, length);
       },
-      [](void *storage_context, const mtl_file_extent *extents,
-         uint64_t length) {
+      [](void *storage_context, uint64_t inode_id, uint64_t offset,
+         void *buffer, uint64_t length) {
         auto This = reinterpret_cast<PipelineStorage *>(storage_context);
-        return This->set_active_write_extent_list(extents, length);
-      },
-
-      [](void *storage_context, uint64_t offset, const void *buffer,
-         uint64_t length) {
-        auto This = reinterpret_cast<PipelineStorage *>(storage_context);
-        return This->write(offset, buffer, length);
-      },
-      [](void *storage_context, uint64_t offset, void *buffer,
-         uint64_t length) {
-        auto This = reinterpret_cast<PipelineStorage *>(storage_context);
-        return This->read(offset, buffer, length);
+        return This->read(inode_id, offset, buffer, length);
       },
       this};
   mtl_initialize(&_context, metadataDir.c_str(), &_backend);
+
+  // Make sure that the necessary pagefiles are in place
+  if (_map == fpga::MapType::DRAMAndNVMe) {
+    if (_dramPipelineStorage == nullptr) {
+      throw std::runtime_error("A DRAM filesystem must be provided.");
+    }
+
+    createDramPagefile(PagefileReadPath);
+    createDramPagefile(PagefileWritePath);
+  }
+}
+
+void PipelineStorage::createDramPagefile(const std::string &pagefilePath) {
+  uint64_t pagefile_inode;
+  int res = mtl_open(_dramPipelineStorage->context(), pagefilePath.c_str(),
+                     &pagefile_inode);
+  if (res == MTL_ERROR_NOENTRY) {
+    res = mtl_create(_dramPipelineStorage->context(), pagefilePath.c_str(),
+                     &pagefile_inode);
+    if (res != MTL_SUCCESS) {
+      throw std::runtime_error("Could not create pagefile.");
+    }
+  } else if (res != MTL_SUCCESS) {
+    throw std::runtime_error("Could not open pagefile.");
+  }
+
+  res = mtl_truncate(_dramPipelineStorage->context(), pagefile_inode,
+                     fpga::PagefileSize);
+  if (res != MTL_SUCCESS) {
+    throw std::runtime_error("Could not resize pagefile.");
+  }
 }
 
 int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
@@ -68,20 +93,9 @@ int PipelineStorage::mtl_storage_get_metadata(mtl_storage_metadata *metadata) {
   return MTL_SUCCESS;
 }
 
-int PipelineStorage::set_active_read_extent_list(const mtl_file_extent *extents,
-                                                 uint64_t length) {
-  _read_extents = std::vector<mtl_file_extent>(extents, extents + length);
-  return MTL_SUCCESS;
-}
-
-int PipelineStorage::set_active_write_extent_list(
-    const mtl_file_extent *extents, uint64_t length) {
-  _write_extents = std::vector<mtl_file_extent>(extents, extents + length);
-  return MTL_SUCCESS;
-}
-
-int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
-  FileDataSourceContext source(_type, _map, _read_extents, offset, length);
+int PipelineStorage::read(uint64_t inode_id, uint64_t offset, void *buffer,
+                          uint64_t length) {
+  FileDataSourceContext source(shared_from_this(), inode_id, offset, length);
   DefaultDataSinkContext sink(DataSink(buffer, length));
 
   try {
@@ -94,10 +108,11 @@ int PipelineStorage::read(uint64_t offset, void *buffer, uint64_t length) {
   }
 }
 
-int PipelineStorage::write(uint64_t offset, const void *buffer,
-                           uint64_t length) {
+int PipelineStorage::write(uint64_t inode_id, uint64_t offset,
+                           const void *buffer, uint64_t length) {
   DefaultDataSourceContext source(DataSource(buffer, length));
-  FileDataSinkContext sink(_type, _map, _write_extents, offset, length);
+  FileDataSinkContext sink(shared_from_this(), inode_id, offset, length);
+
   try {
     SnapPipelineRunner runner(_card);
     runner.run(source, sink);

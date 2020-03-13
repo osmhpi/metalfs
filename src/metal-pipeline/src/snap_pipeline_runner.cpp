@@ -36,6 +36,7 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
   auto initialize = !_initialized;
 
   if (initialize) {
+    // Temporary optimization. prepareForTotalSize should be private
     auto totalSize = dataSource.reportTotalSize();
     if (totalSize > 0) {
       dataSink.prepareForTotalSize(totalSize);
@@ -58,7 +59,7 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
   if (size > 0) {
     outputSize = _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
   }
-  
+
   postRun(action, dataSource, dataSink, endOfInput);
 
   dataSource.finalize(action);

@@ -489,14 +489,9 @@ int mtl_write(mtl_context *context, uint64_t inode_id, const char *buffer,
 
   mdb_txn_commit(txn);
 
-  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
-  mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
-  context->storage->set_active_write_extent_list(context->storage->context,
-                                                 extents, extents_length);
-  mdb_txn_abort(txn);
-
   // Copy the actual data to storage
-  context->storage->write(context->storage->context, offset, buffer, size);
+  context->storage->write(context->storage->context, inode_id, offset, buffer,
+                          size);
 
   return MTL_SUCCESS;
 }
@@ -520,14 +515,12 @@ uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,
     read_len -= (offset + size) - inode->length;
   }
 
-  context->storage->set_active_read_extent_list(context->storage->context,
-                                                extents, extents_length);
-
   mdb_txn_abort(txn);
 
   if (read_len > 0)
     // Copy the actual data from storage
-    context->storage->read(context->storage->context, offset, buffer, read_len);
+    context->storage->read(context->storage->context, inode_id, offset, buffer,
+                           read_len);
 
   return read_len;
 }
@@ -634,21 +627,13 @@ int mtl_unlink(mtl_context *context, const char *filename) {
   return MTL_SUCCESS;
 }
 
-int mtl_load_extent_list(mtl_context *context, const char *filename,
+int mtl_load_extent_list(mtl_context *context, uint64_t inode_id,
                          mtl_file_extent *extents, uint64_t *extents_length,
                          uint64_t *file_length) {
   int res;
 
   MDB_txn *txn;
   mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
-
-  // Resolve inode
-  uint64_t inode_id;
-  res = mtl_resolve_inode(txn, filename, &inode_id);
-  if (res != MTL_SUCCESS) {
-    mdb_txn_abort(txn);
-    return res;
-  }
 
   // Load extents
   const mtl_inode *inode;

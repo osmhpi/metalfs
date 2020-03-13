@@ -14,24 +14,11 @@ namespace metal {
 AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
                                            std::shared_ptr<Pipeline> pipeline,
                                            bool skipReceivingProcessingRequest)
-    : FileDataSinkContext(agent->internalOutputFile().second, "", 0, 0),
+    : FileDataSinkContext(agent->internalOutputFile().second,
+                          agent->internalOutputFile().first, 0, BufferSize),
       _agent(agent),
       _pipeline(pipeline),
-      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {
-  if (_agent->outputBuffer()) {
-    // Nothing to do
-  } else if (DevNullFile::isNullOutput(*_agent)) {
-    // Nothing to do
-  } else if (!agent->internalOutputFile().first.empty()) {
-    _filename = agent->internalOutputFile().first;
-    _dataSink =
-        DataSink(0, BufferSize, agent->internalOutputFile().second->type(),
-                 agent->internalOutputFile().second->map());
-    loadExtents();
-  } else {
-    throw std::runtime_error("Unknown data sink");
-  }
-}
+      _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}
 
 const DataSink AgentDataSinkContext::dataSink() const {
   // The data sink can be of three types: Agent-Buffer, Null or File
@@ -41,7 +28,7 @@ const DataSink AgentDataSinkContext::dataSink() const {
                     _agent->outputBuffer()->size());
   } else if (DevNullFile::isNullOutput(*_agent)) {
     return DataSink(0, 0, fpga::AddressType::Null);
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     return FileDataSinkContext::dataSink();
   } else {
     throw std::runtime_error("Unknown data sink");
@@ -54,7 +41,7 @@ void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
     _agent->receiveProcessingRequest();
   }
 
-  if (!_filename.empty()) {
+  if (_inode_id != 0) {
     return FileDataSinkContext::configure(action, inputSize, initial);
   }
 }
@@ -77,7 +64,7 @@ void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
     msg.set_size(outputSize);
   } else if (DevNullFile::isNullOutput(*_agent)) {
     // Nothing to do
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     FileDataSinkContext::finalize(action, outputSize, endOfInput);
   }
 
@@ -90,7 +77,7 @@ void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
 }
 
 void AgentDataSinkContext::prepareForTotalSize(uint64_t totalSize) {
-  if (!_filename.empty()) {
+  if (_inode_id != 0) {
     FileDataSinkContext::prepareForTotalSize(totalSize);
   }
 }

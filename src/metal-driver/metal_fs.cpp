@@ -142,13 +142,14 @@ int main(int argc, char *argv[]) {
                                           std::move(operators)));
 
     auto dramFilesystem = std::make_shared<PipelineStorage>(
-        fpga::AddressType::CardDRAM, fpga::MapType::DRAM, metadataDirDRAM,
-        true);
+        conf.card, fpga::AddressType::CardDRAM, fpga::MapType::DRAM,
+        metadataDirDRAM, true);
     Context::addHandler(
         "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
     auto nvmeFilesystem = std::make_shared<PipelineStorage>(
-        fpga::AddressType::NVMe, fpga::MapType::DRAMAndNVMe, metadataDir);
+        conf.card, fpga::AddressType::NVMe, fpga::MapType::DRAMAndNVMe,
+        metadataDir, false, dramFilesystem);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
   } else {

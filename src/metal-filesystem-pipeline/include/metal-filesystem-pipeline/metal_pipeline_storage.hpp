@@ -3,6 +3,7 @@
 #include <metal-filesystem-pipeline/metal-filesystem-pipeline_api.h>
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include <metal-filesystem/metal.h>
@@ -11,32 +12,38 @@
 
 namespace metal {
 
-class METAL_FILESYSTEM_PIPELINE_API PipelineStorage : public FilesystemContext {
+class METAL_FILESYSTEM_PIPELINE_API PipelineStorage
+    : public FilesystemContext,
+      public std::enable_shared_from_this<PipelineStorage> {
  public:
-  PipelineStorage(fpga::AddressType type, fpga::MapType map,
-                  std::string metadataDir, bool deleteMetadataIfExists = false);
+  PipelineStorage(
+      int card, fpga::AddressType type, fpga::MapType map,
+      std::string metadataDir, bool deleteMetadataIfExists = false,
+      std::shared_ptr<PipelineStorage> dramPipelineStorage = nullptr);
 
   fpga::AddressType type() const { return _type; };
   fpga::MapType map() const { return _map; };
 
+  std::shared_ptr<PipelineStorage> dramPipelineStorage() const { return _dramPipelineStorage; }
+
+  const std::string PagefileReadPath = "/.pagefile_read";
+  const std::string PagefileWritePath = "/.pagefile_write";
+
  protected:
+  void createDramPagefile(const std::string &pagefilePath);
+
   int initialize();
   int deinitialize();
 
   int mtl_storage_get_metadata(mtl_storage_metadata *metadata);
-  int set_active_read_extent_list(const mtl_file_extent *extents,
-                                  uint64_t length);
-  int set_active_write_extent_list(const mtl_file_extent *extents,
-                                   uint64_t length);
-  int read(uint64_t offset, void *buffer, uint64_t length);
-  int write(uint64_t offset, const void *buffer, uint64_t length);
+  int read(uint64_t inode_id, uint64_t offset, void *buffer, uint64_t length);
+  int write(uint64_t inode_id, uint64_t offset, const void *buffer, uint64_t length);
 
+  int _card;
   mtl_storage_backend _backend;
   fpga::AddressType _type;
   fpga::MapType _map;
-  std::vector<mtl_file_extent> _read_extents;
-  std::vector<mtl_file_extent> _write_extents;
-  int _card;
+  std::shared_ptr<PipelineStorage> _dramPipelineStorage;
 };
 
 }  // namespace metal

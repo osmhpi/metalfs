@@ -44,11 +44,11 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   void createInputBuffer();
   void createOutputBuffer();
-  const std::pair<std::string, std::shared_ptr<PipelineStorage>>
+  const std::pair<uint64_t, std::shared_ptr<PipelineStorage>>
       &internalInputFile() const {
     return _internalInputFile;
   }
-  const std::pair<std::string, std::shared_ptr<PipelineStorage>>
+  const std::pair<uint64_t, std::shared_ptr<PipelineStorage>>
       &internalOutputFile() const {
     return _internalOutputFile;
   }
@@ -73,8 +73,8 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   std::string _internalInputFilename;
   std::string _internalOutputFilename;
-  std::pair<std::string, std::shared_ptr<PipelineStorage>> _internalInputFile;
-  std::pair<std::string, std::shared_ptr<PipelineStorage>> _internalOutputFile;
+  std::pair<uint64_t, std::shared_ptr<PipelineStorage>> _internalInputFile;
+  std::pair<uint64_t, std::shared_ptr<PipelineStorage>> _internalOutputFile;
   std::string _agentLoadFile;
 
   std::shared_ptr<OperatorAgent> _outputAgent;

@@ -45,7 +45,7 @@ uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,
 int mtl_truncate(mtl_context *context, uint64_t inode_id, uint64_t offset);
 int mtl_unlink(mtl_context *context, const char *filename);
 
-int mtl_load_extent_list(mtl_context *context, const char *filename,
+int mtl_load_extent_list(mtl_context *context, uint64_t inode_id,
                          mtl_file_extent *extents, uint64_t *extents_length,
                          uint64_t *file_length);
 

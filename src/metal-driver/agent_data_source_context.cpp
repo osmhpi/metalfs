@@ -14,7 +14,7 @@ namespace metal {
 AgentDataSourceContext::AgentDataSourceContext(
     std::shared_ptr<OperatorAgent> agent, std::shared_ptr<Pipeline> pipeline,
     bool skipSendingProcessingResponse)
-    : FileDataSourceContext(agent->internalInputFile().second, "", 0, 0),
+    : FileDataSourceContext(agent->internalInputFile().second, agent->internalInputFile().first, 0, BufferSize),
       _agent(agent),
       _pipeline(pipeline),
       _skipSendingProcessingResponse(skipSendingProcessingResponse) {
@@ -22,12 +22,8 @@ AgentDataSourceContext::AgentDataSourceContext(
     // Nothing to do
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize = DatagenOperator::datagenLength(*_agent);
-  } else if (!agent->internalInputFile().first.empty()) {
-    _filename = agent->internalInputFile().first;
-    loadExtents();
-    _dataSource = DataSource(0, std::min(BufferSize, _fileLength),
-                             agent->internalInputFile().second->type(),
-                             agent->internalInputFile().second->map());
+  } else if (agent->internalInputFile().first != 0) {
+    // Nothing to do
   } else {
     throw std::runtime_error("Unknown data source");
   }
@@ -40,7 +36,7 @@ const DataSource AgentDataSourceContext::dataSource() const {
     return DataSource(_agent->inputBuffer()->current(), _size);
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     return DataSource(0, _size, fpga::AddressType::Random);
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     return FileDataSourceContext::dataSource();
   } else {
     throw std::runtime_error("Unknown data source");
@@ -59,7 +55,7 @@ void AgentDataSourceContext::configure(SnapAction &action, bool initial) {
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _size = std::min(_remainingTotalSize, BufferSize);
     _eof = _remainingTotalSize == _size;
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     return FileDataSourceContext::configure(action, initial);
   }
 }
@@ -72,7 +68,7 @@ void AgentDataSourceContext::finalize(SnapAction &action) {
     _agent->inputBuffer()->swap();
   } else if (DatagenOperator::isDatagenAgent(*_agent)) {
     _remainingTotalSize -= _size;
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     FileDataSourceContext::finalize(action);
   }
 
@@ -94,14 +90,14 @@ void AgentDataSourceContext::finalize(SnapAction &action) {
 uint64_t AgentDataSourceContext::reportTotalSize() {
   if (DatagenOperator::isDatagenAgent(*_agent)) {
     return _remainingTotalSize;
-  } else if (!_filename.empty()) {
+  } else if (_inode_id != 0) {
     return FileDataSourceContext::reportTotalSize();
   }
   return 0;
 }
 
 bool AgentDataSourceContext::endOfInput() const {
-  if (!_filename.empty()) {
+  if (_inode_id != 0) {
     return FileDataSourceContext::endOfInput();
   }
   return _eof;
