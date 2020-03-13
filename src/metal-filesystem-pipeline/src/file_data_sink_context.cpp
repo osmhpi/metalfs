@@ -64,7 +64,8 @@ void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
       }
 
       uint64_t pagefileInode;
-      if (mtl_open(dramFilesystem->context(), ".pagefile_write",
+      if (mtl_open(dramFilesystem->context(),
+                   PipelineStorage::PagefileWritePath.c_str(),
                    &pagefileInode) != MTL_SUCCESS) {
         throw std::runtime_error("Pagefile does not exist.");
       }

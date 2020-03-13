@@ -24,10 +24,12 @@ class METAL_FILESYSTEM_PIPELINE_API PipelineStorage
   fpga::AddressType type() const { return _type; };
   fpga::MapType map() const { return _map; };
 
-  std::shared_ptr<PipelineStorage> dramPipelineStorage() const { return _dramPipelineStorage; }
+  std::shared_ptr<PipelineStorage> dramPipelineStorage() const {
+    return _dramPipelineStorage;
+  }
 
-  const std::string PagefileReadPath = "/.pagefile_read";
-  const std::string PagefileWritePath = "/.pagefile_write";
+  inline static const std::string PagefileReadPath = "/.pagefile_read";
+  inline static const std::string PagefileWritePath = "/.pagefile_write";
 
  protected:
   void createDramPagefile(const std::string &pagefilePath);
@@ -37,7 +39,8 @@ class METAL_FILESYSTEM_PIPELINE_API PipelineStorage
 
   int mtl_storage_get_metadata(mtl_storage_metadata *metadata);
   int read(uint64_t inode_id, uint64_t offset, void *buffer, uint64_t length);
-  int write(uint64_t inode_id, uint64_t offset, const void *buffer, uint64_t length);
+  int write(uint64_t inode_id, uint64_t offset, const void *buffer,
+            uint64_t length);
 
   int _card;
   mtl_storage_backend _backend;

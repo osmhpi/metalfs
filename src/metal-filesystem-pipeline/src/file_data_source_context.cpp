@@ -18,7 +18,9 @@ FileDataSourceContext::FileDataSourceContext(
     std::shared_ptr<PipelineStorage> filesystem, uint64_t inode_id,
     uint64_t offset, uint64_t size)
     : DefaultDataSourceContext(
-          DataSource(offset, size, filesystem->type(), filesystem->map())) {
+          DataSource(offset, size, filesystem->type(), filesystem->map())),
+      _inode_id(inode_id),
+      _filesystem(filesystem) {
   if (inode_id == 0) {
     // 'Disabled' mode
     return;
@@ -59,7 +61,8 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
       }
 
       uint64_t pagefileInode;
-      if (mtl_open(dramFilesystem->context(), ".pagefile_read",
+      if (mtl_open(dramFilesystem->context(),
+                   PipelineStorage::PagefileReadPath.c_str(),
                    &pagefileInode) != MTL_SUCCESS) {
         throw std::runtime_error("Pagefile does not exist.");
       }
