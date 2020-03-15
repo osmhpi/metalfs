@@ -3,6 +3,8 @@
 #include <cstring>
 #include <functional>
 
+#include <spdlog/spdlog.h>
+
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-filesystem-pipeline/filesystem_context.hpp>
@@ -37,13 +39,13 @@ PipelineStorage::PipelineStorage(
         return This->mtl_storage_get_metadata(metadata);
       },
 
-      [](void *storage_context, uint64_t inode_id, uint64_t offset,
-         const void *buffer, uint64_t length) {
+      [](mtl_context *context, void *storage_context, uint64_t inode_id,
+         uint64_t offset, const void *buffer, uint64_t length) {
         auto This = reinterpret_cast<PipelineStorage *>(storage_context);
         return This->write(inode_id, offset, buffer, length);
       },
-      [](void *storage_context, uint64_t inode_id, uint64_t offset,
-         void *buffer, uint64_t length) {
+      [](mtl_context *context, void *storage_context, uint64_t inode_id,
+         uint64_t offset, void *buffer, uint64_t length) {
         auto This = reinterpret_cast<PipelineStorage *>(storage_context);
         return This->read(inode_id, offset, buffer, length);
       },
@@ -103,6 +105,7 @@ int PipelineStorage::read(uint64_t inode_id, uint64_t offset, void *buffer,
     runner.run(source, sink);
     return MTL_SUCCESS;
   } catch (std::exception &e) {
+    spdlog::error(e.what());
     // For lack of a better error type
     return MTL_ERROR_INVALID_ARGUMENT;
   }
@@ -118,6 +121,7 @@ int PipelineStorage::write(uint64_t inode_id, uint64_t offset,
     runner.run(source, sink);
     return MTL_SUCCESS;
   } catch (std::exception &e) {
+    spdlog::error(e.what());
     return MTL_ERROR_INVALID_ARGUMENT;
   }
 }

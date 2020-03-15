@@ -17,7 +17,9 @@ FileDataSinkContext::FileDataSinkContext(
     std::shared_ptr<PipelineStorage> filesystem, uint64_t inode_id,
     uint64_t offset, uint64_t size)
     : DefaultDataSinkContext(
-          DataSink(offset, size, filesystem->type(), filesystem->map())),
+          DataSink(offset, size,
+                   filesystem ? filesystem->type() : fpga::AddressType::Host,
+                   filesystem ? filesystem->map() : fpga::MapType::None)),
       _inode_id(inode_id),
       _filesystem(filesystem),
       _cachedTotalSize(0) {

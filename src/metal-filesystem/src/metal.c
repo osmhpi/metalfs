@@ -490,8 +490,8 @@ int mtl_write(mtl_context *context, uint64_t inode_id, const char *buffer,
   mdb_txn_commit(txn);
 
   // Copy the actual data to storage
-  context->storage->write(context->storage->context, inode_id, offset, buffer,
-                          size);
+  context->storage->write(context, context->storage->context, inode_id, offset,
+                          buffer, size);
 
   return MTL_SUCCESS;
 }
@@ -519,8 +519,8 @@ uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,
 
   if (read_len > 0)
     // Copy the actual data from storage
-    context->storage->read(context->storage->context, inode_id, offset, buffer,
-                           read_len);
+    context->storage->read(context, context->storage->context, inode_id, offset,
+                           buffer, read_len);
 
   return read_len;
 }

@@ -18,7 +18,9 @@ FileDataSourceContext::FileDataSourceContext(
     std::shared_ptr<PipelineStorage> filesystem, uint64_t inode_id,
     uint64_t offset, uint64_t size)
     : DefaultDataSourceContext(
-          DataSource(offset, size, filesystem->type(), filesystem->map())),
+          DataSource(offset, size,
+                     filesystem ? filesystem->type() : fpga::AddressType::Host,
+                     filesystem ? filesystem->map() : fpga::MapType::None)),
       _inode_id(inode_id),
       _filesystem(filesystem) {
   if (inode_id == 0) {
