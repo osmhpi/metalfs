@@ -154,7 +154,7 @@ void OperatorAgent::setInternalOutputFile(const std::string &filename) {
     throw std::runtime_error("An invalid output file path was provided.");
   }
 
-  auto internalFilename = "/" + filename.substr(prefix.size());
+  auto internalFilename = filename.substr(prefix.size());
   uint64_t inode_id;
   if (mtl_open(fpgaFilesystem->context(), internalFilename.c_str(),
                &inode_id) != MTL_SUCCESS) {

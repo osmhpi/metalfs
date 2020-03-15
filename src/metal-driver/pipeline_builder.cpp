@@ -149,18 +149,19 @@ ConfiguredPipeline PipelineBuilder::configure() {
   }
 
   // Create memory-mapped buffers if necessary, or establish file system context
-  if (result.dataSourceAgent->internalInputFilename().empty() &&
-      !DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
-    result.dataSourceAgent->createInputBuffer();
-  } else {
-    result.dataSourceAgent->setInternalInputFile(
-        result.dataSourceAgent->internalInputFilename());
+  if (result.dataSourceAgent->internalInputFile().second == nullptr) {
+    if (!result.dataSourceAgent->internalInputFilename().empty()) {
+      result.dataSourceAgent->setInternalInputFile(
+          result.dataSourceAgent->internalInputFilename());
+    } else if (!DatagenOperator::isDatagenAgent(*result.dataSourceAgent)) {
+      result.dataSourceAgent->createInputBuffer();
+    }
   }
-  if (result.dataSinkAgent->internalOutputFilename().empty()) {
-    result.dataSinkAgent->createOutputBuffer();
-  } else {
+  if (!result.dataSinkAgent->internalOutputFilename().empty()) {
     result.dataSinkAgent->setInternalOutputFile(
         result.dataSinkAgent->internalOutputFilename());
+  } else {
+    result.dataSinkAgent->createOutputBuffer();
   }
 
   // Tell agents that they're accepted
