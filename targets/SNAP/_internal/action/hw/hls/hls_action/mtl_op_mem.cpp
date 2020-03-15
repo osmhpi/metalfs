@@ -79,11 +79,14 @@ void issue_block_transfer_command(uint64_t transfer_bytes, snap_bool_t end_of_fr
 
 #ifdef NVME_ENABLED
 void issue_nvme_block_transfer_command(uint64_t nvme_address, uint64_t dram_address, NVMeCommandStream &nvme_cmd) {
+    // Both NVMe address and DRAM address may be unaligned, but for NVMe transfers we don't care
     snapu64_t logical_block_offset = nvme_address / StorageBlockSize;
     snapu64_t physical_block_offset = logical_block_offset * (StorageBlockSize / 512);
+    snapu64_t aligned_dram_address = dram_address;
+    aligned_dram_address(StorageBlockSizeD-1, 0) = 0;
 
     NVMeCommand cmd;
-    cmd.dram_offset()       = dram_address;
+    cmd.dram_offset()       = aligned_dram_address;
     cmd.nvme_block_offset() = physical_block_offset;
     cmd.num_blocks()        = (StorageBlockSize / 512) - 1;  // 512 = native block size, zero-based
     cmd.drive()             = 0;
@@ -93,43 +96,45 @@ void issue_nvme_block_transfer_command(uint64_t nvme_address, uint64_t dram_addr
 
 void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, mtl_extmap_t &nvme_extentmap, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp) {
     snapu64_t start_addr = address.addr;
+    snapu64_t end_addr = start_addr + address.size;
+
+    snap_bool_t startAddressIsOdd = start_addr(StorageBlockSizeD-1, 0) != 0;
+    snap_bool_t endAddressIsOdd = end_addr(StorageBlockSizeD-1, 0) != 0;
+    snap_bool_t endBlockIsDifferentFromStartBlock = start_addr(63, StorageBlockSizeD) != end_addr(63, StorageBlockSizeD);
+
     uint64_t intra_block_offset = start_addr % StorageBlockSize;
 
     int cmdCount = 0;
 
-    if (start_addr % StorageBlockSize) {
-        // We start writing in the middle of a block
-
+    if (startAddressIsOdd) {
         uint64_t dram_address = 0;
         if (address.map == MapType::NVMe) {
-            dram_address = NVMeDRAMReadOffset + (start_addr % (1u << 31)); // Where to put data in DRAM
+            dram_address = NVMeDRAMWriteOffset + (start_addr % (1u << 31)); // Where to put data in DRAM
         } else if (address.map == MapType::DRAMAndNVMe) {
             uint64_t pagefile_offset = start_addr % PagefileSize;
             mtl_extmap_seek(dram_extentmap, pagefile_offset / StorageBlockSize);
-            dram_address = (mtl_extmap_pblock(dram_extentmap) * StorageBlockSize) + intra_block_offset; // Where to put data in DRAM
+            dram_address = mtl_extmap_pblock(dram_extentmap) * StorageBlockSize; // Where to put data in DRAM
         }
 
         mtl_extmap_seek(nvme_extentmap, start_addr / StorageBlockSize);
-        uint64_t nvme_address = (mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize) + intra_block_offset; // Where to read from NVMe
+        uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
         cmdCount++;
     }
-    snapu64_t end_addr = start_addr + address.size;
-    if (end_addr % StorageBlockSize && start_addr(63, StorageBlockSizeD) != end_addr(63, StorageBlockSizeD)) {
-        // We end writing in the middle of a block that is different from the block above
 
+    if (endAddressIsOdd && (endBlockIsDifferentFromStartBlock || !startAddressIsOdd)) {
         uint64_t dram_address = 0;
         if (address.map == MapType::NVMe) {
-            dram_address = NVMeDRAMReadOffset + (end_addr % (1u << 31)); // Where to put data in DRAM
+            dram_address = NVMeDRAMWriteOffset + (end_addr % (1u << 31)); // Where to put data in DRAM
         } else if (address.map == MapType::DRAMAndNVMe) {
             uint64_t pagefile_offset = end_addr % PagefileSize;
             mtl_extmap_seek(dram_extentmap, pagefile_offset / StorageBlockSize);
-            dram_address = (mtl_extmap_pblock(dram_extentmap) * StorageBlockSize) + intra_block_offset; // Where to put data in DRAM
+            dram_address = mtl_extmap_pblock(dram_extentmap) * StorageBlockSize; // Where to put data in DRAM
         }
 
         mtl_extmap_seek(nvme_extentmap, end_addr / StorageBlockSize);
-        uint64_t nvme_address = (mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize) + intra_block_offset; // Where to read from NVMe
+        uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
         cmdCount++;
@@ -140,6 +145,12 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
 }
 #endif
 
+enum class TransferType {
+    Read,
+    Write
+};
+
+template<TransferType T>
 void issue_partial_transfers(const Address& transfer
     , mtl_extmap_t &dram_extentmap
     , hls::stream<TransferElement> &partial_transfers
@@ -175,7 +186,7 @@ void issue_partial_transfers(const Address& transfer
         uint64_t intra_block_offset = current_address % StorageBlockSize;
 
         // Always perform block-aligned transfers (i.e. a transfer does not cross a block boundary)
-        auto transfer_limit = StorageBlockSize - (intra_block_offset);
+        auto transfer_limit = StorageBlockSize - intra_block_offset;
         auto bytes_this_round = bytes_remaining <= transfer_limit ? bytes_remaining : transfer_limit;
 
         // Perform address translation
@@ -188,7 +199,7 @@ void issue_partial_transfers(const Address& transfer
             }
 #ifdef NVME_ENABLED
             case MapType::NVMe: {
-                partial_transfer.data.address = NVMeDRAMReadOffset + (current_address % (1u << 31)); // Where to put data in DRAM
+                partial_transfer.data.address = (T == TransferType::Read ? NVMeDRAMReadOffset : NVMeDRAMWriteOffset) + (current_address % (1u << 31)); // Where to put data in DRAM
                 nvme_transfers << (mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize) + intra_block_offset; // Where to read from NVMe
                 mtl_extmap_next(nvme_extentmap);
                 break;
@@ -240,8 +251,7 @@ void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElemen
                 continue;
             }
 
-            const uint64_t align_address_to_block_mask = ~(StorageBlockSize-1);
-            auto dram_address = NVMeDRAMBaseOffset + currentTransfer.data.address & align_address_to_block_mask;
+            auto dram_address = NVMeDRAMBaseOffset + currentTransfer.data.address;
 
             const uint64_t nvme_address = nvme_transfers.read();  // There must be an item in the queue
             issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_cmd);
@@ -323,8 +333,7 @@ void write_nvme_data(hls::stream<TransferElement> &in
                 continue;
             }
 
-            const uint64_t align_address_to_block_mask = ~(StorageBlockSize-1);
-            auto dram_address = NVMeDRAMBaseOffset + currentTransfer.data.address & align_address_to_block_mask;
+            auto dram_address = NVMeDRAMBaseOffset + currentTransfer.data.address;
 
             const uint64_t nvme_address = nvme_transfers.read();  // There must be an item in the queue
 
@@ -421,7 +430,7 @@ void load_data(const Address &transfer
 #pragma HLS dataflow
 
     // 1. Perform block mapping
-    issue_partial_transfers(transfer, dram_extentmap, partial_transfers
+    issue_partial_transfers<TransferType::Read>(transfer, dram_extentmap, partial_transfers
 #ifdef NVME_ENABLED
         , nvme_extentmap
         , nvme_transfers
@@ -489,7 +498,7 @@ void write_data(const Address &transfer
 #pragma HLS dataflow
 
     // 1. Perform block mapping
-    issue_partial_transfers(transfer, dram_extentmap, partial_transfers
+    issue_partial_transfers<TransferType::Write>(transfer, dram_extentmap, partial_transfers
 #ifdef NVME_ENABLED
         , nvme_extentmap
         , nvme_transfers
