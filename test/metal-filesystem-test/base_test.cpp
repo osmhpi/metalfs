@@ -36,7 +36,7 @@ void BaseTest::SetUp() {
   mkdir("test_files/metadata_store", S_IRWXU);
 }
 
-void BaseTest::TearDown() { mtl_deinitialize(&in_memory_storage); }
+void BaseTest::TearDown() { mdb_env_close(env); }
 
 void BaseTest::test_initialize_env() {
   mdb_env_create(&env);
@@ -55,5 +55,7 @@ void BaseTest::test_commit_txn(MDB_txn *txn) { mdb_txn_commit(txn); }
 void MetalTest::SetUp() {
   BaseTest::SetUp();
 
-  mtl_initialize("test_files/metadata_store", &in_memory_storage);
+  mtl_initialize(&_context, "test_files/metadata_store", &in_memory_storage);
 }
+
+void MetalTest::TearDown() { mtl_deinitialize(_context); }

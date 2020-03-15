@@ -40,37 +40,19 @@ int mtl_storage_get_metadata(void *storage_context,
   return MTL_SUCCESS;
 }
 
-int mtl_storage_set_active_write_extent_list(void *storage_context,
-                                             const mtl_file_extent *extents,
-                                             uint64_t length) {
-  free(_extents);
-
-  _extents = malloc(length * sizeof(mtl_file_extent));
-  memcpy(_extents, extents, length * sizeof(mtl_file_extent));
-  _extents_length = length;
-
-  return MTL_SUCCESS;
-}
-
-int mtl_storage_set_active_read_extent_list(void *storage_context,
-                                            const mtl_file_extent *extents,
-                                            uint64_t length) {
-  free(_extents);
-
-  _extents = malloc(length * sizeof(mtl_file_extent));
-  memcpy(_extents, extents, length * sizeof(mtl_file_extent));
-  _extents_length = length;
-
-  return MTL_SUCCESS;
-}
-
-int mtl_storage_write(void *storage_context, uint64_t offset,
-                      const void *buffer, uint64_t length) {
+int mtl_storage_write(mtl_context *context, void *storage_context,
+                      uint64_t inode_id, uint64_t offset, const void *buffer,
+                      uint64_t length) {
   if (!_storage) {
     _storage = malloc(NUM_BLOCKS * BLOCK_SIZE);
   }
 
   assert(offset + length < NUM_BLOCKS * BLOCK_SIZE);
+
+  // Obtain extent list
+  free(_extents);
+  _extents = malloc(MTL_MAX_EXTENTS * sizeof(mtl_file_extent));
+  mtl_load_extent_list(context, inode_id, _extents, &_extents_length, NULL);
 
   uint64_t current_offset = offset;
 
@@ -106,13 +88,19 @@ int mtl_storage_write(void *storage_context, uint64_t offset,
   return MTL_SUCCESS;
 }
 
-int mtl_storage_read(void *storage_context, uint64_t offset, void *buffer,
+int mtl_storage_read(mtl_context *context, void *storage_context,
+                     uint64_t inode_id, uint64_t offset, void *buffer,
                      uint64_t length) {
   if (!_storage) {
     _storage = malloc(NUM_BLOCKS * BLOCK_SIZE);
   }
 
   assert(offset + length < NUM_BLOCKS * BLOCK_SIZE);
+
+  // Obtain extent list
+  free(_extents);
+  _extents = malloc(MTL_MAX_EXTENTS * sizeof(mtl_file_extent));
+  mtl_load_extent_list(context, inode_id, _extents, &_extents_length, NULL);
 
   uint64_t current_offset = offset;
 
@@ -150,14 +138,6 @@ int mtl_storage_read(void *storage_context, uint64_t offset, void *buffer,
 }
 
 mtl_storage_backend in_memory_storage = {
-    &mtl_storage_initialize,
-    &mtl_storage_deinitialize,
-
-    &mtl_storage_get_metadata,
-
-    &mtl_storage_set_active_read_extent_list,
-    &mtl_storage_set_active_write_extent_list,
-
-    &mtl_storage_write,
-    &mtl_storage_read,
-    NULL};
+    &mtl_storage_initialize,   &mtl_storage_deinitialize,
+    &mtl_storage_get_metadata, &mtl_storage_write,
+    &mtl_storage_read,         NULL};

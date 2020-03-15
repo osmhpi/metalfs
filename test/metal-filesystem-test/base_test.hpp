@@ -1,7 +1,9 @@
 #pragma once
 
+#include <gtest/gtest.h>
 #include <lmdb.h>
-#include "gtest/gtest.h"
+
+#include <metal-filesystem/metal.h>
 
 class BaseTest : public ::testing::Test {
  protected:
@@ -18,4 +20,7 @@ class BaseTest : public ::testing::Test {
 class MetalTest : public BaseTest {
  protected:
   virtual void SetUp();
+  virtual void TearDown();
+
+  mtl_context *_context;
 };
