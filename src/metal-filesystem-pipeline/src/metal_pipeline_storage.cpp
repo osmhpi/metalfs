@@ -16,7 +16,7 @@
 namespace metal {
 
 PipelineStorage::PipelineStorage(
-    int card, fpga::AddressType type, fpga::MapType map,
+    Card card, fpga::AddressType type, fpga::MapType map,
     std::string metadataDir, bool deleteMetadataIfExists,
     std::shared_ptr<PipelineStorage> dramPipelineStorage)
     : FilesystemContext(metadataDir, deleteMetadataIfExists),

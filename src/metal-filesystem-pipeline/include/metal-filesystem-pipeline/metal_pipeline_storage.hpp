@@ -8,6 +8,7 @@
 
 #include <metal-filesystem/metal.h>
 #include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-pipeline/card.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
 
 namespace metal {
@@ -17,7 +18,7 @@ class METAL_FILESYSTEM_PIPELINE_API PipelineStorage
       public std::enable_shared_from_this<PipelineStorage> {
  public:
   PipelineStorage(
-      int card, fpga::AddressType type, fpga::MapType map,
+      Card card, fpga::AddressType type, fpga::MapType map,
       std::string metadataDir, bool deleteMetadataIfExists = false,
       std::shared_ptr<PipelineStorage> dramPipelineStorage = nullptr);
 
@@ -42,7 +43,7 @@ class METAL_FILESYSTEM_PIPELINE_API PipelineStorage
   int write(uint64_t inode_id, uint64_t offset, const void *buffer,
             uint64_t length);
 
-  int _card;
+  Card _card;
   mtl_storage_backend _backend;
   fpga::AddressType _type;
   fpga::MapType _map;

@@ -30,6 +30,7 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
+    ${include_path}/card.hpp
     ${include_path}/common.hpp
     ${include_path}/data_sink_context.hpp
     ${include_path}/data_sink.hpp

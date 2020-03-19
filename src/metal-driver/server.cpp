@@ -48,7 +48,7 @@ Server::Server(std::shared_ptr<OperatorFactory> registry)
 
 Server::~Server() { close(_listenfd); }
 
-void Server::start(int card) {
+void Server::start(Card card) {
   _listenfd = 0;
   int connfd = 0;
   struct sockaddr_un serv_addr {};
@@ -68,7 +68,7 @@ void Server::start(int card) {
   }
 }
 
-void Server::processRequest(Socket socket, int card) {
+void Server::processRequest(Socket socket, Card card) {
   try {
     _agents.registerAgent(std::move(socket));
   } catch (std::exception &ex) {

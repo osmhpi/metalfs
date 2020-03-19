@@ -26,7 +26,8 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
   auto filesystem = std::make_shared<PipelineStorage>(
-      0, fpga::AddressType::NVMe, fpga::MapType::NVMe, "./test_metadata", true);
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
@@ -35,7 +36,7 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
 
   DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-  SnapPipelineRunner runner(0);
+  SnapPipelineRunner runner(Card{0, 10});
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(dest);
@@ -48,7 +49,8 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   fill_payload(src, n_bytes);
 
   auto filesystem = std::make_shared<PipelineStorage>(
-      0, fpga::AddressType::NVMe, fpga::MapType::NVMe, "./test_metadata", true);
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
@@ -56,7 +58,7 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
   FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-  SnapPipelineRunner runner(0);
+  SnapPipelineRunner runner(Card{0, 10});
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(src);
@@ -69,7 +71,8 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
   fill_payload(src, n_bytes);
 
   auto filesystem = std::make_shared<PipelineStorage>(
-      0, fpga::AddressType::NVMe, fpga::MapType::NVMe, "./test_metadata", true);
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
@@ -80,7 +83,7 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
     FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -88,7 +91,7 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
     FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -105,7 +108,8 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   fill_payload(src, n_bytes);
 
   auto filesystem = std::make_shared<PipelineStorage>(
-      0, fpga::AddressType::NVMe, fpga::MapType::NVMe, "./test_metadata", true);
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
@@ -121,7 +125,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
     FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -130,7 +134,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     FileDataSinkContext dataSink(filesystem, file, newBytesOffset,
                                  newBytesSize);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -138,7 +142,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 

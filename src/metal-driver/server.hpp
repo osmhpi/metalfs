@@ -1,11 +1,13 @@
-#include <utility>
-
 #pragma once
 
-#include <metal-driver-messages/messages.hpp>
-#include <metal-pipeline/operator_factory.hpp>
 #include <string>
 #include <unordered_set>
+#include <utility>
+
+#include <metal-driver-messages/messages.hpp>
+#include <metal-pipeline/card.hpp>
+#include <metal-pipeline/operator_factory.hpp>
+
 #include "agent_pool.hpp"
 
 void* start_socket(void* args);
@@ -19,12 +21,12 @@ class Server {
   explicit Server(std::shared_ptr<OperatorFactory> registry);
   virtual ~Server();
 
-  void start(int card);
+  void start(Card card);
 
-  const std::string &socketFilename() { return _socketFileName; }
+  const std::string& socketFilename() { return _socketFileName; }
 
  protected:
-  void processRequest(Socket socket, int card);
+  void processRequest(Socket socket, Card card);
 
   AgentPool _agents;
   std::string _socketFileName;

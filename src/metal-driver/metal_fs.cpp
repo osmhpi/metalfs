@@ -22,6 +22,7 @@ using namespace metal;
 
 struct metal_config {
   int card;
+  int timeout;
   char *operators;
   char *metadata_dir;
   int in_memory;
@@ -38,6 +39,8 @@ enum {
 static struct fuse_opt metal_opts[] = {
     METAL_OPT("--card=%i", card, 0),
     METAL_OPT("-c %i", card, 0),
+    METAL_OPT("--timeout=%i", timeout, 10),
+    METAL_OPT("-t %i", timeout, 10),
     METAL_OPT("--metadata %s", metadata_dir, 0),
     METAL_OPT("--in-memory", in_memory, 1),
     METAL_OPT("--in-memory=true", in_memory, 1),
@@ -69,6 +72,7 @@ static int metal_opt_proc(void *data, const char *arg, int key,
               "\n"
               "metal_fs options:\n"
               "    --card=CARD (0)\n"
+              "    --timeout=TIMEOUT (10)\n"
               "    --metadata=METADATA_PATH\n"
               "    --in-memory=(true|false)\n",
               outargs->argv[0]);
@@ -121,7 +125,7 @@ int main(int argc, char *argv[]) {
   std::unique_ptr<Server> server = nullptr;
 
   if (!conf.in_memory) {
-    SnapAction fpga(conf.card);
+    SnapAction fpga(Card{conf.card, conf.timeout});
     auto factory =
         std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(fpga));
 
@@ -142,14 +146,14 @@ int main(int argc, char *argv[]) {
                                           std::move(operators)));
 
     auto dramFilesystem = std::make_shared<PipelineStorage>(
-        conf.card, fpga::AddressType::CardDRAM, fpga::MapType::DRAM,
-        metadataDirDRAM, true);
+        Card{conf.card, conf.timeout}, fpga::AddressType::CardDRAM,
+        fpga::MapType::DRAM, metadataDirDRAM, true);
     Context::addHandler(
         "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
     auto nvmeFilesystem = std::make_shared<PipelineStorage>(
-        conf.card, fpga::AddressType::NVMe, fpga::MapType::DRAMAndNVMe,
-        metadataDir, false, dramFilesystem);
+        Card{conf.card, conf.timeout}, fpga::AddressType::NVMe,
+        fpga::MapType::DRAMAndNVMe, metadataDir, false, dramFilesystem);
     Context::addHandler(
         "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
   } else {
@@ -163,7 +167,7 @@ int main(int argc, char *argv[]) {
   int retc;
 
   if (server != nullptr) {
-    std::thread serverThread(&Server::start, server.get(), conf.card);
+    std::thread serverThread(&Server::start, server.get(), Card{conf.card, conf.timeout});
     retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
     serverThread.join();
   } else {

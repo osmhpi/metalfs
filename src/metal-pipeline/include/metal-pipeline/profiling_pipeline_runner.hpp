@@ -8,11 +8,11 @@ namespace metal {
 
 class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
  public:
-  ProfilingPipelineRunner(int card, std::shared_ptr<Pipeline> pipeline)
+  ProfilingPipelineRunner(Card card, std::shared_ptr<Pipeline> pipeline)
       : SnapPipelineRunner(card, std::move(pipeline)),
         _results(ProfilingResults{}) {}
   template <typename... Ts>
-  ProfilingPipelineRunner(int card, Ts... userOperators)
+  ProfilingPipelineRunner(Card card, Ts... userOperators)
       : ProfilingPipelineRunner(
             card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
