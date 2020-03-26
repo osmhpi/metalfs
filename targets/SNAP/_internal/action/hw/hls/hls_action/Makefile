@@ -7,6 +7,14 @@ HLS_CFLAGS    += \
 	-I$(_SNAP_ROOT)/software/include \
 	-I$(METAL_ROOT)/targets/SNAP/_internal/include
 
+ifeq ($(DDRI_USED),TRUE)
+HLS_CFLAGS    += -DDRAM_ENABLED
+endif
+
+ifeq ($(NVME_USED),TRUE)
+HLS_CFLAGS    += -DNVME_ENABLED
+endif
+
 srcs += \
 	axi_switch.cpp \
 	axi_perfmon.cpp \
