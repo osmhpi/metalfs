@@ -102,44 +102,51 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
     snap_bool_t endAddressIsOdd = end_addr(StorageBlockSizeD-1, 0) != 0;
     snap_bool_t endBlockIsDifferentFromStartBlock = start_addr(63, StorageBlockSizeD) != end_addr(63, StorageBlockSizeD);
 
-    uint64_t intra_block_offset = start_addr % StorageBlockSize;
-
-    int cmdCount = 0;
-
     if (startAddressIsOdd) {
         uint64_t dram_address = 0;
-        if (address.map == MapType::NVMe) {
+        switch (address.map) {
+        case MapType::NVMe: {
             dram_address = NVMeDRAMWriteOffset + (start_addr % (1u << 31)); // Where to put data in DRAM
-        } else if (address.map == MapType::DRAMAndNVMe) {
+            break;
+        }
+        case MapType::DRAMAndNVMe: {
             uint64_t pagefile_offset = start_addr % PagefileSize;
             mtl_extmap_seek(dram_extentmap, pagefile_offset / StorageBlockSize);
             dram_address = mtl_extmap_pblock(dram_extentmap) * StorageBlockSize; // Where to put data in DRAM
+            break;
+        }
+        default: break;
         }
 
         mtl_extmap_seek(nvme_extentmap, start_addr / StorageBlockSize);
         uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
-        cmdCount++;
+        ap_wait();  // Tick-tock
+        nvme_read_resp.read();
     }
 
     if (endAddressIsOdd && (endBlockIsDifferentFromStartBlock || !startAddressIsOdd)) {
         uint64_t dram_address = 0;
-        if (address.map == MapType::NVMe) {
+        switch (address.map) {
+        case MapType::NVMe: {
             dram_address = NVMeDRAMWriteOffset + (end_addr % (1u << 31)); // Where to put data in DRAM
-        } else if (address.map == MapType::DRAMAndNVMe) {
+            break;
+        }
+        case MapType::DRAMAndNVMe: {
             uint64_t pagefile_offset = end_addr % PagefileSize;
             mtl_extmap_seek(dram_extentmap, pagefile_offset / StorageBlockSize);
             dram_address = mtl_extmap_pblock(dram_extentmap) * StorageBlockSize; // Where to put data in DRAM
+            break;
+        }
+        default: break;
         }
 
         mtl_extmap_seek(nvme_extentmap, end_addr / StorageBlockSize);
         uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
         issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
-        cmdCount++;
-    }
-    for (int i = 0; i < cmdCount; ++i) {
+        ap_wait();  // Tick-tock
         nvme_read_resp.read();
     }
 }
