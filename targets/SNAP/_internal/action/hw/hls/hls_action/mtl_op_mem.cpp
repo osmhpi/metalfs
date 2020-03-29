@@ -94,13 +94,19 @@ void issue_nvme_block_transfer_command(uint64_t nvme_address, uint64_t dram_addr
     nvme_cmd.write(cmd);
 }
 
+void issue_nvme_block_transfer_command_sync(uint64_t nvme_address, uint64_t dram_address, NVMeCommandStream &nvme_cmd, NVMeResponseStream &nvme_resp) {
+    issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_cmd);
+    ap_wait();  // Tick-tock
+    nvme_resp.read();
+}
 void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, mtl_extmap_t &nvme_extentmap, NVMeCommandStream &nvme_read_cmd, NVMeResponseStream &nvme_read_resp) {
     snapu64_t start_addr = address.addr;
     snapu64_t end_addr = start_addr + address.size;
+    snapu64_t last_byte_addr = start_addr + (address.size > 0 ? address.size : 1) - 1;
 
-    snap_bool_t startAddressIsOdd = start_addr(StorageBlockSizeD-1, 0) != 0;
-    snap_bool_t endAddressIsOdd = end_addr(StorageBlockSizeD-1, 0) != 0;
-    snap_bool_t endBlockIsDifferentFromStartBlock = start_addr(63, StorageBlockSizeD) != end_addr(63, StorageBlockSizeD);
+    auto startAddressIsOdd = start_addr(StorageBlockSizeD-1, 0) != 0;
+    auto endAddressIsOdd = end_addr(StorageBlockSizeD-1, 0) != 0;
+    auto endBlockIsDifferentFromStartBlock = start_addr(63, StorageBlockSizeD) != last_byte_addr(63, StorageBlockSizeD);
 
     if (startAddressIsOdd) {
         uint64_t dram_address = 0;
@@ -121,9 +127,7 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
         mtl_extmap_seek(nvme_extentmap, start_addr / StorageBlockSize);
         uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
-        issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
-        ap_wait();  // Tick-tock
-        nvme_read_resp.read();
+        issue_nvme_block_transfer_command_sync(nvme_address, dram_address, nvme_read_cmd, nvme_read_resp);
     }
 
     if (endAddressIsOdd && (endBlockIsDifferentFromStartBlock || !startAddressIsOdd)) {
@@ -145,9 +149,7 @@ void preload_nvme_blocks(const Address &address, mtl_extmap_t &dram_extentmap, m
         mtl_extmap_seek(nvme_extentmap, end_addr / StorageBlockSize);
         uint64_t nvme_address = mtl_extmap_pblock(nvme_extentmap) * StorageBlockSize; // Where to read from NVMe
 
-        issue_nvme_block_transfer_command(nvme_address, dram_address, nvme_read_cmd);
-        ap_wait();  // Tick-tock
-        nvme_read_resp.read();
+        issue_nvme_block_transfer_command_sync(nvme_address, dram_address, nvme_read_cmd, nvme_read_resp);
     }
 }
 #endif
