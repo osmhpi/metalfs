@@ -39,8 +39,8 @@ enum {
 static struct fuse_opt metal_opts[] = {
     METAL_OPT("--card=%i", card, 0),
     METAL_OPT("-c %i", card, 0),
-    METAL_OPT("--timeout=%i", timeout, 10),
-    METAL_OPT("-t %i", timeout, 10),
+    METAL_OPT("--timeout=%i", timeout, 0),
+    METAL_OPT("-t %i", timeout, 0),
     METAL_OPT("--metadata %s", metadata_dir, 0),
     METAL_OPT("--in-memory", in_memory, 1),
     METAL_OPT("--in-memory=true", in_memory, 1),
@@ -117,6 +117,10 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::info);
   } else {
     spdlog::set_level(spdlog::level::warn);
+  }
+
+  if (conf.timeout == 0) {
+    conf.timeout = 2;
   }
 
   auto metadataDir = std::string(conf.metadata_dir);
