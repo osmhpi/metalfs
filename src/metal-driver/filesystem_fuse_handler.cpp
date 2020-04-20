@@ -38,27 +38,25 @@ int FilesystemFuseHandler::fuse_getattr(const std::string path,
     return -res;
   }
 
-  (void)stbuf->st_dev;    // device ID? can we put something meaningful here?
-  (void)stbuf->st_ino;    // TODO: inode-ID
-  (void)stbuf->st_mode;   // set according to filetype below
-  (void)stbuf->st_nlink;  // number of hard links to file. since we don't
-                          // support hardlinks as of now, this will always be 0.
+  (void)stbuf->st_dev;  // ignored by FUSE
+  (void)stbuf->st_ino;  // TODO: inode-ID
+  stbuf->st_mode = inode.mode;
+  stbuf->st_nlink = 2;  // number of hard links to file.
+
   stbuf->st_uid = inode.user;   // user-ID of owner
   stbuf->st_gid = inode.group;  // group-ID of owner
   (void)stbuf->st_rdev;  // unused, since this field is meant for special files
                          // which we do not have in our FS
   stbuf->st_size = inode.length;  // length of referenced file in byte
-  (void)stbuf->st_blksize;        // our blocksize. 4k?
-  (void)
-      stbuf->st_blocks;  // number of 512B blocks belonging to file. TODO: needs
-                         // to be set in inode whenever we write an extent
+  (void)stbuf->st_blksize;        // ignored by FUSE
+  stbuf->st_blocks =
+      inode.length / 512 +
+      (inode.length % 512 > 0 ? 1
+                              : 0);  // number of 512B blocks belonging to file.
   stbuf->st_atime = inode.accessed;  // time of last read or write
   stbuf->st_mtime = inode.modified;  // time of last write
   stbuf->st_ctime =
       inode.created;  // time of last change to either content or inode-data
-
-  stbuf->st_mode = inode.type == MTL_FILE ? S_IFREG | 0755 : S_IFDIR | 0755;
-  stbuf->st_nlink = 2;
 
   return 0;
 }
@@ -88,7 +86,7 @@ int FilesystemFuseHandler::fuse_readdir(const std::string path, void *buf,
 int FilesystemFuseHandler::fuse_create(const std::string path, mode_t mode,
                                        struct fuse_file_info *fi) {
   uint64_t inode_id;
-  int res = mtl_create(_filesystem->context(), path.c_str(), &inode_id);
+  int res = mtl_create(_filesystem->context(), path.c_str(), mode, &inode_id);
   if (res != MTL_SUCCESS) {
     return -res;
   }
@@ -170,7 +168,7 @@ int FilesystemFuseHandler::fuse_unlink(const std::string path) {
 }
 
 int FilesystemFuseHandler::fuse_mkdir(const std::string path, mode_t mode) {
-  int res = mtl_mkdir(_filesystem->context(), path.c_str());
+  int res = mtl_mkdir(_filesystem->context(), path.c_str(), mode);
 
   if (res != MTL_SUCCESS) return -res;
 

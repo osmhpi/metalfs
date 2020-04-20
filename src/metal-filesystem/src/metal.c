@@ -229,7 +229,7 @@ int mtl_closedir(mtl_context *context, mtl_dir *dir) {
   return MTL_SUCCESS;
 }
 
-int mtl_mkdir(mtl_context *context, const char *filename) {
+int mtl_mkdir(mtl_context *context, const char *filename, int mode) {
   int res;
 
   MDB_txn *txn;
@@ -247,7 +247,7 @@ int mtl_mkdir(mtl_context *context, const char *filename) {
   base = basename(basec);
 
   uint64_t new_dir_inode_id;
-  res = mtl_create_directory_in_directory(txn, parent_dir_inode_id, base,
+  res = mtl_create_directory_in_directory(txn, parent_dir_inode_id, base, mode,
                                           &new_dir_inode_id);
   if (res != MTL_SUCCESS) {
     mdb_txn_abort(txn);
@@ -386,7 +386,8 @@ int mtl_rename(mtl_context *context, const char *from_filename,
   return MTL_SUCCESS;
 }
 
-int mtl_create(mtl_context *context, const char *filename, uint64_t *inode_id) {
+int mtl_create(mtl_context *context, const char *filename, int mode,
+               uint64_t *inode_id) {
   int res;
 
   MDB_txn *txn;
@@ -404,7 +405,7 @@ int mtl_create(mtl_context *context, const char *filename, uint64_t *inode_id) {
   base = basename(basec);
 
   uint64_t file_inode_id;
-  res = mtl_create_file_in_directory(txn, parent_dir_inode_id, base,
+  res = mtl_create_file_in_directory(txn, parent_dir_inode_id, base, mode,
                                      &file_inode_id);
   if (res != MTL_SUCCESS) {
     mdb_txn_abort(txn);

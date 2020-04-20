@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+
 #include "storage.h"
 
 #ifdef __cplusplus
@@ -32,12 +33,13 @@ int mtl_opendir(mtl_context *context, const char *filename, mtl_dir **dir);
 int mtl_readdir(mtl_context *context, mtl_dir *dir, char *buffer,
                 uint64_t size);
 int mtl_closedir(mtl_context *context, mtl_dir *dir);
-int mtl_mkdir(mtl_context *context, const char *filename);
+int mtl_mkdir(mtl_context *context, const char *filename, int mode);
 int mtl_rmdir(mtl_context *context, const char *filename);
 int mtl_rename(mtl_context *context, const char *from_filename,
                const char *to_filename);
 int mtl_chown(mtl_context *context, const char *path, int uid, int gid);
-int mtl_create(mtl_context *context, const char *filename, uint64_t *inode_id);
+int mtl_create(mtl_context *context, const char *filename, int mode,
+               uint64_t *inode_id);
 int mtl_write(mtl_context *context, uint64_t inode_id, const char *buffer,
               uint64_t size, uint64_t offset);
 uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,

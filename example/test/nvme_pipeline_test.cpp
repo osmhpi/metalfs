@@ -29,7 +29,7 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
       Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
-  mtl_create(filesystem->context(), "/test", &file);
+  mtl_create(filesystem->context(), "/test", 0755, &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
 
   FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
@@ -52,7 +52,7 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
       Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
-  mtl_create(filesystem->context(), "/test", &file);
+  mtl_create(filesystem->context(), "/test", 0755, &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
 
   DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
@@ -74,7 +74,7 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
       Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
-  mtl_create(filesystem->context(), "/test", &file);
+  mtl_create(filesystem->context(), "/test", 0755, &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
@@ -111,7 +111,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
       Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
-  mtl_create(filesystem->context(), "/test", &file);
+  mtl_create(filesystem->context(), "/test", 0755, &file);
   mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));

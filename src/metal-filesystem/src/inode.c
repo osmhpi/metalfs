@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include <metal-filesystem/metal.h>
 #include "meta.h"
@@ -326,14 +327,17 @@ int mtl_create_root_directory(MDB_txn *txn) {
   if (mdb_get(txn, inodes_db, &root_dir_key, &root_dir_value) == MDB_SUCCESS)
     return MTL_SUCCESS;
 
+  int now = time(NULL);
+
   // Create a root inode
   mtl_inode root_inode = {.type = MTL_DIRECTORY,
                           .length = 0,  // sizeof(dir_data),
                           .user = 0,
                           .group = 0,
-                          .accessed = 0,
-                          .modified = 0,
-                          .created = 0};
+                          .accessed = now,
+                          .modified = now,
+                          .created = now,
+                          .mode = 0755 | S_IFDIR};
 
   mtl_put_inode(txn, root_inode_id, &root_inode, NULL, 0);
   mtl_append_inode_id_to_directory(txn, root_inode_id, ".", root_inode_id);
@@ -343,7 +347,7 @@ int mtl_create_root_directory(MDB_txn *txn) {
 }
 
 int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
-                                      char *filename,
+                                      char *filename, int mode,
                                       uint64_t *directory_file_inode_id) {
   int res;
 
@@ -354,13 +358,16 @@ int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
     return res;
   }
 
+  int now = time(NULL);
+
   mtl_inode dir_inode = {.type = MTL_DIRECTORY,
                          .length = 0,  // sizeof(dir_data),
                          .user = 0,
                          .group = 0,
-                         .accessed = 0,
-                         .modified = 0,
-                         .created = 0};
+                         .accessed = now,
+                         .modified = now,
+                         .created = now,
+                         .mode = mode | S_IFDIR};
 
   res = mtl_put_inode(txn, *directory_file_inode_id, &dir_inode, NULL, 0);
   if (res != MTL_SUCCESS) {
@@ -383,7 +390,8 @@ int mtl_create_directory_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
 }
 
 int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
-                                 char *filename, uint64_t *file_inode_id) {
+                                 char *filename, int mode,
+                                 uint64_t *file_inode_id) {
   int res;
 
   *file_inode_id = mtl_next_inode_id(txn);
@@ -393,13 +401,16 @@ int mtl_create_file_in_directory(MDB_txn *txn, uint64_t dir_inode_id,
     return res;
   }
 
+  int now = time(NULL);
+
   mtl_inode file_inode = {.type = MTL_FILE,
                           .length = 0,
                           .user = 0,
                           .group = 0,
-                          .accessed = 0,
-                          .modified = 0,
-                          .created = 0};
+                          .accessed = now,
+                          .modified = now,
+                          .created = now,
+                          .mode = mode | S_IFREG};
 
   return mtl_put_inode(txn, *file_inode_id, &file_inode, NULL, 0);
 }
