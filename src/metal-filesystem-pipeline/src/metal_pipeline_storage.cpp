@@ -68,7 +68,7 @@ void PipelineStorage::createDramPagefile(const std::string &pagefilePath) {
   int res = mtl_open(_dramPipelineStorage->context(), pagefilePath.c_str(),
                      &pagefile_inode);
   if (res == MTL_ERROR_NOENTRY) {
-    res = mtl_create(_dramPipelineStorage->context(), pagefilePath.c_str(),
+    res = mtl_create(_dramPipelineStorage->context(), pagefilePath.c_str(), 0,
                      &pagefile_inode);
     if (res != MTL_SUCCESS) {
       throw std::runtime_error("Could not create pagefile.");
