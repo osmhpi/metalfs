@@ -157,7 +157,8 @@ ConfiguredPipeline PipelineBuilder::configure() {
       result.dataSourceAgent->createInputBuffer();
     }
   }
-  if (!result.dataSinkAgent->internalOutputFilename().empty()) {
+  if (!result.dataSinkAgent->internalOutputFilename().empty() 
+       && !DevNullFile::isNullOutput(*result.dataSinkAgent)) {
     result.dataSinkAgent->setInternalOutputFile(
         result.dataSinkAgent->internalOutputFilename());
   } else {
