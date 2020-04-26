@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 typedef struct mtl_storage_metadata {
   uint64_t num_blocks;
   uint64_t block_size;
