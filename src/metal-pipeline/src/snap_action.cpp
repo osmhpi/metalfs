@@ -15,11 +15,11 @@
 
 namespace metal {
 
-SnapAction::SnapAction(int card) {
-  spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card);
+SnapAction::SnapAction(Card card) : _timeout(card.timeout) {
+  spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card.card);
 
   char device[128];
-  snprintf(device, sizeof(device) - 1, "/dev/cxl/afu%d.0s", card);
+  snprintf(device, sizeof(device) - 1, "/dev/cxl/afu%d.0s", card.card);
 
   _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
   if (!_card) {
@@ -39,7 +39,7 @@ SnapAction::SnapAction(int card) {
 }
 
 SnapAction::SnapAction(SnapAction &&other) noexcept
-    : _action(other._action), _card(other._card) {
+    : _action(other._action), _card(other._card), _timeout(other._timeout) {
   other._action = nullptr;
   other._card = nullptr;
 }
@@ -78,8 +78,7 @@ void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
   struct snap_job cjob {};
   snap_job_set(&cjob, &mjob, sizeof(mjob), nullptr, 0);
 
-  const unsigned long timeout = 10;
-  int rc = snap_action_sync_execute_job(_action, &cjob, timeout);
+  int rc = snap_action_sync_execute_job(_action, &cjob, _timeout);
 
   if (rc != 0)
     throw std::runtime_error("Error starting job: " +

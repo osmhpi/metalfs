@@ -9,6 +9,8 @@
 
 namespace metal {
 
+class PipelineStorage;
+
 class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
  public:
   explicit OperatorAgent(Socket socket);
@@ -29,8 +31,12 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
   bool isOutputAgent() { return _outputAgentPid == 0; }
   const std::string &error() const { return _error; }
   void setError(const std::string &error) { _error = error; }
-  const std::string &internalInputFile() const { return _internalInputFile; }
-  const std::string &internalOutputFile() const { return _internalOutputFile; }
+  const std::string &internalInputFilename() const {
+    return _internalInputFilename;
+  }
+  const std::string &internalOutputFilename() const {
+    return _internalOutputFilename;
+  }
   const std::string &agentLoadFile() const { return _agentLoadFile; }
   const std::string &operatorType() const { return _operatorType; }
   bool terminated() const { return _terminated; }
@@ -38,7 +44,17 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
 
   void createInputBuffer();
   void createOutputBuffer();
+  const std::pair<uint64_t, std::shared_ptr<PipelineStorage>>
+      &internalInputFile() const {
+    return _internalInputFile;
+  }
+  const std::pair<uint64_t, std::shared_ptr<PipelineStorage>>
+      &internalOutputFile() const {
+    return _internalOutputFile;
+  }
   void setInputFile(const std::string &input);
+  void setInternalInputFile(const std::string &filename);
+  void setInternalOutputFile(const std::string &filename);
 
   void sendRegistrationResponse(RegistrationResponse &message);
   ProcessingRequest receiveProcessingRequest();
@@ -55,8 +71,10 @@ class OperatorAgent : public std::enable_shared_from_this<OperatorAgent> {
   uint _inputAgentPid;
   std::optional<Buffer> _inputBuffer;
 
-  std::string _internalInputFile;
-  std::string _internalOutputFile;
+  std::string _internalInputFilename;
+  std::string _internalOutputFilename;
+  std::pair<uint64_t, std::shared_ptr<PipelineStorage>> _internalInputFile;
+  std::pair<uint64_t, std::shared_ptr<PipelineStorage>> _internalOutputFile;
   std::string _agentLoadFile;
 
   std::shared_ptr<OperatorAgent> _outputAgent;

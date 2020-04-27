@@ -12,8 +12,6 @@
 
 #define EXTENTS_DB_NAME "extents"
 
-MDB_dbi extents_db = 0;
-
 typedef enum mtl_extent_status {
   MTL_FREE,
   MTL_RESERVED,
@@ -26,13 +24,14 @@ typedef struct mtl_extent {
   mtl_heap_node_id pq_node;
 } mtl_extent;
 
-int mtl_ensure_extents_db_open(MDB_txn *txn) {
-  if (extents_db == 0)
-    mdb_dbi_open(txn, EXTENTS_DB_NAME, MDB_CREATE, &extents_db);
-  return MTL_SUCCESS;
+int mtl_ensure_extents_db_open(MDB_txn *txn, MDB_dbi *db) {
+  return mdb_dbi_open(txn, EXTENTS_DB_NAME, MDB_CREATE, db);
 }
 
 int mtl_load_extent(MDB_txn *txn, uint64_t offset, const mtl_extent **extent) {
+  MDB_dbi extents_db;
+  mtl_ensure_extents_db_open(txn, &extents_db);
+
   MDB_val extent_key = {.mv_size = sizeof(offset), .mv_data = &offset};
   MDB_val extent_value;
 
@@ -47,6 +46,9 @@ int mtl_load_extent(MDB_txn *txn, uint64_t offset, const mtl_extent **extent) {
 }
 
 int mtl_put_extent(MDB_txn *txn, uint64_t offset, mtl_extent *extent) {
+  MDB_dbi extents_db;
+  mtl_ensure_extents_db_open(txn, &extents_db);
+
   MDB_val extent_key = {.mv_size = sizeof(offset), .mv_data = &offset};
   MDB_val extent_value = {.mv_size = sizeof(*extent), .mv_data = extent};
   mdb_put(txn, extents_db, &extent_key, &extent_value, 0);
@@ -55,8 +57,6 @@ int mtl_put_extent(MDB_txn *txn, uint64_t offset, mtl_extent *extent) {
 }
 
 int mtl_initialize_extents(MDB_txn *txn, uint64_t blocks) {
-  mtl_ensure_extents_db_open(txn);
-
   const mtl_extent *first_extent;
   if (mtl_load_extent(txn, 0, &first_extent) == MTL_ERROR_NOENTRY) {
     mtl_extent all_extent = {.length = blocks, .status = MTL_FREE};
@@ -70,7 +70,8 @@ int mtl_initialize_extents(MDB_txn *txn, uint64_t blocks) {
 uint64_t mtl_reserve_extent(MDB_txn *txn, uint64_t size,
                             mtl_file_extent *last_extent, uint64_t *offset,
                             bool commit) {
-  mtl_ensure_extents_db_open(txn);
+  MDB_dbi extents_db;
+  mtl_ensure_extents_db_open(txn, &extents_db);
 
   int res;
 
@@ -158,8 +159,6 @@ int mtl_truncate_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
     return mtl_free_extent(txn, offset);
   }
 
-  mtl_ensure_extents_db_open(txn);
-
   // Find extent by offset
   const mtl_extent *extent = NULL;
   mtl_load_extent(txn, offset, &extent);
@@ -187,7 +186,8 @@ int mtl_truncate_extent(MDB_txn *txn, uint64_t offset, uint64_t len) {
 }
 
 int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
-  mtl_ensure_extents_db_open(txn);
+  MDB_dbi extents_db;
+  mtl_ensure_extents_db_open(txn, &extents_db);
 
   int res;
 
@@ -270,7 +270,8 @@ int mtl_free_extent(MDB_txn *txn, uint64_t offset) {
 }
 
 int mtl_dump_extents(MDB_txn *txn) {
-  mtl_ensure_extents_db_open(txn);
+  MDB_dbi extents_db;
+  mtl_ensure_extents_db_open(txn, &extents_db);
 
   MDB_cursor *cursor;
   mdb_cursor_open(txn, extents_db, &cursor);
@@ -293,10 +294,5 @@ int mtl_dump_extents(MDB_txn *txn) {
 
   mdb_cursor_close(cursor);
 
-  return MTL_SUCCESS;
-}
-
-int mtl_reset_extents_db() {
-  extents_db = 0;
   return MTL_SUCCESS;
 }

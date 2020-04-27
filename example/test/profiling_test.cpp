@@ -4,9 +4,9 @@
 
 #include <gtest/gtest.h>
 
-#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/profiling_pipeline_runner.hpp>
@@ -48,7 +48,7 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
 
   decryptContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(0, std::move(decryptContext),
+  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -89,7 +89,7 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
 
   changeCaseContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(0, std::move(decryptContext),
+  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -130,7 +130,7 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
 
   encryptContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(0, std::move(decryptContext),
+  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -153,7 +153,7 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
   OperatorContext changeCaseContext(std::move(*change_case));
   changeCaseContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(0, std::move(changeCaseContext));
+  ProfilingPipelineRunner runner(Card{0, 10}, std::move(changeCaseContext));
   ASSERT_NO_THROW(runner.run(DataSource(0, n_bytes, fpga::AddressType::Random),
                              DataSink(0, n_bytes, fpga::AddressType::Null)));
   //   std::cout << runner.formatProfilingResults();

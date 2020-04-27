@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#include <metal-pipeline/card.hpp>
+
 #include "configured_pipeline.hpp"
 
 namespace metal {
@@ -12,7 +14,7 @@ class OperatorAgent;
 
 class PipelineLoop {
  public:
-  PipelineLoop(ConfiguredPipeline pipeline, int card)
+  PipelineLoop(ConfiguredPipeline pipeline, Card card)
       : _pipeline(std::move(pipeline)), _card(card) {}
 
   void run();
@@ -21,7 +23,7 @@ class PipelineLoop {
   std::shared_ptr<OperatorAgent> _dataSourceAgent;
   std::shared_ptr<OperatorAgent> _dataSinkAgent;
   ConfiguredPipeline _pipeline;
-  int _card;
+  Card _card;
 };
 
 }  // namespace metal

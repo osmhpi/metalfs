@@ -2,17 +2,27 @@ extern "C" {
 #include <metal-filesystem/metal.h>
 }
 
-#include <dirent.h>
 #include <thread>
 
 #include <spdlog/spdlog.h>
 #include <cxxopts.hpp>
 
+#include <metal-filesystem-pipeline/filesystem_context.hpp>
+#include <metal-pipeline/operator_factory.hpp>
+#include <metal-pipeline/snap_action.hpp>
+
+#include "filesystem_fuse_handler.hpp"
 #include "metal_fuse_operations.hpp"
+#include "operator_fuse_handler.hpp"
+#include "pseudo_operators.hpp"
 #include "server.hpp"
+#include "socket_fuse_handler.hpp"
+
+using namespace metal;
 
 struct metal_config {
   int card;
+  int timeout;
   char *operators;
   char *metadata_dir;
   int in_memory;
@@ -29,6 +39,8 @@ enum {
 static struct fuse_opt metal_opts[] = {
     METAL_OPT("--card=%i", card, 0),
     METAL_OPT("-c %i", card, 0),
+    METAL_OPT("--timeout=%i", timeout, 0),
+    METAL_OPT("-t %i", timeout, 0),
     METAL_OPT("--metadata %s", metadata_dir, 0),
     METAL_OPT("--in-memory", in_memory, 1),
     METAL_OPT("--in-memory=true", in_memory, 1),
@@ -60,23 +72,33 @@ static int metal_opt_proc(void *data, const char *arg, int key,
               "\n"
               "metal_fs options:\n"
               "    --card=CARD (0)\n"
+              "    --timeout=TIMEOUT (10)\n"
               "    --metadata=METADATA_PATH\n"
               "    --in-memory=(true|false)\n",
               outargs->argv[0]);
       fuse_opt_add_arg(outargs, "-h");
-      fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations,
-                NULL);
+      fuse_main(outargs->argc, outargs->argv, &Context::fuseOperations(), NULL);
       exit(1);
+      break;
 
     case KEY_VERSION:
       fprintf(stderr, "metal_fs version %s\n", "0.0.1");
       fuse_opt_add_arg(outargs, "--version");
-      fuse_main(outargs->argc, outargs->argv, &metal::metal_fuse_operations,
-                NULL);
+      fuse_main(outargs->argc, outargs->argv, &Context::fuseOperations(), NULL);
       exit(0);
+      break;
   }
   return 1;
 }
+
+class InMemoryFilesystem : public FilesystemContext {
+ public:
+  InMemoryFilesystem(std::string metadataDir,
+                     bool deleteMetadataIfExists = false)
+      : FilesystemContext(metadataDir, deleteMetadataIfExists) {
+    mtl_initialize(&_context, metadataDir.c_str(), &in_memory_storage);
+  }
+};
 
 int main(int argc, char *argv[]) {
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
@@ -97,21 +119,64 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
-  auto &c = metal::Context::instance();
+  if (conf.timeout == 0) {
+    conf.timeout = 2;
+  }
 
-  c.initialize(static_cast<bool>(conf.in_memory),
-               std::string(conf.metadata_dir), conf.card);
+  auto metadataDir = std::string(conf.metadata_dir);
+  auto metadataDirDRAM = metadataDir + "_tmp";
 
-  auto server = std::thread(metal::Server::start, c.socket_filename(),
-                            c.registry(), c.card());
+  std::unique_ptr<Server> server = nullptr;
+
+  if (!conf.in_memory) {
+    SnapAction fpga(Card{conf.card, conf.timeout});
+    auto factory =
+        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(fpga));
+
+    std::set<std::string> operators;
+    for (const auto &op : factory->operatorSpecifications()) {
+      spdlog::info("Found operator {}", op.first);
+      operators.emplace(op.first);
+    }
+
+    operators.emplace(DatagenOperator::id());
+    operators.emplace(MetalCatOperator::id());
+
+    server = std::make_unique<Server>(factory);
+
+    Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>(
+                                       server->socketFilename()));
+    Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
+                                          std::move(operators)));
+
+    auto dramFilesystem = std::make_shared<PipelineStorage>(
+        Card{conf.card, conf.timeout}, fpga::AddressType::CardDRAM,
+        fpga::MapType::DRAM, metadataDirDRAM, true);
+    Context::addHandler(
+        "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
+
+    auto nvmeFilesystem = std::make_shared<PipelineStorage>(
+        Card{conf.card, conf.timeout}, fpga::AddressType::NVMe,
+        fpga::MapType::DRAMAndNVMe, metadataDir, false, dramFilesystem);
+    Context::addHandler(
+        "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
+  } else {
+    auto inMemoryFilesystem =
+        std::make_shared<InMemoryFilesystem>(metadataDir, true);
+    Context::addHandler(
+        "/files", std::make_unique<FilesystemFuseHandler>(inMemoryFilesystem));
+  }
 
   spdlog::info("Starting FUSE driver...");
-  auto retc =
-      fuse_main(args.argc, args.argv, &metal::metal_fuse_operations, nullptr);
+  int retc;
 
-  // This de-allocates the action/card, so this must be called every time we
-  // exit
-  mtl_deinitialize(metal::Context::instance().storage());
+  if (server != nullptr) {
+    std::thread serverThread(&Server::start, server.get(), Card{conf.card, conf.timeout});
+    retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
+    serverThread.join();
+  } else {
+    retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
+  }
 
   return retc;
 }

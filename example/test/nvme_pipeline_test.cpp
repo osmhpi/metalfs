@@ -1,11 +1,15 @@
-#include <gtest/gtest.h>
 #include <malloc.h>
-#include <metal-pipeline/fpga_interface.hpp>
+
 #include <memory>
+
+#include <gtest/gtest.h>
+
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
+#include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
+#include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/pipeline.hpp>
 #include <metal-pipeline/snap_action.hpp>
 #include <metal-pipeline/snap_pipeline_runner.hpp>
@@ -21,15 +25,18 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
   uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  // Read unwritten data
-  std::vector<mtl_file_extent> file = {
-      {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
-  FileDataSourceContext dataSource(fpga::AddressType::NVMe,
-                                      fpga::MapType::NVMe, file, 0, n_bytes);
+  auto filesystem = std::make_shared<PipelineStorage>(
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
+  uint64_t file;
+  mtl_create(filesystem->context(), "/test", 0755, &file);
+  mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
+
+  FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
 
   DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-  SnapPipelineRunner runner(0);
+  SnapPipelineRunner runner(Card{0, 10});
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(dest);
@@ -41,14 +48,17 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
+  auto filesystem = std::make_shared<PipelineStorage>(
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
+  uint64_t file;
+  mtl_create(filesystem->context(), "/test", 0755, &file);
+  mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
+
   DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
+  FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-  std::vector<mtl_file_extent> file = {
-      {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
-  FileDataSinkContext dataSink(fpga::AddressType::NVMe, fpga::MapType::NVMe,
-                                  file, 0, n_bytes);
-
-  SnapPipelineRunner runner(0);
+  SnapPipelineRunner runner(Card{0, 10});
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(src);
@@ -60,26 +70,28 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  std::vector<mtl_file_extent> file = {
-      {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
+  auto filesystem = std::make_shared<PipelineStorage>(
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
+  uint64_t file;
+  mtl_create(filesystem->context(), "/test", 0755, &file);
+  mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
   {  // Write
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
-    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
-                                    fpga::MapType::NVMe, file, 0, n_bytes);
+    FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Read
-    FileDataSourceContext dataSource(fpga::AddressType::NVMe,
-                                        fpga::MapType::NVMe, file, 0, n_bytes);
+    FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -95,8 +107,13 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  std::vector<mtl_file_extent> file = {
-      {0, (1ul << 20) / fpga::StorageBlockSize}};  // 1 MB
+  auto filesystem = std::make_shared<PipelineStorage>(
+      Card{0, 10}, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      "./test_metadata", true);
+  uint64_t file;
+  mtl_create(filesystem->context(), "/test", 0755, &file);
+  mtl_truncate(filesystem->context(), file, 1ul << 20);  // 1 MB
+
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
   uint64_t newBytesSize = fpga::StorageBlockSize + 4711;
@@ -106,30 +123,26 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
 
   {  // Write
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
-    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
-                                    fpga::MapType::NVMe, file, 0, n_bytes);
+    FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Write new bytes
-    DefaultDataSourceContext dataSource(
-        DataSource(newBytes, newBytesSize));
-    FileDataSinkContext dataSink(fpga::AddressType::NVMe,
-                                    fpga::MapType::NVMe, file, newBytesOffset,
-                                    newBytesSize);
+    DefaultDataSourceContext dataSource(DataSource(newBytes, newBytesSize));
+    FileDataSinkContext dataSink(filesystem, file, newBytesOffset,
+                                 newBytesSize);
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
   {  // Read
-    FileDataSourceContext dataSource(fpga::AddressType::NVMe,
-                                        fpga::MapType::NVMe, file, 0, n_bytes);
+    FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    SnapPipelineRunner runner(0);
+    SnapPipelineRunner runner(Card{0, 10});
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 

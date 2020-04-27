@@ -62,11 +62,11 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
   auto sourceAddress = dataSource.address(),
        destinationAddress = dataSink.address();
 
-  spdlog::debug("    Read: (Address: {:x}, Size: {}, Type: {}, Map: {})",
+  spdlog::debug("  Read:  (Address: 0x{:016x}   Size: {:>8d}   Type: {:<8}   Map: {:<12})",
                 sourceAddress.addr, sourceAddress.size,
                 SnapAction::addressTypeToString(sourceAddress.type),
                 SnapAction::mapTypeToString(sourceAddress.map));
-  spdlog::debug("    Write: (Address: {:x}, Size: {}, Type: {}, Map: {})",
+  spdlog::debug("  Write: (Address: 0x{:016x}   Size: {:>8d}   Type: {:<8}   Map: {:<12})",
                 destinationAddress.addr, destinationAddress.size,
                 SnapAction::addressTypeToString(destinationAddress.type),
                 SnapAction::mapTypeToString(destinationAddress.map));
@@ -75,6 +75,8 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
   action.executeJob(fpga::JobType::RunOperators, nullptr, sourceAddress,
                      destinationAddress, enable_mask, /* perfmon_enable = */ 1,
                      &output_size);
+
+  spdlog::debug("Result size: {}", output_size);
 
   for (auto &op : _operators) {
     op.finalize(action);

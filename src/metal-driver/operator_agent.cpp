@@ -5,6 +5,8 @@
 #include <spdlog/spdlog.h>
 
 #include "client_error.hpp"
+#include "filesystem_fuse_handler.hpp"
+#include "metal_fuse_operations.hpp"
 
 namespace metal {
 
@@ -42,9 +44,9 @@ OperatorAgent::OperatorAgent(Socket socket)
   _metalMountpoint = request.metal_mountpoint();
 
   if (request.has_metal_input_filename())
-    _internalInputFile = request.metal_input_filename();
+    _internalInputFilename = request.metal_input_filename();
   if (request.has_metal_output_filename())
-    _internalOutputFile = request.metal_output_filename();
+    _internalOutputFilename = request.metal_output_filename();
 }
 
 std::string OperatorAgent::resolvePath(std::string relativeOrAbsolutePath) {
@@ -88,28 +90,78 @@ void OperatorAgent::createOutputBuffer() {
   _outputBuffer = Buffer::createTempFileForSharedBuffer(true);
 }
 
-void OperatorAgent::setInputFile(const std::string &input) {
-  auto absPath = resolvePath(input);
+void OperatorAgent::setInputFile(const std::string &filename) {
+  if (_internalInputFile.first != 0) {
+    return;
+  }
+
+  auto absPath = resolvePath(filename);
 
   char actualpath[PATH_MAX];
-  char *ptr;
-  ptr = realpath(absPath.c_str(), actualpath);
+  char *ptr = realpath(absPath.c_str(), actualpath);
 
   if (ptr == nullptr) {
     throw ClientError(shared_from_this(), "Could not find input file.");
   }
 
   std::string realPath(ptr);
-  auto filesPrefix = _metalMountpoint + "/files/";
-  if (realPath.rfind(filesPrefix, 0) == 0) {
-    if (_internalInputFile.empty()) {
-      // TODO: Before we go ahead and read the file for the user, we should
-      // check access permissions
-      _internalInputFile = "/" + realPath.substr(filesPrefix.size());
-    }
+  if (realPath.rfind(_metalMountpoint, 0) == 0) {
+    // TODO: Before we go ahead and read the file for the user, we should
+    // check access permissions
+    setInternalInputFile(realPath.substr(_metalMountpoint.size()));
   } else {
     _agentLoadFile = realPath;
   }
+}
+
+void OperatorAgent::setInternalInputFile(const std::string &filename) {
+  auto [prefix, handler] = Context::resolveHandler(filename);
+
+  auto filesystemHandler =
+      std::dynamic_pointer_cast<FilesystemFuseHandler>(handler);
+  if (filesystemHandler == nullptr) {
+    throw std::runtime_error("An invalid input file path was provided.");
+  }
+
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(
+      filesystemHandler->filesystem());
+  if (fpgaFilesystem == nullptr) {
+    throw std::runtime_error("An invalid input file path was provided.");
+  }
+
+  auto internalFilename = filename.substr(prefix.size());
+  uint64_t inode_id;
+  if (mtl_open(fpgaFilesystem->context(), internalFilename.c_str(),
+               &inode_id) != MTL_SUCCESS) {
+    throw std::runtime_error("An invalid input file path was provided.");
+  }
+
+  _internalInputFile = std::make_pair(inode_id, fpgaFilesystem);
+}
+
+void OperatorAgent::setInternalOutputFile(const std::string &filename) {
+  auto [prefix, handler] = Context::resolveHandler(filename);
+
+  auto filesystemHandler =
+      std::dynamic_pointer_cast<FilesystemFuseHandler>(handler);
+  if (filesystemHandler == nullptr) {
+    throw std::runtime_error("An invalid output file path was provided.");
+  }
+
+  auto fpgaFilesystem = std::dynamic_pointer_cast<PipelineStorage>(
+      filesystemHandler->filesystem());
+  if (fpgaFilesystem == nullptr) {
+    throw std::runtime_error("An invalid output file path was provided.");
+  }
+
+  auto internalFilename = filename.substr(prefix.size());
+  uint64_t inode_id;
+  if (mtl_open(fpgaFilesystem->context(), internalFilename.c_str(),
+               &inode_id) != MTL_SUCCESS) {
+    throw std::runtime_error("An invalid output file path was provided.");
+  }
+
+  _internalOutputFile = std::make_pair(inode_id, fpgaFilesystem);
 }
 
 void OperatorAgent::sendRegistrationResponse(RegistrationResponse &message) {

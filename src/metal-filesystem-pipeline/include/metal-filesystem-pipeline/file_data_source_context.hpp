@@ -7,36 +7,28 @@
 
 namespace metal {
 
+class PipelineStorage;
+
 class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
     : public DefaultDataSourceContext {
-  // Common API
  public:
+  explicit FileDataSourceContext(std::shared_ptr<PipelineStorage> filesystem,
+                                 uint64_t inode_id, uint64_t offset,
+                                 uint64_t size = 0);
+  uint64_t reportTotalSize();
   bool endOfInput() const override;
 
  protected:
+  uint64_t loadExtents();
   void configure(SnapAction &action, bool initial) override;
   void finalize(SnapAction &action) override;
+  void mapExtents(SnapAction &action, fpga::ExtmapSlot slot, std::vector<mtl_file_extent> &extents);
+
+  uint64_t _inode_id;
+  std::shared_ptr<PipelineStorage> _filesystem;
 
   uint64_t _fileLength;
   std::vector<mtl_file_extent> _extents;
-
-  // API to be used from PipelineStorage (extent list-based)
- public:
-  explicit FileDataSourceContext(fpga::AddressType resource, fpga::MapType map,
-                                 std::vector<mtl_file_extent> &extents,
-                                 uint64_t offset, uint64_t size);
-
-  // API to be used when building file pipelines (filename-based)
- public:
-  explicit FileDataSourceContext(fpga::AddressType resource, fpga::MapType map,
-                                 std::string filename, uint64_t offset,
-                                 uint64_t size = 0);
-  uint64_t reportTotalSize();
-
- protected:
-  uint64_t loadExtents();
-
-  std::string _filename;
 };
 
 }  // namespace metal

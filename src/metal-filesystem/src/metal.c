@@ -23,50 +23,56 @@ typedef struct mtl_dir {
   mtl_directory_entry_head *next;
 } mtl_dir;
 
-MDB_env *env;
-mtl_storage_metadata metadata;
+typedef struct mtl_context {
+  MDB_env *env;
+  mtl_storage_metadata metadata;
+  mtl_storage_backend *storage;
+} mtl_context;
 
-int mtl_initialize(const char *metadata_store, mtl_storage_backend *storage) {
-  int res = storage->initialize();
+int mtl_initialize(mtl_context **context, const char *metadata_store,
+                   mtl_storage_backend *storage) {
+  mtl_context *ctx = (mtl_context *)malloc(sizeof(mtl_context));
+  ctx->storage = storage;
+
+  int res = ctx->storage->initialize(ctx->storage->context);
   if (res != MTL_SUCCESS) {
     return MTL_ERROR_INVALID_ARGUMENT;
   }
 
-  mdb_env_create(&env);
-  mdb_env_set_maxdbs(env, 4);  // inodes, extents, heap, meta
-  res = mdb_env_open(env, metadata_store, 0, 0644);
+  mdb_env_create(&ctx->env);
+  mdb_env_set_maxdbs(ctx->env, 4);  // inodes, extents, heap, meta
+  res = mdb_env_open(ctx->env, metadata_store, 0, 0644);
 
   if (res == MDB_INVALID) {
     return MTL_ERROR_INVALID_ARGUMENT;
   }
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(ctx->env, NULL, 0, &txn);
 
   mtl_create_root_directory(txn);
 
   // Query storage metadata
-  storage->get_metadata(&metadata);
+  storage->get_metadata(ctx->storage->context, &ctx->metadata);
 
   // Create a single extent spanning the entire storage (if necessary)
-  mtl_initialize_extents(txn, metadata.num_blocks);
+  mtl_initialize_extents(txn, ctx->metadata.num_blocks);
 
   // mtl_dump_extents(txn);
 
   mdb_txn_commit(txn);
 
+  *context = ctx;
+
   return MTL_SUCCESS;
 }
 
-int mtl_deinitialize(mtl_storage_backend *storage) {
-  storage->deinitialize();
+int mtl_deinitialize(mtl_context *context) {
+  context->storage->deinitialize(context->storage->context);
 
-  mtl_reset_extents_db();
-  mtl_reset_inodes_db();
-  mtl_reset_meta_db();
-  mtl_reset_heap_db();
+  mdb_env_close(context->env);
 
-  mdb_env_close(env);
+  free(context);
 
   return MTL_SUCCESS;
 }
@@ -124,9 +130,9 @@ int mtl_resolve_parent_dir_inode(MDB_txn *txn, const char *path,
   return res;
 }
 
-int mtl_get_inode(const char *path, mtl_inode *inode) {
+int mtl_get_inode(mtl_context *context, const char *path, mtl_inode *inode) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
 
   uint64_t inode_id;
   int res = mtl_resolve_inode(txn, path, &inode_id);
@@ -150,9 +156,9 @@ int mtl_get_inode(const char *path, mtl_inode *inode) {
   return res;
 }
 
-int mtl_open(const char *filename, uint64_t *inode_id) {
+int mtl_open(mtl_context *context, const char *filename, uint64_t *inode_id) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
 
   uint64_t id;
   int res = mtl_resolve_inode(txn, filename, &id);
@@ -164,9 +170,9 @@ int mtl_open(const char *filename, uint64_t *inode_id) {
   return res;
 }
 
-int mtl_opendir(const char *filename, mtl_dir **dir) {
+int mtl_opendir(mtl_context *context, const char *filename, mtl_dir **dir) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
 
   uint64_t inode_id;
   int res = mtl_resolve_inode(txn, filename, &inode_id);
@@ -190,7 +196,9 @@ int mtl_opendir(const char *filename, mtl_dir **dir) {
   return res;
 }
 
-int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size) {
+int mtl_readdir(mtl_context *context, mtl_dir *dir, char *buffer,
+                uint64_t size) {
+  (void)context;
   if (dir->next != NULL) {
     strncpy(buffer, (char *)dir->next + sizeof(mtl_directory_entry_head),
             size < dir->next->name_len ? size : dir->next->name_len);
@@ -215,16 +223,17 @@ int mtl_readdir(mtl_dir *dir, char *buffer, uint64_t size) {
   return MTL_COMPLETE;
 }
 
-int mtl_closedir(mtl_dir *dir) {
+int mtl_closedir(mtl_context *context, mtl_dir *dir) {
+  (void)context;
   free(dir);
   return MTL_SUCCESS;
 }
 
-int mtl_mkdir(const char *filename) {
+int mtl_mkdir(mtl_context *context, const char *filename, int mode) {
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   uint64_t parent_dir_inode_id;
   res = mtl_resolve_parent_dir_inode(txn, filename, &parent_dir_inode_id);
@@ -238,7 +247,7 @@ int mtl_mkdir(const char *filename) {
   base = basename(basec);
 
   uint64_t new_dir_inode_id;
-  res = mtl_create_directory_in_directory(txn, parent_dir_inode_id, base,
+  res = mtl_create_directory_in_directory(txn, parent_dir_inode_id, base, mode,
                                           &new_dir_inode_id);
   if (res != MTL_SUCCESS) {
     mdb_txn_abort(txn);
@@ -251,11 +260,11 @@ int mtl_mkdir(const char *filename) {
   return MTL_SUCCESS;
 }
 
-int mtl_rmdir(const char *filename) {
+int mtl_rmdir(mtl_context *context, const char *filename) {
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   uint64_t parent_dir_inode_id;
   res = mtl_resolve_parent_dir_inode(txn, filename, &parent_dir_inode_id);
@@ -289,11 +298,11 @@ int mtl_rmdir(const char *filename) {
   return MTL_SUCCESS;
 }
 
-int mtl_chown(const char *path, int uid, int gid) {
+int mtl_chown(mtl_context *context, const char *path, int uid, int gid) {
   int res;
 
   MDB_txn *txn;
-  res = mdb_txn_begin(env, NULL, 0, &txn);
+  res = mdb_txn_begin(context->env, NULL, 0, &txn);
 
   uint64_t inode_id;
   res = mtl_resolve_inode(txn, path, &inode_id);
@@ -324,11 +333,12 @@ int mtl_chown(const char *path, int uid, int gid) {
   return res;
 }
 
-int mtl_rename(const char *from_filename, const char *to_filename) {
+int mtl_rename(mtl_context *context, const char *from_filename,
+               const char *to_filename) {
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   uint64_t from_parent_dir_inode_id;
   res = mtl_resolve_parent_dir_inode(txn, from_filename,
@@ -376,11 +386,12 @@ int mtl_rename(const char *from_filename, const char *to_filename) {
   return MTL_SUCCESS;
 }
 
-int mtl_create(const char *filename, uint64_t *inode_id) {
+int mtl_create(mtl_context *context, const char *filename, int mode,
+               uint64_t *inode_id) {
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   uint64_t parent_dir_inode_id;
   res = mtl_resolve_parent_dir_inode(txn, filename, &parent_dir_inode_id);
@@ -394,7 +405,7 @@ int mtl_create(const char *filename, uint64_t *inode_id) {
   base = basename(basec);
 
   uint64_t file_inode_id;
-  res = mtl_create_file_in_directory(txn, parent_dir_inode_id, base,
+  res = mtl_create_file_in_directory(txn, parent_dir_inode_id, base, mode,
                                      &file_inode_id);
   if (res != MTL_SUCCESS) {
     mdb_txn_abort(txn);
@@ -410,13 +421,13 @@ int mtl_create(const char *filename, uint64_t *inode_id) {
   return MTL_SUCCESS;
 }
 
-int mtl_expand_inode(MDB_txn *txn, uint64_t inode_id,
+int mtl_expand_inode(mtl_context *context, MDB_txn *txn, uint64_t inode_id,
                      const mtl_file_extent *extents, uint64_t extents_length,
                      uint64_t size) {
   // Check how long we intend to write
   uint64_t write_end_bytes = size;
-  uint64_t write_end_blocks = write_end_bytes / metadata.block_size;
-  if (write_end_bytes % metadata.block_size) ++write_end_blocks;
+  uint64_t write_end_blocks = write_end_bytes / context->metadata.block_size;
+  if (write_end_bytes % context->metadata.block_size) ++write_end_blocks;
 
   uint64_t current_inode_length_blocks = 0;
   mtl_file_extent last_extent = {
@@ -439,8 +450,9 @@ int mtl_expand_inode(MDB_txn *txn, uint64_t inode_id,
                .length);  // TODO: We don't handle "no space left on device" yet
 
     uint64_t new_length =
-        write_end_bytes > current_inode_length_blocks * metadata.block_size
-            ? current_inode_length_blocks * metadata.block_size
+        write_end_bytes >
+                current_inode_length_blocks * context->metadata.block_size
+            ? current_inode_length_blocks * context->metadata.block_size
             : write_end_bytes;
 
     // If the new_extent offset matches the last_extent offset, we've extended
@@ -458,18 +470,18 @@ int mtl_expand_inode(MDB_txn *txn, uint64_t inode_id,
   return MTL_SUCCESS;
 }
 
-int mtl_write(mtl_storage_backend *storage, uint64_t inode_id,
-              const char *buffer, uint64_t size, uint64_t offset) {
+int mtl_write(mtl_context *context, uint64_t inode_id, const char *buffer,
+              uint64_t size, uint64_t offset) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   const mtl_inode *inode;
   const mtl_file_extent *extents;
   uint64_t extents_length;
   mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
 
-  int res =
-      mtl_expand_inode(txn, inode_id, extents, extents_length, offset + size);
+  int res = mtl_expand_inode(context, txn, inode_id, extents, extents_length,
+                             offset + size);
 
   if (res != MTL_SUCCESS) {
     mdb_txn_abort(txn);
@@ -478,21 +490,17 @@ int mtl_write(mtl_storage_backend *storage, uint64_t inode_id,
 
   mdb_txn_commit(txn);
 
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-  mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
-  storage->set_active_write_extent_list(extents, extents_length);
-  mdb_txn_abort(txn);
-
   // Copy the actual data to storage
-  storage->write(offset, buffer, size);
+  context->storage->write(context, context->storage->context, inode_id, offset,
+                          buffer, size);
 
   return MTL_SUCCESS;
 }
 
-uint64_t mtl_read(mtl_storage_backend *storage, uint64_t inode_id, char *buffer,
+uint64_t mtl_read(mtl_context *context, uint64_t inode_id, char *buffer,
                   uint64_t size, uint64_t offset) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
+  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
 
   uint64_t read_len = size;
 
@@ -508,20 +516,19 @@ uint64_t mtl_read(mtl_storage_backend *storage, uint64_t inode_id, char *buffer,
     read_len -= (offset + size) - inode->length;
   }
 
-  storage->set_active_read_extent_list(extents, extents_length);
-
   mdb_txn_abort(txn);
 
   if (read_len > 0)
     // Copy the actual data from storage
-    storage->read(offset, buffer, read_len);
+    context->storage->read(context, context->storage->context, inode_id, offset,
+                           buffer, read_len);
 
   return read_len;
 }
 
-int mtl_truncate(uint64_t inode_id, uint64_t offset) {
+int mtl_truncate(mtl_context *context, uint64_t inode_id, uint64_t offset) {
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   const mtl_inode *inode;
   const mtl_file_extent *extents;
@@ -529,7 +536,8 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
   mtl_load_file(txn, inode_id, &inode, &extents, &extents_length);
 
   if (offset >= inode->length) {
-    int res = mtl_expand_inode(txn, inode_id, extents, extents_length, offset);
+    int res = mtl_expand_inode(context, txn, inode_id, extents, extents_length,
+                               offset);
     if (res != MTL_SUCCESS) {
       mdb_txn_abort(txn);
       return res;
@@ -538,8 +546,8 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
     // Figure out how many extents we can keep
     uint64_t previous_extent_end = 0;
     for (uint64_t i = 0; i < extents_length; ++i) {
-      uint64_t extent_end =
-          previous_extent_end + (extents[i].length * metadata.block_size);
+      uint64_t extent_end = previous_extent_end +
+                            (extents[i].length * context->metadata.block_size);
 
       if (previous_extent_end > offset) {
         // The current extent has to be freed
@@ -551,8 +559,8 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
 
         uint64_t new_extent_length_bytes = offset - previous_extent_end;
         uint64_t new_extent_length_blocks =
-            new_extent_length_bytes / metadata.block_size;
-        if (new_extent_length_bytes % metadata.block_size)
+            new_extent_length_bytes / context->metadata.block_size;
+        if (new_extent_length_bytes % context->metadata.block_size)
           ++new_extent_length_blocks;
 
         if (new_extent_length_blocks) {
@@ -578,12 +586,12 @@ int mtl_truncate(uint64_t inode_id, uint64_t offset) {
   return MTL_SUCCESS;
 }
 
-int mtl_unlink(const char *filename) {
+int mtl_unlink(mtl_context *context, const char *filename) {
   // We don't (yet?) support hard links, so we can just remove the inode
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, 0, &txn);
+  mdb_txn_begin(context->env, NULL, 0, &txn);
 
   char *basec, *base;
   basec = strdup(filename);
@@ -620,20 +628,13 @@ int mtl_unlink(const char *filename) {
   return MTL_SUCCESS;
 }
 
-int mtl_load_extent_list(const char *filename, mtl_file_extent *extents,
-                         uint64_t *extents_length, uint64_t *file_length) {
+int mtl_load_extent_list(mtl_context *context, uint64_t inode_id,
+                         mtl_file_extent *extents, uint64_t *extents_length,
+                         uint64_t *file_length) {
   int res;
 
   MDB_txn *txn;
-  mdb_txn_begin(env, NULL, MDB_RDONLY, &txn);
-
-  // Resolve inode
-  uint64_t inode_id;
-  res = mtl_resolve_inode(txn, filename, &inode_id);
-  if (res != MTL_SUCCESS) {
-    mdb_txn_abort(txn);
-    return res;
-  }
+  mdb_txn_begin(context->env, NULL, MDB_RDONLY, &txn);
 
   // Load extents
   const mtl_inode *inode;

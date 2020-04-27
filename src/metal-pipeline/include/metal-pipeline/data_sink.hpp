@@ -21,6 +21,10 @@ class METAL_PIPELINE_API DataSink {
       : DataSink(reinterpret_cast<uint64_t>(address), size,
                  fpga::AddressType::Host, fpga::MapType::None) {}
 
+  DataSink withSize(uint64_t newSize) {
+    return DataSink(_address, newSize, _addressType, _mapType);
+  }
+
   fpga::Address address() const {
     return fpga::Address{
         _address,

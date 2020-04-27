@@ -50,7 +50,6 @@ OperatorFactory::OperatorFactory(const std::string &imageJson)
     auto operatorSpec =
         std::make_unique<OperatorSpecification>(key, currentOperator.dump());
 
-    spdlog::info("Found operator {}", operatorSpec->id());
     _operatorSpecifications.emplace(
         std::make_pair(operatorSpec->id(), std::move(operatorSpec)));
   }

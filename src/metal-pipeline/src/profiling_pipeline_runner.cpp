@@ -185,13 +185,13 @@ std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource,
 
   std::stringstream result;
 
-  result << "STREAM\tBYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER "
+  result << "STREAM  BYTES TRANSFERRED  ACTIVE CYCLES  DATA WAIT      CONSUMER "
             "WAIT  TOTAL CYCLES  MiB/s"
          << std::endl;
 
   if (!dataSource) {
     result << string_format(
-                  "input\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
+                  "input   %-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
                   "%-12lu  %-4.2f",
                   _results.inputDataByteCount, _results.inputTransferCycleCount,
                   input_transfer_cycle_percent, _results.inputMasterIdleCount,
@@ -203,7 +203,7 @@ std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource,
 
   if (!dataSink) {
     result << string_format(
-                  "output\t%-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
+                  "output  %-17lu  %-9lu%3.0f%%  %-9lu%3.0f%%  %-9lu%3.0f%%  "
                   "%-12lu  %-4.2f",
                   _results.outputDataByteCount,
                   _results.outputTransferCycleCount,

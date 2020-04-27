@@ -23,7 +23,7 @@ class DatagenOperator {
 
 class MetalCatOperator {
  public:
-  static std::string id() { return "metal_cat"; }
+  static std::string id() { return "metal-cat"; }
   static bool isMetalCatAgent(const OperatorAgent &agent);
   static void validate(OperatorAgent &agent);
   static bool isProfilingEnabled(OperatorAgent &agent);

@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include <metal-pipeline/card.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
 namespace metal {
@@ -16,10 +17,10 @@ class DataSinkContext;
 // Runs a pipeline one or more times
 class METAL_PIPELINE_API SnapPipelineRunner {
  public:
-  SnapPipelineRunner(int card, std::shared_ptr<Pipeline> pipeline)
+  SnapPipelineRunner(Card card, std::shared_ptr<Pipeline> pipeline)
       : _pipeline(std::move(pipeline)), _initialized(false), _card(card) {}
   template <typename... Ts>
-  SnapPipelineRunner(Ts... userOperators, int card)
+  SnapPipelineRunner(Card card, Ts... userOperators)
       : SnapPipelineRunner(
             card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
@@ -49,7 +50,7 @@ class METAL_PIPELINE_API SnapPipelineRunner {
 
   std::shared_ptr<Pipeline> _pipeline;
   bool _initialized;
-  int _card;
+  Card _card;
 };
 
 }  // namespace metal

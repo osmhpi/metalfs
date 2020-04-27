@@ -7,8 +7,9 @@
 namespace metal {
 
 class FileDataSourceContext;
-class Pipeline;
+class FilesystemContext;
 class OperatorAgent;
+class Pipeline;
 
 class AgentDataSourceContext : public FileDataSourceContext {
  public:

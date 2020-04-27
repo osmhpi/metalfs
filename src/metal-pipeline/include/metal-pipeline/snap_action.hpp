@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include <metal-pipeline/card.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
 
 struct snap_action;
@@ -13,7 +14,7 @@ namespace metal {
 
 class METAL_PIPELINE_API SnapAction {
  public:
-  explicit SnapAction(int card = 0);
+  explicit SnapAction(Card card = {0, 10});
   SnapAction(const SnapAction &other) = delete;
   SnapAction(SnapAction &&other) noexcept;
   virtual ~SnapAction();
@@ -36,6 +37,8 @@ class METAL_PIPELINE_API SnapAction {
 
   struct snap_action *_action;
   struct snap_card *_card;
+
+  int _timeout;
 };
 
 }  // namespace metal

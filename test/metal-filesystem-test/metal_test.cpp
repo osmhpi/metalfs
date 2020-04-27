@@ -7,99 +7,99 @@ extern "C" {
 namespace {
 
 TEST_F(MetalTest, CreatesADirectory) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
 }
 
 TEST_F(MetalTest, CreatesANestedDirectory) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo/bar"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo/bar", 0755));
 }
 
 TEST_F(MetalTest, FailsWhenCreatingAnExistingDirectory) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
-  EXPECT_EQ(MTL_ERROR_EXISTS, mtl_mkdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
+  EXPECT_EQ(MTL_ERROR_EXISTS, mtl_mkdir(_context, "/foo", 0755));
 }
 
 TEST_F(MetalTest, RemovesADirectory) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
-  EXPECT_EQ(MTL_SUCCESS, mtl_rmdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
+  EXPECT_EQ(MTL_SUCCESS, mtl_rmdir(_context, "/foo"));
 }
 
 TEST_F(MetalTest, FailsWhenRemovingNonEmptyDirectory) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
-  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir("/foo/bar"));
-  EXPECT_EQ(MTL_ERROR_NOTEMPTY, mtl_rmdir("/foo"));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
+  EXPECT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo/bar", 0755));
+  EXPECT_EQ(MTL_ERROR_NOTEMPTY, mtl_rmdir(_context, "/foo"));
 }
 
 TEST_F(MetalTest, CreatesAFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create(_context, "/hello_world.txt", 0755, NULL));
 }
 
 TEST_F(MetalTest, OpensACreatedFile) {
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", NULL));
-  EXPECT_EQ(MTL_SUCCESS, mtl_open("/hello_world.txt", NULL));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create(_context, "/hello_world.txt", 0755, NULL));
+  EXPECT_EQ(MTL_SUCCESS, mtl_open(_context, "/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, FailsWhenOpeningNonExistentFile) {
-  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open("/hello_world.txt", NULL));
+  EXPECT_EQ(MTL_ERROR_NOENTRY, mtl_open(_context, "/hello_world.txt", NULL));
 }
 
 TEST_F(MetalTest, ListsDirectoryContents) {
-  ASSERT_EQ(MTL_SUCCESS, mtl_mkdir("/foo"));
+  ASSERT_EQ(MTL_SUCCESS, mtl_mkdir(_context, "/foo", 0755));
 
   mtl_dir *dir;
-  ASSERT_EQ(MTL_SUCCESS, mtl_opendir("/", &dir));
+  ASSERT_EQ(MTL_SUCCESS, mtl_opendir(_context, "/", &dir));
 
   char current_filename[FILENAME_MAX];
 
-  EXPECT_EQ(MTL_SUCCESS,
-            mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(_context, dir, current_filename,
+                                     sizeof(current_filename)));
   EXPECT_STREQ(".", current_filename);
 
-  EXPECT_EQ(MTL_SUCCESS,
-            mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(_context, dir, current_filename,
+                                     sizeof(current_filename)));
   EXPECT_STREQ("..", current_filename);
 
-  EXPECT_EQ(MTL_SUCCESS,
-            mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_SUCCESS, mtl_readdir(_context, dir, current_filename,
+                                     sizeof(current_filename)));
   EXPECT_STREQ("foo", current_filename);
 
-  EXPECT_EQ(MTL_COMPLETE,
-            mtl_readdir(dir, current_filename, sizeof(current_filename)));
+  EXPECT_EQ(MTL_COMPLETE, mtl_readdir(_context, dir, current_filename,
+                                      sizeof(current_filename)));
 
-  EXPECT_EQ(MTL_SUCCESS, mtl_closedir(dir));
+  EXPECT_EQ(MTL_SUCCESS, mtl_closedir(_context, dir));
 }
 
 TEST_F(MetalTest, WritesToAFile) {
   uint64_t inode;
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create(_context, "/hello_world.txt", 0755, &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
-                                   test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_write(_context, inode, test.c_str(), test.size() + 1, 0));
 }
 
 TEST_F(MetalTest, ReadsWrittenBytes) {
   uint64_t inode;
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create(_context, "/hello_world.txt", 0755, &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
-                                   test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_write(_context, inode, test.c_str(), test.size() + 1, 0));
 
   char output[256];
   EXPECT_EQ(test.size() + 1,
-            mtl_read(&in_memory_storage, inode, output, sizeof(output), 0));
+            mtl_read(_context, inode, output, sizeof(output), 0));
 
   EXPECT_EQ(0, strncmp(test.c_str(), output, test.size() + 1));
 }
 
 TEST_F(MetalTest, TruncatesAFile) {
   uint64_t inode;
-  EXPECT_EQ(MTL_SUCCESS, mtl_create("/hello_world.txt", &inode));
+  EXPECT_EQ(MTL_SUCCESS, mtl_create(_context, "/hello_world.txt", 0755, &inode));
   std::string test = "hello world!";
-  EXPECT_EQ(MTL_SUCCESS, mtl_write(&in_memory_storage, inode, test.c_str(),
-                                   test.size() + 1, 0));
+  EXPECT_EQ(MTL_SUCCESS,
+            mtl_write(_context, inode, test.c_str(), test.size() + 1, 0));
 
-  EXPECT_EQ(MTL_SUCCESS, mtl_truncate(inode, 0));
+  EXPECT_EQ(MTL_SUCCESS, mtl_truncate(_context, inode, 0));
 }
 
 }  // namespace

@@ -21,6 +21,10 @@ class METAL_PIPELINE_API DataSource {
       : DataSource(reinterpret_cast<uint64_t>(address), size,
                    fpga::AddressType::Host, fpga::MapType::None) {}
 
+  DataSource withSize(uint64_t newSize) {
+    return DataSource(_address, newSize, _addressType, _mapType);
+  }
+
   fpga::Address address() const {
     return fpga::Address{
         _address,
