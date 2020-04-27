@@ -1,12 +1,19 @@
 #pragma once
 
-#include <snap_action_metal.h>
 #include <metal/stream.h>
+#include <snap_action_metal.h>
+
 #include "mtl_definitions.h"
 #include "mtl_extmap.h"
 
 namespace metal {
 namespace fpga {
+
+const uint64_t DRAMBaseOffset = 0x8000000000000000;
+
+const uint64_t NVMeDRAMBaseOffset = 0x200000000;  // According to https://github.com/open-power/snap/blob/master/hardware/doc/NVMe.md
+const uint64_t NVMeDRAMReadOffset  = 0;
+const uint64_t NVMeDRAMWriteOffset = (1u << 31); // 2 GiB
 
 typedef struct axi_datamover_status {
     ap_uint<8> data;
@@ -101,15 +108,6 @@ struct TransferElement {
     snap_bool_t last;
 };
 
-void issue_partial_transfers(const Address& transfer
-    , mtl_extmap_t &dram_extentmap
-    , hls::stream<TransferElement> &partial_transfers
-#ifdef NVME_ENABLED
-    , mtl_extmap_t &nvme_extentmap
-    , hls::stream<uint64_t> &nvme_transfers
-#endif
-);
-
 void load_nvme_data(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out
 #ifdef NVME_ENABLED
     , hls::stream<uint64_t> &nvme_transfers
@@ -126,9 +124,25 @@ void write_nvme_data(hls::stream<TransferElement> &in
 #endif
 );
 
+enum class TransferType {
+    Read,
+    Write
+};
+
+template<TransferType T>
+void issue_partial_transfers(const Address& transfer
+    , mtl_extmap_t &dram_extentmap
+    , hls::stream<TransferElement> &partial_transfers
+#ifdef NVME_ENABLED
+    , mtl_extmap_t &nvme_extentmap
+    , hls::stream<uint64_t> &nvme_transfers
+#endif
+);
+
 void transfer_to_stream(hls::stream<TransferElement> &in, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_stream_t &dm_sts);
 void transfer_from_stream(hls::stream<TransferElement> &in, hls::stream<TransferElement> &out, axi_datamover_command_stream_t &dm_cmd, axi_datamover_status_ibtt_stream_t &dm_sts, uint64_t *size);
 
-
 }  // namespace fpga
 }  // namespace metal
+
+#include "mtl_op_mem.hpp"

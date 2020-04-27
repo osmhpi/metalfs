@@ -15,7 +15,7 @@ TEST_CASE("Issue partial transfer") {
     xfer.map = MapType::None;
     xfer.size = StorageBlockSize;
 
-    issue_partial_transfers(xfer, dram_read_extmap, partial_transfers);
+    issue_partial_transfers<TransferType::Read>(xfer, dram_read_extmap, partial_transfers);
 
     REQUIRE(partial_transfers.size() == 1);
 
