@@ -1,5 +1,6 @@
-export SNAP_TARGET = $(shell basename $(METAL_TARGET))
-export LOGS_DIR    = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/logs
+export SNAP_TARGET 	       = $(shell basename $(METAL_TARGET))
+export LOGS_DIR            = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/logs
+export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/operators
 
 # Define underscored variables as not to interfere with externally set values
 export _PSLSE_ROOT  = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/pslse
