@@ -32,7 +32,12 @@ class UserOperatorSpecificationParser {
   optionDefinitions() {
     std::unordered_map<std::string, OperatorOptionDefinition> result;
 
-    for (const auto& option : _manifest["options"].items()) {
+    auto& options = _manifest["options"];
+
+    // Optional attribute
+    if (options.is_null()) return result;
+
+    for (const auto& option : options.items()) {
       auto& key = option.key();
       auto& value = option.value();
 

@@ -43,16 +43,23 @@ OperatorFactory::OperatorFactory(const std::string &imageJson)
     throw std::runtime_error("Unexpected input");
   }
 
-  for (const auto &operatorEntry : image["operators"].items()) {
-    auto &key = operatorEntry.key();
-    auto &currentOperator = operatorEntry.value();
+  auto &operators = image["operators"];
 
-    auto operatorSpec =
-        std::make_unique<OperatorSpecification>(key, currentOperator.dump());
+  if (!operators.is_null()) {
+    for (const auto &operatorEntry : image["operators"].items()) {
+      auto &key = operatorEntry.key();
+      auto &currentOperator = operatorEntry.value();
 
-    _operatorSpecifications.emplace(
-        std::make_pair(operatorSpec->id(), std::move(operatorSpec)));
+      auto operatorSpec =
+          std::make_unique<OperatorSpecification>(key, currentOperator.dump());
+
+      _operatorSpecifications.emplace(
+          std::make_pair(operatorSpec->id(), std::move(operatorSpec)));
+    }
   }
+
+  _isDRAMEnabled = image["target"]["dram"].get<bool>();
+  _isNVMeEnabled = image["target"]["nvme"].get<bool>();
 }
 
 Operator OperatorFactory::createOperator(std::string id) {
