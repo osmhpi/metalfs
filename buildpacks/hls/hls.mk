@@ -65,7 +65,7 @@ help:
 
 build/devimage.json:
 	@mkdir -p build
-	@echo '{ "streamBytes": $(STREAM_BYTES), "target": "$(DEVIMAGE_TARGET)", "operators": { "$(WRAPPER)": "./.." } }' > build/devimage.json
+	@echo '{ "streamBytes": $(STREAM_BYTES), "target": "$(DEVIMAGE_TARGET)", "operators": { "$(WRAPPER)": ".." } }' > build/devimage.json
 
 devmodel: build/devimage.json
 	@make -f $(METAL_ROOT)/buildpacks/image/image.mk IMAGE_JSON=$(PWD)/build/devimage.json model
