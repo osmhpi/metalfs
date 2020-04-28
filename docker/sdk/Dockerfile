@@ -5,6 +5,7 @@ FROM metalfs/sdk-base:$VIVADO_EDITION AS build
 ARG PSL
 
 ADD . /src/metal_fs
+
 RUN cd /src/metal_fs \
  && mkdir build \
  && cd build \
@@ -13,7 +14,8 @@ RUN cd /src/metal_fs \
     -DOPTION_BUILD_TESTS=OFF \
     -DPSL_VERSION=$PSL \
     .. \
- && make && make install
+ && make -j8 \
+ && make install
 
 FROM metalfs/sdk-base:$VIVADO_EDITION
 
@@ -47,6 +49,8 @@ COPY --from=build /usr/local/lib/cmake /usr/local/lib/
 COPY --from=build /usr/local/share/metal_fs /usr/local/share/metal_fs
 COPY --from=build /usr/local/share/snap /usr/local/share/snap
 COPY --from=build /usr/local/share/cxl /usr/local/share/cxl
+
+RUN ldconfig
 
 ADD . /sdk/metal_fs
 ENV METAL_ROOT=/sdk/metal_fs
