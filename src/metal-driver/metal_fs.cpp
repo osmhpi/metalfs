@@ -119,6 +119,11 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
+  if (conf.metadata_dir == nullptr) {
+    spdlog::error("No metadata directory provided on startup (e.g. --metadata ./metadata)");
+    return 1;
+  }
+
   if (conf.timeout == 0) {
     conf.timeout = 2;
   }
