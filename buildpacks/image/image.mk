@@ -3,10 +3,10 @@ $(info You have specified a wrong $$METAL_ROOT.)
 $(error Please make sure that $$METAL_ROOT is set up correctly.)
 endif
 
-export IMAGE_BUILD_DIR = $(PWD)/build
-export IMAGE_JSON      = $(PWD)/image.json
-export IMAGE_TARGET    = $(IMAGE_BUILD_DIR)/image.json
-export METAL_TARGET    = $(shell jq -r .target $(IMAGE_JSON))
+export IMAGE_BUILD_DIR  = $(PWD)/build
+export IMAGE_JSON      ?= $(PWD)/image.json
+export IMAGE_TARGET     = $(IMAGE_BUILD_DIR)/image.json
+export METAL_TARGET     = $(shell jq -r .target $(IMAGE_JSON))
 
 targets   = overlay model sim image
 operators = $(shell $(METAL_ROOT)/buildpacks/image/scripts/resolve_operators $(IMAGE_JSON) | cut -f 2 | uniq)
@@ -23,6 +23,7 @@ all: help
 #  - clean
 # As well as the following variables:
 #  - LOGS_DIR
+#  - OPERATORS_BUILD_DIR
 include $(METAL_ROOT)/targets/$(METAL_TARGET)/../target.mk
 
 # Additional dependencies:
@@ -46,7 +47,8 @@ $(LOGS_DIR):
 # Operators
 $(operators): .FORCE $(LOGS_DIR)
 	@echo "                        Generating IP from Metal FS Operator $(@F)"
-	@make -C $@ ip >> $(LOGS_DIR)/operator_$(@F)_make.log; op_ret=$$?; \
+	@mkdir -p $(OPERATORS_BUILD_DIR)/$(@F)
+	@make -C $@ BUILD_DIR="$(OPERATORS_BUILD_DIR)/$(@F)" ip >> $(LOGS_DIR)/operator_$(@F)_make.log; op_ret=$$?; \
 	if [ $${op_ret} -ne 0 ]; then \
 		echo "                        Error: please look into $(LOGS_DIR)/operator_$(@F)_make.log"; exit -1; \
 	fi

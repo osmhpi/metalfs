@@ -18,6 +18,8 @@ class METAL_PIPELINE_API OperatorFactory {
   static OperatorFactory fromManifestString(const std::string &manifest);
 
   Operator createOperator(std::string id);
+  bool isDRAMEnabled() const { return _isDRAMEnabled; }
+  bool isNVMeEnabled() const { return _isNVMeEnabled; }
 
   size_t size() const { return _operatorSpecifications.size(); }
   const std::unordered_map<std::string,
@@ -30,6 +32,8 @@ class METAL_PIPELINE_API OperatorFactory {
   explicit OperatorFactory(const std::string &image_json);
   std::unordered_map<std::string, std::shared_ptr<const OperatorSpecification>>
       _operatorSpecifications;
+  bool _isDRAMEnabled;
+  bool _isNVMeEnabled;
 };
 
 }  // namespace metal

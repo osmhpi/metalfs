@@ -80,12 +80,14 @@ void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
 
   int rc = snap_action_sync_execute_job(_action, &cjob, _timeout);
 
-  if (rc != 0)
+  if (rc != 0) {
     throw std::runtime_error("Error starting job: " +
                              snapReturnCodeToString(rc));
+  }
 
-  if (cjob.retc != SNAP_RETC_SUCCESS)
+  if (cjob.retc != SNAP_RETC_SUCCESS) {
     throw std::runtime_error("Job was unsuccessful");
+  }
 
   if (directDataOut0) *directDataOut0 = mjob.direct_data[2];
   if (directDataOut1) *directDataOut1 = mjob.direct_data[3];

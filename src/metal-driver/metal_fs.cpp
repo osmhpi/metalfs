@@ -119,6 +119,11 @@ int main(int argc, char *argv[]) {
     spdlog::set_level(spdlog::level::warn);
   }
 
+  if (conf.metadata_dir == nullptr) {
+    spdlog::error("No metadata directory provided on startup (e.g. --metadata ./metadata)");
+    return 1;
+  }
+
   if (conf.timeout == 0) {
     conf.timeout = 2;
   }
@@ -145,21 +150,25 @@ int main(int argc, char *argv[]) {
     server = std::make_unique<Server>(factory);
 
     Context::addHandler("/.hello", std::make_unique<SocketFuseHandler>(
-                                       server->socketFilename()));
+                                      server->socketFilename()));
     Context::addHandler("/operators", std::make_unique<OperatorFuseHandler>(
                                           std::move(operators)));
 
-    auto dramFilesystem = std::make_shared<PipelineStorage>(
+    if (factory->isDRAMEnabled()) {
+      auto dramFilesystem = std::make_shared<PipelineStorage>(
         Card{conf.card, conf.timeout}, fpga::AddressType::CardDRAM,
         fpga::MapType::DRAM, metadataDirDRAM, true);
-    Context::addHandler(
-        "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
+      Context::addHandler(
+          "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
-    auto nvmeFilesystem = std::make_shared<PipelineStorage>(
-        Card{conf.card, conf.timeout}, fpga::AddressType::NVMe,
-        fpga::MapType::DRAMAndNVMe, metadataDir, false, dramFilesystem);
-    Context::addHandler(
-        "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
+      if (factory->isNVMeEnabled()) {
+        auto nvmeFilesystem = std::make_shared<PipelineStorage>(
+          Card{conf.card, conf.timeout}, fpga::AddressType::NVMe,
+          fpga::MapType::DRAMAndNVMe, metadataDir, false, dramFilesystem);
+        Context::addHandler(
+            "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
+      }
+    }
   } else {
     auto inMemoryFilesystem =
         std::make_shared<InMemoryFilesystem>(metadataDir, true);

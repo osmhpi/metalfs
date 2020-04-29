@@ -4,10 +4,10 @@ image_json=$1
 image_basedir=$(dirname $image_json)
 
 jq -r ".operators | to_entries | .[] | [.key, .value] | join(\" \")" $image_json | while read name source; do
-    # Check if source starts with "./" using sh syntax
-    if case $source in ./*) ;; *) false;; esac; then
-        # Operator source is a relative path
-        operator_json=$image_basedir/$source/operator.json
+
+    if /bin/sh -c "cd $image_basedir && test -f $source/operator.json"; then
+        # Operator source is a path
+        operator_json=$(/bin/sh -c "cd $image_basedir && realpath $source/operator.json")
     else
         # Operator source is the name of an npm package
         npm_root=$(/bin/sh -c "cd $image_basedir && npm root")

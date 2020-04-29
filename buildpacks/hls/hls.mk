@@ -7,6 +7,7 @@ SOLUTION_DIR  ?= hls_solution
 FPGACHIP         ?= xcku035-ffva1156-2-e
 HLS_ACTION_CLOCK ?= 4
 STREAM_BYTES     ?= $(shell jq -r '.devImage.streamBytes // 8' operator.json)
+DEVIMAGE_TARGET  ?= SNAP/WebPACK_Sim
 
 HLS_CFLAGS += \
 	-std=c++11 \
@@ -46,8 +47,31 @@ ip: $(BUILD_DIR)/$(ip_dir)
 test: $(BUILD_DIR)/run_hls_csim_script.tcl $(srcs)
 	@cd $(BUILD_DIR) && vivado_hls -f run_hls_csim_script.tcl
 
-clean: 
+clean:
 	@rm -rf $(BUILD_DIR)
+
+help:
+	@echo "Targets in the HLS Operator Buildpack";
+	@echo "=====================================";
+	@echo "* ip             Build Vivado IP";
+	@echo "* test           Run HLS testbench";
+	@echo "* devmodel       Build a simulation model containing only the current operator";
+	@echo "* sim            Start a simulation with the devmodel";
+	@echo "* clean          Remove the build directory";
+	@echo "* help           Print this message";
+	@echo;
+
+# Development image targets
+
+build/devimage.json:
+	@mkdir -p build
+	@echo '{ "streamBytes": $(STREAM_BYTES), "target": "$(DEVIMAGE_TARGET)", "operators": { "$(WRAPPER)": ".." } }' > build/devimage.json
+
+devmodel: build/devimage.json
+	@make -f $(METAL_ROOT)/buildpacks/image/image.mk IMAGE_JSON=$(PWD)/build/devimage.json model
+
+sim: build/devimage.json
+	@make -f $(METAL_ROOT)/buildpacks/image/image.mk IMAGE_JSON=$(PWD)/build/devimage.json sim
 
 # Special sauce: we want to re-make certain targets whenever $HLS_CFLAGS changes.
 include $(METAL_ROOT)/third_party/make-utils/gmsl

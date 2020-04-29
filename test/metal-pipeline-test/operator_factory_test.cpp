@@ -10,7 +10,7 @@ TEST(OperatorFactoryTest, DetectsOperatorsInJSON) {
       "\"description\": \"Transform ASCII strings to lower- or uppercase "
       "(default)\", \"options\": { \"lowercase\": { \"short\": \"l\", "
       "\"type\": \"bool\", \"description\": \"Transform to lowercase\", "
-      "\"offset\": 256 } } } } }";
+      "\"offset\": 256 } } } }, \"target\": { \"dram\": false, \"nvme\": false } }";
 
   auto factory = OperatorFactory::fromManifestString(json);
 

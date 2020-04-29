@@ -33,7 +33,7 @@ set(sources
     agent_data_source_context.cpp
     agent_data_source_context.hpp
     agent_pool.cpp
-    agent_pool.hpp 
+    agent_pool.hpp
     client_error.hpp
     combined_fuse_handler.cpp
     combined_fuse_handler.hpp
@@ -43,7 +43,7 @@ set(sources
     fuse_handler.hpp
     metal_fs.cpp
     metal_fuse_operations.cpp
-    metal_fuse_operations.hpp 
+    metal_fuse_operations.hpp
     operator_agent.cpp
     operator_agent.hpp
     operator_fuse_handler.cpp
@@ -55,7 +55,7 @@ set(sources
     pseudo_operators.cpp
     pseudo_operators.hpp
     server.cpp
-    server.hpp 
+    server.hpp
     socket_fuse_handler.cpp
     socket_fuse_handler.hpp
 )
