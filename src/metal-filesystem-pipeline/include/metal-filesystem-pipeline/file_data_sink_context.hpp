@@ -20,7 +20,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
  public:
   explicit FileDataSinkContext(std::shared_ptr<PipelineStorage> filesystem,
                                uint64_t inode_id, uint64_t offset,
-                               uint64_t size);
+                               uint64_t size, bool truncateOnFinalize = false);
 
   void prepareForTotalSize(uint64_t size);
 
@@ -32,6 +32,7 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSinkContext
   void mapExtents(SnapAction &action, fpga::ExtmapSlot slot, std::vector<mtl_file_extent> &extents);
 
   uint64_t _inode_id;
+  bool _truncateOnFinalize;
   std::vector<mtl_file_extent> _extents;
   std::shared_ptr<PipelineStorage> _filesystem;
   uint64_t _cachedTotalSize;

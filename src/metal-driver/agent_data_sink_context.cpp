@@ -15,7 +15,7 @@ AgentDataSinkContext::AgentDataSinkContext(std::shared_ptr<OperatorAgent> agent,
                                            std::shared_ptr<Pipeline> pipeline,
                                            bool skipReceivingProcessingRequest)
     : FileDataSinkContext(agent->internalOutputFile().second,
-                          agent->internalOutputFile().first, 0, BufferSize),
+                          agent->internalOutputFile().first, 0, BufferSize, true),
       _agent(agent),
       _pipeline(pipeline),
       _skipReceivingProcessingRequest(skipReceivingProcessingRequest) {}

@@ -16,12 +16,13 @@ namespace metal {
 
 FileDataSinkContext::FileDataSinkContext(
     std::shared_ptr<PipelineStorage> filesystem, uint64_t inode_id,
-    uint64_t offset, uint64_t size)
+    uint64_t offset, uint64_t size, bool truncateOnFinalize)
     : DefaultDataSinkContext(
           DataSink(offset, size,
                    filesystem ? filesystem->type() : fpga::AddressType::Host,
                    filesystem ? filesystem->map() : fpga::MapType::None)),
       _inode_id(inode_id),
+      _truncateOnFinalize(truncateOnFinalize),
       _filesystem(filesystem),
       _cachedTotalSize(0) {
   if (_inode_id == 0) {
@@ -104,15 +105,15 @@ void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize,
       DataSink(_dataSink.address().addr + outputSize, _dataSink.address().size,
                _dataSink.address().type, _dataSink.address().map);
 
-  // if (endOfInput) {
-  //     if (_inode_id && _dataSink.address().addr < _cachedTotalSize) {
-  //        spdlog::trace("Truncating file to size {}",
-  //        _dataSink.address().addr); int res =
-  //        mtl_truncate(_filesystem->context(), _inode_id,
-  //        _dataSink.address().addr); if (res != MTL_SUCCESS)
-  //          throw std::runtime_error("Unable to update file length");
-  //     }
-  // }
+  if (endOfInput) {
+    if (_inode_id && _truncateOnFinalize) {
+      spdlog::trace("Truncating file to size {}", _dataSink.address().addr);
+      int res = mtl_truncate(_filesystem->context(), _inode_id,
+                             _dataSink.address().addr);
+      if (res != MTL_SUCCESS)
+        throw std::runtime_error("Unable to update file length");
+    }
+  }
 }
 
 void FileDataSinkContext::loadExtents() {
