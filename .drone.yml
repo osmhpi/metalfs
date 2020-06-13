@@ -4,20 +4,58 @@ type: docker
 name: default
 
 steps:
+
+- name: docker metalfs/sdk-base
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    auto_tag: true
+    auto_tag_suffix: webpack
+    repo: metalfs/sdk-base
+    dockerfile: docker/sdk-base/Dockerfile
+    build_args:
+      - VIVADO_EDITION=webpack
+  when:
+    event:
+    - tag
+
+- name: docker metalfs/sdk
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    auto_tag: true
+    auto_tag_suffix: webpack-psl8
+    repo: metalfs/sdk
+    dockerfile: docker/sdk/Dockerfile
+    build_args:
+      - PSL=PSL8
+      - VIVADO_EDITION=webpack
+  when:
+    event:
+    - tag
+  depends_on:
+    - docker metalfs/sdk-base
+
 - name: software-build
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
 
 - name: snap-action
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - cd example/src
     - npm install --production
     - bash -c "make hw_project"
 
 - name: snap-action-testbench
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - cd example/src
     - bash -c "make test_target"
@@ -25,7 +63,7 @@ steps:
     - snap-action
 
 - name: example-test-simulation
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - cd example/src
     - bash -c "make model"
@@ -38,21 +76,21 @@ steps:
     - snap-action-testbench
 
 - name: filesystem-test
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - cd build && ./metal-filesystem-test
   depends_on:
     - software-build
 
 - name: pipeline-test
-  image: metalfs/sdk-base:webpack-psl8
+  image: metalfs/sdk-base:webpack
   commands:
     - cd build && ./metal-pipeline-test
   depends_on:
     - software-build
 
 # - name: storage-test
-#   image: metalfs/sdk-base:webpack-psl8
+#   image: metalfs/sdk-base:webpack
 #   commands:
 #     - cd build && ./metal_storage_test
 #   depends_on:
