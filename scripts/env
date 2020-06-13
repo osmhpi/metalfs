@@ -1,4 +1,4 @@
-if [ -z "$DRONE_TAG" ]; then
+if [ ! -z "$DRONE_TAG" ]; then
     export METAL_TAG="${DRONE_TAG//v}"
 fi
 
