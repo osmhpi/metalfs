@@ -13,7 +13,7 @@ steps:
       - name: docker_sock
         path: /var/run/docker.sock
     commands:
-      - scripts/docker_build_sdk
+      - ./scripts/docker_build_sdk
 
 # ---
 # kind: pipeline
