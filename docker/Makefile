@@ -1,6 +1,6 @@
 export VIVADO_EDITION ?= webpack
 export PSL ?= PSL8
-PSL_TAG = `echo $(PSL) | tr A-Z a-z`
+PSL_TAG = $(shell echo $(PSL) | tr A-Z a-z)
 METAL_TAG ?= $(shell if [ -z "`git status --porcelain`" ]; then git rev-parse --short HEAD; else echo dirty; fi)
 export METAL_TAG := ${METAL_TAG}
 
