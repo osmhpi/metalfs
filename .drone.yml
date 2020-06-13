@@ -15,19 +15,19 @@ steps:
     commands:
       - scripts/docker_build_sdk
 
----
-kind: pipeline
-type: docker
-name: runtime
+# ---
+# kind: pipeline
+# type: docker
+# name: runtime
 
-platform:
-  arch: ppc64le
+# platform:
+#   arch: ppc64le
 
-steps:
-  - name: docker/build
-    image: docker:latest
-    volumes:
-      - name: docker_sock
-        path: /var/run/docker.sock
-    commands:
-      - scripts/docker_build_runtime
+# steps:
+#   - name: docker/build
+#     image: docker:latest
+#     volumes:
+#       - name: docker_sock
+#         path: /var/run/docker.sock
+#     commands:
+#       - scripts/docker_build_runtime
