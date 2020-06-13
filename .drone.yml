@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-type: exec
+type: docker
 name: sdk
 
 platform:
@@ -8,12 +8,16 @@ platform:
 
 steps:
   - name: docker/build
+    image: docker:latest
+    volumes:
+      - name: docker_sock
+        path: /var/run/docker.sock
     commands:
       - scripts/docker_build_sdk
 
 ---
 kind: pipeline
-type: exec
+type: docker
 name: runtime
 
 platform:
@@ -21,5 +25,9 @@ platform:
 
 steps:
   - name: docker/build
+    image: docker:latest
+    volumes:
+      - name: docker_sock
+        path: /var/run/docker.sock
     commands:
       - scripts/docker_build_runtime
