@@ -1,5 +1,6 @@
 export VIVADO_EDITION ?= webpack
 export PSL ?= PSL8
+PSL_TAG = `echo $(PSL) | tr A-Z a-z`
 METAL_TAG ?= $(shell if [ -z "`git status --porcelain`" ]; then git rev-parse --short HEAD; else echo dirty; fi)
 export METAL_TAG := ${METAL_TAG}
 
@@ -20,13 +21,13 @@ endif
 
 latest-sdk: git-is-clean all-sdk
 	docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} 	 metalfs/sdk-base:${VIVADO_EDITION}
-	docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL} metalfs/sdk:${VIVADO_EDITION}-${PSL}
+	docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
 lastest-runtime: git-is-clean all-runtime
 	docker tag metalfs/runtime:${METAL_TAG}                      metalfs/runtime:latest
 
 sdk-base:
 	${docker_build} \
-		-t metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION}-${PSL} \
+		-t metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} \
 		-f docker/sdk-base/Dockerfile \
 		..
 
@@ -44,7 +45,7 @@ runtime:
 
 pull-latest-sdk:
 	docker pull metalfs/sdk-base:${VIVADO_EDITION}
-	docker pull metalfs/sdk:${VIVADO_EDITION}-${PSL}
+	docker pull metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
 pull-latest-runtime:
 	docker pull metalfs/runtime:latest
 
@@ -56,6 +57,6 @@ push-runtime:
 
 push-latest-sdk: git-is-clean push-sdk
 	docker push metalfs/sdk-base:${VIVADO_EDITION}
-	docker push metalfs/sdk:${VIVADO_EDITION}-${PSL}
+	docker push metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
 push-latest-runtime: git-is-clean push-runtime
 	docker push metalfs/runtime:latest
