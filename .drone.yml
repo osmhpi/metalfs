@@ -15,6 +15,10 @@ steps:
       - apk add --no-cache make git
       - sh -c "scripts/docker_build_sdk"
 
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock
 # ---
 # kind: pipeline
 # type: docker
