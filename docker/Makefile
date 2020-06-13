@@ -28,19 +28,19 @@ lastest-runtime: git-is-clean all-runtime
 sdk-base:
 	${docker_build} \
 		-t metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} \
-		-f docker/sdk-base/Dockerfile \
+		-f sdk-base/Dockerfile \
 		..
 
 sdk:
 	${docker_build} \
 		-t metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} \
-		-f docker/sdk/Dockerfile \
+		-f sdk/Dockerfile \
 		..
 
 runtime:
 	${docker_build} \
 		-t metalfs/runtime:${METAL_TAG} \
-		-f docker/runtime/Dockerfile \
+		-f runtime/Dockerfile \
 		..
 
 pull-latest-sdk:
