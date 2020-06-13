@@ -13,6 +13,7 @@ steps:
       - name: docker_sock
         path: /var/run/docker.sock
     commands:
+      - apk add --no-cache make
       - sh -c "scripts/docker_build_sdk"
 
 # ---
