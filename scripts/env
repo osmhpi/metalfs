@@ -1,5 +1,3 @@
-#! /bin/sh
-
 export METAL_TAG="${DRONE_TAG//v}"
 export VIVADO_VERSION="webpack"
 export PSL="PSL8"
