@@ -1,6 +1,6 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
-source env
+. env
 
 # pull latest images to reuse layers if possible
 make -C docker pull-latest-sdk
