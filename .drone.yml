@@ -1,6 +1,5 @@
 ---
 kind: pipeline
-type: docker
 name: sdk
 
 platform:
@@ -8,9 +7,9 @@ platform:
 
 steps:
   - name: docker/build
-    image: docker:latest
+    image: docker
     volumes:
-      - name: docker_sock
+      - name: dockersock
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
