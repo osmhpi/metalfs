@@ -15,8 +15,32 @@ steps:
     auto_tag: true
     auto_tag_suffix: webpack
     repo: metalfs/sdk-base
-    dockerfile: docker/sdk-base
-    dry_run: true
+    dockerfile: docker/sdk-base/Dockerfile
+    build_args:
+      - VIVADO_EDITION=webpack
+  when:
+    event:
+    - tag
+
+- name: docker metalfs/sdk
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    auto_tag: true
+    auto_tag_suffix: webpack-psl8
+    repo: metalfs/sdk
+    dockerfile: docker/sdk/Dockerfile
+    build_args:
+      - PSL=PSL8
+      - VIVADO_EDITION=webpack
+  when:
+    event:
+    - tag
+  depends_on:
+    - docker metalfs/sdk-base
 
 - name: software-build
   image: metalfs/sdk-base:webpack
