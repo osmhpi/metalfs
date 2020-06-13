@@ -20,10 +20,10 @@ endif
 
 
 latest-sdk: git-is-clean all-sdk
-	docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} 	 metalfs/sdk-base:${VIVADO_EDITION}
-	docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
+	docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} 	     metalfs/sdk-base:latest
+	docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:latest
 lastest-runtime: git-is-clean all-runtime
-	docker tag metalfs/runtime:${METAL_TAG}                      metalfs/runtime:latest
+	docker tag metalfs/runtime:${METAL_TAG}                          metalfs/runtime:latest
 
 sdk-base:
 	${docker_build} \
@@ -44,8 +44,8 @@ runtime:
 		..
 
 pull-latest-sdk:
-	docker pull metalfs/sdk-base:${VIVADO_EDITION}
-	docker pull metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
+	docker pull metalfs/sdk-base:latest
+	docker pull metalfs/sdk:latest
 pull-latest-runtime:
 	docker pull metalfs/runtime:latest
 
@@ -56,7 +56,7 @@ push-runtime:
 	docker push metalfs/runtime:${METAL_TAG}
 
 push-latest-sdk: git-is-clean push-sdk
-	docker push metalfs/sdk-base:${VIVADO_EDITION}
-	docker push metalfs/sdk:${VIVADO_EDITION}-${PSL_TAG}
+	docker push metalfs/sdk-base:latest
+	docker push metalfs/sdk:latest
 push-latest-runtime: git-is-clean push-runtime
 	docker push metalfs/runtime:latest
