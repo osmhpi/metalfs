@@ -4,6 +4,20 @@ type: docker
 name: default
 
 steps:
+
+- name: docker metalfs/sdk-base
+  image: plugins/docker
+  settings:
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+    auto_tag: true
+    auto_tag_suffix: webpack
+    repo: metalfs/sdk-base
+    dockerfile: docker/sdk-base
+    dry_run: true
+
 - name: software-build
   image: metalfs/sdk-base:webpack
   commands:
