@@ -1,0 +1,15 @@
+#!/bin/bash -e
+
+source env
+
+# push all images
+make -C docker push-latest-sdk
+
+DOCKER_TAG=$(echo $DOCKER_TAG | awk '{gsub(/\.[0-9]+$/,"",$1);print}')
+while [ ! -z "$DOCKER_TAG" ]; do
+    docker tag metalfs/sdk-base:${VIVADO_VERSION} metalfs/sdk-base:${METAL_TAG}-${VIVADO_VERSION}
+    docker tag metalfs/sdk:${VIVADO_VERSION}-${PSL} metalfs/sdk:${METAL_TAG}-${VIVADO_VERSION}-${PSL}
+    docker push metalfs/sdk-base:${METAL_TAG}-${VIVADO_VERSION}
+    docker push metalfs/sdk:${METAL_TAG}-${VIVADO_VERSION}-${PSL}
+    DOCKER_TAG=$(echo $DOCKER_TAG | awk '{gsub(/\.[0-9]+$/,"",$1);print}')
+done

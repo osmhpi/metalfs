@@ -1,97 +1,25 @@
 ---
 kind: pipeline
-type: docker
-name: default
+type: exec
+name: sdk
+
+platform:
+  arch: amd64
 
 steps:
+  - name: docker/build
+    commands:
+      - scripts/docker_build_sdk
 
-- name: docker metalfs/sdk-base
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    auto_tag: true
-    auto_tag_suffix: webpack
-    repo: metalfs/sdk-base
-    dockerfile: docker/sdk-base/Dockerfile
-    build_args:
-      - VIVADO_EDITION=webpack
-  when:
-    event:
-    - tag
+---
+kind: pipeline
+type: exec
+name: runtime
 
-- name: docker metalfs/sdk
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    auto_tag: true
-    auto_tag_suffix: webpack-psl8
-    repo: metalfs/sdk
-    dockerfile: docker/sdk/Dockerfile
-    build_args:
-      - PSL=PSL8
-      - VIVADO_EDITION=webpack
-  when:
-    event:
-    - tag
-  depends_on:
-    - docker metalfs/sdk-base
+platform:
+  arch: ppc64le
 
-- name: software-build
-  image: metalfs/sdk-base:webpack
-  commands:
-    - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
-
-- name: snap-action
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - npm install --production
-    - bash -c "make hw_project"
-
-- name: snap-action-testbench
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - bash -c "make test_target"
-  depends_on:
-    - snap-action
-
-- name: example-test-simulation
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - bash -c "make model"
-    - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
-    - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
-    - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
-    - ../run_sim -explore -list testlist.sh -noaet
-  depends_on:
-    - software-build
-    - snap-action-testbench
-
-- name: filesystem-test
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd build && ./metal-filesystem-test
-  depends_on:
-    - software-build
-
-- name: pipeline-test
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd build && ./metal-pipeline-test
-  depends_on:
-    - software-build
-
-# - name: storage-test
-#   image: metalfs/sdk-base:webpack
-#   commands:
-#     - cd build && ./metal_storage_test
-#   depends_on:
-#     - software-build
+steps:
+  - name: docker/build
+    commands:
+      - scripts/docker_build_runtime
