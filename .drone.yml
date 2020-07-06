@@ -17,21 +17,25 @@ steps:
 
   - name: metalfs/software
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
 
   - name: metalfs/filesystem-test
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - cd build && ./metal-filesystem-test
 
   - name: metalfs/pipeline-test
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - cd build && ./metal-pipeline-test
 
   - name: metalfs/action
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - cd example/src
       - npm install --production
@@ -39,12 +43,14 @@ steps:
 
   - name: metalfs/testbench
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - cd example/src
       - bash -c "make test_target"
 
   - name: metalfs/example-sim
     image: metalfs/sdk-base:latest
+    pull: if-not-exists
     commands:
       - cd example/src
       - bash -c "make model"
