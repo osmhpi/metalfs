@@ -2,8 +2,5 @@
 
 . scripts/env
 
-# pull latest images to reuse layers if possible
-make -C docker pull-latest-sdk
-
 # build all images
 make -C docker latest-sdk

@@ -6,7 +6,54 @@ platform:
   arch: amd64
 
 steps:
-  - name: docker/build
+  - name: docker/build-base
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk_base"
+
+  - name: metalfs/software
+    image: metalfs/sdk-base:latest
+    commands:
+      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
+
+  - name: metalfs/filesystem-test
+    image: metalfs/sdk-base:latest
+    commands:
+      - cd build && ./metal-filesystem-test
+
+  - name: metalfs/pipeline-test
+    image: metalfs/sdk-base:latest
+    commands:
+      - cd build && ./metal-pipeline-test
+
+  - name: metalfs/action
+    image: metalfs/sdk-base:latest
+    commands:
+      - cd example/src
+      - npm install --production
+      - bash -c "make hw_project"
+
+  - name: metalfs/testbench
+    image: metalfs/sdk-base:latest
+    commands:
+      - cd example/src
+      - bash -c "make test_target"
+
+  - name: metalfs/example-sim
+    image: metalfs/sdk-base:latest
+    commands:
+      - cd example/src
+      - bash -c "make model"
+      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
+      - ../run_sim -explore -list testlist.sh -noaet
+
+  - name: docker/build-sdk
     image: docker
     volumes:
       - name: dockersock

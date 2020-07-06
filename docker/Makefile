@@ -19,8 +19,9 @@ else
 endif
 
 
-latest-sdk: git-is-clean all-sdk
+latest-sdk-base: git-is-clean sdk-base
 	docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} 	     metalfs/sdk-base:latest
+latest-sdk: git-is-clean sdk
 	docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:latest
 lastest-runtime: git-is-clean all-runtime
 	docker tag metalfs/runtime:${METAL_TAG}                          metalfs/runtime:latest
