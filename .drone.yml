@@ -1,97 +1,108 @@
 ---
 kind: pipeline
-type: docker
-name: default
+name: sdk
+
+platform:
+  arch: amd64
 
 steps:
+  - name: docker/build-base
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk_base"
 
-- name: docker metalfs/sdk-base
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    auto_tag: true
-    auto_tag_suffix: webpack
-    repo: metalfs/sdk-base
-    dockerfile: docker/sdk-base/Dockerfile
-    build_args:
-      - VIVADO_EDITION=webpack
-  when:
-    event:
-    - tag
+  - name: metalfs/software
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
 
-- name: docker metalfs/sdk
-  image: plugins/docker
-  settings:
-    username:
-      from_secret: docker_username
-    password:
-      from_secret: docker_password
-    auto_tag: true
-    auto_tag_suffix: webpack-psl8
-    repo: metalfs/sdk
-    dockerfile: docker/sdk/Dockerfile
-    build_args:
-      - PSL=PSL8
-      - VIVADO_EDITION=webpack
-  when:
-    event:
-    - tag
-  depends_on:
-    - docker metalfs/sdk-base
+  - name: metalfs/filesystem-test
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-filesystem-test
 
-- name: software-build
-  image: metalfs/sdk-base:webpack
-  commands:
-    - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
+  - name: metalfs/pipeline-test
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-pipeline-test
 
-- name: snap-action
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - npm install --production
-    - bash -c "make hw_project"
+  - name: metalfs/action
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - npm install --production
+      - bash -c "make hw_project"
 
-- name: snap-action-testbench
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - bash -c "make test_target"
-  depends_on:
-    - snap-action
+  - name: metalfs/testbench
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make test_target"
 
-- name: example-test-simulation
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd example/src
-    - bash -c "make model"
-    - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
-    - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
-    - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
-    - ../run_sim -explore -list testlist.sh -noaet
-  depends_on:
-    - software-build
-    - snap-action-testbench
+  - name: metalfs/example-sim
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make model"
+      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/WebPACK_Sim/snap/hardware/sim/xsim
+      - ../run_sim -explore -list testlist.sh -noaet
 
-- name: filesystem-test
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd build && ./metal-filesystem-test
-  depends_on:
-    - software-build
+  - name: docker/build-sdk
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk"
 
-- name: pipeline-test
-  image: metalfs/sdk-base:webpack
-  commands:
-    - cd build && ./metal-pipeline-test
-  depends_on:
-    - software-build
+  - name: docker/push
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_sdk"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
 
-# - name: storage-test
-#   image: metalfs/sdk-base:webpack
-#   commands:
-#     - cd build && ./metal_storage_test
-#   depends_on:
-#     - software-build
+  - name: docker/push-latest
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_latest_sdk"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      branch:
+        - master
+
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock

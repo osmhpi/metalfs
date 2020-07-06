@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+. scripts/env
+
+# pull latest images to reuse layers if possible
+make -C docker pull-latest-runtime
+
+# build all images
+make -C docker latest-runtime

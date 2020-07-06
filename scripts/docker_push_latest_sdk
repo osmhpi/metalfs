@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+. scripts/env
+
+echo "$PASSWORD" | docker login --username "$USERNAME" --password-stdin
+
+# push all images
+make -C docker push-latest-sdk

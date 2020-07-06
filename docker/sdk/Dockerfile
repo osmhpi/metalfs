@@ -1,7 +1,8 @@
+ARG METAL_TAG=
 ARG VIVADO_EDITION=webpack
 ARG PSL=PSL8
 
-FROM metalfs/sdk-base:$VIVADO_EDITION AS build
+FROM metalfs/sdk-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION AS build
 ARG PSL
 
 ADD . /src/metal_fs
@@ -17,7 +18,7 @@ RUN cd /src/metal_fs \
  && make -j8 \
  && make install
 
-FROM metalfs/sdk-base:$VIVADO_EDITION
+FROM metalfs/sdk-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION
 
 COPY --from=build /usr/local/bin/metal-driver /usr/local/bin/
 

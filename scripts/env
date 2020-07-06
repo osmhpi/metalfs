@@ -1,0 +1,6 @@
+if [ ! -z "$DRONE_TAG" ]; then
+    export METAL_TAG="${DRONE_TAG//v}"
+fi
+
+export VIVADO_VERSION="webpack"
+export PSL="PSL8"
