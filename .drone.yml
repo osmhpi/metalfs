@@ -15,23 +15,41 @@ steps:
       - apk add --no-cache make git
       - sh -c "scripts/docker_build_sdk"
 
+  - name: docker/push
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_sdk"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+  - name: docker/push-latest
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_latest_sdk"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      branch:
+        - master
+
 volumes:
   - name: dockersock
     host:
       path: /var/run/docker.sock
-# ---
-# kind: pipeline
-# type: docker
-# name: runtime
-
-# platform:
-#   arch: ppc64le
-
-# steps:
-#   - name: docker/build
-#     image: docker:latest
-#     volumes:
-#       - name: docker_sock
-#         path: /var/run/docker.sock
-#     commands:
-#       - scripts/docker_build_runtime

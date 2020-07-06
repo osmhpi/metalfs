@@ -50,8 +50,14 @@ pull-latest-runtime:
 	docker pull metalfs/runtime:latest
 
 push-sdk:
-	docker push metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION}
-	docker push metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG}
+	SUBTAG=$(echo ${METAL_TAG} | awk '{gsub(/\.[0-9]+$/,"",$1);print}') ; \
+	while [ ! -z "$SUBTAG" ]; do \
+		docker tag metalfs/sdk-base:${VIVADO_VERSION} metalfs/sdk-base:${METAL_TAG}-${VIVADO_VERSION} ; \
+		docker tag metalfs/sdk:${VIVADO_VERSION}-${PSL} metalfs/sdk:${METAL_TAG}-${VIVADO_VERSION}-${PSL} ; \
+		docker push metalfs/sdk-base:${METAL_TAG}-${VIVADO_VERSION} ; \
+		docker push metalfs/sdk:${METAL_TAG}-${VIVADO_VERSION}-${PSL} ; \
+		SUBTAG=$(echo $SUBTAG | awk '{gsub(/\.[0-9]+$/,"",$1);print}') ; \
+	done
 push-runtime:
 	docker push metalfs/runtime:${METAL_TAG}
 
