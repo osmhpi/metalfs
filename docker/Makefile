@@ -53,9 +53,9 @@ push-sdk:
 	SUBTAG=$$(echo '${METAL_TAG}' | tr -d 'v') ; \
 	while [ ! -z "$$SUBTAG" ]; do \
 		docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
-		docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL} metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL} ; \
+		docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
 		docker push metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
-		docker push metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL} ; \
+		docker push metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
 		SUBTAG=$$(echo "$$SUBTAG" | awk '{gsub(/\.?[0-9]+$$/,"",$$1);print}') ; \
 	done
 
