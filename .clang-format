@@ -1,4 +1,5 @@
 ---
-Language:        Cpp
+Language:      Cpp
 BasedOnStyle:  Google
+IncludeBlocksStyle: Preserve
 ...
