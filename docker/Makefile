@@ -52,19 +52,21 @@ pull-latest-runtime:
 
 push-sdk:
 	SUBTAG=$$(echo '${METAL_TAG}' | tr -d 'v') ; \
-	while [ ! -z "$$SUBTAG" ]; do \
-		docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
-		docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
-		docker push metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
-		docker push metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
-		SUBTAG=$$(echo "$$SUBTAG" | awk '{gsub(/\.?[0-9]+$$/,"",$$1);print}') ; \
-	done
+	if [ $$(echo $$SUBTAG | grep -iE '^[0-9]+\.[0-9]+\.[0-9]+$$' | wc -l) -ne 0 ] ; then \
+		while [ ! -z "$$SUBTAG" ]; do \
+			docker tag metalfs/sdk-base:${METAL_TAG}-${VIVADO_EDITION} metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
+			docker tag metalfs/sdk:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
+			docker push metalfs/sdk-base:$$SUBTAG-${VIVADO_EDITION} ; \
+			docker push metalfs/sdk:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
+			SUBTAG=$$(echo "$$SUBTAG" | awk '{gsub(/\.?[0-9]+$$/,"",$$1);print}') ; \
+		done ; \
+	fi
 
 push-runtime:
 	docker push metalfs/runtime:${METAL_TAG}
 
-push-latest-sdk: git-is-clean push-sdk
+push-latest-sdk: git-is-clean
 	docker push metalfs/sdk-base:latest
 	docker push metalfs/sdk:latest
-push-latest-runtime: git-is-clean push-runtime
+push-latest-runtime: git-is-clean
 	docker push metalfs/runtime:latest
