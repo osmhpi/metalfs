@@ -15,6 +15,11 @@ class DataSource;
 class DataSink;
 class Operator;
 
+/**
+*  @brief
+*    Defines an Operator execution plan which can be executed in combination
+*    with a SnapAction.
+*/
 class METAL_PIPELINE_API Pipeline {
  public:
   explicit Pipeline(std::vector<Operator> operators);
