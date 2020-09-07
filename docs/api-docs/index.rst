@@ -1,19 +1,37 @@
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Getting Started
    :hidden:
 
    prerequisites
-   tutorial
-   operator-parameters
    docker-dev
+   tutorial
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Advanced Topics
+   :hidden:
+
+   operator-parameters
    buildpacks
    deployment
    image-manifest
    operator-manifest
+
+.. toctree::
+   :maxdepth: 3
+   :caption: API Documentation
+   :hidden:
+
    metal-pipeline
    metal-filesystem
    metal-filesystem-pipeline
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Appendix
+   :hidden:
+
    genindex
 
 

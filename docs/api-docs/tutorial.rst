@@ -136,7 +136,7 @@ Therefore, we add a testbench file reference to the top of our ``Makefile``:
     testbench_srcs += testbench.cpp
 
 
-This is our `testbench.cpp`:
+This is our ``testbench.cpp``:
 
 .. code-block:: cpp
 
