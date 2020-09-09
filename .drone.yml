@@ -109,7 +109,7 @@ steps:
         from_secret: github_username
       password:
         from_secret: github_password
-      pages_directory: build/docs/api-docs/sphinx
+      pages_directory: build/docs/sphinx
       upstream_name: git@github.com:metalfs/metalfs.github.io.git
     when:
       branch:

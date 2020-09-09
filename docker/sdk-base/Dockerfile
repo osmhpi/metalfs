@@ -58,8 +58,8 @@ RUN apt-get update \
     doxygen \
     graphviz \
  && rm -rf /var/lib/apt/lists/*
-COPY docs/api-docs/requirements.txt /sdk/metal_fs/docs/api-docs/requirements.txt
-RUN pip3 install -r /sdk/metal_fs/docs/api-docs/requirements.txt
+COPY docs/requirements.txt /sdk/metal_fs/docs/requirements.txt
+RUN pip3 install -r /sdk/metal_fs/docs/requirements.txt
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
