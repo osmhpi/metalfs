@@ -101,6 +101,9 @@ steps:
     when:
       branch:
         - master
+      event:
+        exclude:
+         - pull_request
 
   - name: publish-docs
     image: plugins/gh-pages
@@ -114,6 +117,9 @@ steps:
     when:
       branch:
         - master
+      event:
+        exclude:
+         - pull_request
 
 volumes:
   - name: dockersock
