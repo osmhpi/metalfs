@@ -114,6 +114,7 @@ steps:
         from_secret: github_password
       pages_directory: build/docs/sphinx
       upstream_name: git@github.com:metalfs/metalfs.github.io.git
+      target_branch: master
     when:
       branch:
         - master
