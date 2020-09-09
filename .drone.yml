@@ -19,7 +19,7 @@ steps:
     image: metalfs/sdk-base:latest
     pull: if-not-exists
     commands:
-      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
+      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
 
   - name: metalfs/filesystem-test
     image: metalfs/sdk-base:latest
@@ -101,6 +101,26 @@ steps:
     when:
       branch:
         - master
+      event:
+        exclude:
+         - pull_request
+
+  - name: publish-docs
+    image: plugins/gh-pages
+    settings:
+      username:
+        from_secret: github_username
+      password:
+        from_secret: github_password
+      pages_directory: build/docs/sphinx
+      upstream_name: git@github.com:metalfs/metalfs.github.io.git
+      target_branch: master
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+         - pull_request
 
 volumes:
   - name: dockersock

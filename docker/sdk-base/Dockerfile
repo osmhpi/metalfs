@@ -51,6 +51,16 @@ RUN apt-get update \
     libncurses-dev \
  && rm -rf /var/lib/apt/lists/*
 
+# Documentation
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    python3-pip \
+    doxygen \
+    graphviz \
+ && rm -rf /var/lib/apt/lists/*
+COPY docs/requirements.txt /sdk/metal_fs/docs/requirements.txt
+RUN pip3 install -r /sdk/metal_fs/docs/requirements.txt
+
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
 

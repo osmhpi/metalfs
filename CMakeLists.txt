@@ -73,6 +73,7 @@ string(TOUPPER ${META_PROJECT_ID} META_PROJECT_ID)
 option(BUILD_SHARED_LIBS      "Build shared instead of static libraries."              ON)
 option(OPTION_SELF_CONTAINED  "Create a self-contained install with all dependencies." OFF)
 option(OPTION_BUILD_TESTS     "Build tests."                                           ON)
+option(OPTION_BUILD_DOCS      "Build documentation."                                   OFF)
 option(OPTION_BUILD_EXAMPLES  "Build examples."                                        OFF)
 
 
@@ -170,6 +171,7 @@ endif()
 add_subdirectory(third_party)
 
 add_subdirectory(src)
+add_subdirectory(docs)
 
 # Tests
 if(OPTION_BUILD_TESTS AND NOT MINGW)
