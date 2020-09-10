@@ -1,0 +1,448 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Operator Parameters" href="operator-parameters.html" />
+    <link rel="prev" title="Docker-based Development Environment" href="docker-dev.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-set-up-the-development-environment">Step 1: Set up the Development Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-bootstrap-the-operator-project">Step 2: Bootstrap the Operator Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-implement-the-operator-in-hls">Step 3: Implement the Operator in HLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-test-the-operator-in-a-testbench">Step 4: Test the Operator in a Testbench</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-5-simulating-the-hardware-description-of-the-operator">Step 5: Simulating the Hardware Description of the Operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial walks you through the process of creating a simple operator for Metal FS.</p>
+<p>For your reference, the resulting project files of this tutorial are available on GitHub: <a class="reference external" href="https://github.com/metalfs/getting-started">https://github.com/metalfs/getting-started</a></p>
+<div class="section" id="step-1-set-up-the-development-environment">
+<h2>Step 1: Set up the Development Environment<a class="headerlink" href="#step-1-set-up-the-development-environment" title="Permalink to this headline">¶</a></h2>
+<p>During this tutorial, we will develop a simple HLS operator that transforms a stream of ASCII characters into uppercase characters.</p>
+<p>We first start with an empty folder for our ‘uppercase’ operator:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir uppercase <span class="o">&amp;&amp;</span> <span class="nb">cd</span> uppercase
+</pre></div>
+</div>
+<p>To get you started quickly, we recommend using a development environment that is backed by a Docker container.
+It integrates nicely with Visual Studio Code and its ‘Remote - Containers’ extension.</p>
+<p>If you’d rather like to use raw <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code>, please refer to our <a class="reference internal" href="docker-dev.html#docker-based-development-environment"><span class="std std-ref">guide</span></a> for more details.</p>
+<p>This downloads the container configuration files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir .devcontainer
+
+wget -O .devcontainer/docker-compose.yml <span class="se">\</span>
+  https://raw.githubusercontent.com/metalfs/getting-started/master/.devcontainer/docker-compose.yml
+
+wget -O .devcontainer/devcontainer.json <span class="se">\</span>
+  https://raw.githubusercontent.com/metalfs/getting-started/master/.devcontainer/devcontainer.json
+</pre></div>
+</div>
+<p>Open the project directory in VS Code and select ‘Reopen in Container’ from the global menu (Ctrl/Cmd + Shift + P).</p>
+<blockquote>
+<div><p>Be aware that this will download a Docker image that is 16 GB in size (6.5 GB to download).</p>
+</div></blockquote>
+</div>
+<div class="section" id="step-2-bootstrap-the-operator-project">
+<h2>Step 2: Bootstrap the Operator Project<a class="headerlink" href="#step-2-bootstrap-the-operator-project" title="Permalink to this headline">¶</a></h2>
+<p>To tie in the Metal FS <a class="reference internal" href="buildpacks.html#operator-buildpack-hls-and-hdl"><span class="std std-ref">Operator buildpack</span></a> for HLS, we now create a <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> with the following contents:</p>
+<div class="highlight-Makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">srcs</span>           <span class="o">+=</span> uppercase.cpp
+
+<span class="cp">include $(METAL_ROOT)/buildpacks/hls/hls.mk</span>
+</pre></div>
+</div>
+<p>You can now run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span></code> to see the available targets provided by the buildpack:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Targets in the HLS Operator <span class="nv">Buildpack</span>
+<span class="o">=====================================</span>
+* ip             Build Vivado IP
+* <span class="nb">test</span>           Run HLS testbench
+* devmodel       Build a simulation model containing only the current operator
+* sim            Start a simulation with the devmodel
+* clean          Remove the build directory
+* <span class="nb">help</span>           Print this message
+</pre></div>
+</div>
+<p>Before we get to the actual operator implementation, we need to provide an operator manifest in <code class="docutils literal notranslate"><span class="pre">operator.json</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="s2">&quot;uppercase&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Transform ASCII strings to uppercase.&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">main</span></code> attribute in the manifest refers to the entrypoint of our HLS code.</p>
+</div>
+<div class="section" id="step-3-implement-the-operator-in-hls">
+<h2>Step 3: Implement the Operator in HLS<a class="headerlink" href="#step-3-implement-the-operator-in-hls" title="Permalink to this headline">¶</a></h2>
+<p>Now, the HLS implementation of our uppercase operator is very straightforward.
+Here are the contents of the <code class="docutils literal notranslate"><span class="pre">uppercase.cpp</span></code> file:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;metal/stream.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">uppercase</span><span class="p">(</span><span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">in</span><span class="p">,</span> <span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">out</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cp">#pragma HLS INTERFACE axis port=in name=axis_input</span>
+    <span class="cp">#pragma HLS INTERFACE axis port=out name=axis_output</span>
+    <span class="cp">#pragma HLS INTERFACE s_axilite port=return bundle=control</span>
+
+    <span class="n">mtl_stream_element</span> <span class="n">element</span><span class="p">;</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">in</span><span class="p">.</span><span class="n">read</span><span class="p">();</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">element</span><span class="p">.</span><span class="n">data</span><span class="p">);</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="c1">// Select the ith byte from element</span>
+            <span class="k">auto</span> <span class="n">current</span> <span class="o">=</span> <span class="n">element</span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">8</span><span class="p">);</span>
+
+            <span class="c1">// If current is lowercase, exchange it</span>
+            <span class="c1">// by an uppercase letter</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">current</span> <span class="o">&gt;=</span> <span class="sc">&#39;a&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">current</span> <span class="o">&lt;=</span> <span class="sc">&#39;z&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">element</span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+                <span class="o">=</span> <span class="n">current</span> <span class="o">-</span> <span class="p">(</span><span class="sc">&#39;a&#39;</span> <span class="o">-</span> <span class="sc">&#39;A&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="n">out</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">element</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">element</span><span class="p">.</span><span class="n">last</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note how the <code class="docutils literal notranslate"><span class="pre">#pragma</span> <span class="pre">HLS</span> <span class="pre">INTERFACE</span></code> directives instruct the compiler to create the operator hardware interfaces.</p>
+<p>Also note that in this code, we don’t actually define how many bytes a stream element contains.
+This is automatically inferred from the FPGA image configuration at build time.
+Since we only perform bytewise processing and the streams always contain a full number of bytes, we don’t care how many bytes a single stream element contains.</p>
+<p>The HLS syntax for selecting a single byte from the data word by specifying the bit range (e.g. <code class="docutils literal notranslate"><span class="pre">lowest_byte</span> <span class="pre">=</span> <span class="pre">word(7,</span> <span class="pre">0)</span></code>) might be familiar to you if you have experience with VHDL or Verilog.</p>
+</div>
+<div class="section" id="step-4-test-the-operator-in-a-testbench">
+<h2>Step 4: Test the Operator in a Testbench<a class="headerlink" href="#step-4-test-the-operator-in-a-testbench" title="Permalink to this headline">¶</a></h2>
+<p>The benefit of HLS programming is that we can run our code as software to quickly see if it works.
+Therefore, we add a testbench file reference to the top of our <code class="docutils literal notranslate"><span class="pre">Makefile</span></code>:</p>
+<div class="highlight-Makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">testbench_srcs</span> <span class="o">+=</span> testbench.cpp
+</pre></div>
+</div>
+<p>This is our <code class="docutils literal notranslate"><span class="pre">testbench.cpp</span></code>:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;metal/stream.h&gt;</span><span class="cp"></span>
+
+<span class="c1">// Forward-declare the operator entrypoint</span>
+<span class="kt">void</span> <span class="nf">uppercase</span><span class="p">(</span><span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">in</span><span class="p">,</span> <span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">out</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">copyBufferToStream</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">buffer_length</span><span class="p">,</span> <span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">stream</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">size_t</span> <span class="n">readBytes</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mtl_stream_element</span> <span class="n">inputElement</span><span class="p">;</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">memcpy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">inputElement</span><span class="p">.</span><span class="n">data</span><span class="p">,</span> <span class="n">buffer</span> <span class="o">+</span> <span class="n">readBytes</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">buffer_length</span> <span class="o">-</span> <span class="n">readBytes</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inputElement</span><span class="p">.</span><span class="n">data</span><span class="p">)));</span>
+        <span class="n">inputElement</span><span class="p">.</span><span class="n">keep</span> <span class="o">=</span> <span class="mh">0xff</span><span class="p">;</span>
+        <span class="n">inputElement</span><span class="p">.</span><span class="n">last</span> <span class="o">=</span> <span class="n">readBytes</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inputElement</span><span class="p">.</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">buffer_length</span><span class="p">;</span>
+
+        <span class="n">stream</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="n">inputElement</span><span class="p">);</span>
+
+        <span class="n">readBytes</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">inputElement</span><span class="p">.</span><span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">inputElement</span><span class="p">.</span><span class="n">last</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">copyStreamToBuffer</span><span class="p">(</span><span class="n">mtl_stream</span> <span class="o">&amp;</span><span class="n">stream</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">buffer_length</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">size_t</span> <span class="n">writtenBytes</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mtl_stream_element</span> <span class="n">outputElement</span><span class="p">;</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="n">outputElement</span> <span class="o">=</span> <span class="n">stream</span><span class="p">.</span><span class="n">read</span><span class="p">();</span>
+        <span class="n">memcpy</span><span class="p">(</span><span class="n">buffer</span> <span class="o">+</span> <span class="n">writtenBytes</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">outputElement</span><span class="p">.</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">buffer_length</span> <span class="o">-</span> <span class="n">writtenBytes</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">outputElement</span><span class="p">.</span><span class="n">data</span><span class="p">)));</span>
+
+        <span class="n">writtenBytes</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">outputElement</span><span class="p">.</span><span class="n">data</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="o">!</span><span class="n">outputElement</span><span class="p">.</span><span class="n">last</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="kt">char</span> <span class="n">input</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;This should become uppercase&quot;</span><span class="p">;</span>
+
+    <span class="c1">// Transform our input data into a mtl_stream</span>
+    <span class="n">mtl_stream</span> <span class="n">operatorInput</span><span class="p">;</span>
+    <span class="n">copyBufferToStream</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">input</span><span class="p">),</span> <span class="n">operatorInput</span><span class="p">);</span>
+
+    <span class="c1">// Call the operator</span>
+    <span class="n">mtl_stream</span> <span class="n">operatorOutput</span><span class="p">;</span>
+    <span class="n">uppercase</span><span class="p">(</span><span class="n">operatorInput</span><span class="p">,</span> <span class="n">operatorOutput</span><span class="p">);</span>
+
+    <span class="c1">// Read the output back into a buffer for comparison</span>
+    <span class="kt">char</span> <span class="n">outputData</span><span class="p">[</span><span class="k">sizeof</span><span class="p">(</span><span class="n">input</span><span class="p">)];</span>
+    <span class="n">copyStreamToBuffer</span><span class="p">(</span><span class="n">operatorOutput</span><span class="p">,</span> <span class="n">outputData</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">outputData</span><span class="p">));</span>
+
+    <span class="k">const</span> <span class="kt">char</span> <span class="n">expected</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;THIS SHOULD BECOME UPPERCASE&quot;</span><span class="p">;</span>
+
+    <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">memcmp</span><span class="p">(</span><span class="n">outputData</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">expected</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Success.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failure: Output was different from expected value.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Let’s see if it works using <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code>. You will probably see lots of HLS compiler output, but towards the end you should find:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Success.
+INFO: <span class="o">[</span>SIM <span class="m">211</span>-1<span class="o">]</span> CSim <span class="k">done</span> with <span class="m">0</span> errors.
+INFO: <span class="o">[</span>SIM <span class="m">211</span>-3<span class="o">]</span> *************** CSIM finish ***************
+INFO: <span class="o">[</span>Common <span class="m">17</span>-206<span class="o">]</span> Exiting vivado_hls at Mon Apr <span class="m">27</span> <span class="m">17</span>:39:19 <span class="m">2020</span>...
+</pre></div>
+</div>
+<p>It works!</p>
+</div>
+<div class="section" id="step-5-simulating-the-hardware-description-of-the-operator">
+<h2>Step 5: Simulating the Hardware Description of the Operator<a class="headerlink" href="#step-5-simulating-the-hardware-description-of-the-operator" title="Permalink to this headline">¶</a></h2>
+<p>As the next step, we will create a simulation model of an entire FPGA image that contains our new operator.
+On the first run, this takes some time (~10 min), since also the Metal FS HLS components need to be compiled to a hardware description.</p>
+<p>Start the process with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devmodel</span></code>.</p>
+<p>Once the model synthesis has finished, run <cite>make sim</cite> to start the simulation.
+When you see these lines in the log, the filesystem is running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">[</span>info<span class="o">]</span> Found operator uppercase
+<span class="o">[</span>info<span class="o">]</span> Starting FUSE driver...
+</pre></div>
+</div>
+<p>Afterwards, in a second terminal in the development container, you can try out the simulated operator:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> Hello World <span class="p">|</span> /mnt/operators/uppercase
+HELLO WORLD
+</pre></div>
+</div>
+<p>Terminating the simulation is a bit cumbersome at this point. You have to call this twice (yes, that’s a bug):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pkill metal-driver
+</pre></div>
+</div>
+</div>
+<div class="section" id="next-steps">
+<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Inspect the simulation waveform</p></li>
+<li><p><a class="reference internal" href="image-manifest.html#image-manifest"><span class="std std-ref">Create an image from multiple operators</span></a></p></li>
+<li><p><a class="reference internal" href="operator-parameters.html#operator-parameters"><span class="std std-ref">Add parameters to your operator</span></a></p></li>
+<li><p>Integrate the operator into your C++ application</p></li>
+<li><p>Learn more about operator profiling and benchmarking</p></li>
+<li><p><a class="reference internal" href="buildpacks.html#operator-buildpack-hls-and-hdl"><span class="std std-ref">Write an operator using VHDL or Verilog</span></a></p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="operator-parameters.html" class="btn btn-neutral float-right" title="Operator Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="docker-dev.html" class="btn btn-neutral float-left" title="Docker-based Development Environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

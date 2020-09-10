@@ -1,0 +1,296 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Docker-based Development Environment &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial" href="tutorial.html" />
+    <link rel="prev" title="Metal FS Prerequisites" href="prerequisites.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Docker-based Development Environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docker-images">Docker Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visual-studio-code-development-container">Visual Studio Code Development Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-compose">Docker Compose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#x11-forwarding">X11-Forwarding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fuse-in-docker">FUSE in Docker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vivado-hls-debugging-in-docker">Vivado HLS Debugging in Docker</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Docker-based Development Environment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/docker-dev.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="docker-based-development-environment">
+<h1>Docker-based Development Environment<a class="headerlink" href="#docker-based-development-environment" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="docker-images">
+<h2>Docker Images<a class="headerlink" href="#docker-images" title="Permalink to this headline">¶</a></h2>
+<p>The following Docker images are stacked to provide a self-contained development environment for Metal FS Operators and Metal FS-based applications:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>SDK (<a class="reference external" href="https://hub.docker.com/r/metalfs/sdk">metalfs/sdk</a>, <a class="reference external" href="https://github.com/osmhpi/metal_fs/tree/master/docker/sdk">Source</a>)</dt><dd><p>Includes the Metal FS SDK, including precompiled binaries, for developing accelerated applications</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>SDK Base (<a class="reference external" href="https://hub.docker.com/r/metalfs/sdk-base">metalfs/sdk-base</a>, <a class="reference external" href="https://github.com/osmhpi/metal_fs/tree/master/docker/sdk-base">Source</a>)</dt><dd><p>Prerequisites for Metal FS (useful for development of the project)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Xilinx Vivado (<a class="reference external" href="https://hub.docker.com/r/metalfs/xilinx-vivado">metalfs/xilinx-vivado</a>, <a class="reference external" href="https://github.com/osmhpi/metal_fs/tree/master/docker/xilinx-vivado">Source</a>)</dt><dd><p>Includes an installation of Vivado with FPGAs supported by SNAP</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="visual-studio-code-development-container">
+<h2>Visual Studio Code Development Container<a class="headerlink" href="#visual-studio-code-development-container" title="Permalink to this headline">¶</a></h2>
+<p>Using a plugin for the VS Code Editor, source code can be edited through a Docker container that has additional software installed, in this case the prerequisites listed above.
+Create <a class="reference external" href="https://github.com/metalfs/getting-started/tree/master/.devcontainer/devcontainer.json">devcontainer.json</a> and <a class="reference external" href="https://github.com/metalfs/getting-started/tree/master/.devcontainer/docker-compose.yml">docker-compose.yml</a> files in your repository to get started.</p>
+<img alt="HLS Development in Visual Studio Code" src="_images/vscode.png" />
+</div>
+<div class="section" id="docker-compose">
+<h2>Docker Compose<a class="headerlink" href="#docker-compose" title="Permalink to this headline">¶</a></h2>
+<p>You can also use the <code class="docutils literal notranslate"><span class="pre">docker-compose.yml</span></code> to spin up a development container without using VS Code.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose -f .devcontainer/docker-compose.yml up -d
+docker-compose -f .devcontainer/docker-compose.yml <span class="nb">exec</span> metalfs-dev bash
+</pre></div>
+</div>
+</div>
+<div class="section" id="x11-forwarding">
+<h2>X11-Forwarding<a class="headerlink" href="#x11-forwarding" title="Permalink to this headline">¶</a></h2>
+<p>If you are using a non-Linux host and want to start Vivado X11 applications from the container, please change the DISPLAY environment variable parameter to <code class="docutils literal notranslate"><span class="pre">&quot;DISPLAY=host.docker.internal:0.0&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">.devcontainer/docker-compose.yml</span></code>.</p>
+<p>Allow Docker containers to connect to your X11 server:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Linux: run <code class="docutils literal notranslate"><span class="pre">xhost</span> <span class="pre">local:root</span></code> (<a class="reference external" href="https://stackoverflow.com/a/43016704/5831785">Source</a>)</p></li>
+<li><p>Docker for Mac: Enable “Allow connections from network clients” in the XQuartz settings, then run <code class="docutils literal notranslate"><span class="pre">xhost</span> <span class="pre">+</span> <span class="pre">127.0.0.1</span></code> (<a class="reference external" href="https://medium.com/&#64;mreichelt/how-to-show-x11-windows-within-docker-on-mac-50759f4b65cb">Source</a>)</p></li>
+<li><p>Windows: Start VcXsrv with “Multiple Windows”,  Display number 0 and “Disable access control” (<a class="reference external" href="https://dev.to/darksmile92/run-gui-app-in-linux-docker-container-on-windows-host-4kde">Source</a>)</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="fuse-in-docker">
+<h2>FUSE in Docker<a class="headerlink" href="#fuse-in-docker" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="vivado-hls-debugging-in-docker">
+<h2>Vivado HLS Debugging in Docker<a class="headerlink" href="#vivado-hls-debugging-in-docker" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tutorial.html" class="btn btn-neutral float-right" title="Tutorial" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="prerequisites.html" class="btn btn-neutral float-left" title="Metal FS Prerequisites" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

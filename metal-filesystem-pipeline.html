@@ -1,0 +1,505 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metal Filesystem Pipeline &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Index" href="genindex.html" />
+    <link rel="prev" title="Metal Filesystem" href="metal-filesystem.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Metal Filesystem Pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/metal-filesystem-pipeline.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="metal-filesystem-pipeline">
+<h1>Metal Filesystem Pipeline<a class="headerlink" href="#metal-filesystem-pipeline" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp class">
+<dt id="_CPPv4N5metal19FileDataSinkContextE">
+<span id="_CPPv3N5metal19FileDataSinkContextE"></span><span id="_CPPv2N5metal19FileDataSinkContextE"></span><span id="metal::FileDataSinkContext"></span><span class="target" id="classmetal_1_1_file_data_sink_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">FileDataSinkContext</code> : <em class="property">public</em> metal::<a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal22DefaultDataSinkContextE" title="metal::DefaultDataSinkContext">DefaultDataSinkContext</a><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext19FileDataSinkContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_tb">
+<span id="_CPPv3N5metal19FileDataSinkContext19FileDataSinkContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_tb"></span><span id="_CPPv2N5metal19FileDataSinkContext19FileDataSinkContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_tb"></span><span id="metal::FileDataSinkContext::FileDataSinkContext__std::shared_ptr:PipelineStorage:.uint64_t.uint64_t.uint64_t.b"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a9865365f32c64cef6dd2bd2c33ec16cb"></span><code class="sig-name descname">FileDataSinkContext</code><span class="sig-paren">(</span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <em>filesystem</em>, uint64_t <em>inode_id</em>, uint64_t <em>offset</em>, uint64_t <em>size</em>, bool <em>truncateOnFinalize</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext19FileDataSinkContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_tb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext19prepareForTotalSizeE8uint64_t">
+<span id="_CPPv3N5metal19FileDataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="_CPPv2N5metal19FileDataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="metal::FileDataSinkContext::prepareForTotalSize__uint64_t"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a7de382f1a54be0a720642fd36e92af85"></span>void <code class="sig-name descname">prepareForTotalSize</code><span class="sig-paren">(</span>uint64_t <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext19prepareForTotalSizeE8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext11loadExtentsEv">
+<span id="_CPPv3N5metal19FileDataSinkContext11loadExtentsEv"></span><span id="_CPPv2N5metal19FileDataSinkContext11loadExtentsEv"></span><span id="metal::FileDataSinkContext::loadExtents"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a6c9c087e352c3920237f3c484d0e8b5d"></span>void <code class="sig-name descname">loadExtents</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext11loadExtentsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext9configureER10SnapAction8uint64_tb">
+<span id="_CPPv3N5metal19FileDataSinkContext9configureER10SnapAction8uint64_tb"></span><span id="_CPPv2N5metal19FileDataSinkContext9configureER10SnapAction8uint64_tb"></span><span id="metal::FileDataSinkContext::configure__SnapActionR.uint64_t.b"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1ad902ff8d86517fde972d924ba0b6d0aa"></span>void <code class="sig-name descname">configure</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, uint64_t <em>inputSize</em>, bool <em>initial</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext9configureER10SnapAction8uint64_tb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext8finalizeER10SnapAction8uint64_tb">
+<span id="_CPPv3N5metal19FileDataSinkContext8finalizeER10SnapAction8uint64_tb"></span><span id="_CPPv2N5metal19FileDataSinkContext8finalizeER10SnapAction8uint64_tb"></span><span id="metal::FileDataSinkContext::finalize__SnapActionR.uint64_t.b"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1ac6f82a4d0dc64f1c876cafb090b8ec1a"></span>void <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, uint64_t <em>outputSize</em>, bool <em>endOfInput</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext8finalizeER10SnapAction8uint64_tb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal19FileDataSinkContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE">
+<span id="_CPPv3N5metal19FileDataSinkContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE"></span><span id="_CPPv2N5metal19FileDataSinkContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE"></span><span id="metal::FileDataSinkContext::mapExtents__SnapActionR.fpga::ExtmapSlot.std::vector:mtl_file_extent:R"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a2949133828471b8deb8f0178c6e40c9c"></span>void <code class="sig-name descname">mapExtents</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, fpga::ExtmapSlot <em>slot</em>, std::vector&lt;mtl_file_extent&gt; &amp;<em>extents</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal19FileDataSinkContext9_inode_idE">
+<span id="_CPPv3N5metal19FileDataSinkContext9_inode_idE"></span><span id="_CPPv2N5metal19FileDataSinkContext9_inode_idE"></span><span id="metal::FileDataSinkContext::_inode_id__uint64_t"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1ac4ad6e1400cf020b220da64c228ffb3a"></span>uint64_t <code class="sig-name descname">_inode_id</code><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext9_inode_idE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal19FileDataSinkContext19_truncateOnFinalizeE">
+<span id="_CPPv3N5metal19FileDataSinkContext19_truncateOnFinalizeE"></span><span id="_CPPv2N5metal19FileDataSinkContext19_truncateOnFinalizeE"></span><span id="metal::FileDataSinkContext::_truncateOnFinalize__b"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a9689f029c7d5f47801edb88431e8924a"></span>bool <code class="sig-name descname">_truncateOnFinalize</code><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext19_truncateOnFinalizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal19FileDataSinkContext8_extentsE">
+<span id="_CPPv3N5metal19FileDataSinkContext8_extentsE"></span><span id="_CPPv2N5metal19FileDataSinkContext8_extentsE"></span><span id="metal::FileDataSinkContext::_extents__std::vector:mtl_file_extent:"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a5210a7630c7763df4925a5bb958488d5"></span>std::vector&lt;mtl_file_extent&gt; <code class="sig-name descname">_extents</code><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext8_extentsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal19FileDataSinkContext11_filesystemE">
+<span id="_CPPv3N5metal19FileDataSinkContext11_filesystemE"></span><span id="_CPPv2N5metal19FileDataSinkContext11_filesystemE"></span><span id="metal::FileDataSinkContext::_filesystem__std::shared_ptr:PipelineStorage:"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1aeee966330517beb2d6b694f52e58f216"></span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <code class="sig-name descname">_filesystem</code><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext11_filesystemE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal19FileDataSinkContext16_cachedTotalSizeE">
+<span id="_CPPv3N5metal19FileDataSinkContext16_cachedTotalSizeE"></span><span id="_CPPv2N5metal19FileDataSinkContext16_cachedTotalSizeE"></span><span id="metal::FileDataSinkContext::_cachedTotalSize__uint64_t"></span><span class="target" id="classmetal_1_1_file_data_sink_context_1a7ae799d4f5c87b6477f228f7bb0078a4"></span>uint64_t <code class="sig-name descname">_cachedTotalSize</code><a class="headerlink" href="#_CPPv4N5metal19FileDataSinkContext16_cachedTotalSizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal21FileDataSourceContextE">
+<span id="_CPPv3N5metal21FileDataSourceContextE"></span><span id="_CPPv2N5metal21FileDataSourceContextE"></span><span id="metal::FileDataSourceContext"></span><span class="target" id="classmetal_1_1_file_data_source_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">FileDataSourceContext</code> : <em class="property">public</em> metal::<a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal24DefaultDataSourceContextE" title="metal::DefaultDataSourceContext">DefaultDataSourceContext</a><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext21FileDataSourceContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_t">
+<span id="_CPPv3N5metal21FileDataSourceContext21FileDataSourceContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_t"></span><span id="_CPPv2N5metal21FileDataSourceContext21FileDataSourceContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_t"></span><span id="metal::FileDataSourceContext::FileDataSourceContext__std::shared_ptr:PipelineStorage:.uint64_t.uint64_t.uint64_t"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a5e9ae75bdaa29219a5ac9caf0300de64"></span><code class="sig-name descname">FileDataSourceContext</code><span class="sig-paren">(</span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <em>filesystem</em>, uint64_t <em>inode_id</em>, uint64_t <em>offset</em>, uint64_t <em>size</em> = 0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext21FileDataSourceContextENSt10shared_ptrI15PipelineStorageEE8uint64_t8uint64_t8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext15reportTotalSizeEv">
+<span id="_CPPv3N5metal21FileDataSourceContext15reportTotalSizeEv"></span><span id="_CPPv2N5metal21FileDataSourceContext15reportTotalSizeEv"></span><span id="metal::FileDataSourceContext::reportTotalSize"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a0221af17a3cab23a34c7ac27110906f0"></span>uint64_t <code class="sig-name descname">reportTotalSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext15reportTotalSizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21FileDataSourceContext10endOfInputEv">
+<span id="_CPPv3NK5metal21FileDataSourceContext10endOfInputEv"></span><span id="_CPPv2NK5metal21FileDataSourceContext10endOfInputEv"></span><span id="metal::FileDataSourceContext::endOfInputC"></span><span class="target" id="classmetal_1_1_file_data_source_context_1ab7623ed6ba41c6a5f9f3f4609515dd42"></span>bool <code class="sig-name descname">endOfInput</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> <em class="property">override</em><a class="headerlink" href="#_CPPv4NK5metal21FileDataSourceContext10endOfInputEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext11loadExtentsEv">
+<span id="_CPPv3N5metal21FileDataSourceContext11loadExtentsEv"></span><span id="_CPPv2N5metal21FileDataSourceContext11loadExtentsEv"></span><span id="metal::FileDataSourceContext::loadExtents"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a5193bbf3bc11d306ef25dffd6dde1865"></span>uint64_t <code class="sig-name descname">loadExtents</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext11loadExtentsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext9configureER10SnapActionb">
+<span id="_CPPv3N5metal21FileDataSourceContext9configureER10SnapActionb"></span><span id="_CPPv2N5metal21FileDataSourceContext9configureER10SnapActionb"></span><span id="metal::FileDataSourceContext::configure__SnapActionR.b"></span><span class="target" id="classmetal_1_1_file_data_source_context_1ad5eae64cf9dfe6cf5bce3986ae18522f"></span>void <code class="sig-name descname">configure</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, bool <em>initial</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext9configureER10SnapActionb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext8finalizeER10SnapAction">
+<span id="_CPPv3N5metal21FileDataSourceContext8finalizeER10SnapAction"></span><span id="_CPPv2N5metal21FileDataSourceContext8finalizeER10SnapAction"></span><span id="metal::FileDataSourceContext::finalize__SnapActionR"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a89a966b19e5219158092d2ff0e978877"></span>void <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext8finalizeER10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21FileDataSourceContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE">
+<span id="_CPPv3N5metal21FileDataSourceContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE"></span><span id="_CPPv2N5metal21FileDataSourceContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE"></span><span id="metal::FileDataSourceContext::mapExtents__SnapActionR.fpga::ExtmapSlot.std::vector:mtl_file_extent:R"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a14ae79650f75d29c463d69c3b6f62e17"></span>void <code class="sig-name descname">mapExtents</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, fpga::ExtmapSlot <em>slot</em>, std::vector&lt;mtl_file_extent&gt; &amp;<em>extents</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext10mapExtentsER10SnapActionN4fpga10ExtmapSlotERNSt6vectorI15mtl_file_extentEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21FileDataSourceContext9_inode_idE">
+<span id="_CPPv3N5metal21FileDataSourceContext9_inode_idE"></span><span id="_CPPv2N5metal21FileDataSourceContext9_inode_idE"></span><span id="metal::FileDataSourceContext::_inode_id__uint64_t"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a56fb962230a2514dd9656de6067799f7"></span>uint64_t <code class="sig-name descname">_inode_id</code><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext9_inode_idE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21FileDataSourceContext11_filesystemE">
+<span id="_CPPv3N5metal21FileDataSourceContext11_filesystemE"></span><span id="_CPPv2N5metal21FileDataSourceContext11_filesystemE"></span><span id="metal::FileDataSourceContext::_filesystem__std::shared_ptr:PipelineStorage:"></span><span class="target" id="classmetal_1_1_file_data_source_context_1ad828b7a8d7da184beb0ce33cc07f7508"></span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <code class="sig-name descname">_filesystem</code><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext11_filesystemE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21FileDataSourceContext11_fileLengthE">
+<span id="_CPPv3N5metal21FileDataSourceContext11_fileLengthE"></span><span id="_CPPv2N5metal21FileDataSourceContext11_fileLengthE"></span><span id="metal::FileDataSourceContext::_fileLength__uint64_t"></span><span class="target" id="classmetal_1_1_file_data_source_context_1ac501d0756bf5b2e77dc0411d59d27ece"></span>uint64_t <code class="sig-name descname">_fileLength</code><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext11_fileLengthE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21FileDataSourceContext8_extentsE">
+<span id="_CPPv3N5metal21FileDataSourceContext8_extentsE"></span><span id="_CPPv2N5metal21FileDataSourceContext8_extentsE"></span><span id="metal::FileDataSourceContext::_extents__std::vector:mtl_file_extent:"></span><span class="target" id="classmetal_1_1_file_data_source_context_1a958cae143e69e773d470f593580a2787"></span>std::vector&lt;mtl_file_extent&gt; <code class="sig-name descname">_extents</code><a class="headerlink" href="#_CPPv4N5metal21FileDataSourceContext8_extentsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal17FilesystemContextE">
+<span id="_CPPv3N5metal17FilesystemContextE"></span><span id="_CPPv2N5metal17FilesystemContextE"></span><span id="metal::FilesystemContext"></span><span class="target" id="classmetal_1_1_filesystem_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">FilesystemContext</code><a class="headerlink" href="#_CPPv4N5metal17FilesystemContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#classmetal_1_1_pipeline_storage"><span class="std std-ref">metal::PipelineStorage</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17FilesystemContext17FilesystemContextENSt6stringEb">
+<span id="_CPPv3N5metal17FilesystemContext17FilesystemContextENSt6stringEb"></span><span id="_CPPv2N5metal17FilesystemContext17FilesystemContextENSt6stringEb"></span><span id="metal::FilesystemContext::FilesystemContext__ss.b"></span><span class="target" id="classmetal_1_1_filesystem_context_1a7f597818fa76db02d743470a8efaa96c"></span><code class="sig-name descname">FilesystemContext</code><span class="sig-paren">(</span>std::string <em>metadataDir</em>, bool <em>deleteMetadataIfExists</em> = false<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17FilesystemContext17FilesystemContextENSt6stringEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17FilesystemContextD0Ev">
+<span id="_CPPv3N5metal17FilesystemContextD0Ev"></span><span id="_CPPv2N5metal17FilesystemContextD0Ev"></span><span id="metal::FilesystemContext::~FilesystemContext"></span><span class="target" id="classmetal_1_1_filesystem_context_1a36b06811eba3dc485e05116da4704239"></span><code class="sig-name descname">~FilesystemContext</code><span class="sig-paren">(</span><span class="sig-paren">)</span> = default<a class="headerlink" href="#_CPPv4N5metal17FilesystemContextD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17FilesystemContext7contextEv">
+<span id="_CPPv3N5metal17FilesystemContext7contextEv"></span><span id="_CPPv2N5metal17FilesystemContext7contextEv"></span><span id="metal::FilesystemContext::context"></span><span class="target" id="classmetal_1_1_filesystem_context_1a19cd894dc5428ab8f46dc0e53beaf211"></span>mtl_context *<code class="sig-name descname">context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17FilesystemContext7contextEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal17FilesystemContext8_contextE">
+<span id="_CPPv3N5metal17FilesystemContext8_contextE"></span><span id="_CPPv2N5metal17FilesystemContext8_contextE"></span><span id="metal::FilesystemContext::_context__mtl_contextP"></span><span class="target" id="classmetal_1_1_filesystem_context_1ae5c37042b8e7f11432a34df0247f22ce"></span>mtl_context *<code class="sig-name descname">_context</code><a class="headerlink" href="#_CPPv4N5metal17FilesystemContext8_contextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal15PipelineStorageE">
+<span id="_CPPv3N5metal15PipelineStorageE"></span><span id="_CPPv2N5metal15PipelineStorageE"></span><span id="metal::PipelineStorage"></span><span class="target" id="classmetal_1_1_pipeline_storage"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">PipelineStorage</code> : <em class="property">public</em> metal::<a class="reference internal" href="#_CPPv4N5metal17FilesystemContextE" title="metal::FilesystemContext">FilesystemContext</a>, <em class="property">public</em> std::enable_shared_from_this&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt;<a class="headerlink" href="#_CPPv4N5metal15PipelineStorageE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage15PipelineStorageE4CardN4fpga11AddressTypeEN4fpga7MapTypeENSt6stringEbNSt10shared_ptrI15PipelineStorageEE">
+<span id="_CPPv3N5metal15PipelineStorage15PipelineStorageE4CardN4fpga11AddressTypeEN4fpga7MapTypeENSt6stringEbNSt10shared_ptrI15PipelineStorageEE"></span><span id="_CPPv2N5metal15PipelineStorage15PipelineStorageE4CardN4fpga11AddressTypeEN4fpga7MapTypeENSt6stringEbNSt10shared_ptrI15PipelineStorageEE"></span><span id="metal::PipelineStorage::PipelineStorage__Card.fpga::AddressType.fpga::MapType.ss.b.std::shared_ptr:PipelineStorage:"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a9ba58ec5d0a39fca5b43b5d8ab3fb50d"></span><code class="sig-name descname">PipelineStorage</code><span class="sig-paren">(</span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em>, fpga::AddressType <em>type</em>, fpga::MapType <em>map</em>, std::string <em>metadataDir</em>, bool <em>deleteMetadataIfExists</em> = false, std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorage15PipelineStorageE4CardN4fpga11AddressTypeEN4fpga7MapTypeENSt6stringEbNSt10shared_ptrI15PipelineStorageEE" title="metal::PipelineStorage::PipelineStorage">PipelineStorage</a>&gt; <em>dramPipelineStorage</em> = nullptr<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage15PipelineStorageE4CardN4fpga11AddressTypeEN4fpga7MapTypeENSt6stringEbNSt10shared_ptrI15PipelineStorageEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15PipelineStorage4typeEv">
+<span id="_CPPv3NK5metal15PipelineStorage4typeEv"></span><span id="_CPPv2NK5metal15PipelineStorage4typeEv"></span><span id="metal::PipelineStorage::typeC"></span><span class="target" id="classmetal_1_1_pipeline_storage_1ae3d50591a5556bc6ac6e82584511f808"></span>fpga::AddressType <code class="sig-name descname">type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15PipelineStorage4typeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15PipelineStorage3mapEv">
+<span id="_CPPv3NK5metal15PipelineStorage3mapEv"></span><span id="_CPPv2NK5metal15PipelineStorage3mapEv"></span><span id="metal::PipelineStorage::mapC"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a1bd1b7eb99456c19e4790155a9285e44"></span>fpga::MapType <code class="sig-name descname">map</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15PipelineStorage3mapEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15PipelineStorage19dramPipelineStorageEv">
+<span id="_CPPv3NK5metal15PipelineStorage19dramPipelineStorageEv"></span><span id="_CPPv2NK5metal15PipelineStorage19dramPipelineStorageEv"></span><span id="metal::PipelineStorage::dramPipelineStorageC"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a0b1a8a6fe6c569e445a5cf63178554fe"></span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <code class="sig-name descname">dramPipelineStorage</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15PipelineStorage19dramPipelineStorageEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage16PagefileReadPathE">
+<span id="_CPPv3N5metal15PipelineStorage16PagefileReadPathE"></span><span id="_CPPv2N5metal15PipelineStorage16PagefileReadPathE"></span><span id="metal::PipelineStorage::PagefileReadPath__ssC"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a02a8b5845705bc970d6444b7a71775a8"></span><em class="property">const</em> std::string <code class="sig-name descname">PagefileReadPath</code> = &quot;/.pagefile_read&quot;<a class="headerlink" href="#_CPPv4N5metal15PipelineStorage16PagefileReadPathE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage17PagefileWritePathE">
+<span id="_CPPv3N5metal15PipelineStorage17PagefileWritePathE"></span><span id="_CPPv2N5metal15PipelineStorage17PagefileWritePathE"></span><span id="metal::PipelineStorage::PagefileWritePath__ssC"></span><span class="target" id="classmetal_1_1_pipeline_storage_1aaaec5cfe3994f050e8c879f027538448"></span><em class="property">const</em> std::string <code class="sig-name descname">PagefileWritePath</code> = &quot;/.pagefile_write&quot;<a class="headerlink" href="#_CPPv4N5metal15PipelineStorage17PagefileWritePathE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage18createDramPagefileERKNSt6stringE">
+<span id="_CPPv3N5metal15PipelineStorage18createDramPagefileERKNSt6stringE"></span><span id="_CPPv2N5metal15PipelineStorage18createDramPagefileERKNSt6stringE"></span><span id="metal::PipelineStorage::createDramPagefile__ssCR"></span><span class="target" id="classmetal_1_1_pipeline_storage_1aee5d8400b24b4e8a3a1d61705eb67351"></span>void <code class="sig-name descname">createDramPagefile</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>pagefilePath</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage18createDramPagefileERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage10initializeEv">
+<span id="_CPPv3N5metal15PipelineStorage10initializeEv"></span><span id="_CPPv2N5metal15PipelineStorage10initializeEv"></span><span id="metal::PipelineStorage::initialize"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a473ec45ef7c80e1095b50388793da76e"></span>int <code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage10initializeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage12deinitializeEv">
+<span id="_CPPv3N5metal15PipelineStorage12deinitializeEv"></span><span id="_CPPv2N5metal15PipelineStorage12deinitializeEv"></span><span id="metal::PipelineStorage::deinitialize"></span><span class="target" id="classmetal_1_1_pipeline_storage_1ae17b5fc3415241061678c4b5157b7f93"></span>int <code class="sig-name descname">deinitialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage12deinitializeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage24mtl_storage_get_metadataEP20mtl_storage_metadata">
+<span id="_CPPv3N5metal15PipelineStorage24mtl_storage_get_metadataEP20mtl_storage_metadata"></span><span id="_CPPv2N5metal15PipelineStorage24mtl_storage_get_metadataEP20mtl_storage_metadata"></span><span id="metal::PipelineStorage::mtl_storage_get_metadata__mtl_storage_metadataP"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a4905b55b7c2a4bc3b0d457a3f41f4529"></span>int <code class="sig-name descname">mtl_storage_get_metadata</code><span class="sig-paren">(</span>mtl_storage_metadata *<em>metadata</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage24mtl_storage_get_metadataEP20mtl_storage_metadata" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage4readE8uint64_t8uint64_tPv8uint64_t">
+<span id="_CPPv3N5metal15PipelineStorage4readE8uint64_t8uint64_tPv8uint64_t"></span><span id="_CPPv2N5metal15PipelineStorage4readE8uint64_t8uint64_tPv8uint64_t"></span><span id="metal::PipelineStorage::read__uint64_t.uint64_t.voidP.uint64_t"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a0efd0d9fd8788738cc946f50910816ca"></span>int <code class="sig-name descname">read</code><span class="sig-paren">(</span>uint64_t <em>inode_id</em>, uint64_t <em>offset</em>, void *<em>buffer</em>, uint64_t <em>length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage4readE8uint64_t8uint64_tPv8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15PipelineStorage5writeE8uint64_t8uint64_tPKv8uint64_t">
+<span id="_CPPv3N5metal15PipelineStorage5writeE8uint64_t8uint64_tPKv8uint64_t"></span><span id="_CPPv2N5metal15PipelineStorage5writeE8uint64_t8uint64_tPKv8uint64_t"></span><span id="metal::PipelineStorage::write__uint64_t.uint64_t.voidCP.uint64_t"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a797f4f8a23f253467174ac9cc347ebf7"></span>int <code class="sig-name descname">write</code><span class="sig-paren">(</span>uint64_t <em>inode_id</em>, uint64_t <em>offset</em>, <em class="property">const</em> void *<em>buffer</em>, uint64_t <em>length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage5writeE8uint64_t8uint64_tPKv8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage5_cardE">
+<span id="_CPPv3N5metal15PipelineStorage5_cardE"></span><span id="_CPPv2N5metal15PipelineStorage5_cardE"></span><span id="metal::PipelineStorage::_card__Card"></span><span class="target" id="classmetal_1_1_pipeline_storage_1ae92a6f31540cccd8bb85d3d3bf74b47a"></span><a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <code class="sig-name descname">_card</code><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage5_cardE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage8_backendE">
+<span id="_CPPv3N5metal15PipelineStorage8_backendE"></span><span id="_CPPv2N5metal15PipelineStorage8_backendE"></span><span id="metal::PipelineStorage::_backend__mtl_storage_backend"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a6438da099ac91ee9b5e0b1b59e3b581a"></span>mtl_storage_backend <code class="sig-name descname">_backend</code><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage8_backendE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage5_typeE">
+<span id="_CPPv3N5metal15PipelineStorage5_typeE"></span><span id="_CPPv2N5metal15PipelineStorage5_typeE"></span><span id="metal::PipelineStorage::_type__fpga::AddressType"></span><span class="target" id="classmetal_1_1_pipeline_storage_1afec2dec238f6da24367d808022b99233"></span>fpga::AddressType <code class="sig-name descname">_type</code><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage5_typeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage4_mapE">
+<span id="_CPPv3N5metal15PipelineStorage4_mapE"></span><span id="_CPPv2N5metal15PipelineStorage4_mapE"></span><span id="metal::PipelineStorage::_map__fpga::MapType"></span><span class="target" id="classmetal_1_1_pipeline_storage_1a5310c0a4f6923de55eb0055475c5799d"></span>fpga::MapType <code class="sig-name descname">_map</code><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage4_mapE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15PipelineStorage20_dramPipelineStorageE">
+<span id="_CPPv3N5metal15PipelineStorage20_dramPipelineStorageE"></span><span id="_CPPv2N5metal15PipelineStorage20_dramPipelineStorageE"></span><span id="metal::PipelineStorage::_dramPipelineStorage__std::shared_ptr:PipelineStorage:"></span><span class="target" id="classmetal_1_1_pipeline_storage_1acf93e07ebbdbde229a1de9f699b3db65"></span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal15PipelineStorageE" title="metal::PipelineStorage">PipelineStorage</a>&gt; <code class="sig-name descname">_dramPipelineStorage</code><a class="headerlink" href="#_CPPv4N5metal15PipelineStorage20_dramPipelineStorageE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="genindex.html" class="btn btn-neutral float-right" title="Index" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="metal-filesystem.html" class="btn btn-neutral float-left" title="Metal Filesystem" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

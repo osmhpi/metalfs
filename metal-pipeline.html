@@ -1,0 +1,1232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metal Pipeline &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metal Filesystem" href="metal-filesystem.html" />
+    <link rel="prev" title="Operator Manifest" href="operator-manifest.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Metal Pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/metal-pipeline.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="metal-pipeline">
+<h1>Metal Pipeline<a class="headerlink" href="#metal-pipeline" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp struct">
+<dt id="_CPPv4N5metal4CardE">
+<span id="_CPPv3N5metal4CardE"></span><span id="_CPPv2N5metal4CardE"></span><span id="metal::Card"></span><span class="target" id="structmetal_1_1_card"></span><em class="property">struct </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Card</code><a class="headerlink" href="#_CPPv4N5metal4CardE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4Card4cardE">
+<span id="_CPPv3N5metal4Card4cardE"></span><span id="_CPPv2N5metal4Card4cardE"></span><span id="metal::Card::card__i"></span><span class="target" id="structmetal_1_1_card_1ad9669e5b8c5b4f5cc8cc19d9a1cb0310"></span>int <code class="sig-name descname">card</code><a class="headerlink" href="#_CPPv4N5metal4Card4cardE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4Card7timeoutE">
+<span id="_CPPv3N5metal4Card7timeoutE"></span><span id="_CPPv2N5metal4Card7timeoutE"></span><span id="metal::Card::timeout__i"></span><span class="target" id="structmetal_1_1_card_1a558d6daee71bf9fee2882fa01dc4340b"></span>int <code class="sig-name descname">timeout</code><a class="headerlink" href="#_CPPv4N5metal4Card7timeoutE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal10DataSourceE">
+<span id="_CPPv3N5metal10DataSourceE"></span><span id="_CPPv2N5metal10DataSourceE"></span><span id="metal::DataSource"></span><span class="target" id="classmetal_1_1_data_source"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DataSource</code><a class="headerlink" href="#_CPPv4N5metal10DataSourceE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10DataSource10DataSourceE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE">
+<span id="_CPPv3N5metal10DataSource10DataSourceE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE"></span><span id="_CPPv2N5metal10DataSource10DataSourceE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE"></span><span id="metal::DataSource::DataSource__uint64_t.uint64_t.fpga::AddressType.fpga::MapType"></span><span class="target" id="classmetal_1_1_data_source_1ad27bf5e81876eef1b531a52c9906207b"></span><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span>uint64_t <em>address</em>, uint64_t <em>size</em>, fpga::AddressType <em>addressType</em>, fpga::MapType <em>mapType</em> = fpga::MapType::None<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10DataSource10DataSourceE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10DataSource10DataSourceEPKv8uint64_t">
+<span id="_CPPv3N5metal10DataSource10DataSourceEPKv8uint64_t"></span><span id="_CPPv2N5metal10DataSource10DataSourceEPKv8uint64_t"></span><span id="metal::DataSource::DataSource__voidCP.uint64_t"></span><span class="target" id="classmetal_1_1_data_source_1a3e3d3d0dae4b75e6f6b6fce7babd6ec4"></span><code class="sig-name descname">DataSource</code><span class="sig-paren">(</span><em class="property">const</em> void *<em>address</em>, uint64_t <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10DataSource10DataSourceEPKv8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10DataSource8withSizeE8uint64_t">
+<span id="_CPPv3N5metal10DataSource8withSizeE8uint64_t"></span><span id="_CPPv2N5metal10DataSource8withSizeE8uint64_t"></span><span id="metal::DataSource::withSize__uint64_t"></span><span class="target" id="classmetal_1_1_data_source_1a53f35c796910428dd61a1aefd46049eb"></span><a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <code class="sig-name descname">withSize</code><span class="sig-paren">(</span>uint64_t <em>newSize</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10DataSource8withSizeE8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal10DataSource7addressEv">
+<span id="_CPPv3NK5metal10DataSource7addressEv"></span><span id="_CPPv2NK5metal10DataSource7addressEv"></span><span id="metal::DataSource::addressC"></span><span class="target" id="classmetal_1_1_data_source_1aafa388b6fd505d0e9929baceec53fdd9"></span>fpga::Address <code class="sig-name descname">address</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal10DataSource7addressEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10DataSource8_addressE">
+<span id="_CPPv3N5metal10DataSource8_addressE"></span><span id="_CPPv2N5metal10DataSource8_addressE"></span><span id="metal::DataSource::_address__uint64_t"></span><span class="target" id="classmetal_1_1_data_source_1af9a4b33cea126833959a6fed6fd28538"></span>uint64_t <code class="sig-name descname">_address</code><a class="headerlink" href="#_CPPv4N5metal10DataSource8_addressE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10DataSource5_sizeE">
+<span id="_CPPv3N5metal10DataSource5_sizeE"></span><span id="_CPPv2N5metal10DataSource5_sizeE"></span><span id="metal::DataSource::_size__uint64_t"></span><span class="target" id="classmetal_1_1_data_source_1af9e9a76c2292e47732e60daed59a61f8"></span>uint64_t <code class="sig-name descname">_size</code><a class="headerlink" href="#_CPPv4N5metal10DataSource5_sizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10DataSource12_addressTypeE">
+<span id="_CPPv3N5metal10DataSource12_addressTypeE"></span><span id="_CPPv2N5metal10DataSource12_addressTypeE"></span><span id="metal::DataSource::_addressType__fpga::AddressType"></span><span class="target" id="classmetal_1_1_data_source_1ac8970b1aa4fafe915f616e684ef73ba6"></span>fpga::AddressType <code class="sig-name descname">_addressType</code><a class="headerlink" href="#_CPPv4N5metal10DataSource12_addressTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10DataSource8_mapTypeE">
+<span id="_CPPv3N5metal10DataSource8_mapTypeE"></span><span id="_CPPv2N5metal10DataSource8_mapTypeE"></span><span id="metal::DataSource::_mapType__fpga::MapType"></span><span class="target" id="classmetal_1_1_data_source_1a78e4748883d08591ed7b3f21b7747a2d"></span>fpga::MapType <code class="sig-name descname">_mapType</code><a class="headerlink" href="#_CPPv4N5metal10DataSource8_mapTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal8DataSinkE">
+<span id="_CPPv3N5metal8DataSinkE"></span><span id="_CPPv2N5metal8DataSinkE"></span><span id="metal::DataSink"></span><span class="target" id="classmetal_1_1_data_sink"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DataSink</code><a class="headerlink" href="#_CPPv4N5metal8DataSinkE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8DataSink8DataSinkE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE">
+<span id="_CPPv3N5metal8DataSink8DataSinkE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE"></span><span id="_CPPv2N5metal8DataSink8DataSinkE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE"></span><span id="metal::DataSink::DataSink__uint64_t.uint64_t.fpga::AddressType.fpga::MapType"></span><span class="target" id="classmetal_1_1_data_sink_1a1a7c1fe219ef59eae3e74885cd1656e9"></span><code class="sig-name descname">DataSink</code><span class="sig-paren">(</span>uint64_t <em>address</em>, uint64_t <em>size</em>, fpga::AddressType <em>addressType</em>, fpga::MapType <em>mapType</em> = fpga::MapType::None<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8DataSink8DataSinkE8uint64_t8uint64_tN4fpga11AddressTypeEN4fpga7MapTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8DataSink8DataSinkEPv8uint64_t">
+<span id="_CPPv3N5metal8DataSink8DataSinkEPv8uint64_t"></span><span id="_CPPv2N5metal8DataSink8DataSinkEPv8uint64_t"></span><span id="metal::DataSink::DataSink__voidP.uint64_t"></span><span class="target" id="classmetal_1_1_data_sink_1a6e8fda066e37ea1f1c3044a8f5d3646a"></span><code class="sig-name descname">DataSink</code><span class="sig-paren">(</span>void *<em>address</em>, uint64_t <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8DataSink8DataSinkEPv8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8DataSink8withSizeE8uint64_t">
+<span id="_CPPv3N5metal8DataSink8withSizeE8uint64_t"></span><span id="_CPPv2N5metal8DataSink8withSizeE8uint64_t"></span><span id="metal::DataSink::withSize__uint64_t"></span><span class="target" id="classmetal_1_1_data_sink_1acfea889c4809f2542b23e8a9d5707e5d"></span><a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <code class="sig-name descname">withSize</code><span class="sig-paren">(</span>uint64_t <em>newSize</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8DataSink8withSizeE8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal8DataSink7addressEv">
+<span id="_CPPv3NK5metal8DataSink7addressEv"></span><span id="_CPPv2NK5metal8DataSink7addressEv"></span><span id="metal::DataSink::addressC"></span><span class="target" id="classmetal_1_1_data_sink_1a40b9ecfa9211a7cf92f7d295b1022ad2"></span>fpga::Address <code class="sig-name descname">address</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal8DataSink7addressEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8DataSink8_addressE">
+<span id="_CPPv3N5metal8DataSink8_addressE"></span><span id="_CPPv2N5metal8DataSink8_addressE"></span><span id="metal::DataSink::_address__uint64_t"></span><span class="target" id="classmetal_1_1_data_sink_1ace6eaf73e5b6ae70e0c18e7a7d75d258"></span>uint64_t <code class="sig-name descname">_address</code><a class="headerlink" href="#_CPPv4N5metal8DataSink8_addressE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8DataSink5_sizeE">
+<span id="_CPPv3N5metal8DataSink5_sizeE"></span><span id="_CPPv2N5metal8DataSink5_sizeE"></span><span id="metal::DataSink::_size__uint64_t"></span><span class="target" id="classmetal_1_1_data_sink_1a45140f6abfcfe074eafcf67db3ca8051"></span>uint64_t <code class="sig-name descname">_size</code><a class="headerlink" href="#_CPPv4N5metal8DataSink5_sizeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8DataSink12_addressTypeE">
+<span id="_CPPv3N5metal8DataSink12_addressTypeE"></span><span id="_CPPv2N5metal8DataSink12_addressTypeE"></span><span id="metal::DataSink::_addressType__fpga::AddressType"></span><span class="target" id="classmetal_1_1_data_sink_1ac541c6d671eb2a93bee6f4754ee4c4da"></span>fpga::AddressType <code class="sig-name descname">_addressType</code><a class="headerlink" href="#_CPPv4N5metal8DataSink12_addressTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8DataSink8_mapTypeE">
+<span id="_CPPv3N5metal8DataSink8_mapTypeE"></span><span id="_CPPv2N5metal8DataSink8_mapTypeE"></span><span id="metal::DataSink::_mapType__fpga::MapType"></span><span class="target" id="classmetal_1_1_data_sink_1aa9924a2dedf63c85235d242d8a30052f"></span>fpga::MapType <code class="sig-name descname">_mapType</code><a class="headerlink" href="#_CPPv4N5metal8DataSink8_mapTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal17DataSourceContextE">
+<span id="_CPPv3N5metal17DataSourceContextE"></span><span id="_CPPv2N5metal17DataSourceContextE"></span><span id="metal::DataSourceContext"></span><span class="target" id="classmetal_1_1_data_source_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DataSourceContext</code><a class="headerlink" href="#_CPPv4N5metal17DataSourceContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#classmetal_1_1_default_data_source_context"><span class="std std-ref">metal::DefaultDataSourceContext</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17DataSourceContext17DataSourceContextEv">
+<span id="_CPPv3N5metal17DataSourceContext17DataSourceContextEv"></span><span id="_CPPv2N5metal17DataSourceContext17DataSourceContextEv"></span><span id="metal::DataSourceContext::DataSourceContext"></span><span class="target" id="classmetal_1_1_data_source_context_1ae97caf3467b443e353d1e4d0cee07fe8"></span><code class="sig-name descname">DataSourceContext</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext17DataSourceContextEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17DataSourceContext9configureER10SnapActionb">
+<span id="_CPPv3N5metal17DataSourceContext9configureER10SnapActionb"></span><span id="_CPPv2N5metal17DataSourceContext9configureER10SnapActionb"></span><span id="metal::DataSourceContext::configure__SnapActionR.b"></span><span class="target" id="classmetal_1_1_data_source_context_1adec34bfe2719289389aa33717c7fd1ac"></span>void <code class="sig-name descname">configure</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, bool <em>initial</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext9configureER10SnapActionb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17DataSourceContext8finalizeER10SnapAction">
+<span id="_CPPv3N5metal17DataSourceContext8finalizeER10SnapAction"></span><span id="_CPPv2N5metal17DataSourceContext8finalizeER10SnapAction"></span><span id="metal::DataSourceContext::finalize__SnapActionR"></span><span class="target" id="classmetal_1_1_data_source_context_1a635b828d12206b29f6444248197731e5"></span>void <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext8finalizeER10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal17DataSourceContext10dataSourceEv">
+<span id="_CPPv3NK5metal17DataSourceContext10dataSourceEv"></span><span id="_CPPv2NK5metal17DataSourceContext10dataSourceEv"></span><span id="metal::DataSourceContext::dataSourceC"></span><span class="target" id="classmetal_1_1_data_source_context_1a16ab520c07d7825ce80d9069333179a8"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <code class="sig-name descname">dataSource</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5metal17DataSourceContext10dataSourceEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal17DataSourceContext15reportTotalSizeEv">
+<span id="_CPPv3NK5metal17DataSourceContext15reportTotalSizeEv"></span><span id="_CPPv2NK5metal17DataSourceContext15reportTotalSizeEv"></span><span id="metal::DataSourceContext::reportTotalSizeC"></span><span class="target" id="classmetal_1_1_data_source_context_1aefbdd24763b9447c04cf88ac90bbeae3"></span>uint64_t <code class="sig-name descname">reportTotalSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5metal17DataSourceContext15reportTotalSizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal17DataSourceContext10endOfInputEv">
+<span id="_CPPv3NK5metal17DataSourceContext10endOfInputEv"></span><span id="_CPPv2NK5metal17DataSourceContext10endOfInputEv"></span><span id="metal::DataSourceContext::endOfInputC"></span><span class="target" id="classmetal_1_1_data_source_context_1af94dc71f858f7baffe924314ca892d49"></span>bool <code class="sig-name descname">endOfInput</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5metal17DataSourceContext10endOfInputEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal17DataSourceContext16profilingEnabledEv">
+<span id="_CPPv3NK5metal17DataSourceContext16profilingEnabledEv"></span><span id="_CPPv2NK5metal17DataSourceContext16profilingEnabledEv"></span><span id="metal::DataSourceContext::profilingEnabledC"></span><span class="target" id="classmetal_1_1_data_source_context_1a369c7952998efc3faf2b9aa44c883b46"></span>bool <code class="sig-name descname">profilingEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal17DataSourceContext16profilingEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17DataSourceContext19setProfilingEnabledEb">
+<span id="_CPPv3N5metal17DataSourceContext19setProfilingEnabledEb"></span><span id="_CPPv2N5metal17DataSourceContext19setProfilingEnabledEb"></span><span id="metal::DataSourceContext::setProfilingEnabled__b"></span><span class="target" id="classmetal_1_1_data_source_context_1a8cb4dd2cd2d7537a9608b55661ce358f"></span>void <code class="sig-name descname">setProfilingEnabled</code><span class="sig-paren">(</span>bool <em>enabled</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext19setProfilingEnabledEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal17DataSourceContext19setProfilingResultsENSt6stringE">
+<span id="_CPPv3N5metal17DataSourceContext19setProfilingResultsENSt6stringE"></span><span id="_CPPv2N5metal17DataSourceContext19setProfilingResultsENSt6stringE"></span><span id="metal::DataSourceContext::setProfilingResults__ss"></span><span class="target" id="classmetal_1_1_data_source_context_1a5add48273e46149f4dacff77015320ba"></span>void <code class="sig-name descname">setProfilingResults</code><span class="sig-paren">(</span>std::string <em>results</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext19setProfilingResultsENSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal17DataSourceContext17_profilingEnabledE">
+<span id="_CPPv3N5metal17DataSourceContext17_profilingEnabledE"></span><span id="_CPPv2N5metal17DataSourceContext17_profilingEnabledE"></span><span id="metal::DataSourceContext::_profilingEnabled__b"></span><span class="target" id="classmetal_1_1_data_source_context_1ab56b952cf34fd5987bc9092af1b9dd93"></span>bool <code class="sig-name descname">_profilingEnabled</code><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext17_profilingEnabledE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal17DataSourceContext17_profilingResultsE">
+<span id="_CPPv3N5metal17DataSourceContext17_profilingResultsE"></span><span id="_CPPv2N5metal17DataSourceContext17_profilingResultsE"></span><span id="metal::DataSourceContext::_profilingResults__ss"></span><span class="target" id="classmetal_1_1_data_source_context_1acfd6d957b73f8b48742a0ffa7c6f687d"></span>std::string <code class="sig-name descname">_profilingResults</code><a class="headerlink" href="#_CPPv4N5metal17DataSourceContext17_profilingResultsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal24DefaultDataSourceContextE">
+<span id="_CPPv3N5metal24DefaultDataSourceContextE"></span><span id="_CPPv2N5metal24DefaultDataSourceContextE"></span><span id="metal::DefaultDataSourceContext"></span><span class="target" id="classmetal_1_1_default_data_source_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DefaultDataSourceContext</code> : <em class="property">public</em> metal::<a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a><a class="headerlink" href="#_CPPv4N5metal24DefaultDataSourceContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="metal-filesystem-pipeline.html#classmetal_1_1_file_data_source_context"><span class="std std-ref">metal::FileDataSourceContext</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal24DefaultDataSourceContext24DefaultDataSourceContextE10DataSource">
+<span id="_CPPv3N5metal24DefaultDataSourceContext24DefaultDataSourceContextE10DataSource"></span><span id="_CPPv2N5metal24DefaultDataSourceContext24DefaultDataSourceContextE10DataSource"></span><span id="metal::DefaultDataSourceContext::DefaultDataSourceContext__DataSource"></span><span class="target" id="classmetal_1_1_default_data_source_context_1a696f7d395911de85f06b90f75297b266"></span><code class="sig-name descname">DefaultDataSourceContext</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <em>dataSource</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal24DefaultDataSourceContext24DefaultDataSourceContextE10DataSource" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal24DefaultDataSourceContext10dataSourceEv">
+<span id="_CPPv3NK5metal24DefaultDataSourceContext10dataSourceEv"></span><span id="_CPPv2NK5metal24DefaultDataSourceContext10dataSourceEv"></span><span id="metal::DefaultDataSourceContext::dataSourceC"></span><span class="target" id="classmetal_1_1_default_data_source_context_1a10299572789d4c9c62cbf1bd6a9fea97"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <code class="sig-name descname">dataSource</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> <em class="property">override</em><a class="headerlink" href="#_CPPv4NK5metal24DefaultDataSourceContext10dataSourceEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal24DefaultDataSourceContext15reportTotalSizeEv">
+<span id="_CPPv3NK5metal24DefaultDataSourceContext15reportTotalSizeEv"></span><span id="_CPPv2NK5metal24DefaultDataSourceContext15reportTotalSizeEv"></span><span id="metal::DefaultDataSourceContext::reportTotalSizeC"></span><span class="target" id="classmetal_1_1_default_data_source_context_1a30e2ceba292510103f7bda5c99d72a46"></span>uint64_t <code class="sig-name descname">reportTotalSize</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> <em class="property">override</em><a class="headerlink" href="#_CPPv4NK5metal24DefaultDataSourceContext15reportTotalSizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal24DefaultDataSourceContext10endOfInputEv">
+<span id="_CPPv3NK5metal24DefaultDataSourceContext10endOfInputEv"></span><span id="_CPPv2NK5metal24DefaultDataSourceContext10endOfInputEv"></span><span id="metal::DefaultDataSourceContext::endOfInputC"></span><span class="target" id="classmetal_1_1_default_data_source_context_1af6a63207d7b9019ae5c0295620e5ad10"></span>bool <code class="sig-name descname">endOfInput</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> <em class="property">override</em><a class="headerlink" href="#_CPPv4NK5metal24DefaultDataSourceContext10endOfInputEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal24DefaultDataSourceContext11_dataSourceE">
+<span id="_CPPv3N5metal24DefaultDataSourceContext11_dataSourceE"></span><span id="_CPPv2N5metal24DefaultDataSourceContext11_dataSourceE"></span><span id="metal::DefaultDataSourceContext::_dataSource__DataSource"></span><span class="target" id="classmetal_1_1_default_data_source_context_1a6dda68e589859d28e23d399697a39d6f"></span><a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <code class="sig-name descname">_dataSource</code><a class="headerlink" href="#_CPPv4N5metal24DefaultDataSourceContext11_dataSourceE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal15DataSinkContextE">
+<span id="_CPPv3N5metal15DataSinkContextE"></span><span id="_CPPv2N5metal15DataSinkContextE"></span><span id="metal::DataSinkContext"></span><span class="target" id="classmetal_1_1_data_sink_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DataSinkContext</code><a class="headerlink" href="#_CPPv4N5metal15DataSinkContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#classmetal_1_1_default_data_sink_context"><span class="std std-ref">metal::DefaultDataSinkContext</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext15DataSinkContextEv">
+<span id="_CPPv3N5metal15DataSinkContext15DataSinkContextEv"></span><span id="_CPPv2N5metal15DataSinkContext15DataSinkContextEv"></span><span id="metal::DataSinkContext::DataSinkContext"></span><span class="target" id="classmetal_1_1_data_sink_context_1ad87bf2b2359bb2aa30d5d00453a1bfc1"></span><code class="sig-name descname">DataSinkContext</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext15DataSinkContextEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15DataSinkContext8dataSinkEv">
+<span id="_CPPv3NK5metal15DataSinkContext8dataSinkEv"></span><span id="_CPPv2NK5metal15DataSinkContext8dataSinkEv"></span><span id="metal::DataSinkContext::dataSinkC"></span><span class="target" id="classmetal_1_1_data_sink_context_1a2eaa3bbe20d9b6d3f8f704e4ff6080b2"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <code class="sig-name descname">dataSink</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> = 0<a class="headerlink" href="#_CPPv4NK5metal15DataSinkContext8dataSinkEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext19prepareForTotalSizeE8uint64_t">
+<span id="_CPPv3N5metal15DataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="_CPPv2N5metal15DataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="metal::DataSinkContext::prepareForTotalSize__uint64_t"></span><span class="target" id="classmetal_1_1_data_sink_context_1ac3279bbe52b34cf6f1201b1cb2c63e1d"></span>void <code class="sig-name descname">prepareForTotalSize</code><span class="sig-paren">(</span>uint64_t <em>size</em><span class="sig-paren">)</span> = 0<a class="headerlink" href="#_CPPv4N5metal15DataSinkContext19prepareForTotalSizeE8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext9configureER10SnapAction8uint64_tb">
+<span id="_CPPv3N5metal15DataSinkContext9configureER10SnapAction8uint64_tb"></span><span id="_CPPv2N5metal15DataSinkContext9configureER10SnapAction8uint64_tb"></span><span id="metal::DataSinkContext::configure__SnapActionR.uint64_t.b"></span><span class="target" id="classmetal_1_1_data_sink_context_1ab83be2e4927fb89c3774887bd48c0083"></span>void <code class="sig-name descname">configure</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, uint64_t <em>inputSize</em>, bool <em>initial</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext9configureER10SnapAction8uint64_tb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext8finalizeER10SnapAction8uint64_tb">
+<span id="_CPPv3N5metal15DataSinkContext8finalizeER10SnapAction8uint64_tb"></span><span id="_CPPv2N5metal15DataSinkContext8finalizeER10SnapAction8uint64_tb"></span><span id="metal::DataSinkContext::finalize__SnapActionR.uint64_t.b"></span><span class="target" id="classmetal_1_1_data_sink_context_1aa45ab8c4bc9213f61ec66c8d7b05022d"></span>void <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, uint64_t <em>outputSize</em>, bool <em>endOfInput</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext8finalizeER10SnapAction8uint64_tb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15DataSinkContext16profilingEnabledEv">
+<span id="_CPPv3NK5metal15DataSinkContext16profilingEnabledEv"></span><span id="_CPPv2NK5metal15DataSinkContext16profilingEnabledEv"></span><span id="metal::DataSinkContext::profilingEnabledC"></span><span class="target" id="classmetal_1_1_data_sink_context_1a42c9d782e1b1048abedcaa2066eec20f"></span>bool <code class="sig-name descname">profilingEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15DataSinkContext16profilingEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext19setProfilingEnabledEb">
+<span id="_CPPv3N5metal15DataSinkContext19setProfilingEnabledEb"></span><span id="_CPPv2N5metal15DataSinkContext19setProfilingEnabledEb"></span><span id="metal::DataSinkContext::setProfilingEnabled__b"></span><span class="target" id="classmetal_1_1_data_sink_context_1a842ce638e8b69545bd925d26ca4b2912"></span>void <code class="sig-name descname">setProfilingEnabled</code><span class="sig-paren">(</span>bool <em>enabled</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext19setProfilingEnabledEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15DataSinkContext19setProfilingResultsENSt6stringE">
+<span id="_CPPv3N5metal15DataSinkContext19setProfilingResultsENSt6stringE"></span><span id="_CPPv2N5metal15DataSinkContext19setProfilingResultsENSt6stringE"></span><span id="metal::DataSinkContext::setProfilingResults__ss"></span><span class="target" id="classmetal_1_1_data_sink_context_1a39363ae3e125c0d7457df2453efdc533"></span>void <code class="sig-name descname">setProfilingResults</code><span class="sig-paren">(</span>std::string <em>results</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext19setProfilingResultsENSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15DataSinkContext17_profilingEnabledE">
+<span id="_CPPv3N5metal15DataSinkContext17_profilingEnabledE"></span><span id="_CPPv2N5metal15DataSinkContext17_profilingEnabledE"></span><span id="metal::DataSinkContext::_profilingEnabled__b"></span><span class="target" id="classmetal_1_1_data_sink_context_1a76d00abb9b3983577a24a239b172d0e5"></span>bool <code class="sig-name descname">_profilingEnabled</code><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext17_profilingEnabledE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15DataSinkContext17_profilingResultsE">
+<span id="_CPPv3N5metal15DataSinkContext17_profilingResultsE"></span><span id="_CPPv2N5metal15DataSinkContext17_profilingResultsE"></span><span id="metal::DataSinkContext::_profilingResults__ss"></span><span class="target" id="classmetal_1_1_data_sink_context_1aa94af889de3704959ebd7b7cef8de970"></span>std::string <code class="sig-name descname">_profilingResults</code><a class="headerlink" href="#_CPPv4N5metal15DataSinkContext17_profilingResultsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal22DefaultDataSinkContextE">
+<span id="_CPPv3N5metal22DefaultDataSinkContextE"></span><span id="_CPPv2N5metal22DefaultDataSinkContextE"></span><span id="metal::DefaultDataSinkContext"></span><span class="target" id="classmetal_1_1_default_data_sink_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">DefaultDataSinkContext</code> : <em class="property">public</em> metal::<a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a><a class="headerlink" href="#_CPPv4N5metal22DefaultDataSinkContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="metal-filesystem-pipeline.html#classmetal_1_1_file_data_sink_context"><span class="std std-ref">metal::FileDataSinkContext</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal22DefaultDataSinkContext22DefaultDataSinkContextE8DataSink">
+<span id="_CPPv3N5metal22DefaultDataSinkContext22DefaultDataSinkContextE8DataSink"></span><span id="_CPPv2N5metal22DefaultDataSinkContext22DefaultDataSinkContextE8DataSink"></span><span id="metal::DefaultDataSinkContext::DefaultDataSinkContext__DataSink"></span><span class="target" id="classmetal_1_1_default_data_sink_context_1a23d05683f3e1d1dafeec85d453a65622"></span><code class="sig-name descname">DefaultDataSinkContext</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <em>dataSink</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal22DefaultDataSinkContext22DefaultDataSinkContextE8DataSink" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal22DefaultDataSinkContext8dataSinkEv">
+<span id="_CPPv3NK5metal22DefaultDataSinkContext8dataSinkEv"></span><span id="_CPPv2NK5metal22DefaultDataSinkContext8dataSinkEv"></span><span id="metal::DefaultDataSinkContext::dataSinkC"></span><span class="target" id="classmetal_1_1_default_data_sink_context_1ac811a806dafdb3f67ab3ab9829918caa"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <code class="sig-name descname">dataSink</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em> <em class="property">override</em><a class="headerlink" href="#_CPPv4NK5metal22DefaultDataSinkContext8dataSinkEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal22DefaultDataSinkContext19prepareForTotalSizeE8uint64_t">
+<span id="_CPPv3N5metal22DefaultDataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="_CPPv2N5metal22DefaultDataSinkContext19prepareForTotalSizeE8uint64_t"></span><span id="metal::DefaultDataSinkContext::prepareForTotalSize__uint64_t"></span><span class="target" id="classmetal_1_1_default_data_sink_context_1a785a34d7956526bec1c75ac9a4d2a414"></span>void <code class="sig-name descname">prepareForTotalSize</code><span class="sig-paren">(</span>uint64_t <em>size</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal22DefaultDataSinkContext19prepareForTotalSizeE8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal22DefaultDataSinkContext9_dataSinkE">
+<span id="_CPPv3N5metal22DefaultDataSinkContext9_dataSinkE"></span><span id="_CPPv2N5metal22DefaultDataSinkContext9_dataSinkE"></span><span id="metal::DefaultDataSinkContext::_dataSink__DataSink"></span><span class="target" id="classmetal_1_1_default_data_sink_context_1a61bb98a516d008748fe3c17dc58360f2"></span><a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <code class="sig-name descname">_dataSink</code><a class="headerlink" href="#_CPPv4N5metal22DefaultDataSinkContext9_dataSinkE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal8OperatorE">
+<span id="_CPPv3N5metal8OperatorE"></span><span id="_CPPv2N5metal8OperatorE"></span><span id="metal::Operator"></span><span class="target" id="classmetal_1_1_operator"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Operator</code><a class="headerlink" href="#_CPPv4N5metal8OperatorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Operator8OperatorENSt10shared_ptrIK21OperatorSpecificationEE">
+<span id="_CPPv3N5metal8Operator8OperatorENSt10shared_ptrIK21OperatorSpecificationEE"></span><span id="_CPPv2N5metal8Operator8OperatorENSt10shared_ptrIK21OperatorSpecificationEE"></span><span id="metal::Operator::Operator__std::shared_ptr:OperatorSpecificationC:"></span><span class="target" id="classmetal_1_1_operator_1a7079083ac0d4a41df0d08ded5957b91a"></span><code class="sig-name descname">Operator</code><span class="sig-paren">(</span>std::shared_ptr&lt;<em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal21OperatorSpecificationE" title="metal::OperatorSpecification">OperatorSpecification</a>&gt; <em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Operator8OperatorENSt10shared_ptrIK21OperatorSpecificationEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Operator8OperatorERR8Operator">
+<span id="_CPPv3N5metal8Operator8OperatorERR8Operator"></span><span id="_CPPv2N5metal8Operator8OperatorERR8Operator"></span><span id="metal::Operator::Operator__OperatorRR"></span><span class="target" id="classmetal_1_1_operator_1a6aa3f85e248186770d777504dc84d2c4"></span><code class="sig-name descname">Operator</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal8Operator8OperatorERR8Operator" title="metal::Operator::Operator">Operator</a> &amp;&amp;<em>other</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Operator8OperatorERR8Operator" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal8Operator2idEv">
+<span id="_CPPv3NK5metal8Operator2idEv"></span><span id="_CPPv2NK5metal8Operator2idEv"></span><span id="metal::Operator::idC"></span><span class="target" id="classmetal_1_1_operator_1ad33e61dc78cc08f502e0e7fc7facda7f"></span>std::string <code class="sig-name descname">id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal8Operator2idEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal8Operator11descriptionEv">
+<span id="_CPPv3NK5metal8Operator11descriptionEv"></span><span id="_CPPv2NK5metal8Operator11descriptionEv"></span><span id="metal::Operator::descriptionC"></span><span class="target" id="classmetal_1_1_operator_1aab2cc14ccb4e28dfcb2c8688307e0f99"></span>std::string <code class="sig-name descname">description</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal8Operator11descriptionEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal8Operator7optionsEv">
+<span id="_CPPv3NK5metal8Operator7optionsEv"></span><span id="_CPPv2NK5metal8Operator7optionsEv"></span><span id="metal::Operator::optionsC"></span><span class="target" id="classmetal_1_1_operator_1af9699c42a4528a8a48e7a8a9edf74624"></span><em class="property">const</em> std::unordered_map&lt;std::string, std::optional&lt;OperatorArgumentValue&gt;&gt; <code class="sig-name descname">options</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal8Operator7optionsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal8Operator4specEv">
+<span id="_CPPv3NK5metal8Operator4specEv"></span><span id="_CPPv2NK5metal8Operator4specEv"></span><span id="metal::Operator::specC"></span><span class="target" id="classmetal_1_1_operator_1a4c9ffaf4b0d19c101fb310a43757a09b"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal21OperatorSpecificationE" title="metal::OperatorSpecification">OperatorSpecification</a> &amp;<code class="sig-name descname">spec</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal8Operator4specEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Operator9setOptionENSt6stringE21OperatorArgumentValue">
+<span id="_CPPv3N5metal8Operator9setOptionENSt6stringE21OperatorArgumentValue"></span><span id="_CPPv2N5metal8Operator9setOptionENSt6stringE21OperatorArgumentValue"></span><span id="metal::Operator::setOption__ss.OperatorArgumentValue"></span><span class="target" id="classmetal_1_1_operator_1a389492d389ceafa25a56318fba491402"></span>void <code class="sig-name descname">setOption</code><span class="sig-paren">(</span>std::string <em>option</em>, OperatorArgumentValue <em>arg</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Operator9setOptionENSt6stringE21OperatorArgumentValue" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8Operator8_optionsE">
+<span id="_CPPv3N5metal8Operator8_optionsE"></span><span id="_CPPv2N5metal8Operator8_optionsE"></span><span id="metal::Operator::_options__std::unordered_map:ss.std::optional:OperatorArgumentValue::"></span><span class="target" id="classmetal_1_1_operator_1a825d5b2bb59f16dad52bb05e4beebbc2"></span>std::unordered_map&lt;std::string, std::optional&lt;OperatorArgumentValue&gt;&gt; <code class="sig-name descname">_options</code><a class="headerlink" href="#_CPPv4N5metal8Operator8_optionsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal16OperatorArgumentE">
+<span id="_CPPv3N5metal16OperatorArgumentE"></span><span id="_CPPv2N5metal16OperatorArgumentE"></span><span id="metal::OperatorArgument"></span><span class="target" id="classmetal_1_1_operator_argument"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">OperatorArgument</code><a class="headerlink" href="#_CPPv4N5metal16OperatorArgumentE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal16OperatorArgument16OperatorArgumentE6size_t">
+<span id="_CPPv3N5metal16OperatorArgument16OperatorArgumentE6size_t"></span><span id="_CPPv2N5metal16OperatorArgument16OperatorArgumentE6size_t"></span><span id="metal::OperatorArgument::OperatorArgument__s"></span><span class="target" id="classmetal_1_1_operator_argument_1a02afb417ed29370d43eb35b9052789ac"></span><code class="sig-name descname">OperatorArgument</code><span class="sig-paren">(</span>size_t <em>offset</em> = 0<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal16OperatorArgument16OperatorArgumentE6size_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal16OperatorArgument6offsetEv">
+<span id="_CPPv3NK5metal16OperatorArgument6offsetEv"></span><span id="_CPPv2NK5metal16OperatorArgument6offsetEv"></span><span id="metal::OperatorArgument::offsetC"></span><span class="target" id="classmetal_1_1_operator_argument_1a95ccdfa355e384b43ca6eb80aeb2cc52"></span>size_t <code class="sig-name descname">offset</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal16OperatorArgument6offsetEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal16OperatorArgument8hasValueEv">
+<span id="_CPPv3NK5metal16OperatorArgument8hasValueEv"></span><span id="_CPPv2NK5metal16OperatorArgument8hasValueEv"></span><span id="metal::OperatorArgument::hasValueC"></span><span class="target" id="classmetal_1_1_operator_argument_1ae686f9c6fe8bae003351b53cf2b19e0d"></span>bool <code class="sig-name descname">hasValue</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal16OperatorArgument8hasValueEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal16OperatorArgument5valueEv">
+<span id="_CPPv3NK5metal16OperatorArgument5valueEv"></span><span id="_CPPv2NK5metal16OperatorArgument5valueEv"></span><span id="metal::OperatorArgument::valueC"></span><span class="target" id="classmetal_1_1_operator_argument_1ad99eff2a6a2e004809d551950ec498a9"></span><em class="property">const</em> OperatorArgumentValue &amp;<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal16OperatorArgument5valueEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal16OperatorArgument8setValueE21OperatorArgumentValue">
+<span id="_CPPv3N5metal16OperatorArgument8setValueE21OperatorArgumentValue"></span><span id="_CPPv2N5metal16OperatorArgument8setValueE21OperatorArgumentValue"></span><span id="metal::OperatorArgument::setValue__OperatorArgumentValue"></span><span class="target" id="classmetal_1_1_operator_argument_1ae3ab9db4269fab3885665d0c9f2a94a9"></span>void <code class="sig-name descname">setValue</code><span class="sig-paren">(</span>OperatorArgumentValue <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal16OperatorArgument8setValueE21OperatorArgumentValue" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal16OperatorArgument6_valueE">
+<span id="_CPPv3N5metal16OperatorArgument6_valueE"></span><span id="_CPPv2N5metal16OperatorArgument6_valueE"></span><span id="metal::OperatorArgument::_value__std::optional:OperatorArgumentValue:"></span><span class="target" id="classmetal_1_1_operator_argument_1aea7f979b9636923d4cbd92a9f272883a"></span>std::optional&lt;OperatorArgumentValue&gt; <code class="sig-name descname">_value</code><a class="headerlink" href="#_CPPv4N5metal16OperatorArgument6_valueE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal16OperatorArgument7_offsetE">
+<span id="_CPPv3N5metal16OperatorArgument7_offsetE"></span><span id="_CPPv2N5metal16OperatorArgument7_offsetE"></span><span id="metal::OperatorArgument::_offset__s"></span><span class="target" id="classmetal_1_1_operator_argument_1af83170f1bb254950f818f0cc5d184209"></span>size_t <code class="sig-name descname">_offset</code><a class="headerlink" href="#_CPPv4N5metal16OperatorArgument7_offsetE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal15OperatorContextE">
+<span id="_CPPv3N5metal15OperatorContextE"></span><span id="_CPPv2N5metal15OperatorContextE"></span><span id="metal::OperatorContext"></span><span class="target" id="classmetal_1_1_operator_context"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">OperatorContext</code><a class="headerlink" href="#_CPPv4N5metal15OperatorContextE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext15OperatorContextE8Operator">
+<span id="_CPPv3N5metal15OperatorContext15OperatorContextE8Operator"></span><span id="_CPPv2N5metal15OperatorContext15OperatorContextE8Operator"></span><span id="metal::OperatorContext::OperatorContext__Operator"></span><span class="target" id="classmetal_1_1_operator_context_1abaf376091e3f6bd27d51c83a9c2e0780"></span><code class="sig-name descname">OperatorContext</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal8OperatorE" title="metal::Operator">Operator</a> <em>op</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext15OperatorContextE8Operator" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext9configureER10SnapAction">
+<span id="_CPPv3N5metal15OperatorContext9configureER10SnapAction"></span><span id="_CPPv2N5metal15OperatorContext9configureER10SnapAction"></span><span id="metal::OperatorContext::configure__SnapActionR"></span><span class="target" id="classmetal_1_1_operator_context_1a10e1474d004335c0c045978200bc16b8"></span>void <code class="sig-name descname">configure</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext9configureER10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext8finalizeER10SnapAction">
+<span id="_CPPv3N5metal15OperatorContext8finalizeER10SnapAction"></span><span id="_CPPv2N5metal15OperatorContext8finalizeER10SnapAction"></span><span id="metal::OperatorContext::finalize__SnapActionR"></span><span class="target" id="classmetal_1_1_operator_context_1a6e3ee68a2a4fee5c07e9e8635b37494f"></span>void <code class="sig-name descname">finalize</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext8finalizeER10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorContext17needs_preparationEv">
+<span id="_CPPv3NK5metal15OperatorContext17needs_preparationEv"></span><span id="_CPPv2NK5metal15OperatorContext17needs_preparationEv"></span><span id="metal::OperatorContext::needs_preparationC"></span><span class="target" id="classmetal_1_1_operator_context_1a72e64495f11cc728fe75fa654b32c008"></span>bool <code class="sig-name descname">needs_preparation</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorContext17needs_preparationEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext15set_is_preparedEv">
+<span id="_CPPv3N5metal15OperatorContext15set_is_preparedEv"></span><span id="_CPPv2N5metal15OperatorContext15set_is_preparedEv"></span><span id="metal::OperatorContext::set_is_prepared"></span><span class="target" id="classmetal_1_1_operator_context_1a5c2743973d4c2a6bdb4de5d1d5e35832"></span>void <code class="sig-name descname">set_is_prepared</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext15set_is_preparedEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorContext12userOperatorEv">
+<span id="_CPPv3NK5metal15OperatorContext12userOperatorEv"></span><span id="_CPPv2NK5metal15OperatorContext12userOperatorEv"></span><span id="metal::OperatorContext::userOperatorC"></span><span class="target" id="classmetal_1_1_operator_context_1a68631342f031547fee0d9f434ee52ca9"></span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal8OperatorE" title="metal::Operator">Operator</a> &amp;<code class="sig-name descname">userOperator</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorContext12userOperatorEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorContext16profilingEnabledEv">
+<span id="_CPPv3NK5metal15OperatorContext16profilingEnabledEv"></span><span id="_CPPv2NK5metal15OperatorContext16profilingEnabledEv"></span><span id="metal::OperatorContext::profilingEnabledC"></span><span class="target" id="classmetal_1_1_operator_context_1a19924acbd93113259128c67e1f8381a2"></span>bool <code class="sig-name descname">profilingEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorContext16profilingEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext19setProfilingEnabledEb">
+<span id="_CPPv3N5metal15OperatorContext19setProfilingEnabledEb"></span><span id="_CPPv2N5metal15OperatorContext19setProfilingEnabledEb"></span><span id="metal::OperatorContext::setProfilingEnabled__b"></span><span class="target" id="classmetal_1_1_operator_context_1a9c36787505a11bf67a93adc3f0c67945"></span>void <code class="sig-name descname">setProfilingEnabled</code><span class="sig-paren">(</span>bool <em>enabled</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext19setProfilingEnabledEb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorContext16profilingResultsEv">
+<span id="_CPPv3NK5metal15OperatorContext16profilingResultsEv"></span><span id="_CPPv2NK5metal15OperatorContext16profilingResultsEv"></span><span id="metal::OperatorContext::profilingResultsC"></span><span class="target" id="classmetal_1_1_operator_context_1af1e8d0794ada92525a1d0183a6bf8788"></span>std::string <code class="sig-name descname">profilingResults</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorContext16profilingResultsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorContext19setProfilingResultsENSt6stringE">
+<span id="_CPPv3N5metal15OperatorContext19setProfilingResultsENSt6stringE"></span><span id="_CPPv2N5metal15OperatorContext19setProfilingResultsENSt6stringE"></span><span id="metal::OperatorContext::setProfilingResults__ss"></span><span class="target" id="classmetal_1_1_operator_context_1a1a98074d9dc7b99c80db360741f09a1e"></span>void <code class="sig-name descname">setProfilingResults</code><span class="sig-paren">(</span>std::string <em>results</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorContext19setProfilingResultsENSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorContext3_opE">
+<span id="_CPPv3N5metal15OperatorContext3_opE"></span><span id="_CPPv2N5metal15OperatorContext3_opE"></span><span id="metal::OperatorContext::_op__Operator"></span><span class="target" id="classmetal_1_1_operator_context_1a51e6934cb4a8da4bbd3b891fa0484a3a"></span><a class="reference internal" href="#_CPPv4N5metal8OperatorE" title="metal::Operator">Operator</a> <code class="sig-name descname">_op</code><a class="headerlink" href="#_CPPv4N5metal15OperatorContext3_opE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorContext12_is_preparedE">
+<span id="_CPPv3N5metal15OperatorContext12_is_preparedE"></span><span id="_CPPv2N5metal15OperatorContext12_is_preparedE"></span><span id="metal::OperatorContext::_is_prepared__b"></span><span class="target" id="classmetal_1_1_operator_context_1aae3afd88045c5c9e0b0a1cab7199b3b0"></span>bool <code class="sig-name descname">_is_prepared</code><a class="headerlink" href="#_CPPv4N5metal15OperatorContext12_is_preparedE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorContext17_profilingEnabledE">
+<span id="_CPPv3N5metal15OperatorContext17_profilingEnabledE"></span><span id="_CPPv2N5metal15OperatorContext17_profilingEnabledE"></span><span id="metal::OperatorContext::_profilingEnabled__b"></span><span class="target" id="classmetal_1_1_operator_context_1acced0d558da0ef1598b47c21deed48cc"></span>bool <code class="sig-name descname">_profilingEnabled</code><a class="headerlink" href="#_CPPv4N5metal15OperatorContext17_profilingEnabledE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorContext17_profilingResultsE">
+<span id="_CPPv3N5metal15OperatorContext17_profilingResultsE"></span><span id="_CPPv2N5metal15OperatorContext17_profilingResultsE"></span><span id="metal::OperatorContext::_profilingResults__ss"></span><span class="target" id="classmetal_1_1_operator_context_1a1a705a6dc2e5179e521cda213a3548c6"></span>std::string <code class="sig-name descname">_profilingResults</code><a class="headerlink" href="#_CPPv4N5metal15OperatorContext17_profilingResultsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal15OperatorFactoryE">
+<span id="_CPPv3N5metal15OperatorFactoryE"></span><span id="_CPPv2N5metal15OperatorFactoryE"></span><span id="metal::OperatorFactory"></span><span class="target" id="classmetal_1_1_operator_factory"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">OperatorFactory</code><a class="headerlink" href="#_CPPv4N5metal15OperatorFactoryE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorFactory14createOperatorENSt6stringE">
+<span id="_CPPv3N5metal15OperatorFactory14createOperatorENSt6stringE"></span><span id="_CPPv2N5metal15OperatorFactory14createOperatorENSt6stringE"></span><span id="metal::OperatorFactory::createOperator__ss"></span><span class="target" id="classmetal_1_1_operator_factory_1a2989dae196bddd7a23d1a032ebafd25d"></span><a class="reference internal" href="#_CPPv4N5metal8OperatorE" title="metal::Operator">Operator</a> <code class="sig-name descname">createOperator</code><span class="sig-paren">(</span>std::string <em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory14createOperatorENSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorFactory13isDRAMEnabledEv">
+<span id="_CPPv3NK5metal15OperatorFactory13isDRAMEnabledEv"></span><span id="_CPPv2NK5metal15OperatorFactory13isDRAMEnabledEv"></span><span id="metal::OperatorFactory::isDRAMEnabledC"></span><span class="target" id="classmetal_1_1_operator_factory_1ab661de42a2eb4f38545ec32db7c78883"></span>bool <code class="sig-name descname">isDRAMEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorFactory13isDRAMEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorFactory13isNVMeEnabledEv">
+<span id="_CPPv3NK5metal15OperatorFactory13isNVMeEnabledEv"></span><span id="_CPPv2NK5metal15OperatorFactory13isNVMeEnabledEv"></span><span id="metal::OperatorFactory::isNVMeEnabledC"></span><span class="target" id="classmetal_1_1_operator_factory_1a9ebe7abf9b012ff9b672a8a206367e0d"></span>bool <code class="sig-name descname">isNVMeEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorFactory13isNVMeEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorFactory4sizeEv">
+<span id="_CPPv3NK5metal15OperatorFactory4sizeEv"></span><span id="_CPPv2NK5metal15OperatorFactory4sizeEv"></span><span id="metal::OperatorFactory::sizeC"></span><span class="target" id="classmetal_1_1_operator_factory_1a2be4ceb7d1aab42a04ae81c082c2941e"></span>size_t <code class="sig-name descname">size</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorFactory4sizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal15OperatorFactory22operatorSpecificationsEv">
+<span id="_CPPv3NK5metal15OperatorFactory22operatorSpecificationsEv"></span><span id="_CPPv2NK5metal15OperatorFactory22operatorSpecificationsEv"></span><span id="metal::OperatorFactory::operatorSpecificationsC"></span><span class="target" id="classmetal_1_1_operator_factory_1a0d21b482257c6b4bfc45039e4279dffe"></span><em class="property">const</em> std::unordered_map&lt;std::string, std::shared_ptr&lt;<em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal21OperatorSpecificationE" title="metal::OperatorSpecification">OperatorSpecification</a>&gt;&gt; &amp;<code class="sig-name descname">operatorSpecifications</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal15OperatorFactory22operatorSpecificationsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorFactory8fromFPGAER10SnapAction">
+<span id="_CPPv3N5metal15OperatorFactory8fromFPGAER10SnapAction"></span><span id="_CPPv2N5metal15OperatorFactory8fromFPGAER10SnapAction"></span><span id="metal::OperatorFactory::fromFPGA__SnapActionR"></span><span class="target" id="classmetal_1_1_operator_factory_1a391c6421dc454e4d72b6d54c95a0f239"></span><a class="reference internal" href="#_CPPv4N5metal15OperatorFactoryE" title="metal::OperatorFactory">OperatorFactory</a> <code class="sig-name descname">fromFPGA</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>snapAction</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory8fromFPGAER10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorFactory18fromManifestStringERKNSt6stringE">
+<span id="_CPPv3N5metal15OperatorFactory18fromManifestStringERKNSt6stringE"></span><span id="_CPPv2N5metal15OperatorFactory18fromManifestStringERKNSt6stringE"></span><span id="metal::OperatorFactory::fromManifestString__ssCR"></span><span class="target" id="classmetal_1_1_operator_factory_1a59f2fd222a07661cd0f83076c84e653c"></span><a class="reference internal" href="#_CPPv4N5metal15OperatorFactoryE" title="metal::OperatorFactory">OperatorFactory</a> <code class="sig-name descname">fromManifestString</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>manifest</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory18fromManifestStringERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal15OperatorFactory15OperatorFactoryERKNSt6stringE">
+<span id="_CPPv3N5metal15OperatorFactory15OperatorFactoryERKNSt6stringE"></span><span id="_CPPv2N5metal15OperatorFactory15OperatorFactoryERKNSt6stringE"></span><span id="metal::OperatorFactory::OperatorFactory__ssCR"></span><span class="target" id="classmetal_1_1_operator_factory_1a06c28061cc6c6caecfd7456a860a7a48"></span><code class="sig-name descname">OperatorFactory</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>image_json</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory15OperatorFactoryERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorFactory23_operatorSpecificationsE">
+<span id="_CPPv3N5metal15OperatorFactory23_operatorSpecificationsE"></span><span id="_CPPv2N5metal15OperatorFactory23_operatorSpecificationsE"></span><span id="metal::OperatorFactory::_operatorSpecifications__std::unordered_map:ss.std::shared_ptr:OperatorSpecificationC::"></span><span class="target" id="classmetal_1_1_operator_factory_1a3475d92f9c2603d0bb041807eb908402"></span>std::unordered_map&lt;std::string, std::shared_ptr&lt;<em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal21OperatorSpecificationE" title="metal::OperatorSpecification">OperatorSpecification</a>&gt;&gt; <code class="sig-name descname">_operatorSpecifications</code><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory23_operatorSpecificationsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorFactory14_isDRAMEnabledE">
+<span id="_CPPv3N5metal15OperatorFactory14_isDRAMEnabledE"></span><span id="_CPPv2N5metal15OperatorFactory14_isDRAMEnabledE"></span><span id="metal::OperatorFactory::_isDRAMEnabled__b"></span><span class="target" id="classmetal_1_1_operator_factory_1a59ab219970bc8f8d0b81044e990f82ec"></span>bool <code class="sig-name descname">_isDRAMEnabled</code><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory14_isDRAMEnabledE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal15OperatorFactory14_isNVMeEnabledE">
+<span id="_CPPv3N5metal15OperatorFactory14_isNVMeEnabledE"></span><span id="_CPPv2N5metal15OperatorFactory14_isNVMeEnabledE"></span><span id="metal::OperatorFactory::_isNVMeEnabled__b"></span><span class="target" id="classmetal_1_1_operator_factory_1a9fd5874a4960872eac7092bdffde30e2"></span>bool <code class="sig-name descname">_isNVMeEnabled</code><a class="headerlink" href="#_CPPv4N5metal15OperatorFactory14_isNVMeEnabledE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal21OperatorSpecificationE">
+<span id="_CPPv3N5metal21OperatorSpecificationE"></span><span id="_CPPv2N5metal21OperatorSpecificationE"></span><span id="metal::OperatorSpecification"></span><span class="target" id="classmetal_1_1_operator_specification"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">OperatorSpecification</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecificationE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal21OperatorSpecification21OperatorSpecificationENSt6stringERKNSt6stringE">
+<span id="_CPPv3N5metal21OperatorSpecification21OperatorSpecificationENSt6stringERKNSt6stringE"></span><span id="_CPPv2N5metal21OperatorSpecification21OperatorSpecificationENSt6stringERKNSt6stringE"></span><span id="metal::OperatorSpecification::OperatorSpecification__ss.ssCR"></span><span class="target" id="classmetal_1_1_operator_specification_1a464edf0ee7fb8b8037f20bb188ae3ab2"></span><code class="sig-name descname">OperatorSpecification</code><span class="sig-paren">(</span>std::string <em>id</em>, <em class="property">const</em> std::string &amp;<em>manifest</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification21OperatorSpecificationENSt6stringERKNSt6stringE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21OperatorSpecification2idEv">
+<span id="_CPPv3NK5metal21OperatorSpecification2idEv"></span><span id="_CPPv2NK5metal21OperatorSpecification2idEv"></span><span id="metal::OperatorSpecification::idC"></span><span class="target" id="classmetal_1_1_operator_specification_1a969ad1facbd28ede74755a8c795960ec"></span>std::string <code class="sig-name descname">id</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal21OperatorSpecification2idEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21OperatorSpecification11descriptionEv">
+<span id="_CPPv3NK5metal21OperatorSpecification11descriptionEv"></span><span id="_CPPv2NK5metal21OperatorSpecification11descriptionEv"></span><span id="metal::OperatorSpecification::descriptionC"></span><span class="target" id="classmetal_1_1_operator_specification_1aaf7a30bfeec262dc07ca5be3fe394f90"></span>std::string <code class="sig-name descname">description</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal21OperatorSpecification11descriptionEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21OperatorSpecification8streamIDEv">
+<span id="_CPPv3NK5metal21OperatorSpecification8streamIDEv"></span><span id="_CPPv2NK5metal21OperatorSpecification8streamIDEv"></span><span id="metal::OperatorSpecification::streamIDC"></span><span class="target" id="classmetal_1_1_operator_specification_1a4952ae3262ce5c0d1c120e19d8f2a0b1"></span>uint8_t <code class="sig-name descname">streamID</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal21OperatorSpecification8streamIDEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21OperatorSpecification15prepareRequiredEv">
+<span id="_CPPv3NK5metal21OperatorSpecification15prepareRequiredEv"></span><span id="_CPPv2NK5metal21OperatorSpecification15prepareRequiredEv"></span><span id="metal::OperatorSpecification::prepareRequiredC"></span><span class="target" id="classmetal_1_1_operator_specification_1a8ef70d6838268f9649fe40c18c314479"></span>bool <code class="sig-name descname">prepareRequired</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal21OperatorSpecification15prepareRequiredEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK5metal21OperatorSpecification17optionDefinitionsEv">
+<span id="_CPPv3NK5metal21OperatorSpecification17optionDefinitionsEv"></span><span id="_CPPv2NK5metal21OperatorSpecification17optionDefinitionsEv"></span><span id="metal::OperatorSpecification::optionDefinitionsC"></span><span class="target" id="classmetal_1_1_operator_specification_1a7717895a43c96966bdfb9699f26c2bd1"></span><em class="property">const</em> std::unordered_map&lt;std::string, OperatorOptionDefinition&gt; <code class="sig-name descname">optionDefinitions</code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property">const</em><a class="headerlink" href="#_CPPv4NK5metal21OperatorSpecification17optionDefinitionsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21OperatorSpecification3_idE">
+<span id="_CPPv3N5metal21OperatorSpecification3_idE"></span><span id="_CPPv2N5metal21OperatorSpecification3_idE"></span><span id="metal::OperatorSpecification::_id__ss"></span><span class="target" id="classmetal_1_1_operator_specification_1a47d1f4892863e2e30196b5129a46fd9a"></span>std::string <code class="sig-name descname">_id</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification3_idE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21OperatorSpecification12_descriptionE">
+<span id="_CPPv3N5metal21OperatorSpecification12_descriptionE"></span><span id="_CPPv2N5metal21OperatorSpecification12_descriptionE"></span><span id="metal::OperatorSpecification::_description__ss"></span><span class="target" id="classmetal_1_1_operator_specification_1addfb36199257f8a6ebf51fa9c663ecd5"></span>std::string <code class="sig-name descname">_description</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification12_descriptionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21OperatorSpecification9_streamIDE">
+<span id="_CPPv3N5metal21OperatorSpecification9_streamIDE"></span><span id="_CPPv2N5metal21OperatorSpecification9_streamIDE"></span><span id="metal::OperatorSpecification::_streamID__uint8_t"></span><span class="target" id="classmetal_1_1_operator_specification_1a23e967bac8e2d375308235c112a1d9af"></span>uint8_t <code class="sig-name descname">_streamID</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification9_streamIDE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21OperatorSpecification16_prepareRequiredE">
+<span id="_CPPv3N5metal21OperatorSpecification16_prepareRequiredE"></span><span id="_CPPv2N5metal21OperatorSpecification16_prepareRequiredE"></span><span id="metal::OperatorSpecification::_prepareRequired__b"></span><span class="target" id="classmetal_1_1_operator_specification_1aa7496404871a03576c4258adc590653a"></span>bool <code class="sig-name descname">_prepareRequired</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification16_prepareRequiredE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal21OperatorSpecification18_optionDefinitionsE">
+<span id="_CPPv3N5metal21OperatorSpecification18_optionDefinitionsE"></span><span id="_CPPv2N5metal21OperatorSpecification18_optionDefinitionsE"></span><span id="metal::OperatorSpecification::_optionDefinitions__std::unordered_map:ss.OperatorOptionDefinition:"></span><span class="target" id="classmetal_1_1_operator_specification_1a653f316f12b61760959d3ee193f74b2d"></span>std::unordered_map&lt;std::string, OperatorOptionDefinition&gt; <code class="sig-name descname">_optionDefinitions</code><a class="headerlink" href="#_CPPv4N5metal21OperatorSpecification18_optionDefinitionsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal8PipelineE">
+<span id="_CPPv3N5metal8PipelineE"></span><span id="_CPPv2N5metal8PipelineE"></span><span id="metal::Pipeline"></span><span class="target" id="classmetal_1_1_pipeline"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Pipeline</code><a class="headerlink" href="#_CPPv4N5metal8PipelineE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Defines an <a class="reference internal" href="#classmetal_1_1_operator"><span class="std std-ref">Operator</span></a> execution plan which can be executed in combination with a <a class="reference internal" href="#classmetal_1_1_snap_action"><span class="std std-ref">SnapAction</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline8PipelineENSt6vectorI8OperatorEE">
+<span id="_CPPv3N5metal8Pipeline8PipelineENSt6vectorI8OperatorEE"></span><span id="_CPPv2N5metal8Pipeline8PipelineENSt6vectorI8OperatorEE"></span><span id="metal::Pipeline::Pipeline__std::vector:Operator:"></span><span class="target" id="classmetal_1_1_pipeline_1a9f9b5604a86a27036afa214d6d3d5b39"></span><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span>std::vector&lt;<a class="reference internal" href="#_CPPv4N5metal8OperatorE" title="metal::Operator">Operator</a>&gt; <em>operators</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline8PipelineENSt6vectorI8OperatorEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline8PipelineENSt6vectorI15OperatorContextEE">
+<span id="_CPPv3N5metal8Pipeline8PipelineENSt6vectorI15OperatorContextEE"></span><span id="_CPPv2N5metal8Pipeline8PipelineENSt6vectorI15OperatorContextEE"></span><span id="metal::Pipeline::Pipeline__std::vector:OperatorContext:"></span><span class="target" id="classmetal_1_1_pipeline_1a7dead71edb89fa6b47b607f12d2b4889"></span><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span>std::vector&lt;<a class="reference internal" href="#_CPPv4N5metal15OperatorContextE" title="metal::OperatorContext">OperatorContext</a>&gt; <em>operators</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline8PipelineENSt6vectorI15OperatorContextEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline8PipelineEv">
+<span id="_CPPv3N5metal8Pipeline8PipelineEv"></span><span id="_CPPv2N5metal8Pipeline8PipelineEv"></span><span id="metal::Pipeline::Pipeline"></span><span class="target" id="classmetal_1_1_pipeline_1a6ab54a0725c073898f0f74433c92648f"></span><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline8PipelineEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0DpEN5metal8Pipeline8PipelineE1TDp2Ts">
+<span id="_CPPv3I0DpEN5metal8Pipeline8PipelineE1TDp2Ts"></span><span id="_CPPv2I0DpEN5metal8Pipeline8PipelineE1TDp2Ts"></span>template&lt;typename <code class="sig-name descname">T</code>, typename ...<code class="sig-name descname">Ts</code>&gt;<br /><span class="target" id="classmetal_1_1_pipeline_1afa0d70dfcc8680b55ba8cb11f9ad5cd2"></span><code class="sig-name descname">Pipeline</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0DpEN5metal8Pipeline8PipelineE1TDp2Ts" title="metal::Pipeline::Pipeline::T">T</a> <em>firstOperator</em>, <a class="reference internal" href="#_CPPv4I0DpEN5metal8Pipeline8PipelineE1TDp2Ts" title="metal::Pipeline::Pipeline::Ts">Ts</a>... <em>rest</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpEN5metal8Pipeline8PipelineE1TDp2Ts" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline9operatorsEv">
+<span id="_CPPv3N5metal8Pipeline9operatorsEv"></span><span id="_CPPv2N5metal8Pipeline9operatorsEv"></span><span id="metal::Pipeline::operators"></span><span class="target" id="classmetal_1_1_pipeline_1a4e13c4227213c548b259bf7c6d15e8a7"></span>std::vector&lt;<a class="reference internal" href="#_CPPv4N5metal15OperatorContextE" title="metal::OperatorContext">OperatorContext</a>&gt; &amp;<code class="sig-name descname">operators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline9operatorsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline3runE10DataSource8DataSinkR10SnapAction">
+<span id="_CPPv3N5metal8Pipeline3runE10DataSource8DataSinkR10SnapAction"></span><span id="_CPPv2N5metal8Pipeline3runE10DataSource8DataSinkR10SnapAction"></span><span id="metal::Pipeline::run__DataSource.DataSink.SnapActionR"></span><span class="target" id="classmetal_1_1_pipeline_1ac3540fdbbf0873bdd78ccd38a644e012"></span>uint64_t <code class="sig-name descname">run</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <em>dataSink</em>, <a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline3runE10DataSource8DataSinkR10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal8Pipeline15configureSwitchER10SnapActionb">
+<span id="_CPPv3N5metal8Pipeline15configureSwitchER10SnapActionb"></span><span id="_CPPv2N5metal8Pipeline15configureSwitchER10SnapActionb"></span><span id="metal::Pipeline::configureSwitch__SnapActionR.b"></span><span class="target" id="classmetal_1_1_pipeline_1a4ab9b62959e2e7aaba768218a987d739"></span>void <code class="sig-name descname">configureSwitch</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, bool <em>set_cached</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal8Pipeline15configureSwitchER10SnapActionb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8Pipeline10_operatorsE">
+<span id="_CPPv3N5metal8Pipeline10_operatorsE"></span><span id="_CPPv2N5metal8Pipeline10_operatorsE"></span><span id="metal::Pipeline::_operators__std::vector:OperatorContext:"></span><span class="target" id="classmetal_1_1_pipeline_1ad8092cd54bb3b2e8d48b437191cea669"></span>std::vector&lt;<a class="reference internal" href="#_CPPv4N5metal15OperatorContextE" title="metal::OperatorContext">OperatorContext</a>&gt; <code class="sig-name descname">_operators</code><a class="headerlink" href="#_CPPv4N5metal8Pipeline10_operatorsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal8Pipeline26_cachedSwitchConfigurationE">
+<span id="_CPPv3N5metal8Pipeline26_cachedSwitchConfigurationE"></span><span id="_CPPv2N5metal8Pipeline26_cachedSwitchConfigurationE"></span><span id="metal::Pipeline::_cachedSwitchConfiguration__b"></span><span class="target" id="classmetal_1_1_pipeline_1a4ce36c1bf2f3ca81f2ee90d6b2a35a78"></span>bool <code class="sig-name descname">_cachedSwitchConfiguration</code><a class="headerlink" href="#_CPPv4N5metal8Pipeline26_cachedSwitchConfigurationE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunnerE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunnerE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunnerE"></span><span id="metal::ProfilingPipelineRunner"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">ProfilingPipelineRunner</code> : <em class="property">public</em> metal::<a class="reference internal" href="#_CPPv4N5metal18SnapPipelineRunnerE" title="metal::SnapPipelineRunner">SnapPipelineRunner</a><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunnerE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE"></span><span id="metal::ProfilingPipelineRunner::ProfilingPipelineRunner__Card.std::shared_ptr:Pipeline:"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a90ffa8d9dad876c2f8ec233b206dc8b9"></span><code class="sig-name descname">ProfilingPipelineRunner</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em>, std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal8PipelineE" title="metal::Pipeline">Pipeline</a>&gt; <em>pipeline</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4IDpEN5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardDp2Ts">
+<span id="_CPPv3IDpEN5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardDp2Ts"></span><span id="_CPPv2IDpEN5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardDp2Ts"></span>template&lt;typename ...<code class="sig-name descname">Ts</code>&gt;<br /><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a835bd63800b3889a181687a8c7fb629e"></span><code class="sig-name descname">ProfilingPipelineRunner</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em>, <a class="reference internal" href="#_CPPv4IDpEN5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardDp2Ts" title="metal::ProfilingPipelineRunner::ProfilingPipelineRunner::Ts">Ts</a>... <em>userOperators</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5metal23ProfilingPipelineRunner23ProfilingPipelineRunnerE4CardDp2Ts" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner22formatProfilingResultsEbb">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner22formatProfilingResultsEbb"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner22formatProfilingResultsEbb"></span><span id="metal::ProfilingPipelineRunner::formatProfilingResults__b.b"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1ac7851b720eff7be5cb51ded89d01935d"></span>std::string <code class="sig-name descname">formatProfilingResults</code><span class="sig-paren">(</span>bool <em>dataSource</em>, bool <em>dataSink</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner22formatProfilingResultsEbb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner12resetResultsEv">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner12resetResultsEv"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner12resetResultsEv"></span><span id="metal::ProfilingPipelineRunner::resetResults"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1ab7e5a7db10ae922817e77912a04510ea"></span>void <code class="sig-name descname">resetResults</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner12resetResultsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="metal::ProfilingPipelineRunner::preRun__SnapActionR.DataSourceContextR.DataSinkContextR.b"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a1aeca46c2fb1e3c3e42c728cee13a3e8"></span>void <code class="sig-name descname">preRun</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, <a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a> &amp;<em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a> &amp;<em>dataSink</em>, bool <em>initialize</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="metal::ProfilingPipelineRunner::postRun__SnapActionR.DataSourceContextR.DataSinkContextR.b"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a55ec701ea91249bdc7f2371c7490f21f"></span>void <code class="sig-name descname">postRun</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, <a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a> &amp;<em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a> &amp;<em>dataSink</em>, bool <em>finalize</em><span class="sig-paren">)</span> <em class="property">override</em><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner17_profileStreamIdsE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner17_profileStreamIdsE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner17_profileStreamIdsE"></span><span id="metal::ProfilingPipelineRunner::_profileStreamIds__std::optional:std::pair:uint8_t.uint8_t::"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1abc2f292f6ee1a8c059e22a88f8c57de6"></span>std::optional&lt;std::pair&lt;uint8_t, uint8_t&gt;&gt; <code class="sig-name descname">_profileStreamIds</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner17_profileStreamIdsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner8_resultsE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner8_resultsE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner8_resultsE"></span><span id="metal::ProfilingPipelineRunner::_results__ProfilingResults"></span><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a6e504a14097c3fb3c6e692e48632d208"></span><a class="reference internal" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResultsE" title="metal::ProfilingPipelineRunner::ProfilingResults">ProfilingResults</a> <code class="sig-name descname">_results</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner8_resultsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Static Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4IDpEN5metal23ProfilingPipelineRunner13string_formatENSt6stringERKNSt6stringEDp4Args">
+<span id="_CPPv3IDpEN5metal23ProfilingPipelineRunner13string_formatERKNSt6stringEDp4Args"></span><span id="_CPPv2IDpEN5metal23ProfilingPipelineRunner13string_formatERKNSt6stringEDp4Args"></span>template&lt;typename ...<code class="sig-name descname">Args</code>&gt;<br /><span class="target" id="classmetal_1_1_profiling_pipeline_runner_1a6f6703ce40ca209865341b047776086d"></span>std::string <code class="sig-name descname">string_format</code><span class="sig-paren">(</span><em class="property">const</em> std::string &amp;<em>format</em>, <a class="reference internal" href="#_CPPv4IDpEN5metal23ProfilingPipelineRunner13string_formatENSt6stringERKNSt6stringEDp4Args" title="metal::ProfilingPipelineRunner::string_format::Args">Args</a>... <em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5metal23ProfilingPipelineRunner13string_formatENSt6stringERKNSt6stringEDp4Args" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResultsE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResultsE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResultsE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results"></span><em class="property">struct </em><code class="sig-name descname">ProfilingResults</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResultsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults18globalClockCounterE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults18globalClockCounterE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults18globalClockCounterE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::globalClockCounter__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1af224124751054c08e1b006f33353e0f7"></span>uint64_t <code class="sig-name descname">globalClockCounter</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults18globalClockCounterE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults18inputDataByteCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults18inputDataByteCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults18inputDataByteCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::inputDataByteCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1a6bb780a0087c0f2e14cc1f46225633cb"></span>uint64_t <code class="sig-name descname">inputDataByteCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults18inputDataByteCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults23inputTransferCycleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults23inputTransferCycleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults23inputTransferCycleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::inputTransferCycleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1a6a5bda8169565580f8ecd81a488a5648"></span>uint64_t <code class="sig-name descname">inputTransferCycleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults23inputTransferCycleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults19inputSlaveIdleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults19inputSlaveIdleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults19inputSlaveIdleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::inputSlaveIdleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1abeae8d4ccfd24c1993c4b9f3e58f00da"></span>uint64_t <code class="sig-name descname">inputSlaveIdleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults19inputSlaveIdleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults20inputMasterIdleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults20inputMasterIdleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults20inputMasterIdleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::inputMasterIdleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1af9e39b4818bbfabe27bc1bff8424d8be"></span>uint64_t <code class="sig-name descname">inputMasterIdleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults20inputMasterIdleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults19outputDataByteCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults19outputDataByteCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults19outputDataByteCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::outputDataByteCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1af03a34b43fbe18c61c60f7b230bc59f5"></span>uint64_t <code class="sig-name descname">outputDataByteCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults19outputDataByteCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults24outputTransferCycleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults24outputTransferCycleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults24outputTransferCycleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::outputTransferCycleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1a058411fb346c81e15a1eaf4d474414a9"></span>uint64_t <code class="sig-name descname">outputTransferCycleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults24outputTransferCycleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults20outputSlaveIdleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults20outputSlaveIdleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults20outputSlaveIdleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::outputSlaveIdleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1a9e2ade9774fad3b777bc6ceb32058edc"></span>uint64_t <code class="sig-name descname">outputSlaveIdleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults20outputSlaveIdleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults21outputMasterIdleCountE">
+<span id="_CPPv3N5metal23ProfilingPipelineRunner16ProfilingResults21outputMasterIdleCountE"></span><span id="_CPPv2N5metal23ProfilingPipelineRunner16ProfilingResults21outputMasterIdleCountE"></span><span id="metal::ProfilingPipelineRunner::ProfilingResults::outputMasterIdleCount__uint64_t"></span><span class="target" id="structmetal_1_1_profiling_pipeline_runner_1_1_profiling_results_1a3a6d62326bc95dc506aeacc1ac0501fe"></span>uint64_t <code class="sig-name descname">outputMasterIdleCount</code><a class="headerlink" href="#_CPPv4N5metal23ProfilingPipelineRunner16ProfilingResults21outputMasterIdleCountE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal10SnapActionE">
+<span id="_CPPv3N5metal10SnapActionE"></span><span id="_CPPv2N5metal10SnapActionE"></span><span id="metal::SnapAction"></span><span class="target" id="classmetal_1_1_snap_action"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">SnapAction</code><a class="headerlink" href="#_CPPv4N5metal10SnapActionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction10SnapActionE4Card">
+<span id="_CPPv3N5metal10SnapAction10SnapActionE4Card"></span><span id="_CPPv2N5metal10SnapAction10SnapActionE4Card"></span><span id="metal::SnapAction::SnapAction__Card"></span><span class="target" id="classmetal_1_1_snap_action_1aabddde4d18201ca64c3f046418596a98"></span><code class="sig-name descname">SnapAction</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em> = {0, 10}<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction10SnapActionE4Card" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction10SnapActionERK10SnapAction">
+<span id="_CPPv3N5metal10SnapAction10SnapActionERK10SnapAction"></span><span id="_CPPv2N5metal10SnapAction10SnapActionERK10SnapAction"></span><span id="metal::SnapAction::SnapAction__SnapActionCR"></span><span class="target" id="classmetal_1_1_snap_action_1a663190c1b704dd4bd78d3b6c3a6de694"></span><code class="sig-name descname">SnapAction</code><span class="sig-paren">(</span><em class="property">const</em> <a class="reference internal" href="#_CPPv4N5metal10SnapAction10SnapActionERK10SnapAction" title="metal::SnapAction::SnapAction">SnapAction</a> &amp;<em>other</em><span class="sig-paren">)</span> = delete<a class="headerlink" href="#_CPPv4N5metal10SnapAction10SnapActionERK10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction10SnapActionERR10SnapAction">
+<span id="_CPPv3N5metal10SnapAction10SnapActionERR10SnapAction"></span><span id="_CPPv2N5metal10SnapAction10SnapActionERR10SnapAction"></span><span id="metal::SnapAction::SnapAction__SnapActionRR"></span><span class="target" id="classmetal_1_1_snap_action_1a88fdcabbfc42aef7cdb8604116bc0532"></span><code class="sig-name descname">SnapAction</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapAction10SnapActionERR10SnapAction" title="metal::SnapAction::SnapAction">SnapAction</a> &amp;&amp;<em>other</em><span class="sig-paren">)</span> <em class="property">noexcept</em><a class="headerlink" href="#_CPPv4N5metal10SnapAction10SnapActionERR10SnapAction" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapActionD0Ev">
+<span id="_CPPv3N5metal10SnapActionD0Ev"></span><span id="_CPPv2N5metal10SnapActionD0Ev"></span><span id="metal::SnapAction::~SnapAction"></span><span class="target" id="classmetal_1_1_snap_action_1a540a75f7d089a72284c0b41af2c8aacf"></span><code class="sig-name descname">~SnapAction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapActionD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction10executeJobEN4fpga7JobTypeEPKvN4fpga7AddressEN4fpga7AddressE8uint64_t8uint64_tP8uint64_tP8uint64_t">
+<span id="_CPPv3N5metal10SnapAction10executeJobEN4fpga7JobTypeEPKvN4fpga7AddressEN4fpga7AddressE8uint64_t8uint64_tP8uint64_tP8uint64_t"></span><span id="_CPPv2N5metal10SnapAction10executeJobEN4fpga7JobTypeEPKvN4fpga7AddressEN4fpga7AddressE8uint64_t8uint64_tP8uint64_tP8uint64_t"></span><span id="metal::SnapAction::executeJob__fpga::JobType.voidCP.fpga::Address.fpga::Address.uint64_t.uint64_t.uint64_tP.uint64_tP"></span><span class="target" id="classmetal_1_1_snap_action_1a2150963deeea972ac131a6370ddafdcc"></span>void <code class="sig-name descname">executeJob</code><span class="sig-paren">(</span>fpga::JobType <em>jobType</em>, <em class="property">const</em> void *<em>parameters</em> = nullptr, fpga::Address <em>source</em> = {}, fpga::Address <em>destination</em> = {}, uint64_t <em>directData0</em> = 0, uint64_t <em>directData1</em> = 0, uint64_t *<em>directDataOut0</em> = nullptr, uint64_t *<em>directDataOut1</em> = nullptr<span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction10executeJobEN4fpga7JobTypeEPKvN4fpga7AddressEN4fpga7AddressE8uint64_t8uint64_tP8uint64_tP8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction13isNVMeEnabledEv">
+<span id="_CPPv3N5metal10SnapAction13isNVMeEnabledEv"></span><span id="_CPPv2N5metal10SnapAction13isNVMeEnabledEv"></span><span id="metal::SnapAction::isNVMeEnabled"></span><span class="target" id="classmetal_1_1_snap_action_1aedafc212101d00f65f5d8f01e289d361"></span>bool <code class="sig-name descname">isNVMeEnabled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction13isNVMeEnabledEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction14allocateMemoryE6size_t">
+<span id="_CPPv3N5metal10SnapAction14allocateMemoryE6size_t"></span><span id="_CPPv2N5metal10SnapAction14allocateMemoryE6size_t"></span><span id="metal::SnapAction::allocateMemory__s"></span><span class="target" id="classmetal_1_1_snap_action_1aafe96da03e8441f2a1f71d73bd552a66"></span>void *<code class="sig-name descname">allocateMemory</code><span class="sig-paren">(</span>size_t <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction14allocateMemoryE6size_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction19addressTypeToStringEN4fpga11AddressTypeE">
+<span id="_CPPv3N5metal10SnapAction19addressTypeToStringEN4fpga11AddressTypeE"></span><span id="_CPPv2N5metal10SnapAction19addressTypeToStringEN4fpga11AddressTypeE"></span><span id="metal::SnapAction::addressTypeToString__fpga::AddressType"></span><span class="target" id="classmetal_1_1_snap_action_1a73e23b28d907032f8fe6c33802078c5f"></span>std::string <code class="sig-name descname">addressTypeToString</code><span class="sig-paren">(</span>fpga::AddressType <em>addressType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction19addressTypeToStringEN4fpga11AddressTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction15mapTypeToStringEN4fpga7MapTypeE">
+<span id="_CPPv3N5metal10SnapAction15mapTypeToStringEN4fpga7MapTypeE"></span><span id="_CPPv2N5metal10SnapAction15mapTypeToStringEN4fpga7MapTypeE"></span><span id="metal::SnapAction::mapTypeToString__fpga::MapType"></span><span class="target" id="classmetal_1_1_snap_action_1a5984b4d8ee993e3585972dd4fd671041"></span>std::string <code class="sig-name descname">mapTypeToString</code><span class="sig-paren">(</span>fpga::MapType <em>mapType</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction15mapTypeToStringEN4fpga7MapTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10SnapAction7_actionE">
+<span id="_CPPv3N5metal10SnapAction7_actionE"></span><span id="_CPPv2N5metal10SnapAction7_actionE"></span><span id="metal::SnapAction::_action__snap_actionP"></span><span class="target" id="classmetal_1_1_snap_action_1a881106f1fa18005bdf60112f9aece493"></span><em class="property">struct</em> snap_action *<code class="sig-name descname">_action</code><a class="headerlink" href="#_CPPv4N5metal10SnapAction7_actionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10SnapAction5_cardE">
+<span id="_CPPv3N5metal10SnapAction5_cardE"></span><span id="_CPPv2N5metal10SnapAction5_cardE"></span><span id="metal::SnapAction::_card__snap_cardP"></span><span class="target" id="classmetal_1_1_snap_action_1abe6c01a85570d3605eb33864d88e0ac8"></span><em class="property">struct</em> snap_card *<code class="sig-name descname">_card</code><a class="headerlink" href="#_CPPv4N5metal10SnapAction5_cardE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal10SnapAction8_timeoutE">
+<span id="_CPPv3N5metal10SnapAction8_timeoutE"></span><span id="_CPPv2N5metal10SnapAction8_timeoutE"></span><span id="metal::SnapAction::_timeout__i"></span><span class="target" id="classmetal_1_1_snap_action_1a1d5909a8dcad995e678f41d08dfb2bb9"></span>int <code class="sig-name descname">_timeout</code><a class="headerlink" href="#_CPPv4N5metal10SnapAction8_timeoutE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Static Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction15jobTypeToStringEN4fpga7JobTypeE">
+<span id="_CPPv3N5metal10SnapAction15jobTypeToStringEN4fpga7JobTypeE"></span><span id="_CPPv2N5metal10SnapAction15jobTypeToStringEN4fpga7JobTypeE"></span><span id="metal::SnapAction::jobTypeToString__fpga::JobType"></span><span class="target" id="classmetal_1_1_snap_action_1ae3e5db9080b1c52ab358125ed3e2fcec"></span>std::string <code class="sig-name descname">jobTypeToString</code><span class="sig-paren">(</span>fpga::JobType <em>job</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction15jobTypeToStringEN4fpga7JobTypeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal10SnapAction22snapReturnCodeToStringEi">
+<span id="_CPPv3N5metal10SnapAction22snapReturnCodeToStringEi"></span><span id="_CPPv2N5metal10SnapAction22snapReturnCodeToStringEi"></span><span id="metal::SnapAction::snapReturnCodeToString__i"></span><span class="target" id="classmetal_1_1_snap_action_1ad77e7be7b188ba692287cbfaf69f7a34"></span>std::string <code class="sig-name descname">snapReturnCodeToString</code><span class="sig-paren">(</span>int <em>rc</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal10SnapAction22snapReturnCodeToStringEi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N5metal18SnapPipelineRunnerE">
+<span id="_CPPv3N5metal18SnapPipelineRunnerE"></span><span id="_CPPv2N5metal18SnapPipelineRunnerE"></span><span id="metal::SnapPipelineRunner"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner"></span><em class="property">class </em><code class="sig-prename descclassname">metal<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">SnapPipelineRunner</code><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunnerE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#classmetal_1_1_profiling_pipeline_runner"><span class="std std-ref">metal::ProfilingPipelineRunner</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE">
+<span id="_CPPv3N5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE"></span><span id="_CPPv2N5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE"></span><span id="metal::SnapPipelineRunner::SnapPipelineRunner__Card.std::shared_ptr:Pipeline:"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a11e19575e2da91da97ff6dd4abf2cdde"></span><code class="sig-name descname">SnapPipelineRunner</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em>, std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal8PipelineE" title="metal::Pipeline">Pipeline</a>&gt; <em>pipeline</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardNSt10shared_ptrI8PipelineEE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4IDpEN5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardDp2Ts">
+<span id="_CPPv3IDpEN5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardDp2Ts"></span><span id="_CPPv2IDpEN5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardDp2Ts"></span>template&lt;typename ...<code class="sig-name descname">Ts</code>&gt;<br /><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a6fb494411f3fcad7d79b7aa4fb125c8b"></span><code class="sig-name descname">SnapPipelineRunner</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <em>card</em>, <a class="reference internal" href="#_CPPv4IDpEN5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardDp2Ts" title="metal::SnapPipelineRunner::SnapPipelineRunner::Ts">Ts</a>... <em>userOperators</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5metal18SnapPipelineRunner18SnapPipelineRunnerE4CardDp2Ts" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner3runE10DataSource8DataSink">
+<span id="_CPPv3N5metal18SnapPipelineRunner3runE10DataSource8DataSink"></span><span id="_CPPv2N5metal18SnapPipelineRunner3runE10DataSource8DataSink"></span><span id="metal::SnapPipelineRunner::run__DataSource.DataSink"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a0e5cda780862cb7d965a1616ae312c6d"></span>std::pair&lt;uint64_t, bool&gt; <code class="sig-name descname">run</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10DataSourceE" title="metal::DataSource">DataSource</a> <em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal8DataSinkE" title="metal::DataSink">DataSink</a> <em>dataSink</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner3runE10DataSource8DataSink" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner3runER17DataSourceContextR15DataSinkContext">
+<span id="_CPPv3N5metal18SnapPipelineRunner3runER17DataSourceContextR15DataSinkContext"></span><span id="_CPPv2N5metal18SnapPipelineRunner3runER17DataSourceContextR15DataSinkContext"></span><span id="metal::SnapPipelineRunner::run__DataSourceContextR.DataSinkContextR"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1afe737cbf4f2801b9a56a5b7992b775d6"></span>std::pair&lt;uint64_t, bool&gt; <code class="sig-name descname">run</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a> &amp;<em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a> &amp;<em>dataSink</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner3runER17DataSourceContextR15DataSinkContext" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Static Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner13readImageInfoEi">
+<span id="_CPPv3N5metal18SnapPipelineRunner13readImageInfoEi"></span><span id="_CPPv2N5metal18SnapPipelineRunner13readImageInfoEi"></span><span id="metal::SnapPipelineRunner::readImageInfo__i"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1aa82e5f8075d55c875a1e51fb710c7c1e"></span>std::string <code class="sig-name descname">readImageInfo</code><span class="sig-paren">(</span>int <em>card</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner13readImageInfoEi" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner23requireReinitializationEv">
+<span id="_CPPv3N5metal18SnapPipelineRunner23requireReinitializationEv"></span><span id="_CPPv2N5metal18SnapPipelineRunner23requireReinitializationEv"></span><span id="metal::SnapPipelineRunner::requireReinitialization"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a1ba59af5828b224ad25e2b34c0a56a97"></span>void <code class="sig-name descname">requireReinitialization</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner23requireReinitializationEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb">
+<span id="_CPPv3N5metal18SnapPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="_CPPv2N5metal18SnapPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="metal::SnapPipelineRunner::preRun__SnapActionR.DataSourceContextR.DataSinkContextR.b"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1abd6f2ffab0c686d6fe2352fee87ef520"></span>void <code class="sig-name descname">preRun</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, <a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a> &amp;<em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a> &amp;<em>dataSink</em>, bool <em>initialize</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner6preRunER10SnapActionR17DataSourceContextR15DataSinkContextb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N5metal18SnapPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb">
+<span id="_CPPv3N5metal18SnapPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="_CPPv2N5metal18SnapPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb"></span><span id="metal::SnapPipelineRunner::postRun__SnapActionR.DataSourceContextR.DataSinkContextR.b"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1aea61916cafe505879479afe699dce61d"></span>void <code class="sig-name descname">postRun</code><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5metal10SnapActionE" title="metal::SnapAction">SnapAction</a> &amp;<em>action</em>, <a class="reference internal" href="#_CPPv4N5metal17DataSourceContextE" title="metal::DataSourceContext">DataSourceContext</a> &amp;<em>dataSource</em>, <a class="reference internal" href="#_CPPv4N5metal15DataSinkContextE" title="metal::DataSinkContext">DataSinkContext</a> &amp;<em>dataSink</em>, bool <em>finalize</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner7postRunER10SnapActionR17DataSourceContextR15DataSinkContextb" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Protected Attributes</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal18SnapPipelineRunner9_pipelineE">
+<span id="_CPPv3N5metal18SnapPipelineRunner9_pipelineE"></span><span id="_CPPv2N5metal18SnapPipelineRunner9_pipelineE"></span><span id="metal::SnapPipelineRunner::_pipeline__std::shared_ptr:Pipeline:"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a64db994554380d23ff7b1682df667151"></span>std::shared_ptr&lt;<a class="reference internal" href="#_CPPv4N5metal8PipelineE" title="metal::Pipeline">Pipeline</a>&gt; <code class="sig-name descname">_pipeline</code><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner9_pipelineE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal18SnapPipelineRunner12_initializedE">
+<span id="_CPPv3N5metal18SnapPipelineRunner12_initializedE"></span><span id="_CPPv2N5metal18SnapPipelineRunner12_initializedE"></span><span id="metal::SnapPipelineRunner::_initialized__b"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a6d8c7a8482648ae5edf81b8079802947"></span>bool <code class="sig-name descname">_initialized</code><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner12_initializedE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal18SnapPipelineRunner5_cardE">
+<span id="_CPPv3N5metal18SnapPipelineRunner5_cardE"></span><span id="_CPPv2N5metal18SnapPipelineRunner5_cardE"></span><span id="metal::SnapPipelineRunner::_card__Card"></span><span class="target" id="classmetal_1_1_snap_pipeline_runner_1a3b2125cf7b36cabcdcdd0eda9ef24fe4"></span><a class="reference internal" href="#_CPPv4N5metal4CardE" title="metal::Card">Card</a> <code class="sig-name descname">_card</code><a class="headerlink" href="#_CPPv4N5metal18SnapPipelineRunner5_cardE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt id="_CPPv4N5metal4fpga3JobE">
+<span id="_CPPv3N5metal4fpga3JobE"></span><span id="_CPPv2N5metal4fpga3JobE"></span><span id="metal::fpga::Job"></span><span class="target" id="structmetal_1_1fpga_1_1_job"></span><em class="property">struct </em><code class="sig-prename descclassname">metal::fpga<code class="sig-prename descclassname">::</code></code><code class="sig-name descname">Job</code><a class="headerlink" href="#_CPPv4N5metal4fpga3JobE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric">Public Members</p>
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4fpga3Job11job_addressE">
+<span id="_CPPv3N5metal4fpga3Job11job_addressE"></span><span id="_CPPv2N5metal4fpga3Job11job_addressE"></span><span id="metal::fpga::Job::job_address__uint64_t"></span><span class="target" id="structmetal_1_1fpga_1_1_job_1a47d3bcb5700df1d85f8302f748767585"></span>uint64_t <code class="sig-name descname">job_address</code><a class="headerlink" href="#_CPPv4N5metal4fpga3Job11job_addressE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4fpga3Job8job_typeE">
+<span id="_CPPv3N5metal4fpga3Job8job_typeE"></span><span id="_CPPv2N5metal4fpga3Job8job_typeE"></span><span id="metal::fpga::Job::job_type__JobType"></span><span class="target" id="structmetal_1_1fpga_1_1_job_1add6810cbe5955efb83cce12b4141b121"></span>JobType <code class="sig-name descname">job_type</code><a class="headerlink" href="#_CPPv4N5metal4fpga3Job8job_typeE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4fpga3Job6sourceE">
+<span id="_CPPv3N5metal4fpga3Job6sourceE"></span><span id="_CPPv2N5metal4fpga3Job6sourceE"></span><span id="metal::fpga::Job::source__Address"></span><span class="target" id="structmetal_1_1fpga_1_1_job_1adc7da5ef96f0b61c4be2b6e44e99c90c"></span>Address <code class="sig-name descname">source</code><a class="headerlink" href="#_CPPv4N5metal4fpga3Job6sourceE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4fpga3Job11destinationE">
+<span id="_CPPv3N5metal4fpga3Job11destinationE"></span><span id="_CPPv2N5metal4fpga3Job11destinationE"></span><span id="metal::fpga::Job::destination__Address"></span><span class="target" id="structmetal_1_1fpga_1_1_job_1a169beef7d61386b30b464a3671ed67c9"></span>Address <code class="sig-name descname">destination</code><a class="headerlink" href="#_CPPv4N5metal4fpga3Job11destinationE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N5metal4fpga3Job11direct_dataE">
+<span id="_CPPv3N5metal4fpga3Job11direct_dataE"></span><span id="_CPPv2N5metal4fpga3Job11direct_dataE"></span><span id="metal::fpga::Job::direct_data__uint64_tA"></span><span class="target" id="structmetal_1_1fpga_1_1_job_1a1db8acc409911a27c4b785dfba192c3e"></span>uint64_t <code class="sig-name descname">direct_data</code>[4]<a class="headerlink" href="#_CPPv4N5metal4fpga3Job11direct_dataE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="metal-filesystem.html" class="btn btn-neutral float-right" title="Metal Filesystem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="operator-manifest.html" class="btn btn-neutral float-left" title="Operator Manifest" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

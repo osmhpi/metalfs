@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metal FS &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metal FS Prerequisites" href="prerequisites.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Metal FS</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="metal-fs">
+<h1>Metal FS<a class="headerlink" href="#metal-fs" title="Permalink to this headline">¶</a></h1>
+<a class="reference internal image-reference" href="_images/metalfs.png"><img alt="Metal FS" src="_images/metalfs.png" style="width: 200px;" /></a>
+<p>Metal FS is a near-storage compute framework that combines FPGA compute kernels (‘operators’) with a file system.
+It is open-source on <a class="reference external" href="https://github.com/osmhpi/metalfs">GitHub</a>.</p>
+<p>It currently supports CAPI-enabled FPGA cards in IBM POWER systems.</p>
+<p>Development and simulation of operators is possible using only free tools (x86_64).</p>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="tutorial.html#tutorial"><span class="std std-ref">tutorial</span></a> will cover how to create a Metal FS FPGA image that consists of pre-defined operators as well as a custom image transformation kernel.</p>
+<p>For operator development you can either use a <a class="reference internal" href="docker-dev.html#docker-based-development-environment"><span class="std std-ref">dockerized development environment</span></a> (recommended), or set up the <a class="reference internal" href="prerequisites.html#metal-fs-prerequisites"><span class="std std-ref">prerequisites</span></a> manually.</p>
+</div>
+<div class="section" id="running-on-power">
+<h2>Running on POWER<a class="headerlink" href="#running-on-power" title="Permalink to this headline">¶</a></h2>
+<p>If you have access to a POWER8/POWER9 system equipped with a suitable FPGA, please follow the <a class="reference internal" href="deployment.html#deployment-guide"><span class="std std-ref">deployment guide</span></a>.</p>
+</div>
+<div class="section" id="advanced-topics">
+<h2>Advanced Topics<a class="headerlink" href="#advanced-topics" title="Permalink to this headline">¶</a></h2>
+<p>Refer to these guides for advanced Metal FS use cases:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="operator-parameters.html#operator-parameters"><span class="std std-ref">Operator Parameters</span></a></p></li>
+<li><p><a class="reference internal" href="image-manifest.html#image-manifest"><span class="std std-ref">Image Manifest Documentation</span></a></p></li>
+<li><p><a class="reference internal" href="operator-manifest.html#operator-manifest"><span class="std std-ref">Operator Manifest Documentation</span></a></p></li>
+<li><p>Operator Pipeline API (C++)</p>
+<ul>
+<li><p>Basic usage</p></li>
+<li><p>Filesystem Data Source / Data Sink</p></li>
+</ul>
+</li>
+<li><p>Inspecting Simulation Waveforms</p></li>
+<li><p>Operator Profiling at Runtime</p></li>
+<li><p>Operator Hardware Interface</p></li>
+<li><p>Benchmarking Data Generator</p></li>
+<li><p><a class="reference internal" href="buildpacks.html#buildpacks"><span class="std std-ref">Operator Buildpacks</span></a></p></li>
+<li><p>FPGA Targets</p></li>
+</ul>
+</div>
+<div class="section" id="feedback">
+<h2>Feedback<a class="headerlink" href="#feedback" title="Permalink to this headline">¶</a></h2>
+<p>We welcome your feedback to Metal FS!</p>
+<p>If you have questions or remarks, please create an <a class="reference external" href="https://github.com/osmhpi/metalfs/issues">issue</a> on the main <a class="reference external" href="https://github.com/osmhpi/metalfs">GitHub</a> repository.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="prerequisites.html" class="btn btn-neutral float-right" title="Metal FS Prerequisites" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

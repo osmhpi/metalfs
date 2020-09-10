@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Buildpacks &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Deployment Guide" href="deployment.html" />
+    <link rel="prev" title="Operator Parameters" href="operator-parameters.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Buildpacks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#image-build-pack">Image Build Pack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#operator-buildpack-hls-and-hdl">Operator Buildpack (HLS and HDL)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Buildpacks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/buildpacks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="buildpacks">
+<h1>Buildpacks<a class="headerlink" href="#buildpacks" title="Permalink to this headline">¶</a></h1>
+<p>Metal FS provides build packs for creating operators from different types of hardware descriptions as well as to create FPGA images from an image manifest.
+Build packs are <code class="docutils literal notranslate"><span class="pre">make</span></code> based.</p>
+<div class="section" id="image-build-pack">
+<h2>Image Build Pack<a class="headerlink" href="#image-build-pack" title="Permalink to this headline">¶</a></h2>
+<p>Add the following line in a Makefile that sits next to your <code class="docutils literal notranslate"><span class="pre">image.json</span></code>:</p>
+<div class="highlight-Makefile notranslate"><div class="highlight"><pre><span></span><span class="cp">include $(METAL_ROOT)/buildpacks/image/image.mk</span>
+</pre></div>
+</div>
+<p>You will now have access to the following <code class="docutils literal notranslate"><span class="pre">make</span></code> targets (resembling SNAP <code class="docutils literal notranslate"><span class="pre">make</span></code> targets):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span></code> – shows help</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">model</span></code> – builds a simulation model</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">sim</span></code> – starts simulation and the Metal FS filesystem driver (under <cite>/mnt</cite>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">image</span></code> – builds the FPGA bitstream</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="operator-buildpack-hls-and-hdl">
+<h2>Operator Buildpack (HLS and HDL)<a class="headerlink" href="#operator-buildpack-hls-and-hdl" title="Permalink to this headline">¶</a></h2>
+<p>Add this to a Makefile that sits next to your <code class="docutils literal notranslate"><span class="pre">operator.json</span></code>:</p>
+<p>HLS:</p>
+<div class="highlight-Makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">srcs</span> <span class="o">+=</span> changecase.cpp
+<span class="cp">include $(METAL_ROOT)/buildpacks/hls/hls.mk</span>
+</pre></div>
+</div>
+<p>HDL:</p>
+<div class="highlight-Makefile notranslate"><div class="highlight"><pre><span></span><span class="nv">srcs</span> <span class="o">+=</span> changecase.vhd
+<span class="cp">include $(METAL_ROOT)/buildpacks/hdl/hdl.mk</span>
+</pre></div>
+</div>
+<p>The buildpack offers the following targets, so you can quickly build a simulation model from your operator:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">help</span></code> – shows help</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">devmodel</span></code> – (similar to <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">model</span></code> from the image buildpack)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">sim</span></code> – starts simulation with the devmodel</p></li>
+</ul>
+</div></blockquote>
+<p>For setting the stream width to be used in the devmodel image, please refer to the [operator manifest](operator_manifest) docs.</p>
+<p>The HLS buildpack additionally offers the following target:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">test</span></code> – runs the HLS testbench</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="deployment.html" class="btn btn-neutral float-right" title="Deployment Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="operator-parameters.html" class="btn btn-neutral float-left" title="Operator Parameters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

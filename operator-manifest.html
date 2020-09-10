@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Operator Manifest &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metal Pipeline" href="metal-pipeline.html" />
+    <link rel="prev" title="Image Manifest" href="image-manifest.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Operator Manifest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#detailed-property-descriptions">Detailed Property Descriptions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem.html">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Operator Manifest</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/operator-manifest.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="operator-manifest">
+<h1>Operator Manifest<a class="headerlink" href="#operator-manifest" title="Permalink to this headline">¶</a></h1>
+<p>The operator manifest (<code class="docutils literal notranslate"><span class="pre">operator.json</span></code>) specifies operator metadata.</p>
+<p>Example:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;main&quot;</span><span class="p">:</span> <span class="s2">&quot;changecase&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;description&quot;</span><span class="p">:</span>
+        <span class="s2">&quot;Transform ASCII strings to lower- or uppercase&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;prepare_required&quot;</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nt">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;lowercase&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;short&quot;</span><span class="p">:</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;bool&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Transform to lowercase&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;offset&quot;</span><span class="p">:</span> <span class="mi">256</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;devImage&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;streamBytes&quot;</span><span class="p">:</span> <span class="mi">8</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="detailed-property-descriptions">
+<h2>Detailed Property Descriptions<a class="headerlink" href="#detailed-property-descriptions" title="Permalink to this headline">¶</a></h2>
+<p><strong>main</strong>:
+The entrypoint/top-level component of the operator.
+Depending on the [buildpack](buildpacks) (e.g. HLS or HDL), this is used during the IP build process.</p>
+<p><strong>description</strong>:
+Usage information about the operator. Displayed as part of the help text provided by the operator executable.
+Example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/metal_fs $ ./operators/colorfilter --help
+Convert bitmap to grayscale
+</pre></div>
+</div>
+<p><strong>prepare_required</strong>:
+Whether the operator requires to prepare its internal state before processing starts.
+<em>Optional</em> (default: <code class="docutils literal notranslate"><span class="pre">false</span></code>).</p>
+<p>This is typically used to avoid costly parameter ingestion computations on each operator invocation.
+Instead, the processing phase is only trigged when the parameter values change, i.e. once per <a class="reference internal" href="metal-pipeline.html#_CPPv4N5metal18SnapPipelineRunnerE" title="metal::SnapPipelineRunner"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">SnapPipelineRunner</span></code></a> invocation. See also: <a class="reference internal" href="operator-parameters.html#operator-parameters"><span class="std std-ref">Operator Parameters</span></a>.</p>
+<p><strong>options</strong>:
+JSON object specifying configuration options for the operator to be provided at runtime.
+The keys specify the long option names which are used for passing parameters to the operator executables or the operator objects in the C++ API.
+The values are another JSON object with the following properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>short</strong>: Short parameter name (for passing arguments to the operator executable). <em>Optional.</em></p></li>
+<li><p><strong>type</strong>: One of the supported parameter types:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bool&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;int&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;buffer&quot;,</span> <span class="pre">&quot;size&quot;:</span> <span class="pre">&lt;number&gt;</span> <span class="pre">}</span></code> (<code class="docutils literal notranslate"><span class="pre">size</span></code> can be chosen arbitrarily)</p></li>
+</ul>
+</li>
+<li><p><strong>description</strong>: Description shown in help text of the operator executable</p></li>
+<li><p><strong>offset</strong>: Offset of the parameter in the operator register space</p></li>
+</ul>
+</div></blockquote>
+<p><strong>devImage</strong>:
+When creating simulation models during operator development, a simple Metal FS image containing the operator is generated
+in the background.
+If the operator does not support arbitrary stream widths, the development image can be configured to use the stream width specified here.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="metal-pipeline.html" class="btn btn-neutral float-right" title="Metal Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="image-manifest.html" class="btn btn-neutral float-left" title="Image Manifest" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

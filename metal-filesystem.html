@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Metal Filesystem &mdash; metalfs  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metal Filesystem Pipeline" href="metal-filesystem-pipeline.html" />
+    <link rel="prev" title="Metal Pipeline" href="metal-pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> metalfs
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prerequisites.html">Metal FS Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker-dev.html">Docker-based Development Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Advanced Topics</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="operator-parameters.html">Operator Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="buildpacks.html">Buildpacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Deployment Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image-manifest.html">Image Manifest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operator-manifest.html">Operator Manifest</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="metal-pipeline.html">Metal Pipeline</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Metal Filesystem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metal-filesystem-pipeline.html">Metal Filesystem Pipeline</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Appendix</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">metalfs</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Metal Filesystem</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/metal-filesystem.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="metal-filesystem">
+<h1>Metal Filesystem<a class="headerlink" href="#metal-filesystem" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp function">
+<dt id="_CPPv413mtl_get_inodeP11mtl_contextPKcP9mtl_inode">
+<span id="_CPPv313mtl_get_inodeP11mtl_contextPKcP9mtl_inode"></span><span id="_CPPv213mtl_get_inodeP11mtl_contextPKcP9mtl_inode"></span><span id="mtl_get_inode__mtl_contextP.cCP.mtl_inodeP"></span><span class="target" id="metal_8h_1a28547c08692d41d85e0144538a12645a"></span>int <code class="sig-name descname">mtl_get_inode</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>path</em>, mtl_inode *<em>inode</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv413mtl_get_inodeP11mtl_contextPKcP9mtl_inode" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv48mtl_openP11mtl_contextPKcP8uint64_t">
+<span id="_CPPv38mtl_openP11mtl_contextPKcP8uint64_t"></span><span id="_CPPv28mtl_openP11mtl_contextPKcP8uint64_t"></span><span id="mtl_open__mtl_contextP.cCP.uint64_tP"></span><span class="target" id="metal_8h_1a82e9bd17447c9a4e489de66a8091f38d"></span>int <code class="sig-name descname">mtl_open</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em>, uint64_t *<em>inode_id</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48mtl_openP11mtl_contextPKcP8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv411mtl_opendirP11mtl_contextPKcPP7mtl_dir">
+<span id="_CPPv311mtl_opendirP11mtl_contextPKcPP7mtl_dir"></span><span id="_CPPv211mtl_opendirP11mtl_contextPKcPP7mtl_dir"></span><span id="mtl_opendir__mtl_contextP.cCP.mtl_dirPP"></span><span class="target" id="metal_8h_1a5ad4a1e26e81d6f04e0bd4996c2809f1"></span>int <code class="sig-name descname">mtl_opendir</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em>, mtl_dir **<em>dir</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411mtl_opendirP11mtl_contextPKcPP7mtl_dir" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv411mtl_readdirP11mtl_contextP7mtl_dirPc8uint64_t">
+<span id="_CPPv311mtl_readdirP11mtl_contextP7mtl_dirPc8uint64_t"></span><span id="_CPPv211mtl_readdirP11mtl_contextP7mtl_dirPc8uint64_t"></span><span id="mtl_readdir__mtl_contextP.mtl_dirP.cP.uint64_t"></span><span class="target" id="metal_8h_1a3ba1103ee9058cfc08998229e8fe779b"></span>int <code class="sig-name descname">mtl_readdir</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, mtl_dir *<em>dir</em>, char *<em>buffer</em>, uint64_t <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv411mtl_readdirP11mtl_contextP7mtl_dirPc8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv412mtl_closedirP11mtl_contextP7mtl_dir">
+<span id="_CPPv312mtl_closedirP11mtl_contextP7mtl_dir"></span><span id="_CPPv212mtl_closedirP11mtl_contextP7mtl_dir"></span><span id="mtl_closedir__mtl_contextP.mtl_dirP"></span><span class="target" id="metal_8h_1a6c7a1f0d6c9b72d86ba95fea29094353"></span>int <code class="sig-name descname">mtl_closedir</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, mtl_dir *<em>dir</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412mtl_closedirP11mtl_contextP7mtl_dir" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv49mtl_mkdirP11mtl_contextPKci">
+<span id="_CPPv39mtl_mkdirP11mtl_contextPKci"></span><span id="_CPPv29mtl_mkdirP11mtl_contextPKci"></span><span id="mtl_mkdir__mtl_contextP.cCP.i"></span><span class="target" id="metal_8h_1af832cd454b94c1c614e1ebae4e58904c"></span>int <code class="sig-name descname">mtl_mkdir</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em>, int <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49mtl_mkdirP11mtl_contextPKci" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv49mtl_rmdirP11mtl_contextPKc">
+<span id="_CPPv39mtl_rmdirP11mtl_contextPKc"></span><span id="_CPPv29mtl_rmdirP11mtl_contextPKc"></span><span id="mtl_rmdir__mtl_contextP.cCP"></span><span class="target" id="metal_8h_1adfcd88345d129e4502a0be682f4d9364"></span>int <code class="sig-name descname">mtl_rmdir</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49mtl_rmdirP11mtl_contextPKc" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv410mtl_renameP11mtl_contextPKcPKc">
+<span id="_CPPv310mtl_renameP11mtl_contextPKcPKc"></span><span id="_CPPv210mtl_renameP11mtl_contextPKcPKc"></span><span id="mtl_rename__mtl_contextP.cCP.cCP"></span><span class="target" id="metal_8h_1a1eae3591cec1490a7ec22b99c2a4f270"></span>int <code class="sig-name descname">mtl_rename</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>from_filename</em>, <em class="property">const</em> char *<em>to_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410mtl_renameP11mtl_contextPKcPKc" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv49mtl_chownP11mtl_contextPKcii">
+<span id="_CPPv39mtl_chownP11mtl_contextPKcii"></span><span id="_CPPv29mtl_chownP11mtl_contextPKcii"></span><span id="mtl_chown__mtl_contextP.cCP.i.i"></span><span class="target" id="metal_8h_1ab3edee255d2f3e6cff824cde215dcd09"></span>int <code class="sig-name descname">mtl_chown</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>path</em>, int <em>uid</em>, int <em>gid</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49mtl_chownP11mtl_contextPKcii" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv410mtl_createP11mtl_contextPKciP8uint64_t">
+<span id="_CPPv310mtl_createP11mtl_contextPKciP8uint64_t"></span><span id="_CPPv210mtl_createP11mtl_contextPKciP8uint64_t"></span><span id="mtl_create__mtl_contextP.cCP.i.uint64_tP"></span><span class="target" id="metal_8h_1a0fc5772bdbb9bb4ba67c3c34ba034218"></span>int <code class="sig-name descname">mtl_create</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em>, int <em>mode</em>, uint64_t *<em>inode_id</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410mtl_createP11mtl_contextPKciP8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv49mtl_writeP11mtl_context8uint64_tPKc8uint64_t8uint64_t">
+<span id="_CPPv39mtl_writeP11mtl_context8uint64_tPKc8uint64_t8uint64_t"></span><span id="_CPPv29mtl_writeP11mtl_context8uint64_tPKc8uint64_t8uint64_t"></span><span id="mtl_write__mtl_contextP.uint64_t.cCP.uint64_t.uint64_t"></span><span class="target" id="metal_8h_1aec39fe63b15ceff03bb13346a7a4865c"></span>int <code class="sig-name descname">mtl_write</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, uint64_t <em>inode_id</em>, <em class="property">const</em> char *<em>buffer</em>, uint64_t <em>size</em>, uint64_t <em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv49mtl_writeP11mtl_context8uint64_tPKc8uint64_t8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv48mtl_readP11mtl_context8uint64_tPc8uint64_t8uint64_t">
+<span id="_CPPv38mtl_readP11mtl_context8uint64_tPc8uint64_t8uint64_t"></span><span id="_CPPv28mtl_readP11mtl_context8uint64_tPc8uint64_t8uint64_t"></span><span id="mtl_read__mtl_contextP.uint64_t.cP.uint64_t.uint64_t"></span><span class="target" id="metal_8h_1a72fa073c676085cb9c3ad3b774cef2df"></span>uint64_t <code class="sig-name descname">mtl_read</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, uint64_t <em>inode_id</em>, char *<em>buffer</em>, uint64_t <em>size</em>, uint64_t <em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv48mtl_readP11mtl_context8uint64_tPc8uint64_t8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv412mtl_truncateP11mtl_context8uint64_t8uint64_t">
+<span id="_CPPv312mtl_truncateP11mtl_context8uint64_t8uint64_t"></span><span id="_CPPv212mtl_truncateP11mtl_context8uint64_t8uint64_t"></span><span id="mtl_truncate__mtl_contextP.uint64_t.uint64_t"></span><span class="target" id="metal_8h_1a8928b880eb581951ff7b8406d481f5fc"></span>int <code class="sig-name descname">mtl_truncate</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, uint64_t <em>inode_id</em>, uint64_t <em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv412mtl_truncateP11mtl_context8uint64_t8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv410mtl_unlinkP11mtl_contextPKc">
+<span id="_CPPv310mtl_unlinkP11mtl_contextPKc"></span><span id="_CPPv210mtl_unlinkP11mtl_contextPKc"></span><span id="mtl_unlink__mtl_contextP.cCP"></span><span class="target" id="metal_8h_1a4ad0ff2662a3a39fccd5ef18c345c500"></span>int <code class="sig-name descname">mtl_unlink</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, <em class="property">const</em> char *<em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv410mtl_unlinkP11mtl_contextPKc" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv420mtl_load_extent_listP11mtl_context8uint64_tP15mtl_file_extentP8uint64_tP8uint64_t">
+<span id="_CPPv320mtl_load_extent_listP11mtl_context8uint64_tP15mtl_file_extentP8uint64_tP8uint64_t"></span><span id="_CPPv220mtl_load_extent_listP11mtl_context8uint64_tP15mtl_file_extentP8uint64_tP8uint64_t"></span><span id="mtl_load_extent_list__mtl_contextP.uint64_t.mtl_file_extentP.uint64_tP.uint64_tP"></span><span class="target" id="metal_8h_1a00ad90c9c91868449cfd8bdd78716a7f"></span>int <code class="sig-name descname">mtl_load_extent_list</code><span class="sig-paren">(</span>mtl_context *<em>context</em>, uint64_t <em>inode_id</em>, mtl_file_extent *<em>extents</em>, uint64_t *<em>extents_length</em>, uint64_t *<em>file_length</em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv420mtl_load_extent_listP11mtl_context8uint64_tP15mtl_file_extentP8uint64_tP8uint64_t" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="metal-filesystem-pipeline.html" class="btn btn-neutral float-right" title="Metal Filesystem Pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="metal-pipeline.html" class="btn btn-neutral float-left" title="Metal Pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Robert Schmid
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
