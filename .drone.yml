@@ -105,7 +105,21 @@ steps:
         exclude:
          - pull_request
 
-  - name: publish-docs
+  - name: docs/prepare
+    image: metalfs/sdk-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build/docs/sphinx
+      - rm -rf .buildinfo .doctrees
+      - touch .nojekyll
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+         - pull_request
+
+  - name: docs/publish
     image: plugins/gh-pages
     settings:
       username:
