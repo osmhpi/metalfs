@@ -12,6 +12,7 @@ RUN apt-get update \
     build-essential \
     git openssh-client \
     jq \
+    cmake-curses-gui \
  && rm -rf /var/lib/apt/lists/*
 
 # Metal FS Dependencies

@@ -120,8 +120,18 @@ target_link_libraries(${target}
 # Compile definitions
 #
 
+set(compile_definitions)
+
+if(WITH_SNAP)
+    list(APPEND compile_definitions WITH_SNAP)
+endif()
+if(WITH_OCACCEL)
+    list(APPEND compile_definitions WITH_OCACCEL)
+endif()
+
 target_compile_definitions(${target}
     PRIVATE
+    ${compile_definitions}
     ${DEFAULT_COMPILE_DEFINITIONS}
 )
 

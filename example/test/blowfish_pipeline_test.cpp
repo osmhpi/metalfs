@@ -5,7 +5,6 @@
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
 #include "base_test.hpp"
 
 namespace metal {
@@ -37,10 +36,10 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayload) {
   encrypt->setOption("key", keyBuffer);
   decrypt->setOption("key", keyBuffer);
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
-  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
+  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), *action);
 
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 
@@ -78,10 +77,10 @@ TEST_F(BlowfishPipeline, EncryptsAndDecryptsPayloadUsingDifferentKeys) {
   encrypt->setOption("key", encryptKeyBuffer);
   decrypt->setOption("key", decryptKeyBuffer);
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline(std::move(*encrypt), std::move(*decrypt));
-  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
+  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), *action);
 
   EXPECT_NE(0, memcmp(src, dest, n_bytes));
 

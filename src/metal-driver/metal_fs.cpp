@@ -9,7 +9,12 @@ extern "C" {
 
 #include <metal-filesystem-pipeline/filesystem_context.hpp>
 #include <metal-pipeline/operator_factory.hpp>
-#include <metal-pipeline/snap_action.hpp>
+
+#ifdef WITH_SNAP
+#include <metal-pipeline/snap/snap_action.hpp>
+#elif WITH_OCACCEL
+#include <metal-pipeline/ocaccel/ocaccel_action.hpp>
+#endif
 
 #include "filesystem_fuse_handler.hpp"
 #include "metal_fuse_operations.hpp"
@@ -25,7 +30,6 @@ struct metal_config {
   int timeout;
   char *operators;
   char *metadata_dir;
-  char *platform;
   int in_memory;
   int verbosity;
 };
@@ -43,7 +47,6 @@ static struct fuse_opt metal_opts[] = {
     METAL_OPT("--timeout=%i", timeout, 0),
     METAL_OPT("-t %i", timeout, 0),
     METAL_OPT("--metadata %s", metadata_dir, 0),
-    METAL_OPT("--platform %s", platform, 0),
     METAL_OPT("--in-memory", in_memory, 1),
     METAL_OPT("--in-memory=true", in_memory, 1),
     METAL_OPT("--in-memory=false", in_memory, 0),
@@ -76,7 +79,6 @@ static int metal_opt_proc(void *data, const char *arg, int key,
               "    --card=CARD (0)\n"
               "    --timeout=TIMEOUT (10)\n"
               "    --metadata=METADATA_PATH\n"
-              "    --platform=(snap|ocaccel)\n"
               "    --in-memory=(true|false)\n",
               outargs->argv[0]);
       fuse_opt_add_arg(outargs, "-h");
@@ -131,16 +133,11 @@ int main(int argc, char *argv[]) {
     conf.timeout = 2;
   }
 
-  std::shared_ptr<FpgaActionFactory> actionFactory;
-
-  if (std::string(conf.platform) == "snap") {
-    actionFactory = std::make_shared<SnapActionFactory>(conf.card, conf.timeout);
-  } else if (std::string(conf.platform) == "ocaccel") {
-    actionFactory = std::make_shared<OCAccelActionFactory>(conf.card, conf.timeout);
-  } else {
-    spdlog::error("Please specify a valid platform (e.g. --platform (snap|ocaccel))");
-    return 1;
-  }
+#ifdef WITH_SNAP
+  auto actionFactory = std::make_shared<SnapActionFactory>(conf.card, conf.timeout);
+#elif WITH_OCACCEL
+  auto actionFactory = std::make_shared<OCAccelActionFactory>(conf.card, conf.timeout);
+#endif
 
   auto metadataDir = std::string(conf.metadata_dir);
   auto metadataDirDRAM = metadataDir + "_tmp";

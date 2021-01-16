@@ -2,9 +2,21 @@
 
 #include <libgen.h>
 
-#include <metal-pipeline/snap_action.hpp>
+#ifdef WITH_SNAP
+#include <metal-pipeline/snap/snap_action.hpp>
+#elif WITH_OCACCEL
+#include <metal-pipeline/ocaccel/ocaccel_action.hpp>
+#endif
 
 namespace metal {
+
+BaseTest::BaseTest() :
+  #ifdef WITH_SNAP
+    _actionFactory(std::make_shared<SnapActionFactory>(0, 10))
+  #elif WITH_OCACCEL
+    _actionFactory(std::make_shared<OCAccelActionFactory>(0, 10))
+  #endif
+    {}
 
 void BaseTest::fill_payload(uint8_t *buffer, uint64_t length) {
   for (uint64_t i = 0; i < length; ++i) {
@@ -20,8 +32,8 @@ void BaseTest::SetUp() {
 }
 
 void PipelineTest::_setUp() {
-  SnapAction action;
-  _registry = std::make_unique<OperatorFactory>(OperatorFactory::fromFPGA(action));
+  auto action = _actionFactory->createAction();
+  _registry = std::make_unique<OperatorFactory>(OperatorFactory::fromFPGA(*action));
 }
 
 std::optional<Operator> PipelineTest::try_get_operator(

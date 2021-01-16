@@ -38,7 +38,6 @@ set(headers
     ${include_path}/fpga_action.hpp
     ${include_path}/fpga_action_factory.hpp
     ${include_path}/fpga_interface.hpp
-    ${include_path}/ocaccel_action.hpp
     ${include_path}/operator_argument.hpp
     ${include_path}/operator_context.hpp
     ${include_path}/operator_factory.hpp
@@ -47,12 +46,9 @@ set(headers
     ${include_path}/pipeline.hpp
     ${include_path}/pipeline_runner.hpp
     ${include_path}/profiling_pipeline_runner.hpp
-    ${include_path}/snap_action.hpp
 )
 
 set(sources
-    ${source_path}/fpga_action_factory.cpp
-    ${source_path}/ocaccel_action.cpp
     ${source_path}/operator_context.cpp
     ${source_path}/operator_factory.cpp
     ${source_path}/operator_specification.cpp
@@ -60,8 +56,17 @@ set(sources
     ${source_path}/pipeline.cpp
     ${source_path}/pipeline_runner.cpp
     ${source_path}/profiling_pipeline_runner.cpp
-    ${source_path}/snap_action.cpp
 )
+
+if(WITH_SNAP)
+    list(APPEND headers ${include_path}/snap/snap_action.hpp)
+    list(APPEND sources ${source_path}/snap/snap_action.cpp )
+endif()
+
+if (WITH_OCACCEL)
+    list(APPEND headers ${include_path}/ocaccel/ocaccel_action.hpp)
+    list(APPEND sources ${source_path}/ocaccel/ocaccel_action.cpp)
+endif()
 
 # Group source files
 set(header_group "Header Files (API)")
@@ -158,12 +163,22 @@ target_include_directories(${target}
 # Libraries
 #
 
-target_link_libraries(${target}
-    PRIVATE
+set(libraries
     nlohmann_json::nlohmann_json
     spdlog::spdlog
-    snap
-    oc-accel
+)
+
+if(WITH_SNAP)
+    list(APPEND libraries snap)
+endif()
+
+if(WITH_OCACCEL)
+    list(APPEND libraries oc-accel)
+endif()
+
+target_link_libraries(${target}
+    PRIVATE
+    ${libraries}
 
     PUBLIC
     ${DEFAULT_LIBRARIES}

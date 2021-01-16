@@ -19,7 +19,7 @@ steps:
     image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
-      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
+      - mkdir build && cd build && cmake -DWITH_SNAP=ON -DWITH_OCACCEL=OFF -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
 
   - name: metalfs/filesystem-test
     image: metalfs/sdk-snap-base:latest
@@ -160,7 +160,7 @@ steps:
     image: metalfs/sdk-ocaccel-base:latest
     pull: if-not-exists
     commands:
-      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
+      - mkdir build && cd build && cmake -DWITH_SNAP=OFF -DWITH_OCACCEL=ON -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
 
   - name: metalfs/filesystem-test
     image: metalfs/sdk-ocaccel-base:latest

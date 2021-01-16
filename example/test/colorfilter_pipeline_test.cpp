@@ -7,7 +7,6 @@
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
 
@@ -33,10 +32,10 @@ TEST_F(ColorfilterPipeline, PreservesHeaderData) {
     return;
   }
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline(std::move(*filter));
-  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), action);
+  pipeline.run(DataSource(src, n_bytes), DataSink(dest, n_bytes), *action);
 
   EXPECT_EQ(0, memcmp(src, dest, n_bytes));
 

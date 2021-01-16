@@ -48,8 +48,7 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
 
   decryptContext.setProfilingEnabled(true);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
+  ProfilingPipelineRunner runner(_actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -90,8 +89,7 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
 
   changeCaseContext.setProfilingEnabled(true);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
+  ProfilingPipelineRunner runner(_actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -132,8 +130,7 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
 
   encryptContext.setProfilingEnabled(true);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
+  ProfilingPipelineRunner runner(_actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -156,8 +153,7 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
   OperatorContext changeCaseContext(std::move(*change_case));
   changeCaseContext.setProfilingEnabled(true);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-  ProfilingPipelineRunner runner(actionFactory, std::move(changeCaseContext));
+  ProfilingPipelineRunner runner(_actionFactory, std::move(changeCaseContext));
   ASSERT_NO_THROW(runner.run(DataSource(0, n_bytes, fpga::AddressType::Random),
                              DataSink(0, n_bytes, fpga::AddressType::Null)));
   //   std::cout << runner.formatProfilingResults();

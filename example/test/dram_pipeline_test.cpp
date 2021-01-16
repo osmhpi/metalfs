@@ -7,7 +7,6 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
 #include "base_test.hpp"
 
 namespace metal {
@@ -20,12 +19,12 @@ TEST_F(DRAMPipeline, TransferBlockToDRAM) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline();
   ASSERT_NO_THROW(pipeline.run(
       DataSource(src, n_bytes),
-      DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), action));
+      DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), *action));
 
   free(src);
 }
@@ -38,20 +37,20 @@ TEST_F(DRAMPipeline, WriteAndReadBlock) {
 
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   {  // Write
     auto pipeline = Pipeline();
     ASSERT_NO_THROW(pipeline.run(
         DataSource(src, n_bytes),
-        DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), action));
+        DataSink(1ul << 31, n_bytes, fpga::AddressType::CardDRAM), *action));
   }
 
   {  // Read
     auto pipeline = Pipeline();
     ASSERT_NO_THROW(pipeline.run(
         DataSource(1ul << 31, n_bytes, fpga::AddressType::CardDRAM),
-        DataSink(src, n_bytes), action));
+        DataSink(src, n_bytes), *action));
   }
 
   free(src);

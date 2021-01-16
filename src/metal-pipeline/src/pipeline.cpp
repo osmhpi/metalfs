@@ -10,7 +10,7 @@ extern "C" {
 #include <metal-pipeline/common.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 

@@ -1,9 +1,9 @@
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/ocaccel/ocaccel_action.hpp>
 
 #include <unistd.h>
 
-#include <libsnap.h>
-#include <snap_hls_if.h>
+#include <libosnap.h>
+#include <osnap_hls_if.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -15,11 +15,15 @@
 
 namespace metal {
 
-SnapAction::SnapAction(int card, int timeout) : _timeout(timeout) {
-  spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card);
+std::unique_ptr<FpgaAction> OCAccelActionFactory::createAction() const {
+    return std::make_unique<OCAccelAction>(_card, _timeout);
+}
+
+OCAccelAction::OCAccelAction(int card, int timeout) : _timeout(timeout) {
+  spdlog::trace("Allocating OCXL device /dev/ocxl/IBM,oc-snap.000{}:00:00.1.0", card);
 
   char device[128];
-  snprintf(device, sizeof(device) - 1, "/dev/cxl/afu%d.0s", card);
+  snprintf(device, sizeof(device) - 1, "/dev/ocxl/IBM,oc-snap.000%d:00:00.1.0", card);
 
   _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
   if (!_card) {
@@ -38,13 +42,13 @@ SnapAction::SnapAction(int card, int timeout) : _timeout(timeout) {
   }
 }
 
-SnapAction::SnapAction(SnapAction &&other) noexcept
+OCAccelAction::OCAccelAction(OCAccelAction &&other) noexcept
     : _action(other._action), _card(other._card), _timeout(other._timeout) {
   other._action = nullptr;
   other._card = nullptr;
 }
 
-SnapAction::~SnapAction() {
+OCAccelAction::~OCAccelAction() {
   if (_action) {
     spdlog::trace("Detaching action...");
     snap_detach_action(_action);
@@ -58,7 +62,7 @@ SnapAction::~SnapAction() {
   }
 }
 
-void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
+void OCAccelAction::executeJob(fpga::JobType jobType, const void *parameters,
                             fpga::Address source, fpga::Address destination,
                             uint64_t directData0, uint64_t directData1,
                             uint64_t *directDataOut0,
@@ -93,15 +97,15 @@ void SnapAction::executeJob(fpga::JobType jobType, const void *parameters,
   if (directDataOut1) *directDataOut1 = mjob.direct_data[3];
 }
 
-bool SnapAction::isNVMeEnabled() {
+bool OCAccelAction::isNVMeEnabled() {
   unsigned long haveNVMe = 0;
   snap_card_ioctl(_card, GET_NVME_ENABLED, (unsigned long)&haveNVMe);
   return haveNVMe != 0;
 }
 
-void *SnapAction::allocateMemory(size_t size) { return snap_malloc(size); }
+void *OCAccelAction::allocateMemory(size_t size) { return snap_malloc(size); }
 
-std::string SnapAction::jobTypeToString(fpga::JobType job) {
+std::string OCAccelAction::jobTypeToString(fpga::JobType job) {
   switch (job) {
     case fpga::JobType::ReadImageInfo:
       return "ReadImageInfo";
@@ -126,7 +130,7 @@ std::string SnapAction::jobTypeToString(fpga::JobType job) {
   return "Unknown";
 }
 
-std::string SnapAction::addressTypeToString(fpga::AddressType addressType) {
+std::string OCAccelAction::addressTypeToString(fpga::AddressType addressType) {
   switch (addressType) {
     case fpga::AddressType::Host:
       return "Host";
@@ -145,7 +149,7 @@ std::string SnapAction::addressTypeToString(fpga::AddressType addressType) {
   return "Unknown";
 }
 
-std::string SnapAction::mapTypeToString(fpga::MapType mapType) {
+std::string OCAccelAction::mapTypeToString(fpga::MapType mapType) {
   switch (mapType) {
     case fpga::MapType::None:
       return "None";
@@ -162,7 +166,7 @@ std::string SnapAction::mapTypeToString(fpga::MapType mapType) {
   return "Unknown";
 }
 
-std::string SnapAction::snapReturnCodeToString(int rc) {
+std::string OCAccelAction::snapReturnCodeToString(int rc) {
   switch (rc) {
     case SNAP_OK:
       return "";

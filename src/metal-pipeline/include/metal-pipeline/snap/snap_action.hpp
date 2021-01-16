@@ -5,11 +5,22 @@
 #include <string>
 
 #include <metal-pipeline/fpga_action.hpp>
+#include <metal-pipeline/fpga_action_factory.hpp>
 
 struct snap_action;
 struct snap_card;
 
 namespace metal {
+
+class METAL_PIPELINE_API SnapActionFactory : public FpgaActionFactory {
+public:
+  SnapActionFactory(int card, int timeout) : FpgaActionFactory(), _card(card), _timeout(timeout) {}
+  std::unique_ptr<FpgaAction> createAction() const override;
+
+protected:
+  int _card;
+  int _timeout;
+};
 
 class METAL_PIPELINE_API SnapAction : public FpgaAction{
  public:

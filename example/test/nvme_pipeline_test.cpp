@@ -12,7 +12,6 @@
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/fpga_action_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
 #include <metal-pipeline/pipeline_runner.hpp>
 
 #include "base_test.hpp"
@@ -26,10 +25,8 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
   uint64_t n_bytes = n_blocks * fpga::StorageBlockSize;
   auto *dest = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-
   auto filesystem = std::make_shared<PipelineStorage>(
-      actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      _actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", 0755, &file);
@@ -39,7 +36,7 @@ TEST_F(NVMePipelineTest, TransfersBlockFromNVMe) {
 
   DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-  PipelineRunner runner(actionFactory);
+  PipelineRunner runner(_actionFactory);
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(dest);
@@ -51,10 +48,8 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-
   auto filesystem = std::make_shared<PipelineStorage>(
-      actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      _actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", 0755, &file);
@@ -63,7 +58,7 @@ TEST_F(NVMePipelineTest, TransfersBlockToNVMe) {
   DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
   FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-  PipelineRunner runner(actionFactory);
+  PipelineRunner runner(_actionFactory);
   ASSERT_NO_THROW(runner.run(dataSource, dataSink));
 
   free(src);
@@ -75,10 +70,8 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-
   auto filesystem = std::make_shared<PipelineStorage>(
-      actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      _actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", 0755, &file);
@@ -90,7 +83,7 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
     FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    PipelineRunner runner(actionFactory);
+    PipelineRunner runner(_actionFactory);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -98,7 +91,7 @@ TEST_F(NVMePipelineTest, ReadBlockHasPreviouslyWrittenContents) {
     FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    PipelineRunner runner(actionFactory);
+    PipelineRunner runner(_actionFactory);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -114,10 +107,8 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
   auto *src = reinterpret_cast<uint8_t *>(memalign(4096, n_bytes));
   fill_payload(src, n_bytes);
 
-  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
-
   auto filesystem = std::make_shared<PipelineStorage>(
-      actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
+      _actionFactory, fpga::AddressType::NVMe, fpga::MapType::NVMe,
       "./test_metadata", true);
   uint64_t file;
   mtl_create(filesystem->context(), "/test", 0755, &file);
@@ -134,7 +125,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     DefaultDataSourceContext dataSource(DataSource(src, n_bytes));
     FileDataSinkContext dataSink(filesystem, file, 0, n_bytes);
 
-    PipelineRunner runner(actionFactory);
+    PipelineRunner runner(_actionFactory);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -143,7 +134,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     FileDataSinkContext dataSink(filesystem, file, newBytesOffset,
                                  newBytesSize);
 
-    PipelineRunner runner(actionFactory);
+    PipelineRunner runner(_actionFactory);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 
@@ -151,7 +142,7 @@ TEST_F(NVMePipelineTest, WritingInMiddleOfFilePreservesSurroundingContents) {
     FileDataSourceContext dataSource(filesystem, file, 0, n_bytes);
     DefaultDataSinkContext dataSink(DataSink(dest, n_bytes));
 
-    PipelineRunner runner(actionFactory);
+    PipelineRunner runner(_actionFactory);
     ASSERT_NO_THROW(runner.run(dataSource, dataSink));
   }
 

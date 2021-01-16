@@ -4,7 +4,7 @@
 #
 
 # CMake version
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 #
 # Configure CMake environment
@@ -76,6 +76,16 @@ option(OPTION_BUILD_TESTS     "Build tests."                                    
 option(OPTION_BUILD_DOCS      "Build documentation."                                   OFF)
 option(OPTION_BUILD_EXAMPLES  "Build examples."                                        OFF)
 
+option(WITH_SNAP              "Build with snap target enabled"                         ON)
+option(WITH_OCACCEL           "Build with oc-accel target enabled"                     OFF)
+
+if (WITH_SNAP AND WITH_OCACCEL)
+  message(FATAL_ERROR "Can't build snap and oc-accel targets at same time")
+endif()
+
+if (NOT WITH_SNAP AND NOT WITH_OCACCEL)
+  message(FATAL_ERROR "Either SNAP or OC-Accel must be selected as target")
+endif()
 
 #
 # Declare project

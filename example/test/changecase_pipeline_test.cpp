@@ -7,7 +7,6 @@
 #include <metal-pipeline/data_source.hpp>
 #include <metal-pipeline/operator_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
 
 #include "base_test.hpp"
 
@@ -28,11 +27,11 @@ TEST_F(ChangecasePipeline, TransformsToUppercase) {
 
   transformer->setOption("lowercase", false);
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),
-               DataSink(dest, sizeof(input) - 1), action);
+               DataSink(dest, sizeof(input) - 1), *action);
 
   EXPECT_EQ("HELLO WORLD", std::string(dest));
 }
@@ -50,11 +49,11 @@ TEST_F(ChangecasePipeline, TransformsToLowercase) {
 
   transformer->setOption("lowercase", true);
 
-  SnapAction action;
+  auto action = _actionFactory->createAction();
 
   auto pipeline = Pipeline(std::move(*transformer));
   pipeline.run(DataSource(input, sizeof(input) - 1),
-               DataSink(dest, sizeof(input) - 1), action);
+               DataSink(dest, sizeof(input) - 1), *action);
 
   EXPECT_EQ("hello world", std::string(dest));
 }
