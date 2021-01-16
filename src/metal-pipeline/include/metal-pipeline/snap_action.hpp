@@ -4,17 +4,16 @@
 
 #include <string>
 
-#include <metal-pipeline/card.hpp>
-#include <metal-pipeline/fpga_interface.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 struct snap_action;
 struct snap_card;
 
 namespace metal {
 
-class METAL_PIPELINE_API SnapAction {
+class METAL_PIPELINE_API SnapAction : public FpgaAction{
  public:
-  explicit SnapAction(Card card = {0, 10});
+  explicit SnapAction(int card = 0, int timeout = 10);
   SnapAction(const SnapAction &other) = delete;
   SnapAction(SnapAction &&other) noexcept;
   virtual ~SnapAction();
@@ -23,13 +22,13 @@ class METAL_PIPELINE_API SnapAction {
                   fpga::Address source = {}, fpga::Address destination = {},
                   uint64_t directData0 = 0, uint64_t directData1 = 0,
                   uint64_t *directDataOut0 = nullptr,
-                  uint64_t *directDataOut1 = nullptr);
-  bool isNVMeEnabled();
+                  uint64_t *directDataOut1 = nullptr) override;
+  bool isNVMeEnabled() override;
 
-  static void *allocateMemory(size_t size);
+  void *allocateMemory(size_t size) override;
 
-  static std::string addressTypeToString(fpga::AddressType addressType);
-  static std::string mapTypeToString(fpga::MapType mapType);
+  std::string addressTypeToString(fpga::AddressType addressType) override;
+  std::string mapTypeToString(fpga::MapType mapType) override;
 
  protected:
   static std::string jobTypeToString(fpga::JobType job);

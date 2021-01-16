@@ -13,16 +13,16 @@
 
 namespace metal {
 
-class SnapAction;
+class FpgaAction;
 
 class METAL_PIPELINE_API DataSourceContext {
  public:
   DataSourceContext() : _profilingEnabled(false), _profilingResults() {}
-  virtual void configure(SnapAction &action, bool initial) {
+  virtual void configure(FpgaAction &action, bool initial) {
     (void)action;
     (void)initial;
   };
-  virtual void finalize(SnapAction &action) { (void)action; };
+  virtual void finalize(FpgaAction &action) { (void)action; };
 
   virtual const DataSource dataSource() const = 0;
   virtual uint64_t reportTotalSize() const = 0;

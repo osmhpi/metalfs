@@ -71,12 +71,22 @@ Metal Pipeline
     :protected-members:
     :undoc-members:
 
+.. doxygenclass:: metal::FpgaAction
+    :members:
+    :protected-members:
+    :undoc-members:
+
+.. doxygenclass:: metal::OCAccelAction
+    :members:
+    :protected-members:
+    :undoc-members:
+
 .. doxygenclass:: metal::SnapAction
     :members:
     :protected-members:
     :undoc-members:
 
-.. doxygenclass:: metal::SnapPipelineRunner
+.. doxygenclass:: metal::PipelineRunner
     :members:
     :protected-members:
     :undoc-members:

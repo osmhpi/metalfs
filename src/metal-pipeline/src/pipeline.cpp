@@ -31,7 +31,7 @@ Pipeline::Pipeline(std::vector<OperatorContext> userOperators)
       _cachedSwitchConfiguration(false) {}
 
 uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
-                       SnapAction &action) {
+                       FpgaAction &action) {
   for (auto &op : _operators) {
     op.configure(action);
   }
@@ -64,12 +64,12 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
 
   spdlog::debug("  Read:  (Address: 0x{:016x}   Size: {:>8d}   Type: {:<8}   Map: {:<12})",
                 sourceAddress.addr, sourceAddress.size,
-                SnapAction::addressTypeToString(sourceAddress.type),
-                SnapAction::mapTypeToString(sourceAddress.map));
+                action.addressTypeToString(sourceAddress.type),
+                action.mapTypeToString(sourceAddress.map));
   spdlog::debug("  Write: (Address: 0x{:016x}   Size: {:>8d}   Type: {:<8}   Map: {:<12})",
                 destinationAddress.addr, destinationAddress.size,
-                SnapAction::addressTypeToString(destinationAddress.type),
-                SnapAction::mapTypeToString(destinationAddress.map));
+                action.addressTypeToString(destinationAddress.type),
+                action.mapTypeToString(destinationAddress.map));
 
   uint64_t output_size;
   action.executeJob(fpga::JobType::RunOperators, nullptr, sourceAddress,
@@ -85,7 +85,7 @@ uint64_t Pipeline::run(DataSource dataSource, DataSink dataSink,
   return output_size;
 }
 
-void Pipeline::configureSwitch(SnapAction &action, bool set_cached) {
+void Pipeline::configureSwitch(FpgaAction &action, bool set_cached) {
   _cachedSwitchConfiguration = set_cached;
 
   auto *job_struct =

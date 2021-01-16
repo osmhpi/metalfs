@@ -1,7 +1,7 @@
 #! /bin/bash -e
 
-VIVADO_VERSION=2018.1
-VIVADO_EDITION=webpack  # Choose from hl_design_edition or webpack
+VIVADO_VERSION=2019.2
+VIVADO_EDITION=hl_design_edition  # Choose from hl_design_edition or webpack
 
 docker build \
     -t xilinx-base:${VIVADO_VERSION} \
@@ -12,8 +12,9 @@ docker run \
     --name xilinx-vivado-install-${VIVADO_VERSION}-${VIVADO_EDITION} \
     -v $PWD/${VIVADO_VERSION}/installer:/installer \
     -v $PWD/${VIVADO_VERSION}/${VIVADO_EDITION}.txt:/install_config.txt \
+    -v /home/robert/.Xilinx/wi_authentication_key:/root/.Xilinx/wi_authentication_key \
     xilinx-base:${VIVADO_VERSION} \
-        /bin/bash -c "/installer/*/xsetup --agree 3rdPartyEULA,WebTalkTerms,XilinxEULA --batch Install --config /install_config.txt"
+        /bin/bash -c "/installer/Xilinx_Unified_*.bin -- --agree 3rdPartyEULA,WebTalkTerms,XilinxEULA --batch Install --config /install_config.txt"
 
 docker commit \
     --change='ENTRYPOINT []' \

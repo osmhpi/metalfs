@@ -1,4 +1,4 @@
-#include <metal-pipeline/snap_pipeline_runner.hpp>
+#include <metal-pipeline/pipeline_runner.hpp>
 
 extern "C" {
 #include <unistd.h>
@@ -15,11 +15,11 @@ extern "C" {
 #include <metal-pipeline/data_source_context.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 
-std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSource dataSource,
+std::pair<uint64_t, bool> PipelineRunner::run(DataSource dataSource,
                                                   DataSink dataSink) {
   // One-off contexts for data source and data sink
 
@@ -29,9 +29,9 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSource dataSource,
   return run(source, sink);
 }
 
-std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
+std::pair<uint64_t, bool> PipelineRunner::run(DataSourceContext &dataSource,
                                                   DataSinkContext &dataSink) {
-  SnapAction action = SnapAction(_card);
+  auto action = _actionFactory->createAction();
 
   auto initialize = !_initialized;
 
@@ -42,28 +42,28 @@ std::pair<uint64_t, bool> SnapPipelineRunner::run(DataSourceContext &dataSource,
       dataSink.prepareForTotalSize(totalSize);
     }
 
-    _pipeline->configureSwitch(action, true);
+    _pipeline->configureSwitch(*action, true);
   }
 
-  dataSource.configure(action, initialize);
+  dataSource.configure(*action, initialize);
 
   auto size = dataSource.dataSource().address().size;
   auto endOfInput = dataSource.endOfInput();
-  dataSink.configure(action, size, initialize);
+  dataSink.configure(*action, size, initialize);
 
   _initialized = true;
 
-  preRun(action, dataSource, dataSink, initialize);
+  preRun(*action, dataSource, dataSink, initialize);
 
   uint64_t outputSize = 0;
   if (size > 0) {
-    outputSize = _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), action);
+    outputSize = _pipeline->run(dataSource.dataSource(), dataSink.dataSink(), *action);
   }
 
-  postRun(action, dataSource, dataSink, endOfInput);
+  postRun(*action, dataSource, dataSink, endOfInput);
 
-  dataSource.finalize(action);
-  dataSink.finalize(action, outputSize, endOfInput);
+  dataSource.finalize(*action);
+  dataSink.finalize(*action, outputSize, endOfInput);
 
   return std::make_pair(outputSize, endOfInput);
 }

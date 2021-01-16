@@ -3,7 +3,7 @@
 . scripts/env
 
 # pull latest images to reuse layers if possible
-make -C docker pull-latest-runtime
+make -C docker/snap pull-latest-runtime
 
 # build all images
-make -C docker latest-runtime
+make -C docker/snap latest-runtime

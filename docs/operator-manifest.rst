@@ -46,7 +46,7 @@ Whether the operator requires to prepare its internal state before processing st
 *Optional* (default: ``false``).
 
 This is typically used to avoid costly parameter ingestion computations on each operator invocation.
-Instead, the processing phase is only trigged when the parameter values change, i.e. once per :cpp:class:`~metal::SnapPipelineRunner` invocation. See also: :ref:`Operator Parameters`.
+Instead, the processing phase is only trigged when the parameter values change, i.e. once per :cpp:class:`~metal::PipelineRunner` invocation. See also: :ref:`Operator Parameters`.
 
 **options**:
 JSON object specifying configuration options for the operator to be provided at runtime.

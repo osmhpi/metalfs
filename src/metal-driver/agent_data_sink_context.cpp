@@ -35,7 +35,7 @@ const DataSink AgentDataSinkContext::dataSink() const {
   }
 }
 
-void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
+void AgentDataSinkContext::configure(FpgaAction &action, uint64_t inputSize,
                                      bool initial) {
   if ((initial || _agent->outputBuffer()) && !_skipReceivingProcessingRequest) {
     _agent->receiveProcessingRequest();
@@ -46,7 +46,7 @@ void AgentDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
   }
 }
 
-void AgentDataSinkContext::finalize(SnapAction &action, uint64_t outputSize,
+void AgentDataSinkContext::finalize(FpgaAction &action, uint64_t outputSize,
                                     bool endOfInput) {
   ProcessingResponse msg{};
   msg.set_eof(endOfInput);

@@ -18,7 +18,7 @@ class Operator;
 /**
 *  @brief
 *    Defines an Operator execution plan which can be executed in combination
-*    with a SnapAction.
+*    with an FpgaAction.
 */
 class METAL_PIPELINE_API Pipeline {
  public:
@@ -40,9 +40,9 @@ class METAL_PIPELINE_API Pipeline {
 
   std::vector<OperatorContext> &operators() { return _operators; }
 
-  uint64_t run(DataSource dataSource, DataSink dataSink, SnapAction &action);
+  uint64_t run(DataSource dataSource, DataSink dataSink, FpgaAction &action);
 
-  void configureSwitch(SnapAction &action, bool set_cached);
+  void configureSwitch(FpgaAction &action, bool set_cached);
 
  protected:
   std::vector<OperatorContext> _operators;

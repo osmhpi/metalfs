@@ -17,11 +17,11 @@ extern "C" {
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 
-void ProfilingPipelineRunner::preRun(SnapAction &action,
+void ProfilingPipelineRunner::preRun(FpgaAction &action,
                                      DataSourceContext &dataSource,
                                      DataSinkContext &dataSink,
                                      bool initialize) {
@@ -102,10 +102,10 @@ void ProfilingPipelineRunner::preRun(SnapAction &action,
     action.executeJob(fpga::JobType::ResetPerfmon);
   }
 
-  SnapPipelineRunner::preRun(action, dataSource, dataSink, initialize);
+  PipelineRunner::preRun(action, dataSource, dataSink, initialize);
 }  // namespace metal
 
-void ProfilingPipelineRunner::postRun(SnapAction &action,
+void ProfilingPipelineRunner::postRun(FpgaAction &action,
                                       DataSourceContext &dataSource,
                                       DataSinkContext &dataSink,
                                       bool finalize) {
@@ -155,7 +155,7 @@ void ProfilingPipelineRunner::postRun(SnapAction &action,
     }
   }
 
-  SnapPipelineRunner::postRun(action, dataSource, dataSink, finalize);
+  PipelineRunner::postRun(action, dataSource, dataSink, finalize);
 }
 
 std::string ProfilingPipelineRunner::formatProfilingResults(bool dataSource,

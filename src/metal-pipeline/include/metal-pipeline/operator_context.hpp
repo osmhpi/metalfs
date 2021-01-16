@@ -13,14 +13,14 @@
 
 namespace metal {
 
-class SnapAction;
+class FpgaAction;
 
 class METAL_PIPELINE_API OperatorContext {
  public:
   explicit OperatorContext(Operator op);
 
-  void configure(SnapAction &action);
-  void finalize(SnapAction &action);
+  void configure(FpgaAction &action);
+  void finalize(FpgaAction &action);
 
   bool needs_preparation() const;
   void set_is_prepared() { _is_prepared = true; }

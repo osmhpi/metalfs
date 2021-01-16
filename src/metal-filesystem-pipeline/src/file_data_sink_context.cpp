@@ -10,7 +10,7 @@ extern "C" {
 #include <metal-filesystem-pipeline/file_data_sink_context.hpp>
 #include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 
@@ -48,7 +48,7 @@ void FileDataSinkContext::prepareForTotalSize(uint64_t size) {
   loadExtents();
 }
 
-void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
+void FileDataSinkContext::configure(FpgaAction &action, uint64_t inputSize,
                                     bool) {
   _dataSink = _dataSink.withSize(inputSize);
 
@@ -98,7 +98,7 @@ void FileDataSinkContext::configure(SnapAction &action, uint64_t inputSize,
   }
 }
 
-void FileDataSinkContext::finalize(SnapAction &, uint64_t outputSize,
+void FileDataSinkContext::finalize(FpgaAction &, uint64_t outputSize,
                                    bool endOfInput) {
   // Advance offset
   _dataSink =
@@ -130,7 +130,7 @@ void FileDataSinkContext::loadExtents() {
   _cachedTotalSize = fileLength;
 }
 
-void FileDataSinkContext::mapExtents(SnapAction &action, fpga::ExtmapSlot slot,
+void FileDataSinkContext::mapExtents(FpgaAction &action, fpga::ExtmapSlot slot,
                                      std::vector<mtl_file_extent> &extents) {
   auto *job_struct = reinterpret_cast<uint64_t *>(action.allocateMemory(
       sizeof(uint64_t) *

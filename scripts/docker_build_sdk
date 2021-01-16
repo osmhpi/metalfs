@@ -3,4 +3,4 @@
 . scripts/env
 
 # build all images
-make -C docker latest-sdk
+make -C docker/snap latest-sdk

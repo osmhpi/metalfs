@@ -20,7 +20,7 @@
 namespace metal {
 
 void PipelineLoop::run() {
-  ProfilingPipelineRunner runner(_card, _pipeline.pipeline);
+  ProfilingPipelineRunner runner(_actionFactory, _pipeline.pipeline);
 
   // Establish data sources and sinks
   auto singleStagePipeline =

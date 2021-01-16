@@ -15,11 +15,11 @@
 
 namespace metal {
 
-SnapAction::SnapAction(Card card) : _timeout(card.timeout) {
-  spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card.card);
+SnapAction::SnapAction(int card, int timeout) : _timeout(timeout) {
+  spdlog::trace("Allocating CXL device /dev/cxl/afu{}.0s...", card);
 
   char device[128];
-  snprintf(device, sizeof(device) - 1, "/dev/cxl/afu%d.0s", card.card);
+  snprintf(device, sizeof(device) - 1, "/dev/cxl/afu%d.0s", card);
 
   _card = snap_card_alloc_dev(device, SNAP_VENDOR_ID_IBM, SNAP_DEVICE_ID_SNAP);
   if (!_card) {

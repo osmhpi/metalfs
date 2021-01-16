@@ -8,7 +8,7 @@
 #include <metal-filesystem-pipeline/file_data_source_context.hpp>
 #include <metal-filesystem-pipeline/metal_pipeline_storage.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 
@@ -46,7 +46,7 @@ FileDataSourceContext::FileDataSourceContext(
       _dataSource.withSize(std::min(offset + size, _fileLength) - offset);
 }
 
-void FileDataSourceContext::configure(SnapAction &action, bool) {
+void FileDataSourceContext::configure(FpgaAction &action, bool) {
   if (_extents.empty())
     throw std::runtime_error("Extents were not initialized");
 
@@ -92,7 +92,7 @@ void FileDataSourceContext::configure(SnapAction &action, bool) {
   }
 }
 
-void FileDataSourceContext::mapExtents(SnapAction &action,
+void FileDataSourceContext::mapExtents(FpgaAction &action,
                                        fpga::ExtmapSlot slot,
                                        std::vector<mtl_file_extent> &extents) {
   auto *job_struct = reinterpret_cast<uint64_t *>(action.allocateMemory(
@@ -125,7 +125,7 @@ void FileDataSourceContext::mapExtents(SnapAction &action,
   free(job_struct);
 }
 
-void FileDataSourceContext::finalize(SnapAction &action) {
+void FileDataSourceContext::finalize(FpgaAction &action) {
   (void)action;
   // Advance offset
   _dataSource =

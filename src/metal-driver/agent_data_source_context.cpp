@@ -43,7 +43,7 @@ const DataSource AgentDataSourceContext::dataSource() const {
   }
 }
 
-void AgentDataSourceContext::configure(SnapAction &action, bool initial) {
+void AgentDataSourceContext::configure(FpgaAction &action, bool initial) {
   ProcessingRequest request;
   if (initial || _agent->inputBuffer()) {
     request = _agent->receiveProcessingRequest();
@@ -60,7 +60,7 @@ void AgentDataSourceContext::configure(SnapAction &action, bool initial) {
   }
 }
 
-void AgentDataSourceContext::finalize(SnapAction &action) {
+void AgentDataSourceContext::finalize(FpgaAction &action) {
   // Check for end-of-input *before* advancing any read offsets
   auto eof = endOfInput();
 

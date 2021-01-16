@@ -25,6 +25,7 @@ struct metal_config {
   int timeout;
   char *operators;
   char *metadata_dir;
+  char *platform;
   int in_memory;
   int verbosity;
 };
@@ -42,6 +43,7 @@ static struct fuse_opt metal_opts[] = {
     METAL_OPT("--timeout=%i", timeout, 0),
     METAL_OPT("-t %i", timeout, 0),
     METAL_OPT("--metadata %s", metadata_dir, 0),
+    METAL_OPT("--platform %s", platform, 0),
     METAL_OPT("--in-memory", in_memory, 1),
     METAL_OPT("--in-memory=true", in_memory, 1),
     METAL_OPT("--in-memory=false", in_memory, 0),
@@ -74,6 +76,7 @@ static int metal_opt_proc(void *data, const char *arg, int key,
               "    --card=CARD (0)\n"
               "    --timeout=TIMEOUT (10)\n"
               "    --metadata=METADATA_PATH\n"
+              "    --platform=(snap|ocaccel)\n"
               "    --in-memory=(true|false)\n",
               outargs->argv[0]);
       fuse_opt_add_arg(outargs, "-h");
@@ -128,15 +131,26 @@ int main(int argc, char *argv[]) {
     conf.timeout = 2;
   }
 
+  std::shared_ptr<FpgaActionFactory> actionFactory;
+
+  if (std::string(conf.platform) == "snap") {
+    actionFactory = std::make_shared<SnapActionFactory>(conf.card, conf.timeout);
+  } else if (std::string(conf.platform) == "ocaccel") {
+    actionFactory = std::make_shared<OCAccelActionFactory>(conf.card, conf.timeout);
+  } else {
+    spdlog::error("Please specify a valid platform (e.g. --platform (snap|ocaccel))");
+    return 1;
+  }
+
   auto metadataDir = std::string(conf.metadata_dir);
   auto metadataDirDRAM = metadataDir + "_tmp";
 
   std::unique_ptr<Server> server = nullptr;
 
   if (!conf.in_memory) {
-    SnapAction fpga(Card{conf.card, conf.timeout});
+    auto fpga = actionFactory->createAction();
     auto factory =
-        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(fpga));
+        std::make_shared<OperatorFactory>(OperatorFactory::fromFPGA(*fpga));
 
     std::set<std::string> operators;
     for (const auto &op : factory->operatorSpecifications()) {
@@ -156,14 +170,14 @@ int main(int argc, char *argv[]) {
 
     if (factory->isDRAMEnabled()) {
       auto dramFilesystem = std::make_shared<PipelineStorage>(
-        Card{conf.card, conf.timeout}, fpga::AddressType::CardDRAM,
+        actionFactory, fpga::AddressType::CardDRAM,
         fpga::MapType::DRAM, metadataDirDRAM, true);
       Context::addHandler(
           "/tmp", std::make_unique<FilesystemFuseHandler>(dramFilesystem));
 
       if (factory->isNVMeEnabled()) {
         auto nvmeFilesystem = std::make_shared<PipelineStorage>(
-          Card{conf.card, conf.timeout}, fpga::AddressType::NVMe,
+          actionFactory, fpga::AddressType::NVMe,
           fpga::MapType::DRAMAndNVMe, metadataDir, false, dramFilesystem);
         Context::addHandler(
             "/files", std::make_unique<FilesystemFuseHandler>(nvmeFilesystem));
@@ -180,7 +194,7 @@ int main(int argc, char *argv[]) {
   int retc;
 
   if (server != nullptr) {
-    std::thread serverThread(&Server::start, server.get(), Card{conf.card, conf.timeout});
+    std::thread serverThread(&Server::start, server.get(), actionFactory);
     retc = fuse_main(args.argc, args.argv, &Context::fuseOperations(), nullptr);
     serverThread.join();
   } else {

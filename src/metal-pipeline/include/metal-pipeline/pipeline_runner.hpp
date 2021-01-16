@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include <metal-pipeline/card.hpp>
+#include <metal-pipeline/fpga_action_factory.hpp>
 #include <metal-pipeline/pipeline.hpp>
 
 namespace metal {
@@ -15,14 +15,14 @@ class DataSourceContext;
 class DataSinkContext;
 
 // Runs a pipeline one or more times
-class METAL_PIPELINE_API SnapPipelineRunner {
+class METAL_PIPELINE_API PipelineRunner {
  public:
-  SnapPipelineRunner(Card card, std::shared_ptr<Pipeline> pipeline)
-      : _pipeline(std::move(pipeline)), _initialized(false), _card(card) {}
+  PipelineRunner(std::shared_ptr<FpgaActionFactory> actionFactory, std::shared_ptr<Pipeline> pipeline)
+      : _actionFactory(actionFactory), _pipeline(std::move(pipeline)), _initialized(false) {}
   template <typename... Ts>
-  SnapPipelineRunner(Card card, Ts... userOperators)
-      : SnapPipelineRunner(
-            card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
+  PipelineRunner(std::shared_ptr<FpgaActionFactory> actionFactory, Ts... userOperators)
+      : PipelineRunner(
+            actionFactory, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
   std::pair<uint64_t, bool> run(DataSource dataSource, DataSink dataSink);
   std::pair<uint64_t, bool> run(DataSourceContext &dataSource,
@@ -33,14 +33,14 @@ class METAL_PIPELINE_API SnapPipelineRunner {
  protected:
   void requireReinitialization() { _initialized = false; }
 
-  virtual void preRun(SnapAction &action, DataSourceContext &dataSource,
+  virtual void preRun(FpgaAction &action, DataSourceContext &dataSource,
                       DataSinkContext &dataSink, bool initialize) {
     (void)action;
     (void)dataSource;
     (void)dataSink;
     (void)initialize;
   };
-  virtual void postRun(SnapAction &action, DataSourceContext &dataSource,
+  virtual void postRun(FpgaAction &action, DataSourceContext &dataSource,
                        DataSinkContext &dataSink, bool finalize) {
     (void)action;
     (void)dataSource;
@@ -48,9 +48,9 @@ class METAL_PIPELINE_API SnapPipelineRunner {
     (void)finalize;
   };
 
+  std::shared_ptr<FpgaActionFactory> _actionFactory;
   std::shared_ptr<Pipeline> _pipeline;
   bool _initialized;
-  Card _card;
 };
 
 }  // namespace metal

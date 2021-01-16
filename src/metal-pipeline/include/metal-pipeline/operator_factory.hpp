@@ -10,11 +10,11 @@
 namespace metal {
 
 class OperatorSpecification;
-class SnapAction;
+class FpgaAction;
 
 class METAL_PIPELINE_API OperatorFactory {
  public:
-  static OperatorFactory fromFPGA(SnapAction &snapAction);
+  static OperatorFactory fromFPGA(FpgaAction &FpgaAction);
   static OperatorFactory fromManifestString(const std::string &manifest);
 
   Operator createOperator(std::string id);

@@ -11,16 +11,16 @@
 #include <metal-pipeline/data_sink.hpp>
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/pipeline.hpp>
-#include <metal-pipeline/snap_pipeline_runner.hpp>
+#include <metal-pipeline/pipeline_runner.hpp>
 
 namespace metal {
 
 PipelineStorage::PipelineStorage(
-    Card card, fpga::AddressType type, fpga::MapType map,
+    std::shared_ptr<FpgaActionFactory> actionFactory, fpga::AddressType type, fpga::MapType map,
     std::string metadataDir, bool deleteMetadataIfExists,
     std::shared_ptr<PipelineStorage> dramPipelineStorage)
     : FilesystemContext(metadataDir, deleteMetadataIfExists),
-      _card(card),
+      _actionFactory(actionFactory),
       _type(type),
       _map(map),
       _dramPipelineStorage(dramPipelineStorage) {
@@ -101,7 +101,7 @@ int PipelineStorage::read(uint64_t inode_id, uint64_t offset, void *buffer,
   DefaultDataSinkContext sink(DataSink(buffer, length));
 
   try {
-    SnapPipelineRunner runner(_card);
+    PipelineRunner runner(_actionFactory);
     runner.run(source, sink);
     return MTL_SUCCESS;
   } catch (std::exception &e) {
@@ -117,7 +117,7 @@ int PipelineStorage::write(uint64_t inode_id, uint64_t offset,
   FileDataSinkContext sink(shared_from_this(), inode_id, offset, length);
 
   try {
-    SnapPipelineRunner runner(_card);
+    PipelineRunner runner(_actionFactory);
     runner.run(source, sink);
     return MTL_SUCCESS;
   } catch (std::exception &e) {

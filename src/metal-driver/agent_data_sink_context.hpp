@@ -18,8 +18,8 @@ class AgentDataSinkContext : public FileDataSinkContext {
                                 bool skipReceivingProcessingRequest);
 
   const DataSink dataSink() const final;
-  void configure(SnapAction &action, uint64_t inputSize, bool initial) final;
-  void finalize(SnapAction &action, uint64_t outputSize, bool endOfInput) final;
+  void configure(FpgaAction &action, uint64_t inputSize, bool initial) final;
+  void finalize(FpgaAction &action, uint64_t outputSize, bool endOfInput) final;
   void prepareForTotalSize(uint64_t totalSize);
 
  protected:

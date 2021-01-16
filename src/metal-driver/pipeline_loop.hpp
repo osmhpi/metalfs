@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include <metal-pipeline/card.hpp>
+#include <metal-pipeline/fpga_action_factory.hpp>
 
 #include "configured_pipeline.hpp"
 
@@ -14,8 +14,8 @@ class OperatorAgent;
 
 class PipelineLoop {
  public:
-  PipelineLoop(ConfiguredPipeline pipeline, Card card)
-      : _pipeline(std::move(pipeline)), _card(card) {}
+  PipelineLoop(ConfiguredPipeline pipeline, std::shared_ptr<FpgaActionFactory> actionFactory)
+      : _pipeline(std::move(pipeline)), _actionFactory(actionFactory) {}
 
   void run();
 
@@ -23,7 +23,7 @@ class PipelineLoop {
   std::shared_ptr<OperatorAgent> _dataSourceAgent;
   std::shared_ptr<OperatorAgent> _dataSinkAgent;
   ConfiguredPipeline _pipeline;
-  Card _card;
+  std::shared_ptr<FpgaActionFactory> _actionFactory;
 };
 
 }  // namespace metal

@@ -9,15 +9,15 @@
 
 #include <metal-pipeline/fpga_interface.hpp>
 #include <metal-pipeline/operator_specification.hpp>
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 
 namespace metal {
 
-OperatorFactory OperatorFactory::fromFPGA(SnapAction &snapAction) {
+OperatorFactory OperatorFactory::fromFPGA(FpgaAction &action) {
   uint64_t json_len = 0;
-  auto json = snapAction.allocateMemory(4096);
+  auto json = action.allocateMemory(4096);
   try {
-    snapAction.executeJob(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
+    action.executeJob(fpga::JobType::ReadImageInfo, json, {}, {}, 0, 0,
                           &json_len);
   } catch (std::exception &ex) {
     free(json);

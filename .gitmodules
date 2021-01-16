@@ -17,3 +17,9 @@
 [submodule "third_party/json"]
 	path = third_party/json
 	url = https://github.com/nlohmann/json
+[submodule "third_party/oc-accel/oc-accel"]
+	path = third_party/oc-accel/oc-accel
+	url = https://github.com/OpenCAPI/oc-accel
+[submodule "third_party/ocse/ocse"]
+	path = third_party/ocse/ocse
+	url = https://github.com/OpenCAPI/ocse

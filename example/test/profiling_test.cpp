@@ -48,7 +48,8 @@ TEST_F(ProfilingPipeline, ProfileDecryptInMultistagePipeline) {
 
   decryptContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
+  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
+  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -89,7 +90,8 @@ TEST_F(ProfilingPipeline, ProfileChangecaseInMultistagePipeline) {
 
   changeCaseContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
+  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
+  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -130,7 +132,8 @@ TEST_F(ProfilingPipeline, ProfileEncryptInMultistagePipeline) {
 
   encryptContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(Card{0, 10}, std::move(decryptContext),
+  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
+  ProfilingPipelineRunner runner(actionFactory, std::move(decryptContext),
                                  std::move(changeCaseContext),
                                  std::move(encryptContext));
   ASSERT_NO_THROW(
@@ -153,7 +156,8 @@ TEST_F(ProfilingPipeline, BenchmarkChangecase) {
   OperatorContext changeCaseContext(std::move(*change_case));
   changeCaseContext.setProfilingEnabled(true);
 
-  ProfilingPipelineRunner runner(Card{0, 10}, std::move(changeCaseContext));
+  auto actionFactory = std::make_shared<SnapActionFactory>(0, 10);
+  ProfilingPipelineRunner runner(actionFactory, std::move(changeCaseContext));
   ASSERT_NO_THROW(runner.run(DataSource(0, n_bytes, fpga::AddressType::Random),
                              DataSink(0, n_bytes, fpga::AddressType::Null)));
   //   std::cout << runner.formatProfilingResults();

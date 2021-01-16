@@ -3,7 +3,7 @@
 . scripts/env
 
 # push all images
-make -C docker push-latest-runtime
+make -C docker/snap push-latest-runtime
 
 DOCKER_TAG=$(echo $DOCKER_TAG | awk '{gsub(/\.[0-9]+$/,"",$1);print}')
 while [ ! -z "$DOCKER_TAG" ]; do

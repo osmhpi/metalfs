@@ -5,4 +5,4 @@
 echo "$PASSWORD" | docker login --username "$USERNAME" --password-stdin
 
 # push all images
-make -C docker push-latest-sdk
+make -C docker/snap push-latest-sdk

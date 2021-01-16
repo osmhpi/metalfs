@@ -48,7 +48,7 @@ Server::Server(std::shared_ptr<OperatorFactory> registry)
 
 Server::~Server() { close(_listenfd); }
 
-void Server::start(Card card) {
+void Server::start(std::shared_ptr<FpgaActionFactory> actionFactory) {
   _listenfd = 0;
   int connfd = 0;
   struct sockaddr_un serv_addr {};
@@ -64,11 +64,11 @@ void Server::start(Card card) {
   for (;;) {
     connfd = accept(_listenfd, NULL, NULL);
 
-    processRequest(Socket(connfd), card);
+    processRequest(Socket(connfd), actionFactory);
   }
 }
 
-void Server::processRequest(Socket socket, Card card) {
+void Server::processRequest(Socket socket, std::shared_ptr<FpgaActionFactory> actionFactory) {
   try {
     _agents.registerAgent(std::move(socket));
   } catch (std::exception &ex) {
@@ -89,7 +89,7 @@ void Server::processRequest(Socket socket, Card card) {
 
     auto configuredPipeline = builder.configure();
 
-    PipelineLoop loop(std::move(configuredPipeline), card);
+    PipelineLoop loop(std::move(configuredPipeline), actionFactory);
     loop.run();
   } catch (ClientError &error) {
     error.agent()->setError(error.what());

@@ -20,9 +20,9 @@ class METAL_FILESYSTEM_PIPELINE_API FileDataSourceContext
 
  protected:
   uint64_t loadExtents();
-  void configure(SnapAction &action, bool initial) override;
-  void finalize(SnapAction &action) override;
-  void mapExtents(SnapAction &action, fpga::ExtmapSlot slot, std::vector<mtl_file_extent> &extents);
+  void configure(FpgaAction &action, bool initial) override;
+  void finalize(FpgaAction &action) override;
+  void mapExtents(FpgaAction &action, fpga::ExtmapSlot slot, std::vector<mtl_file_extent> &extents);
 
   uint64_t _inode_id;
   std::shared_ptr<PipelineStorage> _filesystem;

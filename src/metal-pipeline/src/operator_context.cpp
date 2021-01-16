@@ -4,7 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include <metal-pipeline/snap_action.hpp>
+#include <metal-pipeline/fpga_action.hpp>
 #include <metal-pipeline/operator.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 
@@ -16,7 +16,7 @@ OperatorContext::OperatorContext(Operator op)
       _profilingEnabled(false),
       _profilingResults() {}
 
-void OperatorContext::configure(SnapAction &action) {
+void OperatorContext::configure(FpgaAction &action) {
   // Allocate job struct memory aligned on a page boundary, hopefully 4KB is
   // sufficient
   auto job_config = reinterpret_cast<char *>(action.allocateMemory(4096));
@@ -75,7 +75,7 @@ void OperatorContext::configure(SnapAction &action) {
   free(job_config);
 }
 
-void OperatorContext::finalize(SnapAction &action) { (void)action; }
+void OperatorContext::finalize(FpgaAction &action) { (void)action; }
 
 bool OperatorContext::needs_preparation() const {
   return !_is_prepared && _op.spec().prepareRequired();

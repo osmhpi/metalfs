@@ -30,33 +30,37 @@ set(include_path "${CMAKE_CURRENT_SOURCE_DIR}/include/${target}")
 set(source_path  "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 set(headers
-    ${include_path}/card.hpp
     ${include_path}/common.hpp
     ${include_path}/data_sink_context.hpp
     ${include_path}/data_sink.hpp
     ${include_path}/data_source_context.hpp
     ${include_path}/data_source.hpp
+    ${include_path}/fpga_action.hpp
+    ${include_path}/fpga_action_factory.hpp
     ${include_path}/fpga_interface.hpp
+    ${include_path}/ocaccel_action.hpp
     ${include_path}/operator_argument.hpp
     ${include_path}/operator_context.hpp
     ${include_path}/operator_factory.hpp
     ${include_path}/operator_specification.hpp
     ${include_path}/operator.hpp
     ${include_path}/pipeline.hpp
+    ${include_path}/pipeline_runner.hpp
     ${include_path}/profiling_pipeline_runner.hpp
     ${include_path}/snap_action.hpp
-    ${include_path}/snap_pipeline_runner.hpp
 )
 
 set(sources
+    ${source_path}/fpga_action_factory.cpp
+    ${source_path}/ocaccel_action.cpp
     ${source_path}/operator_context.cpp
     ${source_path}/operator_factory.cpp
     ${source_path}/operator_specification.cpp
     ${source_path}/operator.cpp
     ${source_path}/pipeline.cpp
+    ${source_path}/pipeline_runner.cpp
     ${source_path}/profiling_pipeline_runner.cpp
     ${source_path}/snap_action.cpp
-    ${source_path}/snap_pipeline_runner.cpp
 )
 
 # Group source files
@@ -159,6 +163,7 @@ target_link_libraries(${target}
     nlohmann_json::nlohmann_json
     spdlog::spdlog
     snap
+    oc-accel
 
     PUBLIC
     ${DEFAULT_LIBRARIES}

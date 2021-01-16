@@ -9,7 +9,6 @@ extern "C" {
 #include <iostream>
 #include <stdexcept>
 
-#include <metal-pipeline/snap_action.hpp>
 #include <metal-pipeline/operator_specification.hpp>
 
 namespace metal {

@@ -18,8 +18,8 @@ class AgentDataSourceContext : public FileDataSourceContext {
                                   bool skipSendingProcessingResponse);
 
   const DataSource dataSource() const final;
-  void configure(SnapAction &action, bool initial) final;
-  void finalize(SnapAction &action) final;
+  void configure(FpgaAction &action, bool initial) final;
+  void finalize(FpgaAction &action) final;
   uint64_t reportTotalSize();
 
   bool endOfInput() const final;

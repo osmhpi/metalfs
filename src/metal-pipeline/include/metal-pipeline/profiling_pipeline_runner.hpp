@@ -2,19 +2,19 @@
 
 #include <metal-pipeline/metal-pipeline_api.h>
 
-#include <metal-pipeline/snap_pipeline_runner.hpp>
+#include <metal-pipeline/pipeline_runner.hpp>
 
 namespace metal {
 
-class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
+class METAL_PIPELINE_API ProfilingPipelineRunner : public PipelineRunner {
  public:
-  ProfilingPipelineRunner(Card card, std::shared_ptr<Pipeline> pipeline)
-      : SnapPipelineRunner(card, std::move(pipeline)),
+  ProfilingPipelineRunner(std::shared_ptr<FpgaActionFactory> actionFactory, std::shared_ptr<Pipeline> pipeline)
+      : PipelineRunner(actionFactory, std::move(pipeline)),
         _results(ProfilingResults{}) {}
   template <typename... Ts>
-  ProfilingPipelineRunner(Card card, Ts... userOperators)
+  ProfilingPipelineRunner(std::shared_ptr<FpgaActionFactory> actionFactory, Ts... userOperators)
       : ProfilingPipelineRunner(
-            card, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
+            actionFactory, std::make_shared<Pipeline>(std::move(userOperators)...)) {}
 
   std::string formatProfilingResults(bool dataSource, bool dataSink);
   void resetResults() { _results = ProfilingResults{}; };
@@ -32,9 +32,9 @@ class METAL_PIPELINE_API ProfilingPipelineRunner : public SnapPipelineRunner {
     uint64_t outputMasterIdleCount;
   };
 
-  void preRun(SnapAction &action, DataSourceContext &dataSource,
+  void preRun(FpgaAction &action, DataSourceContext &dataSource,
               DataSinkContext &dataSink, bool initialize) override;
-  void postRun(SnapAction &action, DataSourceContext &dataSource,
+  void postRun(FpgaAction &action, DataSourceContext &dataSource,
                DataSinkContext &dataSink, bool finalize) override;
   template <typename... Args>
   static std::string string_format(const std::string &format, Args... args);
