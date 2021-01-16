@@ -1,5 +1,7 @@
 #! /bin/bash -e
 
+PLATFORM=$1
+
 mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON .. && make -j4
 
 cd example/src

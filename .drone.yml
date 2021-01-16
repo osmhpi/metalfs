@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-name: sdk
+name: sdk-snap
 
 platform:
   arch: amd64
@@ -13,28 +13,28 @@ steps:
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
-      - sh -c "scripts/docker_build_sdk_base"
+      - sh -c "scripts/docker_build_sdk_base snap"
 
   - name: metalfs/software
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
 
   - name: metalfs/filesystem-test
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd build && ./metal-filesystem-test
 
   - name: metalfs/pipeline-test
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd build && ./metal-pipeline-test
 
   - name: metalfs/action
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd example/src
@@ -42,14 +42,14 @@ steps:
       - bash -c "make hw_project"
 
   - name: metalfs/testbench
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd example/src
       - bash -c "make test_target"
 
   - name: metalfs/example-sim
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd example/src
@@ -66,7 +66,7 @@ steps:
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
-      - sh -c "scripts/docker_build_sdk"
+      - sh -c "scripts/docker_build_sdk snap"
 
   - name: docker/push
     image: docker
@@ -75,7 +75,7 @@ steps:
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
-      - sh -c "scripts/docker_push_sdk"
+      - sh -c "scripts/docker_push_sdk snap"
     environment:
       USERNAME:
         from_secret: docker_username
@@ -92,7 +92,7 @@ steps:
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
-      - sh -c "scripts/docker_push_latest_sdk"
+      - sh -c "scripts/docker_push_latest_sdk snap"
     environment:
       USERNAME:
         from_secret: docker_username
@@ -106,7 +106,7 @@ steps:
          - pull_request
 
   - name: docs/prepare
-    image: metalfs/sdk-base:latest
+    image: metalfs/sdk-snap-base:latest
     pull: if-not-exists
     commands:
       - cd build/docs/sphinx
@@ -127,6 +127,107 @@ steps:
       password:
         from_secret: github_password
       pages_directory: build/docs/sphinx
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+         - pull_request
+
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock
+
+---
+kind: pipeline
+name: sdk-ocaccel
+
+platform:
+  arch: amd64
+
+steps:
+  - name: docker/build-base
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk_base ocaccel"
+
+  - name: metalfs/software
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - mkdir build && cd build && cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
+
+  - name: metalfs/filesystem-test
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-filesystem-test
+
+  - name: metalfs/pipeline-test
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-pipeline-test
+
+  - name: metalfs/action
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - npm install --production
+      - bash -c "make hw_project"
+
+  - name: metalfs/testbench
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make test_target"
+
+  - name: docker/build-sdk
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk ocaccel"
+
+  - name: docker/push
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_sdk ocaccel"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+  - name: docker/push-latest
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_latest_sdk ocaccel"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
     when:
       branch:
         - master

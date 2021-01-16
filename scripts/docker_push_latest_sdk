@@ -1,8 +1,10 @@
 #!/bin/sh -e
 
+PLATFORM=$1
+
 . scripts/env
 
 echo "$PASSWORD" | docker login --username "$USERNAME" --password-stdin
 
 # push all images
-make -C docker/snap push-latest-sdk
+make -C docker/$PLATFORM push-latest-sdk

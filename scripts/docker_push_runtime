@@ -1,9 +1,11 @@
 #!/bin/sh -e
 
+PLATFORM=$1
+
 . scripts/env
 
 # push all images
-make -C docker/snap push-latest-runtime
+make -C docker/$PLATFORM push-latest-runtime
 
 DOCKER_TAG=$(echo $DOCKER_TAG | awk '{gsub(/\.[0-9]+$/,"",$1);print}')
 while [ ! -z "$DOCKER_TAG" ]; do
