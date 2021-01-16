@@ -11,7 +11,8 @@ RUN cd /src/metal_fs \
  && cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DOPTION_BUILD_TESTS=OFF \
-    -DPSL_VERSION=PSL8 \
+    -DWITH_SNAP=OFF \
+    -DWITH_OCACCEL=ON \
     .. \
  && make -j8 \
  && make install
@@ -22,8 +23,8 @@ COPY --from=build /usr/local/bin/metal-driver /usr/local/bin/
 
 COPY --from=build /usr/local/include/ /usr/local/include/
 
-COPY --from=build /usr/local/lib/libcxl.so /usr/local/lib/
-COPY --from=build /usr/local/lib/libsnap.so /usr/local/lib/
+COPY --from=build /usr/local/lib/libocxl.so /usr/local/lib/
+COPY --from=build /usr/local/lib/liboc-accel.so /usr/local/lib/
 COPY --from=build /usr/local/lib/libspdlog.so.1.5.0 /usr/local/lib/
 RUN cd /usr/local/lib \
  && ln -s libspdlog.so.1.5.0 libspdlog.so.1 \
@@ -46,8 +47,8 @@ RUN cd /usr/local/lib \
 COPY --from=build /usr/local/lib/cmake /usr/local/lib/
 
 COPY --from=build /usr/local/share/metal_fs /usr/local/share/metal_fs
-COPY --from=build /usr/local/share/snap /usr/local/share/snap
-COPY --from=build /usr/local/share/cxl /usr/local/share/cxl
+COPY --from=build /usr/local/share/oc-accel /usr/local/share/oc-accel
+COPY --from=build /usr/local/share/ocxl /usr/local/share/ocxl
 
 RUN ldconfig
 

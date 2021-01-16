@@ -14,6 +14,8 @@ RUN cd /src/metal_fs \
     -DCMAKE_BUILD_TYPE=Release \
     -DOPTION_BUILD_TESTS=OFF \
     -DPSL_VERSION=$PSL \
+    -DWITH_SNAP=ON \
+    -DWITH_OCACCEL=OFF \
     .. \
  && make -j8 \
  && make install
