@@ -43,10 +43,10 @@ runtime:
 		../..
 
 pull-latest-sdk:
-	docker pull metalfs/sdk-ocaccel-base:latest
-	docker pull metalfs/sdk-ocaccel:latest
+	docker pull metalfs/sdk-ocaccel-base:latest || true
+	docker pull metalfs/sdk-ocaccel:latest || true
 pull-latest-runtime:
-	docker pull metalfs/runtime:latest
+	docker pull metalfs/runtime:latest || true
 
 push-sdk:
 	SUBTAG=$$(echo '${METAL_TAG}' | tr -d 'v') ; \

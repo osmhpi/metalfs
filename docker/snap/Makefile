@@ -45,10 +45,10 @@ runtime:
 		../..
 
 pull-latest-sdk:
-	docker pull metalfs/sdk-snap-base:latest
-	docker pull metalfs/sdk-snap:latest
+	docker pull metalfs/sdk-snap-base:latest || true
+	docker pull metalfs/sdk-snap:latest || true
 pull-latest-runtime:
-	docker pull metalfs/runtime:latest
+	docker pull metalfs/runtime:latest || true
 
 push-sdk:
 	SUBTAG=$$(echo '${METAL_TAG}' | tr -d 'v') ; \
