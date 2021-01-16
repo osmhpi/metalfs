@@ -18,6 +18,14 @@ endif()
 if (${BUILD_OCSE})
     project(ocxl)
 
+    CHECK_INCLUDE_FILE(misc/ocxl.h HAVE_MISC_OCXL_H)
+    IF(NOT HAVE_MISC_OCXL_H)
+        file(DOWNLOAD
+            https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/misc/ocxl.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/misc/ocxl.h
+        )
+    ENDIF()
+
     add_library(ocxl
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/debug.c
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/utils.c
@@ -27,9 +35,11 @@ if (${BUILD_OCSE})
 
     target_include_directories(ocxl
         PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/libocxl
 
         INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ocse/common>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/ocse/libocxl>
         $<INSTALL_INTERFACE:include>
     )

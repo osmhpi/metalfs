@@ -22,6 +22,14 @@ if (${BUILD_PSLSE})
     set(PSL_VERSION PSL8 CACHE STRING "Target version of PSL")
     set_property(CACHE PSL_VERSION PROPERTY STRINGS ${PSL_VERSIONS})
 
+    CHECK_INCLUDE_FILE(misc/cxl.h HAVE_MISC_CXL_H)
+    IF(NOT HAVE_MISC_CXL_H)
+        file(DOWNLOAD
+            https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/include/uapi/misc/cxl.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/pslse/common/misc/cxl.h
+        )
+    ENDIF()
+
     add_library(cxl
         ${CMAKE_CURRENT_SOURCE_DIR}/pslse/common/debug.c
         ${CMAKE_CURRENT_SOURCE_DIR}/pslse/common/utils.c
@@ -41,9 +49,11 @@ if (${BUILD_PSLSE})
 
     target_include_directories(cxl
         PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/pslse/common
         ${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl
 
         INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pslse/common>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pslse/libcxl>
         $<INSTALL_INTERFACE:include>
     )
