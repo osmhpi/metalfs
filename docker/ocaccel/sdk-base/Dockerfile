@@ -12,7 +12,6 @@ RUN apt-get update \
     build-essential \
     git openssh-client \
     jq \
-    cmake-curses-gui \
  && rm -rf /var/lib/apt/lists/*
 
 # Metal FS Dependencies
@@ -23,6 +22,13 @@ RUN apt-get update \
     libprotobuf-dev \
     protobuf-compiler \
  && rm -rf /var/lib/apt/lists/*
+
+# CMake (newer than version available from package sources)
+RUN mkdir /tmp/cmake \
+ && curl -sL https://cmake.org/files/v3.16/cmake-3.16.1-Linux-x86_64.tar.gz | tar xvz -C /tmp/cmake --strip 1 \
+ && cp -rf /tmp/cmake/bin /usr/ \
+ && cp -rf /tmp/cmake/share /usr/ \
+ && rm -rf /tmp/cmake
 
 # node.js and npm
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
