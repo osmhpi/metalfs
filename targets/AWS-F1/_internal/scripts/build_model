@@ -1,0 +1,8 @@
+#! /bin/bash -e
+
+cd $_HDK_ROOT
+source ./hdk_setup.sh
+
+cd $_CL_DIR
+export CL_DIR=$_CL_DIR
+$METAL_ROOT/targets/AWS-F1/_internal/cl_metalfs_hlx/build/scripts/aws_build_dcp_from_cl.sh -ignore_memory_requirement -foreground
