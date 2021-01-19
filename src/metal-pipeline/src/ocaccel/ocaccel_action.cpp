@@ -33,13 +33,14 @@ OCAccelAction::OCAccelAction(int card, int timeout) : _timeout(timeout) {
   spdlog::trace("Attaching to Metal FS action...");
 
   auto action_irq =
-      (snap_action_flag_t)(SNAP_ACTION_DONE_IRQ | SNAP_ATTACH_IRQ);
+      (snap_action_flag_t)(SNAP_ACTION_DONE_IRQ);
   _action = snap_attach_action(_card, fpga::ActionType, action_irq, 10);
   if (!_action) {
     snap_card_free(_card);
     _card = nullptr;
     throw std::runtime_error("Failed to attach action");
   }
+  snap_action_assign_irq(_action, ACTION_IRQ_SRC_LO);
 }
 
 OCAccelAction::OCAccelAction(OCAccelAction &&other) noexcept
