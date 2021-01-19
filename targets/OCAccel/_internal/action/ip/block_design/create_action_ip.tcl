@@ -11,7 +11,6 @@ set src_dir     $build_dir/block_design/action_ip_prj/action_ip_prj.srcs/sources
 set image_build_dir  $::env(IMAGE_BUILD_DIR)/$::env(METAL_TARGET)
 set image_json       $::env(IMAGE_JSON)
 set metal_root       $::env(METAL_ROOT)
-# set snap_target      $::env(SNAP_TARGET)
 
 ## Create a new Vivado IP Project
 create_project action_ip_prj $build_dir/block_design/action_ip_prj -force -part $fpga_part -ip >> $log_file

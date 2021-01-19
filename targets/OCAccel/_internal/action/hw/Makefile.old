@@ -5,7 +5,7 @@ vhd_targets=$(addprefix $(ACTION_BUILDROOT)/,$(vhd_srcs))
 vhd_files=$(vhd_targets:.vhd_source=.vhd)
 
 ACTION_ROOT ?= $(PWD)/..
-CONFIG_FILE  = $(_SNAP_ROOT)/.snap_config
+CONFIG_FILE  = $(_OCACCEL_ROOT)/.snap_config
 
 hls_components  = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
 

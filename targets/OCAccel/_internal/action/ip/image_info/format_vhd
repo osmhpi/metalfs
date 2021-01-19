@@ -1,0 +1,6 @@
+#! /bin/sh
+
+cat $1 \
+    | sed -e "s/IMAGE_JSON_DATA/$(cat $2)/g" \
+    | sed -e "s/IMAGE_JSON_LENGTH/$(expr `cat $2 | wc -c` / 2 | xargs printf "%x\n")/g" \
+    > $3

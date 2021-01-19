@@ -1,11 +1,16 @@
-export SNAP_TARGET 	       = $(shell basename $(METAL_TARGET))
-export LOGS_DIR            = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/logs
-export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/operators
+# export SNAP_TARGET 	       = $(shell basename $(METAL_TARGET))
+export LOGS_DIR            = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/logs
+export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/operators
 
 # Define underscored variables as not to interfere with externally set values
-export _PSLSE_ROOT  = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/pslse
-export _SNAP_ROOT   = $(IMAGE_BUILD_DIR)/$(SNAP_TARGET)/snap
+export _PSLSE_ROOT  = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/pslse
+export _SNAP_ROOT   = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/snap
 export _ACTION_ROOT = $(METAL_ROOT)/targets/SNAP/_internal/action
+
+CONFIG_FILE  = $(_SNAP_ROOT)/.snap_config
+ifeq ($(FPGACHIP),)
+export FPGACHIP  = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+endif
 
 snap_targets = snap_config clean hw_project model image help
 

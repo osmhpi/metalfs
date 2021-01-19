@@ -1,6 +1,6 @@
 set image_json      $::env(IMAGE_JSON)
 set metal_root      $::env(METAL_ROOT)
-# set snap_target     $::env(SNAP_TARGET)
+set snap_target     $::env(OCACCEL_TARGET)
 set build_dir       $::env(IMAGE_BUILD_DIR)/$::env(METAL_TARGET)
 
 set_property ip_repo_paths [concat \

@@ -1,39 +1,13 @@
 export ACTION_BUILDROOT=$(IMAGE_BUILD_DIR)/$(METAL_TARGET)/action
 
-vhd_srcs=$(wildcard *.vhd_source)
-vhd_targets=$(addprefix $(ACTION_BUILDROOT)/,$(vhd_srcs))
-vhd_files=$(vhd_targets:.vhd_source=.vhd)
-
 ACTION_ROOT ?= $(PWD)/..
-CONFIG_FILE  = $(_SNAP_ROOT)/.snap_config
+CONFIG_FILE  = $(_OCACCEL_ROOT)/.snap_config
 
 hls_components  = $(shell find hls/ -maxdepth 1 -type d -name 'hls_*')
 
-ifeq ($(DDRI_USED),)
-export DDRI_USED = $(shell grep DDRI_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
-endif
-ifeq ($(NVME_USED),)
-export NVME_USED = $(shell grep NVME_USED $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
-endif
-ifeq ($(FPGACHIP),)
-export FPGACHIP  = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
-endif
-
-ifeq ($(DDRI_USED),TRUE)
-DDRI_FILTER = "\-\- only for DDRI_USED!=TRUE"
-else
-DDRI_FILTER = "\-\- only for DDRI_USED=TRUE"
-endif
-
-ifeq ($(NVME_USED),TRUE)
-NVME_FILTER = "\-\- only for NVME_USED!=TRUE"
-else
-NVME_FILTER = "\-\- only for NVME_USED=TRUE"
-endif
-
 .PHONY: clean vhdl $(hls_components) block_design image_info nvme_arbiter
 
-all: vhd_files block_design
+all: block_design $(ACTION_BUILDROOT)/action_wrapper.v
 
 $(LOGS_DIR):
 	@mkdir -p $(LOGS_DIR)
@@ -77,17 +51,15 @@ test: $(LOGS_DIR)
 	fi \
 	done
 
-vhd_files: $(vhd_files)
 
 $(ACTION_BUILDROOT):
 	@mkdir -p $(ACTION_BUILDROOT)
 
-$(vhd_files): $(vhd_srcs) $(ACTION_BUILDROOT)
-	@echo "                        Generating $@"
-	@grep -v $(DDRI_FILTER) $< | grep -v $(NVME_FILTER) > $@
+$(ACTION_BUILDROOT)/action_wrapper.v: $(ACTION_BUILDROOT) action_wrapper.v
+	@cp action_wrapper.v $(ACTION_BUILDROOT)/action_wrapper.v
 
 clean:
-	@$(RM) $(vhd_files)
+	# @$(RM) $(vhd_files)
 
 	@for hls_dir in ./hls/hls_*/; do make -C $$hls_dir clean; done
 	@for ip_dir in ../ip/*; do make -C $$ip_dir clean; done

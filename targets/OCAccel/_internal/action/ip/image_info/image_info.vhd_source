@@ -1,0 +1,73 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity ImageInfo is
+port (
+    p_clk        : in  std_logic;
+    p_rst_n      : in  std_logic;
+    -- layout
+    --  0x0000: length
+    --  0x1000..1FFF: data
+    p_regs_AWADDR   : in  std_logic_vector (12 downto 0);
+    p_regs_AWVALID  : in  std_logic;
+    p_regs_AWREADY  : out std_logic;
+    p_regs_WDATA    : in  std_logic_vector (31 downto 0);
+    p_regs_WSTRB    : in  std_logic_vector ( 3 downto 0);
+    p_regs_WVALID   : in  std_logic;
+    p_regs_WREADY   : out std_logic;
+    p_regs_BRESP    : out std_logic_vector (1 downto 0);
+    p_regs_BVALID   : out std_logic;
+    p_regs_BREADY   : in  std_logic;
+    p_regs_ARADDR   : in  std_logic_vector (12 downto 0);
+    p_regs_ARVALID  : in  std_logic;
+    p_regs_ARREADY  : out std_logic;
+    p_regs_RDATA    : out std_logic_vector (31 downto 0);
+    p_regs_RRESP    : out std_logic_vector (1 downto 0);
+    p_regs_RVALID   : out std_logic;
+    p_regs_RREADY   : in  std_logic);
+end ImageInfo;
+architecture ImageInfo of ImageInfo is
+  function f_fill(v_input: std_logic_vector; v_target_width: positive) return std_logic_vector is
+    variable v_return : std_logic_vector (v_target_width-1 downto 0);
+  begin
+    v_return := (others => '0');
+    v_return(v_input'length -1 downto 0) := v_input;
+    return v_return;
+  end f_fill;
+  function f_byteswap(v_input: std_logic_vector) return std_logic_vector is
+    constant c_input_bits : integer := v_input'length;
+    constant c_input_bytes : integer := c_input_bits / 8;
+    variable v_return : std_logic_vector(c_input_bits-1 downto 0);
+  begin
+    for v_idx in 0 to c_input_bytes-1 loop
+      v_return(8*v_idx + 7 downto 8*v_idx) := v_input(8*v_idx to 8*v_idx + 7);
+    end loop;
+    return v_return;
+  end f_byteswap;
+begin
+i_configStore : entity work.ConfigStore
+  generic map (
+    g_ConstData => f_fill(f_byteswap(x"IMAGE_JSON_DATA"), 32768),
+    g_ConstDataLength => f_fill(x"IMAGE_JSON_LENGTH", 32))
+  port map (
+    p_clk => p_clk,
+    p_rst_n => p_rst_n,
+    p_regs_AWADDR => p_regs_AWADDR,
+    p_regs_AWVALID => p_regs_AWVALID,
+    p_regs_AWREADY => p_regs_AWREADY,
+    p_regs_WDATA => p_regs_WDATA,
+    p_regs_WSTRB => p_regs_WSTRB,
+    p_regs_WVALID => p_regs_WVALID,
+    p_regs_WREADY => p_regs_WREADY,
+    p_regs_BRESP => p_regs_BRESP,
+    p_regs_BVALID => p_regs_BVALID,
+    p_regs_BREADY => p_regs_BREADY,
+    p_regs_ARADDR => p_regs_ARADDR,
+    p_regs_ARVALID => p_regs_ARVALID,
+    p_regs_ARREADY => p_regs_ARREADY,
+    p_regs_RDATA => p_regs_RDATA,
+    p_regs_RRESP => p_regs_RRESP,
+    p_regs_RVALID => p_regs_RVALID,
+    p_regs_RREADY => p_regs_RREADY);
+end ImageInfo;
