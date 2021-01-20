@@ -6,7 +6,7 @@ export ACTION_ROOT=$_ACTION_ROOT
 export OCSE_ROOT=$_OCSE_ROOT
 EOF
 
-cat > $_OCACCEL_ROOT/defconfig/AD9H7.hls_metalfpga.defconfig <<- EOF
+cat > $_OCACCEL_ROOT/defconfig/AD9H7_Sim.hls_metalfpga.defconfig <<- EOF
 #
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
@@ -32,8 +32,6 @@ HDL_ACTION=y
 # HLS_HELLOWORLD_512 is not set
 # HLS_HELLOWORLD_1024 is not set
 # HLS_HELLOWORLD_PYTHON is not set
-# HLS_MEMCOPY_512 is not set
-# HLS_MEMCOPY_1024 is not set
 # HLS_HBM_MEMCOPY_1024 is not set
 # HLS_IMAGE_FILTER is not set
 # HLS_DECIMAL_MULT is not set
@@ -49,10 +47,11 @@ SDRAM_USED="FALSE"
 # DISABLE_HBM is not set
 ENABLE_HBM=y
 HBM_USED="TRUE"
-# ENABLE_BRAM is not set
-BRAM_USED="FALSE"
+ENABLE_BRAM=y
+BRAM_USED="TRUE"
 DDR4_USED="FALSE"
-DDRI_USED="FALSE"
+ENABLE_DDRI=y
+DDRI_USED="TRUE"
 DISABLE_NVME=y
 # FORCE_NVME is not set
 NVME_USED="FALSE"
@@ -104,4 +103,4 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
-make -C $_OCACCEL_ROOT AD9H7.hls_metalfpga.defconfig <&-
+make -C $_OCACCEL_ROOT AD9H7_Sim.hls_metalfpga.defconfig <&-

@@ -6,24 +6,24 @@ export ACTION_ROOT=$_ACTION_ROOT
 export OCSE_ROOT=$_OCSE_ROOT
 EOF
 
-cat > $_OCACCEL_ROOT/defconfig/AD9H7.hls_metalfpga.defconfig <<- EOF
+cat > $_OCACCEL_ROOT/defconfig/AD9V3_Sim.hls_metalfpga.defconfig <<- EOF
 #
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
 #
-# AD9V3 is not set
+AD9V3=y
 # AD9H3 is not set
 # AD9H335 is not set
-AD9H7=y
+# AD9H7 is not set
 # BW250SOC is not set
-FPGACARD="AD9H7"
+FPGACARD="AD9V3"
 FLASH_INTERFACE="SPIx8"
-FLASH_SIZE="128"
+FLASH_SIZE="64"
 FLASH_FACTORYADDR="0x00000000"
 FLASH_USERADDR="0x08000000"
 OPENCAPI30=y
 CAPI_VER="opencapi30"
-FPGACHIP="xcvu37p-fsvh2892-2-e"
+FPGACHIP="xcvu3p-ffvc1517-2-e"
 NUM_OF_ACTIONS=1
 HDL_ACTION=y
 # HDL_EXAMPLE is not set
@@ -34,11 +34,8 @@ HDL_ACTION=y
 # HLS_HELLOWORLD_PYTHON is not set
 # HLS_MEMCOPY_512 is not set
 # HLS_MEMCOPY_1024 is not set
-# HLS_HBM_MEMCOPY_1024 is not set
 # HLS_IMAGE_FILTER is not set
 # HLS_DECIMAL_MULT is not set
-# HLS_UDP is not set
-# HLS_RX100G is not set
 ACTION_HALF_WIDTH=y
 HALF_WIDTH="TRUE"
 # ENABLE_HLS_SUPPORT is not set
@@ -47,21 +44,21 @@ HLS_SUPPORT="FALSE"
 # FORCE_SDRAM_OR_BRAM is not set
 SDRAM_USED="FALSE"
 # DISABLE_HBM is not set
-ENABLE_HBM=y
-HBM_USED="TRUE"
-# ENABLE_BRAM is not set
-BRAM_USED="FALSE"
+HBM_USED="FALSE"
+ENABLE_BRAM=y
+BRAM_USED="TRUE"
 DDR4_USED="FALSE"
-DDRI_USED="FALSE"
+ENABLE_DDRI=y
+DDRI_USED="TRUE"
 DISABLE_NVME=y
 # FORCE_NVME is not set
 NVME_USED="FALSE"
+# ENABLE_ETHERNET is not set
 # DISABLE_ETHERNET is not set
 ETH_LOOP_BACK="FALSE"
 ETHERNET_USED="FALSE"
 USER_CLOCK="FALSE"
 # ACTION_USER_CLOCK is not set
-HBM_AXI_IF_NUM=32
 SIM_XSIM=y
 # SIM_IRUN is not set
 # SIM_XCELIUM is not set
@@ -104,4 +101,4 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
-make -C $_OCACCEL_ROOT AD9H7.hls_metalfpga.defconfig <&-
+make -C $_OCACCEL_ROOT AD9V3_Sim.hls_metalfpga.defconfig <&-
