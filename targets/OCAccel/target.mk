@@ -8,7 +8,7 @@ export _OCSE_REPO    = https://github.com/OpenCAPI/ocse
 export _OCSE_RELEASE = master
 export _OCACCEL_ROOT    = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocaccel
 export _OCACCEL_REPO    = https://github.com/metalfs/oc-accel
-export _OCACCEL_RELEASE = master
+export _OCACCEL_RELEASE = metalfs
 export _ACTION_ROOT = $(METAL_ROOT)/targets/OCAccel/_internal/action
 
 CONFIG_FILE  = $(_OCACCEL_ROOT)/.snap_config
