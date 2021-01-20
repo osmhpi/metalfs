@@ -39,7 +39,7 @@ sdk:
 runtime:
 	${docker_build} \
 		-t metalfs/runtime:${METAL_TAG} \
-		-f runtime/Dockerfile \
+		-f runtime/Dockerfile.ppc64le \
 		../..
 
 pull-latest-sdk:
