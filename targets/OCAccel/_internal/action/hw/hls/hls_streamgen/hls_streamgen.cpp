@@ -1,5 +1,5 @@
 #include <metal/stream.h>
-#include <hls_snap_1024.h>
+#include <hls_snap_1024.H>
 
 void hls_streamgen(snapu32_t length, mtl_stream &out) {
     #pragma HLS INTERFACE s_axilite port=length bundle=ctrl offset=0x010
