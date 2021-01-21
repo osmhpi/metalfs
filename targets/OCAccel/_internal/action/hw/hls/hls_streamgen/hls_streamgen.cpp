@@ -1,7 +1,7 @@
 #include <metal/stream.h>
-#include <metal/types.h>
+#include <hls_snap_1024.h>
 
-void hls_streamgen(mtlu32_t length, mtl_stream &out) {
+void hls_streamgen(snapu32_t length, mtl_stream &out) {
     #pragma HLS INTERFACE s_axilite port=length bundle=ctrl offset=0x010
     #pragma HLS INTERFACE axis port=out
     #pragma HLS INTERFACE s_axilite port=return bundle=ctrl
@@ -11,7 +11,7 @@ void hls_streamgen(mtlu32_t length, mtl_stream &out) {
     element.keep = ~((mtl_stream_keep)0);
     element.last = false;
 
-    mtlu32_t bytes_written = 0;
+    snapu32_t bytes_written = 0;
     do {
     #pragma HLS pipeline
         bytes_written += sizeof(element.data);
