@@ -14,7 +14,7 @@ $(_HDK_ROOT):
 	@if [ ! -e $(_HDK_ROOT) ] ; then \
 		echo "                        Cloning AWS HDK..." ; \
 		git clone https://github.com/aws/aws-fpga $(_HDK_ROOT) 2> $(LOGS_DIR)/clone_hdk.log && \
-		(cd $(_HDK_ROOT) && git checkout REL_V1_4_15 >> $(LOGS_DIR)/clone_hdk.log ) \
+		(cd $(_HDK_ROOT) && git checkout v1.4.15 >> $(LOGS_DIR)/clone_hdk.log ) \
 	fi
 
 $(_CL_DIR):

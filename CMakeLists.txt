@@ -78,6 +78,7 @@ option(OPTION_BUILD_EXAMPLES  "Build examples."                                 
 
 option(WITH_SNAP              "Build with snap target enabled"                         ON)
 option(WITH_OCACCEL           "Build with oc-accel target enabled"                     OFF)
+option(WITH_AWS_SV            "Build with AWS F1 SV target enabled"                    OFF)
 
 if (WITH_SNAP AND WITH_OCACCEL)
   message(FATAL_ERROR "Can't build snap and oc-accel targets at same time")

@@ -68,6 +68,11 @@ if (WITH_OCACCEL)
     list(APPEND sources ${source_path}/ocaccel/ocaccel_action.cpp)
 endif()
 
+if (WITH_AWS_SV)
+    list(APPEND headers ${include_path}/aws-f1/aws_f1_action.hpp)
+    list(APPEND sources ${source_path}/aws-f1/aws_f1_action.cpp)
+endif()
+
 # Group source files
 set(header_group "Header Files (API)")
 set(source_group "Source Files")
@@ -174,6 +179,10 @@ endif()
 
 if(WITH_OCACCEL)
     list(APPEND libraries oc-accel)
+endif()
+
+if(WITH_AWS_SV)
+    list(APPEND libraries fpga_mgmt)
 endif()
 
 target_link_libraries(${target}

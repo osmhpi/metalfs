@@ -23,3 +23,6 @@
 [submodule "third_party/ocse/ocse"]
 	path = third_party/ocse/ocse
 	url = https://github.com/OpenCAPI/ocse
+[submodule "third_party/aws-fpga/aws-fpga"]
+	path = third_party/aws-fpga/aws-fpga
+	url = https://github.com/aws/aws-fpga
