@@ -1,6 +1,6 @@
 {
     "streamBytes": 8,
-    "target": "OCAccel/AD9V3",
+    "target": "SNAP/WebPACK_Sim",
     "operators": {
         "changecase":           "./changecase"
     }

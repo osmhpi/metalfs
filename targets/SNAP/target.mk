@@ -1,4 +1,3 @@
-# export SNAP_TARGET 	       = $(shell basename $(METAL_TARGET))
 export LOGS_DIR            = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/logs
 export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/operators
 
@@ -9,7 +8,7 @@ export _ACTION_ROOT = $(METAL_ROOT)/targets/SNAP/_internal/action
 
 CONFIG_FILE  = $(_SNAP_ROOT)/.snap_config
 ifeq ($(FPGACHIP),)
-export FPGACHIP  = $(shell grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"')
+export FPGACHIP  = $(shell if [ -f $(CONFIG_FILE) ]; then grep FPGACHIP $(CONFIG_FILE) | cut -d = -f 2 | tr -d '"'; fi)
 endif
 
 snap_targets = snap_config clean hw_project model image help

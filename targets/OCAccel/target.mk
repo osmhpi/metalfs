@@ -1,15 +1,15 @@
-export OCACCEL_TARGET      = $(shell basename $(METAL_TARGET))
 export LOGS_DIR            = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/logs
 export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/operators
 
 # Define underscored variables as not to interfere with externally set values
 export _OCSE_ROOT    = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocse
-export _OCSE_REPO    = https://github.com/OpenCAPI/ocse
-export _OCSE_RELEASE = master
-export _OCACCEL_ROOT    = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocaccel
-export _OCACCEL_REPO    = https://github.com/metalfs/oc-accel
-export _OCACCEL_RELEASE = metalfs
-export _ACTION_ROOT = $(METAL_ROOT)/targets/OCAccel/_internal/action
+export _OCACCEL_ROOT = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocaccel
+export _ACTION_ROOT  = $(METAL_ROOT)/targets/OCAccel/_internal/action
+
+OCSE_REPO       = https://github.com/OpenCAPI/ocse
+OCSE_RELEASE    = master
+OCACCEL_REPO    = https://github.com/metalfs/oc-accel
+OCACCEL_RELEASE = metalfs
 
 CONFIG_FILE  = $(_OCACCEL_ROOT)/.snap_config
 ifeq ($(FPGACHIP),)
@@ -24,8 +24,8 @@ $(_OCSE_ROOT):
 	@mkdir -p $(LOGS_DIR)
 	@if [ ! -e $(_OCSE_ROOT) ] ; then \
 		echo "                        Cloning OCSE..." ; \
-		git clone $(_OCSE_REPO) $(_OCSE_ROOT) 2> $(LOGS_DIR)/clone_ocse.log && \
-		(cd $(_OCSE_ROOT) && git checkout $(_OCSE_RELEASE) 2>> $(LOGS_DIR)/clone_ocse.log ) \
+		git clone $(OCSE_REPO) $(_OCSE_ROOT) 2> $(LOGS_DIR)/clone_ocse.log && \
+		(cd $(_OCSE_ROOT) && git checkout $(OCSE_RELEASE) 2>> $(LOGS_DIR)/clone_ocse.log ) \
 	fi
 
 $(_OCACCEL_ROOT): $(_OCSE_ROOT)
@@ -40,7 +40,7 @@ $(_OCACCEL_ROOT)/snap_env.sh: $(_OCACCEL_ROOT)
 	@mkdir -p $(LOGS_DIR)
 	@echo "                        Configuring OCAccel..."
 	@$(METAL_ROOT)/targets/$(METAL_TARGET)/configure > $(LOGS_DIR)/configure_ocaccel.log 2>&1
-	
+
 
 $(ocaccel_targets): $(_OCACCEL_ROOT)/snap_env.sh $(operators) $(IMAGE_TARGET)
 	@make -C $(_OCACCEL_ROOT) -s $@
