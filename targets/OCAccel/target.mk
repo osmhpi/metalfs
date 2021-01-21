@@ -32,8 +32,8 @@ $(_OCACCEL_ROOT): $(_OCSE_ROOT)
 	@mkdir -p $(LOGS_DIR)
 	@if [ ! -e $(_OCACCEL_ROOT) ] ; then \
 		echo "                        Cloning OCAccel..." ; \
-		git clone $(_OCACCEL_REPO) $(_OCACCEL_ROOT) 2> $(LOGS_DIR)/clone_ocaccel.log && \
-		(cd $(_OCACCEL_ROOT) && git checkout $(_OCACCEL_RELEASE) 2>> $(LOGS_DIR)/clone_ocaccel.log ) \
+		git clone $(OCACCEL_REPO) $(_OCACCEL_ROOT) 2> $(LOGS_DIR)/clone_ocaccel.log && \
+		(cd $(_OCACCEL_ROOT) && git checkout $(OCACCEL_RELEASE) 2>> $(LOGS_DIR)/clone_ocaccel.log ) \
 	fi
 
 $(_OCACCEL_ROOT)/snap_env.sh: $(_OCACCEL_ROOT)

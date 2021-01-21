@@ -179,6 +179,7 @@ steps:
     pull: if-not-exists
     commands:
       - cd example/src
+      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3,' image.json
       - npm install --production
       - bash -c "make hw_project"
 
@@ -188,6 +189,17 @@ steps:
     commands:
       - cd example/src
       - bash -c "make test_target"
+
+  - name: metalfs/example-sim
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make model"
+      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/snap/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/snap/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/snap/hardware/sim/xsim
+      - ../run_sim -explore -list testlist.sh -noaet
 
   - name: docker/build-sdk
     image: docker
