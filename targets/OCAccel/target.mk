@@ -3,7 +3,7 @@ export OPERATORS_BUILD_DIR = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/operators
 
 # Define underscored variables as not to interfere with externally set values
 export _OCSE_ROOT    = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocse
-export _OCACCEL_ROOT = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/ocaccel
+export _OCACCEL_ROOT = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/oc-accel
 export _ACTION_ROOT  = $(METAL_ROOT)/targets/OCAccel/_internal/action
 
 OCSE_REPO       = https://github.com/OpenCAPI/ocse

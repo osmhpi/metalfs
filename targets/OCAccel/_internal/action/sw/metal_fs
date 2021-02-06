@@ -1,4 +1,3 @@
 #! /bin/bash
 
-/workspace/example/src/build/OCAccel/AD9V3/ocaccel/software/tools/oc_maint -vvv
-/workspace/build/metal-driver --timeout=30 -vvv --metadata ./metadata -s -f $1
+metal-driver --timeout=30 -vvv --metadata ./metadata -s -f $1

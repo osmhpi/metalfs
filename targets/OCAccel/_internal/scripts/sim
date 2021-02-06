@@ -7,5 +7,4 @@ EOF
 
 chmod +x $_OCACCEL_ROOT/hardware/sim/testlist.sh
 mkdir -p $_OCACCEL_ROOT/hardware/sim/xsim
-cd $_OCACCEL_ROOT/hardware/sim/xsim && $_OCACCEL_ROOT/hardware/sim/run_sim -explore -list testlist.sh
-# $_OCACCEL_ROOT/hardware/sim/run_sim -explore -list testlist.sh
+cd $_OCACCEL_ROOT/hardware/sim/xsim && $_OCACCEL_ROOT/hardware/sim/run_sim -list testlist.sh

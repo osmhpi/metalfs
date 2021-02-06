@@ -6,7 +6,7 @@ export ACTION_ROOT=$_ACTION_ROOT
 export OCSE_ROOT=$_OCSE_ROOT
 EOF
 
-cat > $_OCACCEL_ROOT/defconfig/AD9H7_Sim.hls_metalfpga.defconfig <<- EOF
+cat > $_OCACCEL_ROOT/defconfig/AD9H7_BRAM.hls_metalfpga.defconfig <<- EOF
 #
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
@@ -103,4 +103,4 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
-make -C $_OCACCEL_ROOT AD9H7_Sim.hls_metalfpga.defconfig <&-
+make -C $_OCACCEL_ROOT AD9H7_BRAM.hls_metalfpga.defconfig <&-

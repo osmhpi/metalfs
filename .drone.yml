@@ -179,7 +179,7 @@ steps:
     pull: if-not-exists
     commands:
       - cd example/src
-      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3,' image.json
+      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3_BRAM,' image.json
       - npm install --production
       - bash -c "make hw_project"
 

@@ -6,7 +6,7 @@ export ACTION_ROOT=$_ACTION_ROOT
 export OCSE_ROOT=$_OCSE_ROOT
 EOF
 
-cat > $_OCACCEL_ROOT/defconfig/AD9V3_Fast.hls_metalfpga.defconfig <<- EOF
+cat > $_OCACCEL_ROOT/defconfig/AD9V3_Speedgrade_3_DDR4.hls_metalfpga.defconfig <<- EOF
 #
 # Automatically generated file; DO NOT EDIT.
 # Kernel Configuration
@@ -104,4 +104,4 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
-make -C $_OCACCEL_ROOT AD9V3_Fast.hls_metalfpga.defconfig <&-
+make -C $_OCACCEL_ROOT AD9V3_Speedgrade_3_DDR4.hls_metalfpga.defconfig <&-
