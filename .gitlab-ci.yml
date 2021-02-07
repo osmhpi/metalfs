@@ -8,31 +8,31 @@ build:
   script:
       - ./scripts/docker_build_sdk_base
       - |
-        docker run -v $PWD:/workspace --workdir /workspace --rm -it metalfs/sdk-base:latest bash -e << EOF
+        docker run -v $PWD:/workspace --workdir /workspace --rm metalfs/sdk-base:latest bash -e << EOF
           mkdir build
           cd build
           cmake -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON ..
           make -j4
         EOF
       - |
-        docker run -v $PWD:/workspace --workdir /workspace --rm -it metalfs/sdk-base:latest bash -e << EOF
+        docker run -v $PWD:/workspace --workdir /workspace --rm metalfs/sdk-base:latest bash -e << EOF
           cd build
           ./metal-filesystem-test
           ./metal-pipeline-test
         EOF
       - |
-        docker run -v $PWD:/workspace --workdir /workspace --rm -it metalfs/sdk-base:latest bash -e << EOF
+        docker run -v $PWD:/workspace --workdir /workspace --rm metalfs/sdk-base:latest bash -e << EOF
           cd example/src
           npm install --production
           make hw_project
         EOF
       - |
-        docker run -v $PWD:/workspace --workdir /workspace --rm -it metalfs/sdk-base:latest bash -e << EOF
+        docker run -v $PWD:/workspace --workdir /workspace --rm metalfs/sdk-base:latest bash -e << EOF
           cd example/src
           make test_target
         EOF
       - |
-        docker run -v $PWD:/workspace --workdir /workspace --rm -it metalfs/sdk-base:latest bash -e << EOF
+        docker run -v $PWD:/workspace --workdir /workspace --rm metalfs/sdk-base:latest bash -e << EOF
           cd example/src
           make model
           echo "/workspace/build/example-test" > /workspace/example/src/build/WebPACK_Sim/snap/hardware/sim/testlist.sh
