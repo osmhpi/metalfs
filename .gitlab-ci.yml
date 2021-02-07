@@ -3,5 +3,7 @@ stages:
 
 build:
   stage: build
+  tags:
+    - libvirt
   script:
     - echo hello world
