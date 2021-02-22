@@ -196,10 +196,10 @@ steps:
     commands:
       - cd example/src
       - bash -c "make model"
-      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/ocaccel/hardware/sim/testlist.sh
-      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/ocaccel/hardware/sim/testlist.sh
-      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/ocaccel/hardware/sim/xsim
-      - ../run_sim -explore -list testlist.sh -noaet
+      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/xsim
+      - ../run_sim -list testlist.sh -noaet
 
   - name: docker/build-sdk
     image: docker
