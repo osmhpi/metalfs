@@ -104,4 +104,10 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
+# We cannot override the FPGACHIP individually from the defconfig
+# because oc-accel will default to the value provided in Kconfig
+# for the specified FPGACARD. Hence, we globally alter the target
+# speedgrade in oc-accel.
+sed -i 's/-2-e/-3-e/g' $_OCACCEL_ROOT/scripts/Kconfig
+
 make -C $_OCACCEL_ROOT AD9V3_Speedgrade_3_DDR4.hls_metalfpga.defconfig <&-
