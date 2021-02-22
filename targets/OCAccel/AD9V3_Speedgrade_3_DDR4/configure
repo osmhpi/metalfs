@@ -104,4 +104,7 @@ ENABLE_FLASH=y
 FLASH_USED="TRUE"
 EOF
 
+# Override FPGACHIP values in OC-Accel to use -3 speedgrade
+sed -i -E 's/(x\w+-\w+)-2-e/\1-3-e/g' $_OCACCEL_ROOT/scripts/Kconfig
+
 make -C $_OCACCEL_ROOT AD9V3_Speedgrade_3_DDR4.hls_metalfpga.defconfig <&-
