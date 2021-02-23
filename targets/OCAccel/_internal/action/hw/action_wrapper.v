@@ -1830,6 +1830,8 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
   bd_action bd_action_metalfs (
     .ap_clk                       ( ap_clk                  ) ,
     .ap_rst_n                     ( hls_rst_n_q             ) ,
+
+`ifdef ENABLE_AXI_CARD_MEM
     .m_axi_card_mem0_araddr       (temp_card_mem0_araddr    ) ,
     .m_axi_card_mem0_arburst      (m_axi_card_mem0_arburst  ) ,
     .m_axi_card_mem0_arcache      (m_axi_card_mem0_arcache  ) ,
@@ -1871,6 +1873,7 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .m_axi_card_mem0_wuser        (m_axi_card_mem0_wuser    ) ,
     .m_axi_card_mem0_wvalid       (m_axi_card_mem0_wvalid   ) ,
 
+`endif
     .s_axi_ctrl_reg_araddr        (s_axi_ctrl_reg_araddr    ) ,
     .s_axi_ctrl_reg_arready       (s_axi_ctrl_reg_arready   ) ,
     .s_axi_ctrl_reg_arvalid       (s_axi_ctrl_reg_arvalid   ) ,
@@ -1937,15 +1940,19 @@ wire [31:0] temp_s_axi_ctrl_reg_rdata;
     .interrupt                    ( interrupt_i             )
   );
 
+`ifdef ENABLE_AXI_CARD_MEM
 // bd_action does not use card_mem0 ids
   assign  m_axi_card_mem0_arid  [ 0 ] = 'b0;
   assign  m_axi_card_mem0_awid  [ 0 ] = 'b0;
+`endif
 
 // bd_action does not use lock signals
   assign m_axi_host_mem_awlock = 'b0;
   assign m_axi_host_mem_arlock = 'b0;
+`ifdef ENABLE_AXI_CARD_MEM
   assign m_axi_card_mem0_awlock = 'b0;
   assign m_axi_card_mem0_arlock = 'b0;
+`endif
 
 //==========================================
 // Reset for hls_action

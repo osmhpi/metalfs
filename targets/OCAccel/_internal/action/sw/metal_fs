@@ -1,3 +1,3 @@
 #! /bin/bash
 
-metal-driver --timeout=30 -vvv --metadata ./metadata -s -f $1
+$METAL_ROOT/build/metal-driver --timeout=30 -vvv --metadata ./metadata -s -f $1
