@@ -1,10 +1,9 @@
 #! /bin/bash
 
-echo "export PATH=$$PATH:$_ACTION_ROOT/sw/" > $_OCACCEL_ROOT/hardware/sim/testlist.sh
-cat >> $_OCACCEL_ROOT/hardware/sim/testlist.sh <<- EOF
-SNAP_TRACE=0xF metal_fs /mnt
+cat > $_OCACCEL_ROOT/hardware/sim/testlist.sh <<- EOF
+metal_fs /mnt
 EOF
 
 chmod +x $_OCACCEL_ROOT/hardware/sim/testlist.sh
 mkdir -p $_OCACCEL_ROOT/hardware/sim/xsim
-cd $_OCACCEL_ROOT/hardware/sim/xsim && $_OCACCEL_ROOT/hardware/sim/run_sim -list testlist.sh
+cd $_OCACCEL_ROOT/hardware/sim/xsim && ../run_sim -list testlist.sh

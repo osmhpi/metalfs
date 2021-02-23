@@ -5,4 +5,5 @@ metal_fs /mnt
 EOF
 
 chmod +x $_SNAP_ROOT/hardware/sim/testlist.sh
+mkdir -p $_SNAP_ROOT/hardware/sim/xsim
 cd $_SNAP_ROOT/hardware/sim/xsim && ../run_sim -explore -list testlist.sh

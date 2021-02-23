@@ -5,8 +5,11 @@
 #include <libosnap.h>
 #include <osnap_hls_if.h>
 
+#include <chrono>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
+
 
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/spdlog.h>
@@ -60,6 +63,13 @@ OCAccelAction::~OCAccelAction() {
     spdlog::trace("Deallocating CXL device...");
     snap_card_free(_card);
     _card = nullptr;
+  }
+
+  // Workaround for https://github.com/OpenCAPI/ocse/issues/9
+  // Are we running an OCSE simulation?
+  // cf. https://github.com/OpenCAPI/ocse/blob/9f0001603c08be058a9ca40344f420bfe0a61908/libocxl/libocxl.c#L1916
+  if (getenv("OCSE_SERVER_DAT") || access("ocse_server.dat", F_OK) != -1) {
+    std::this_thread::sleep_for(std::chrono::seconds(5));
   }
 }
 
