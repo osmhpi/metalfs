@@ -179,7 +179,7 @@ steps:
     pull: if-not-exists
     commands:
       - cd example/src
-      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3_BRAM,' image.json
+      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3,' image.json
       - npm install --production
       - bash -c "make hw_project"
 
@@ -196,9 +196,9 @@ steps:
     commands:
       - cd example/src
       - bash -c "make model"
-      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3_BRAM/oc-accel/hardware/sim/testlist.sh
-      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3_BRAM/oc-accel/hardware/sim/testlist.sh
-      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3_BRAM/oc-accel/hardware/sim/xsim
+      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/xsim
       - ../run_sim -list testlist.sh -noaet
 
   - name: docker/build-sdk

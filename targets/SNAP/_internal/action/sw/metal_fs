@@ -1,3 +1,6 @@
 #! /bin/bash
 
+# Metal FS Development: Try to find metal-driver in cmake build directory
+[[ $(type -P "metal-driver") ]] || PATH=$PATH:$METAL_ROOT/build
+
 metal-driver --timeout=30 -v --metadata ./metadata -s -f $1
