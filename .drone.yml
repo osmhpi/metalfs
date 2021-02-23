@@ -1,5 +1,118 @@
 ---
 kind: pipeline
+name: sdk-ocaccel
+
+platform:
+  arch: amd64
+
+steps:
+  - name: docker/build-base
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk_base ocaccel"
+
+  - name: metalfs/software
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - mkdir build && cd build && cmake -DWITH_SNAP=OFF -DWITH_OCACCEL=ON -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
+
+  - name: metalfs/filesystem-test
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-filesystem-test
+
+  - name: metalfs/pipeline-test
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd build && ./metal-pipeline-test
+
+  - name: metalfs/action
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3,' image.json
+      - npm install --production
+      - bash -c "make hw_project"
+
+  - name: metalfs/testbench
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make test_target"
+
+  - name: metalfs/example-sim
+    image: metalfs/sdk-ocaccel-base:latest
+    pull: if-not-exists
+    commands:
+      - cd example/src
+      - bash -c "make model"
+      - echo "$DRONE_WORKSPACE/build/example-test -vvv" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
+      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/xsim
+      - ../run_sim -list testlist.sh -noaet
+
+  - name: docker/build-sdk
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_build_sdk ocaccel"
+
+  - name: docker/push
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_sdk ocaccel"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      event:
+        - tag
+
+  - name: docker/push-latest
+    image: docker
+    volumes:
+      - name: dockersock
+        path: /var/run/docker.sock
+    commands:
+      - apk add --no-cache make git
+      - sh -c "scripts/docker_push_latest_sdk ocaccel"
+    environment:
+      USERNAME:
+        from_secret: docker_username
+      PASSWORD:
+        from_secret: docker_password
+    when:
+      branch:
+        - master
+      event:
+        exclude:
+         - pull_request
+
+volumes:
+  - name: dockersock
+    host:
+      path: /var/run/docker.sock
+
+---
+kind: pipeline
 name: sdk-snap
 
 platform:
@@ -127,119 +240,6 @@ steps:
       password:
         from_secret: github_password
       pages_directory: build/docs/sphinx
-    when:
-      branch:
-        - master
-      event:
-        exclude:
-         - pull_request
-
-volumes:
-  - name: dockersock
-    host:
-      path: /var/run/docker.sock
-
----
-kind: pipeline
-name: sdk-ocaccel
-
-platform:
-  arch: amd64
-
-steps:
-  - name: docker/build-base
-    image: docker
-    volumes:
-      - name: dockersock
-        path: /var/run/docker.sock
-    commands:
-      - apk add --no-cache make git
-      - sh -c "scripts/docker_build_sdk_base ocaccel"
-
-  - name: metalfs/software
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - mkdir build && cd build && cmake -DWITH_SNAP=OFF -DWITH_OCACCEL=ON -DOPTION_BUILD_EXAMPLES=ON -DOPTION_BUILD_DOCS=ON .. && make -j4
-
-  - name: metalfs/filesystem-test
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - cd build && ./metal-filesystem-test
-
-  - name: metalfs/pipeline-test
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - cd build && ./metal-pipeline-test
-
-  - name: metalfs/action
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - cd example/src
-      - sed -i 's,SNAP/WebPACK_Sim,OCAccel/AD9V3,' image.json
-      - npm install --production
-      - bash -c "make hw_project"
-
-  - name: metalfs/testbench
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - cd example/src
-      - bash -c "make test_target"
-
-  - name: metalfs/example-sim
-    image: metalfs/sdk-ocaccel-base:latest
-    pull: if-not-exists
-    commands:
-      - cd example/src
-      - bash -c "make model"
-      - echo "$DRONE_WORKSPACE/build/example-test" > $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
-      - chmod +x $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/testlist.sh
-      - cd $DRONE_WORKSPACE/example/src/build/OCAccel/AD9V3/oc-accel/hardware/sim/xsim
-      - ../run_sim -list testlist.sh -noaet
-
-  - name: docker/build-sdk
-    image: docker
-    volumes:
-      - name: dockersock
-        path: /var/run/docker.sock
-    commands:
-      - apk add --no-cache make git
-      - sh -c "scripts/docker_build_sdk ocaccel"
-
-  - name: docker/push
-    image: docker
-    volumes:
-      - name: dockersock
-        path: /var/run/docker.sock
-    commands:
-      - apk add --no-cache make git
-      - sh -c "scripts/docker_push_sdk ocaccel"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
-    when:
-      event:
-        - tag
-
-  - name: docker/push-latest
-    image: docker
-    volumes:
-      - name: dockersock
-        path: /var/run/docker.sock
-    commands:
-      - apk add --no-cache make git
-      - sh -c "scripts/docker_push_latest_sdk ocaccel"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
     when:
       branch:
         - master
