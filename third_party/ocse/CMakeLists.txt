@@ -28,7 +28,9 @@ if (${BUILD_OCSE})
 
     add_library(ocxl
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/debug.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/debug.h
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/utils.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/ocse/common/utils.h
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/libocxl/libocxl.c
         ${CMAKE_CURRENT_SOURCE_DIR}/ocse/libocxl/libocxl.h
     )
