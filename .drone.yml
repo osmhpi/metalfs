@@ -67,6 +67,7 @@ steps:
         path: /var/run/docker.sock
     commands:
       - apk add --no-cache make git
+      - git reset --hard && git clean -fd
       - sh -c "scripts/docker_build_sdk ocaccel"
 
   - name: docker/push
