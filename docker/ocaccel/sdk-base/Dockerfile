@@ -1,5 +1,5 @@
 ARG VIVADO_EDITION=webpack
-FROM metalfs/xilinx-vivado:2019.2-$VIVADO_EDITION
+FROM reg.osmhpi.de/metalfs/xilinx-vivado:2019.2-$VIVADO_EDITION
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive

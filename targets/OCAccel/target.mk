@@ -7,7 +7,7 @@ export _OCACCEL_ROOT = $(IMAGE_BUILD_DIR)/$(METAL_TARGET)/oc-accel
 export _ACTION_ROOT  = $(METAL_ROOT)/targets/OCAccel/_internal/action
 
 OCSE_REPO       = https://github.com/OpenCAPI/ocse
-OCSE_RELEASE    = 72422e3
+OCSE_RELEASE    = 1f7225b
 OCACCEL_REPO    = https://github.com/metalfs/oc-accel
 OCACCEL_RELEASE = metalfs
 
