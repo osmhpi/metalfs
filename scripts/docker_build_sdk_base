@@ -4,8 +4,6 @@ PLATFORM=$1
 
 . scripts/env
 
-echo "$PASSWORD" | docker login --username "$USERNAME" --password-stdin
-
 # pull latest images to reuse layers if possible
 make -C docker/$PLATFORM pull-latest-sdk
 

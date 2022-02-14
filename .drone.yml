@@ -14,11 +14,6 @@ steps:
     commands:
       - apk add --no-cache make git
       - sh -c "scripts/docker_build_sdk_base ocaccel"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
 
   - name: metalfs/software
     image: metalfs/sdk-ocaccel-base:latest
@@ -133,11 +128,6 @@ steps:
     commands:
       - apk add --no-cache make git
       - sh -c "scripts/docker_build_sdk_base snap"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
 
   - name: metalfs/software
     image: metalfs/sdk-snap-base:latest
