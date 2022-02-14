@@ -74,11 +74,6 @@ steps:
       - apk add --no-cache make git
       - git reset --hard && git clean -fd
       - sh -c "scripts/docker_build_sdk ocaccel"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
 
   - name: docker/push
     image: docker
@@ -196,11 +191,6 @@ steps:
     commands:
       - apk add --no-cache make git
       - sh -c "scripts/docker_build_sdk snap"
-    environment:
-      USERNAME:
-        from_secret: docker_username
-      PASSWORD:
-        from_secret: docker_password
 
   - name: docker/push
     image: docker

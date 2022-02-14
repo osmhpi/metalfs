@@ -4,7 +4,5 @@ PLATFORM=$1
 
 . scripts/env
 
-echo "$PASSWORD" | docker login --username "$USERNAME" --password-stdin
-
 # build all images
 make -C docker/$PLATFORM latest-sdk
