@@ -1,7 +1,7 @@
 ARG METAL_TAG=
 ARG VIVADO_EDITION=webpack
 
-FROM reg.osmhpi.de/sdk-ocaccel-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION AS build
+FROM reg.osmhpi.de/metalfs/sdk-ocaccel-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION AS build
 
 ADD . /src/metal_fs
 
@@ -17,7 +17,7 @@ RUN cd /src/metal_fs \
  && make -j8 \
  && make install
 
-FROM reg.osmhpi.de/sdk-ocaccel-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION
+FROM reg.osmhpi.de/metalfs/sdk-ocaccel-base:${METAL_TAG:+$METAL_TAG-}$VIVADO_EDITION
 
 COPY --from=build /usr/local/bin/metal-driver /usr/local/bin/
 
