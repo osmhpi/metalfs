@@ -6,6 +6,8 @@ build-ocaccel:
   tags:
     - libvirt
   script:
+      - mkdir -p /root/.docker
+      - echo "{\"auths\":{\"reg.osmhpi.de\":{\"username\":\"$DOCKER_REGISTRY_USER\",\"password\":\"$DOCKER_REGISTRY_PASSWORD\"}}}" > /root/.docker/config.json
       - ./scripts/docker_build_sdk_base ocaccel
       - ./scripts/docker_build_sdk ocaccel
 
