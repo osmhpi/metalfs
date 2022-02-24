@@ -3,9 +3,10 @@ FROM reg.osmhpi.de/metalfs/xilinx-vivado:2019.2-$VIVADO_EDITION
 
 # Apply patch for Vivado Year 2022 bug
 ADD assets/y2k22_patch-1.2.tar.gz /tools/Xilinx/
-RUN LD_LIBRARY_PATH=/tools/Xilinx/Vivado/2019.2/tps/lnx64/python-2.7.5/lib/ \
-  /tools/Xilinx/Vivado/2019.2/tps/lnx64/python-2.7.5/bin/python2.7 \
-  /tools/Xilinx/y2k22_patch/patch.py
+RUN cd /tools/Xilinx && \
+  LD_LIBRARY_PATH=/tools/Xilinx/Vivado/2019.2/tps/lnx64/python-2.7.5/lib/ \
+    Vivado/2019.2/tps/lnx64/python-2.7.5/bin/python2.7 \
+      y2k22_patch/patch.py
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
