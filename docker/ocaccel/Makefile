@@ -22,7 +22,7 @@ endif
 latest-sdk-base: git-is-clean sdk-base
 	docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel-base:${METAL_TAG}-${VIVADO_EDITION}       $(IMAGE_NAMESPACE)/sdk-ocaccel-base:latest
 latest-sdk: git-is-clean sdk
-	docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} $(IMAGE_NAMESPACE)/sdk-ocaccel:latest
+	docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION} 			$(IMAGE_NAMESPACE)/sdk-ocaccel:latest
 lastest-runtime: git-is-clean all-runtime
 	docker tag $(IMAGE_NAMESPACE)/runtime:${METAL_TAG}                                  $(IMAGE_NAMESPACE)/runtime:latest
 
@@ -34,7 +34,7 @@ sdk-base:
 
 sdk:
 	${docker_build} \
-		-t $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} \
+		-t $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION} \
 		-f sdk/Dockerfile \
 		../..
 
@@ -54,10 +54,10 @@ push-sdk:
 	SUBTAG=$$(echo '${METAL_TAG}' | tr -d 'v') ; \
 	if [ $$(echo $$SUBTAG | grep -iE '^[0-9]+\.[0-9]+\.[0-9]+$$' | wc -l) -ne 0 ] ; then \
 		while [ ! -z "$$SUBTAG" ]; do \
-			docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel-base:${METAL_TAG}-${VIVADO_EDITION}       $(IMAGE_NAMESPACE)/sdk-ocaccel-base:$$SUBTAG-${VIVADO_EDITION} ; \
-			docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION}-${PSL_TAG} $(IMAGE_NAMESPACE)/sdk-ocaccel:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
+			docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel-base:${METAL_TAG}-${VIVADO_EDITION}   $(IMAGE_NAMESPACE)/sdk-ocaccel-base:$$SUBTAG-${VIVADO_EDITION} ; \
+			docker tag $(IMAGE_NAMESPACE)/sdk-ocaccel:${METAL_TAG}-${VIVADO_EDITION} 		$(IMAGE_NAMESPACE)/sdk-ocaccel:$$SUBTAG-${VIVADO_EDITION} ; \
 			docker push $(IMAGE_NAMESPACE)/sdk-ocaccel-base:$$SUBTAG-${VIVADO_EDITION} ; \
-			docker push $(IMAGE_NAMESPACE)/sdk-ocaccel:$$SUBTAG-${VIVADO_EDITION}-${PSL_TAG} ; \
+			docker push $(IMAGE_NAMESPACE)/sdk-ocaccel:$$SUBTAG-${VIVADO_EDITION} ; \
 			SUBTAG=$$(echo "$$SUBTAG" | awk '{gsub(/\.?[0-9]+$$/,"",$$1);print}') ; \
 		done ; \
 	fi
